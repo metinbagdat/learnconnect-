@@ -20,7 +20,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, or, desc, inArray } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -79,6 +79,122 @@ export class DatabaseStorage implements IStorage {
       pool,
       createTableIfMissing: true,
     });
+    
+    // Check if we need to seed the database
+    this.seedDatabaseIfEmpty();
+  }
+  
+  private async seedDatabaseIfEmpty() {
+    try {
+      // Check if we have any courses
+      const existingCourses = await this.getCourses();
+      if (existingCourses.length === 0) {
+        console.log("Seeding database with initial data...");
+        await this.seedSampleData();
+      }
+    } catch (error) {
+      console.error("Error checking or seeding database:", error);
+    }
+  }
+  
+  private async seedSampleData() {
+    try {
+      // First check if we have an instructor
+      let instructorId = 1; // Default to the first user
+      const instructorUser = await this.getUserByUsername("instructor");
+      
+      if (!instructorUser) {
+        // Create a sample instructor user
+        const instructor = await this.createUser({
+          username: "instructor",
+          password: "$2b$10$D8OXXrBpHCqB/JikS6UT5Or2w9K1q4kBTfTa9L4cFbz/5lxDxjOe.", // instructor123
+          displayName: "John Instructor",
+          role: "instructor"
+        });
+        instructorId = instructor.id;
+      } else {
+        instructorId = instructorUser.id;
+      }
+      
+      // Create sample courses
+      const course1 = await this.createCourse({
+        title: "Introduction to JavaScript",
+        description: "Learn the basics of JavaScript programming language",
+        category: "Programming",
+        moduleCount: 8,
+        durationHours: 24,
+        instructorId,
+        imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+        rating: 4
+      });
+      
+      const course2 = await this.createCourse({
+        title: "Data Science Fundamentals",
+        description: "Introduction to data science concepts and tools",
+        category: "Data Science",
+        moduleCount: 10,
+        durationHours: 30,
+        instructorId,
+        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+        rating: 5
+      });
+      
+      const course3 = await this.createCourse({
+        title: "Web Development Bootcamp",
+        description: "Comprehensive course on full-stack web development",
+        category: "Web Development",
+        moduleCount: 12,
+        durationHours: 40,
+        instructorId,
+        imageUrl: "https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
+        rating: 5
+      });
+      
+      // Create sample assignments
+      await this.createAssignment({
+        title: "JavaScript Basics Quiz",
+        description: "Test your knowledge of JavaScript fundamentals",
+        courseId: course1.id,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // One week from now
+      });
+      
+      await this.createAssignment({
+        title: "Data Analysis Project",
+        description: "Analyze a real-world dataset and present your findings",
+        courseId: course2.id,
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // Two weeks from now
+      });
+      
+      await this.createAssignment({
+        title: "Portfolio Website",
+        description: "Build a personal portfolio website using HTML, CSS, and JavaScript",
+        courseId: course3.id,
+        dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000) // Three weeks from now
+      });
+      
+      // Create sample badges
+      const badge1 = await this.createBadge({
+        title: "JavaScript Master",
+        description: "Completed the JavaScript course with excellence",
+        imageUrl: "https://img.icons8.com/color/96/000000/javascript.png"
+      });
+      
+      const badge2 = await this.createBadge({
+        title: "Data Scientist",
+        description: "Successfully completed the data science course",
+        imageUrl: "https://img.icons8.com/color/96/000000/python.png"
+      });
+      
+      const badge3 = await this.createBadge({
+        title: "Web Developer",
+        description: "Mastered full-stack web development",
+        imageUrl: "https://img.icons8.com/color/96/000000/html-5.png"
+      });
+      
+      console.log("Database seeded successfully!");
+    } catch (error) {
+      console.error("Error seeding database:", error);
+    }
   }
 
   // User operations
@@ -144,8 +260,8 @@ export class DatabaseStorage implements IStorage {
     
     return userCoursesResult.map(({ userCourse, course }) => ({
       ...userCourse,
-      course
-    }));
+      course: course as Course // Type cast to handle potential null
+    })) as (UserCourse & { course: Course })[];
   }
   
   async enrollUserInCourse(userCourse: InsertUserCourse): Promise<UserCourse> {
@@ -197,15 +313,13 @@ export class DatabaseStorage implements IStorage {
       })
       .from(assignments)
       .leftJoin(courses, eq(assignments.courseId, courses.id))
-      .where(
-        assignments.courseId.in(courseIds)
-      )
+      .where(inArray(assignments.courseId, courseIds))
       .orderBy(desc(assignments.dueDate));
     
     return assignmentsResult.map(({ assignment, course }) => ({
       ...assignment,
-      course
-    }));
+      course: course as Course // Type cast to handle potential null
+    })) as (Assignment & { course: Course })[];
   }
   
   async createAssignment(assignment: InsertAssignment): Promise<Assignment> {
@@ -221,6 +335,11 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(badges);
   }
   
+  async createBadge(badge: InsertBadge): Promise<Badge> {
+    const [newBadge] = await db.insert(badges).values(badge).returning();
+    return newBadge;
+  }
+  
   async getUserBadges(userId: number): Promise<(UserBadge & { badge: Badge })[]> {
     const userBadgesResult = await db
       .select({
@@ -234,8 +353,8 @@ export class DatabaseStorage implements IStorage {
     
     return userBadgesResult.map(({ userBadge, badge }) => ({
       ...userBadge,
-      badge
-    }));
+      badge: badge as Badge // Type cast to handle potential null
+    })) as (UserBadge & { badge: Badge })[];
   }
   
   async awardBadgeToUser(userBadge: InsertUserBadge): Promise<UserBadge> {

@@ -39,10 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Force cache invalidation of other queries after login
+      queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+      
+      // Show success toast
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.displayName}`,
       });
+      
+      // Manually redirect to dashboard
+      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({
@@ -60,10 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Force cache invalidation of other queries after registration
+      queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+      
       toast({
         title: "Registration successful",
         description: `Welcome to EduLearn, ${user.displayName}`,
       });
+      
+      // Manually redirect to dashboard
+      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({

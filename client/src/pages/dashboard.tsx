@@ -18,10 +18,16 @@ export default function Dashboard() {
   
   const { data: userCourses = [], isLoading: coursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
     queryKey: ["/api/user/courses"],
+    enabled: !!user, // Only run this query if user is logged in
+    refetchOnMount: true,
+    retry: 3,
   });
   
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<(Assignment & { course: Course })[]>({
     queryKey: ["/api/assignments"],
+    enabled: !!user, // Only run this query if user is logged in
+    refetchOnMount: true,
+    retry: 3,
   });
   
   // Compute stats

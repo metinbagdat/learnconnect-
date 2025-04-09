@@ -38,6 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Store user in localStorage as fallback mechanism
+      localStorage.setItem('edulearn_user', JSON.stringify(user));
+      
       queryClient.setQueryData(["/api/user"], user);
       // Force cache invalidation of other queries after login
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
@@ -49,8 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${user.displayName}`,
       });
       
-      // Manually redirect to dashboard
-      window.location.href = '/';
+      // Manually redirect to dashboard page
+      window.location.href = '/dashboard-standalone';
     },
     onError: (error: Error) => {
       toast({
@@ -67,6 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Store user in localStorage as fallback mechanism
+      localStorage.setItem('edulearn_user', JSON.stringify(user));
+      
       queryClient.setQueryData(["/api/user"], user);
       // Force cache invalidation of other queries after registration
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
@@ -78,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Manually redirect to dashboard
-      window.location.href = '/';
+      window.location.href = '/dashboard-standalone';
     },
     onError: (error: Error) => {
       toast({
@@ -94,11 +100,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Remove user from local storage
+      localStorage.removeItem('edulearn_user');
+      
+      // Clear query cache
       queryClient.setQueryData(["/api/user"], null);
+      queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
       });
+      
+      // Redirect to auth page
+      window.location.href = '/auth';
     },
     onError: (error: Error) => {
       toast({

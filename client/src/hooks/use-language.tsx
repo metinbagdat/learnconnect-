@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 export type Language = 'en' | 'tr';
 
 // Create the translations object for both languages
-export const translations = {
+const translations = {
   en: {
     // Common
     appName: 'EduLearn Platform',
@@ -146,7 +146,7 @@ export const translations = {
     viewAll: 'Tümünü Görüntüle',
     enrolledIn: 'Kayıtlı',
     course: 'Kurs',
-    courses: 'Kurslar',
+    coursesPlural: 'Kurslar',
     continueLeaning: 'Öğrenmeye Devam Et',
     completed: 'Tamamlandı',
     dueDate: 'Bitiş Tarihi',

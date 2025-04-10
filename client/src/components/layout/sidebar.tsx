@@ -15,6 +15,8 @@ import {
   Sparkles,
   Shield
 } from "lucide-react";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarLinkProps {
@@ -40,6 +42,7 @@ const SidebarLink = ({ href, icon, children, isActive }: SidebarLinkProps) => (
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const { t } = useLanguage();
   const [integrationsOpen, setIntegrationsOpen] = useState(true);
   
   const handleLogout = () => {
@@ -67,7 +70,7 @@ export function Sidebar() {
             icon={<Home className="h-5 w-5" />}
             isActive={location === '/'}
           >
-            Dashboard
+            {t('dashboard')}
           </SidebarLink>
           
           <SidebarLink 
@@ -75,7 +78,7 @@ export function Sidebar() {
             icon={<BookOpen className="h-5 w-5" />}
             isActive={location === '/courses'}
           >
-            My Courses
+            {t('myCourses')}
           </SidebarLink>
           
           <SidebarLink 
@@ -83,7 +86,7 @@ export function Sidebar() {
             icon={<Calendar className="h-5 w-5" />}
             isActive={location === '/calendar'}
           >
-            Calendar
+            {t('calendar')}
           </SidebarLink>
           
           <SidebarLink 
@@ -91,7 +94,7 @@ export function Sidebar() {
             icon={<FileText className="h-5 w-5" />}
             isActive={location === '/assignments'}
           >
-            Assignments
+            {t('assignments')}
           </SidebarLink>
           
           <SidebarLink 
@@ -99,7 +102,7 @@ export function Sidebar() {
             icon={<Package className="h-5 w-5" />}
             isActive={location === '/resources'}
           >
-            Resources
+            {t('resources')}
           </SidebarLink>
           
           <SidebarLink 
@@ -107,7 +110,7 @@ export function Sidebar() {
             icon={<Award className="h-5 w-5" />}
             isActive={location === '/achievements'}
           >
-            Achievements
+            {t('achievements')}
           </SidebarLink>
           
           {/* Only show for instructors and admins */}
@@ -118,7 +121,7 @@ export function Sidebar() {
               isActive={location === '/course-generator'}
             >
               <span className="flex items-center">
-                AI Course Generator
+                {t('courseGenerator')}
                 <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white">
                   AI
                 </span>
@@ -134,7 +137,7 @@ export function Sidebar() {
               isActive={location === '/admin'}
             >
               <span className="flex items-center">
-                Admin Panel
+                {t('adminPanel')}
               </span>
             </SidebarLink>
           )}
@@ -203,6 +206,7 @@ export function Sidebar() {
             <p className="text-xs text-neutral-500 capitalize">{user?.role || 'Student'}</p>
           </div>
           <div className="ml-auto flex">
+            <LanguageSwitcher />
             <Button
               variant="ghost"
               size="icon"

@@ -7,6 +7,7 @@ import DashboardStandalone from "@/pages/dashboard-standalone";
 import Courses from "@/pages/courses";
 import Assignments from "@/pages/assignments";
 import Profile from "@/pages/profile";
+import CourseGenerator from "@/pages/course-generator";
 import AuthPage from "@/pages/auth-page";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <ProtectedRoute path="/courses" component={Courses} />
       <ProtectedRoute path="/assignments" component={Assignments} />
       <ProtectedRoute path="/profile" component={Profile} />
+      <ProtectedRoute path="/course-generator" component={CourseGenerator} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

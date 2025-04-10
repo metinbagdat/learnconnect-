@@ -11,7 +11,8 @@ import {
   Award, 
   Settings, 
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -107,6 +108,22 @@ export function Sidebar() {
           >
             Achievements
           </SidebarLink>
+          
+          {/* Only show for instructors and admins */}
+          {(user?.role === "instructor" || user?.role === "admin") && (
+            <SidebarLink 
+              href="/course-generator" 
+              icon={<Sparkles className="h-5 w-5" />}
+              isActive={location === '/course-generator'}
+            >
+              <span className="flex items-center">
+                AI Course Generator
+                <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+                  AI
+                </span>
+              </span>
+            </SidebarLink>
+          )}
         </div>
         
         {/* Integrations */}

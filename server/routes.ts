@@ -338,11 +338,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Import the add-turkish-courses module dynamically
-      const turkishCoursesModule = await import("./add-turkish-courses");
+      // Import the addTurkishCourses function directly
+      const { default: addTurkishCourses } = await import("./add-turkish-courses");
       
-      // The default export should be a function that adds the courses
-      await turkishCoursesModule.default();
+      // Call the function to add Turkish courses
+      await addTurkishCourses();
       
       res.json({ message: "Turkish university entrance exam courses added successfully" });
     } catch (error) {

@@ -12,7 +12,8 @@ import {
   Settings, 
   LogOut,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -121,6 +122,19 @@ export function Sidebar() {
                 <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white">
                   AI
                 </span>
+              </span>
+            </SidebarLink>
+          )}
+          
+          {/* Only show for admins */}
+          {user?.role === "admin" && (
+            <SidebarLink 
+              href="/admin" 
+              icon={<Shield className="h-5 w-5" />}
+              isActive={location === '/admin'}
+            >
+              <span className="flex items-center">
+                Admin Panel
               </span>
             </SidebarLink>
           )}

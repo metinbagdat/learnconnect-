@@ -8,6 +8,7 @@ import Courses from "@/pages/courses";
 import Assignments from "@/pages/assignments";
 import Profile from "@/pages/profile";
 import CourseGenerator from "@/pages/course-generator";
+import AdminPanel from "@/pages/admin-panel";
 import AuthPage from "@/pages/auth-page";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <ProtectedRoute path="/assignments" component={Assignments} />
       <ProtectedRoute path="/profile" component={Profile} />
       <ProtectedRoute path="/course-generator" component={CourseGenerator} />
+      <ProtectedRoute path="/admin" component={AdminPanel} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

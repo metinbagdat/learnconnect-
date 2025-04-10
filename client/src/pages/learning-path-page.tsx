@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { LearningPath, LearningPathStep, Course } from "@shared/schema";
 
 export default function LearningPathPage() {
   const { id } = useParams();
@@ -171,7 +172,7 @@ export default function LearningPathPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {learningPaths.map((path) => (
+            {learningPaths.map((path: LearningPath) => (
               <Link key={path.id} href={`/learning-paths/${path.id}`}>
                 <a className="block transition-all hover:scale-105">
                   <Card className="h-full">
@@ -253,7 +254,7 @@ export default function LearningPathPage() {
               {/* Left side timeline */}
               <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border"></div>
 
-              {learningPath.steps?.map((step, index) => (
+              {learningPath.steps?.map((step: LearningPathStep & { course: Course }, index: number) => (
                 <div key={step.id} className="relative pl-16">
                   {/* Timeline circle */}
                   <div className={`absolute left-[30px] top-0 w-4 h-4 rounded-full ${step.completed ? 'bg-primary' : 'bg-background border-2 border-primary'}`}>

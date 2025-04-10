@@ -13,7 +13,8 @@ import {
   LogOut,
   ChevronDown,
   Sparkles,
-  Shield
+  Shield,
+  Map
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/hooks/use-language";
@@ -103,6 +104,19 @@ export function Sidebar() {
             isActive={location === '/resources'}
           >
             {t('resources')}
+          </SidebarLink>
+          
+          <SidebarLink 
+            href="/learning-paths" 
+            icon={<Map className="h-5 w-5" />}
+            isActive={location.startsWith('/learning-paths')}
+          >
+            <span className="flex items-center">
+              Learning Paths
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+                AI
+              </span>
+            </span>
           </SidebarLink>
           
           <SidebarLink 

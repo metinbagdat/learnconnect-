@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { Home, BookOpen, FileText, User } from "lucide-react";
+import { Home, BookOpen, FileText, User, Map } from "lucide-react";
 
 export function MobileNav() {
   const [location] = useLocation();
@@ -22,6 +22,15 @@ export function MobileNav() {
           }`}>
             <BookOpen className="h-6 w-6" />
             <span className="text-xs">Courses</span>
+          </div>
+        </Link>
+        
+        <Link href="/learning-paths">
+          <div className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
+            location.startsWith("/learning-paths") ? "text-primary" : "text-neutral-500"
+          }`}>
+            <Map className="h-6 w-6" />
+            <span className="text-xs">Paths</span>
           </div>
         </Link>
         

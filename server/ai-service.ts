@@ -86,9 +86,9 @@ export async function generateCourse(
     }
     
     return JSON.parse(responseContent) as GeneratedCourse;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating course:", error);
-    throw new Error(`Failed to generate course: ${error.message}`);
+    throw new Error(`Failed to generate course: ${error.message || 'Unknown error'}`);
   }
 }
 
@@ -164,13 +164,9 @@ export async function generateCourseRecommendations(
     
     const recommendations = JSON.parse(responseContent);
     return recommendations.recommendations || [];
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating recommendations:", error);
-    return [
-      "Web Development with React",
-      "Data Science Fundamentals",
-      "UX/UI Design Principles"
-    ];
+    throw new Error(`Failed to generate recommendations: ${error.message || 'Unknown error'}`);
   }
 }
 

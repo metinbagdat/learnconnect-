@@ -26,7 +26,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.8
+      rating: 5
     });
     
     const tytTurkish = await storage.createCourse({
@@ -38,7 +38,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Intermediate",
       imageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.6
+      rating: 5
     });
     
     const tytScience = await storage.createCourse({
@@ -50,7 +50,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Intermediate",
       imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.7
+      rating: 5
     });
     
     const tytSocial = await storage.createCourse({
@@ -62,7 +62,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Intermediate",
       imageUrl: "https://images.unsplash.com/photo-1447069387593-a5de0862481e?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.5
+      rating: 5
     });
     
     // AYT Courses (Second stage of YKS)
@@ -76,7 +76,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.9
+      rating: 5
     });
     
     const aytPhysics = await storage.createCourse({
@@ -88,7 +88,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.8
+      rating: 5
     });
     
     const aytChemistry = await storage.createCourse({
@@ -100,7 +100,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.7
+      rating: 5
     });
     
     const aytBiology = await storage.createCourse({
@@ -112,7 +112,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.6
+      rating: 5
     });
     
     const aytLiterature = await storage.createCourse({
@@ -124,7 +124,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.5
+      rating: 5
     });
     
     const aytHistory = await storage.createCourse({
@@ -136,7 +136,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1461360228754-6e81c478b882?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.7
+      rating: 5
     });
     
     // YDT (Foreign Language Test) Course
@@ -150,7 +150,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Intermediate",
       imageUrl: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.8
+      rating: 5
     });
     
     // YKS Preparation Courses
@@ -164,7 +164,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Intermediate",
       imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.9
+      rating: 5
     });
     
     const mockExams = await storage.createCourse({
@@ -176,7 +176,7 @@ async function addTurkishCourses() {
       instructorId,
       level: "Advanced",
       imageUrl: "https://images.unsplash.com/photo-1593642532400-2682810df593?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-      rating: 4.9
+      rating: 5
     });
     
     // Add sample assignments

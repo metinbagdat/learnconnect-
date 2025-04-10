@@ -2,9 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertCourseSchema, insertUserCourseSchema, insertAssignmentSchema, insertModuleSchema, insertLessonSchema } from "@shared/schema";
+import { insertCourseSchema, insertUserCourseSchema, insertAssignmentSchema, insertModuleSchema, insertLessonSchema, insertLearningPathSchema } from "@shared/schema";
 import { z } from "zod";
-import { generateCourse, saveGeneratedCourse, generateCourseRecommendations } from "./ai-service";
+import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
 import * as fs from "fs";
 import * as path from "path";
 import OpenAI from "openai";
@@ -227,7 +227,9 @@ Use markdown formatting. Be comprehensive and educational.`
               ],
             });
             
-            content = message.content[0].text || "";
+            if (message.content && message.content.length > 0 && 'text' in message.content[0]) {
+              content = message.content[0].text || "";
+            }
             console.log("Generated content with Anthropic Claude");
           } catch (claudeError) {
             console.error("Error generating content with Anthropic Claude:", claudeError);
@@ -569,6 +571,108 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error adding Turkish courses:", error);
       res.status(500).json({ message: "Failed to add Turkish courses" });
+    }
+  });
+
+  // Learning Paths API
+  app.get("/api/learning-paths", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const learningPaths = await storage.getLearningPaths(req.user.id);
+      res.json(learningPaths);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch learning paths" });
+    }
+  });
+  
+  app.get("/api/learning-paths/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const pathId = parseInt(req.params.id);
+      const learningPath = await storage.getLearningPath(pathId);
+      
+      if (!learningPath) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+      
+      res.json(learningPath);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch learning path" });
+    }
+  });
+  
+  app.post("/api/learning-paths", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { goal } = req.body;
+      
+      if (!goal || typeof goal !== "string") {
+        return res.status(400).json({ message: "Goal is required" });
+      }
+      
+      // Generate learning path with AI
+      const generatedPath = await generateLearningPath(req.user.id, goal);
+      
+      // Save to database
+      const learningPath = await saveLearningPath(req.user.id, generatedPath);
+      
+      res.status(201).json(learningPath);
+    } catch (error) {
+      console.error("Error creating learning path:", error);
+      res.status(500).json({ message: "Failed to create learning path" });
+    }
+  });
+  
+  app.patch("/api/learning-paths/:id/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const pathId = parseInt(req.params.id);
+      const { progress } = req.body;
+      
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return res.status(400).json({ message: "Invalid progress value" });
+      }
+      
+      const updatedPath = await storage.updateLearningPathProgress(pathId, progress);
+      
+      if (!updatedPath) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+      
+      res.json(updatedPath);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+  
+  app.patch("/api/learning-paths/steps/:id/complete", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const stepId = parseInt(req.params.id);
+      const updatedStep = await storage.markStepAsCompleted(stepId);
+      
+      if (!updatedStep) {
+        return res.status(404).json({ message: "Learning path step not found" });
+      }
+      
+      res.json(updatedStep);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark step as completed" });
     }
   });
 

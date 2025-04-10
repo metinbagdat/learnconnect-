@@ -13,6 +13,7 @@ import Profile from "@/pages/profile";
 import CourseGenerator from "@/pages/course-generator";
 import AdminPanel from "@/pages/admin-panel";
 import AuthPage from "@/pages/auth-page";
+import LearningPathPage from "@/pages/learning-path-page";
 
 function Router() {
   return (
@@ -26,6 +27,8 @@ function Router() {
       <ProtectedRoute path="/resources" component={Resources} />
       <ProtectedRoute path="/profile" component={Profile} />
       <ProtectedRoute path="/course-generator" component={CourseGenerator} />
+      <ProtectedRoute path="/learning-paths" component={LearningPathPage} />
+      <ProtectedRoute path="/learning-paths/:id" component={LearningPathPage} />
       <ProtectedRoute path="/admin" component={AdminPanel} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

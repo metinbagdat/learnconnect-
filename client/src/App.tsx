@@ -19,7 +19,7 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Dashboard} />
-      <Route path="/dashboard-standalone" component={DashboardStandalone} />
+      <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />
       <ProtectedRoute path="/courses" component={Courses} />
       <ProtectedRoute path="/courses/:courseId" component={CourseDetail} />
       <ProtectedRoute path="/assignments" component={Assignments} />
@@ -37,13 +37,20 @@ function Router() {
 }
 
 import { LanguageProvider } from "./hooks/use-language";
+import { AuthProvider } from "./hooks/use-auth";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
 
 function App() {
   return (
-    <LanguageProvider>
-      <Router />
-      <Toaster />
-    </LanguageProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <LanguageProvider>
+          <Router />
+          <Toaster />
+        </LanguageProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

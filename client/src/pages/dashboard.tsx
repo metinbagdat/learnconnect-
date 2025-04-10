@@ -6,6 +6,8 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { CourseCard } from "@/components/ui/course-card";
 import { AIAssistant } from "@/components/ui/ai-assistant";
 import { AssignmentList } from "@/components/ui/assignment-list";
+import { CourseRecommendations } from "@/components/ui/course-recommendations";
+import { UserInterests } from "@/components/ui/user-interests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
@@ -169,15 +171,28 @@ export default function Dashboard() {
               )}
             </div>
             
-            {/* Two-column layout for AI Assistant and Assignments */}
+            {/* AI-powered Recommendations Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
+              <h2 className="text-xl font-semibold text-neutral-900">Recommended For You</h2>
+              <div className="mt-4">
+                <CourseRecommendations />
+              </div>
+            </div>
+            
+            {/* Three-column layout */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* AI Assistant */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
+                <UserInterests />
+              </div>
+              
+              {/* AI Assistant */}
+              <div className="md:col-span-1">
                 <AIAssistant />
               </div>
               
               {/* Assignments */}
-              <div>
+              <div className="md:col-span-1">
                 <AssignmentList 
                   assignments={upcomingAssignments}
                   onViewAll={() => navigate('/assignments')}

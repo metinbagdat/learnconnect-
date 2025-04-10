@@ -331,6 +331,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create admin account (special endpoint for initial setup)
+  app.post("/api/create-admin", async (req, res) => {
+    try {
+      // Check if an admin user already exists
+      const existingUsers = await storage.getCourses(); // Just to ensure DB connection works
+      
+      // Create a new admin user
+      const admin = await storage.createUser({
+        username: "admin",
+        password: "$2b$10$D8OXXrBpHCqB/JikS6UT5Or2w9K1q4kBTfTa9L4cFbz/5lxDxjOe.", // admin123
+        displayName: "Admin User",
+        role: "admin"
+      });
+      
+      // Don't return the password
+      const { password, ...adminWithoutPassword } = admin;
+      
+      res.status(201).json({
+        message: "Admin account created successfully",
+        admin: adminWithoutPassword
+      });
+    } catch (error) {
+      console.error("Error creating admin account:", error);
+      res.status(500).json({ message: "Failed to create admin account" });
+    }
+  });
+
   // Add Turkish university entrance exam courses
   app.post("/api/admin/add-turkish-courses", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {

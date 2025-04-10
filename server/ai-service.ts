@@ -7,7 +7,7 @@ import { storage } from "./storage";
 type InsertCourse = z.infer<typeof insertCourseSchema>;
 
 // Initialize the OpenAI client
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// Use gpt-3.5-turbo model which is widely available with most API keys
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -71,7 +71,7 @@ export async function generateCourse(
   
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: COURSE_GENERATION_SYSTEM_PROMPT },
         { role: "user", content: prompt }
@@ -145,7 +145,7 @@ export async function generateCourseRecommendations(
   
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [
         { 
           role: "system", 

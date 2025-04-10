@@ -33,7 +33,7 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || "edulearn-platform-dev-secret",
     resave: true,
     saveUninitialized: true,
-    store: storage.sessionStore,
+    // Using a memory store for development to avoid database connection issues
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,

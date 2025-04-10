@@ -8,25 +8,25 @@ export function MobileNav() {
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 z-10">
       <div className="flex items-center justify-around py-2">
         <Link href="/">
-          <a className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
+          <div className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
             location === "/" ? "text-primary" : "text-neutral-500"
           }`}>
             <Home className="h-6 w-6" />
             <span className="text-xs">Home</span>
-          </a>
+          </div>
         </Link>
         
         <Link href="/courses">
-          <a className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
+          <div className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
             location === "/courses" ? "text-primary" : "text-neutral-500"
           }`}>
             <BookOpen className="h-6 w-6" />
             <span className="text-xs">Courses</span>
-          </a>
+          </div>
         </Link>
         
         <Link href="/assignments">
-          <a className={`inline-flex flex-col items-center justify-center px-3 py-1 relative ${
+          <div className={`inline-flex flex-col items-center justify-center px-3 py-1 relative ${
             location === "/assignments" ? "text-primary" : "text-neutral-500"
           }`}>
             <FileText className="h-6 w-6" />
@@ -35,16 +35,16 @@ export function MobileNav() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
             </span>
-          </a>
+          </div>
         </Link>
         
         <Link href="/profile">
-          <a className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
+          <div className={`inline-flex flex-col items-center justify-center px-3 py-1 ${
             location === "/profile" ? "text-primary" : "text-neutral-500"
           }`}>
             <User className="h-6 w-6" />
             <span className="text-xs">Profile</span>
-          </a>
+          </div>
         </Link>
       </div>
     </div>

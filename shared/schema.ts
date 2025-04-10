@@ -105,6 +105,29 @@ export const courseRecommendations = pgTable("course_recommendations", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const learningPaths = pgTable("learning_paths", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  goal: text("goal").notNull(),
+  estimatedDuration: integer("estimated_duration_hours"),
+  progress: integer("progress").notNull().default(0),
+  isAiGenerated: boolean("is_ai_generated").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const learningPathSteps = pgTable("learning_path_steps", {
+  id: serial("id").primaryKey(),
+  pathId: integer("path_id").notNull(),
+  courseId: integer("course_id").notNull(),
+  order: integer("order").notNull(),
+  required: boolean("required").default(true),
+  completed: boolean("completed").default(false),
+  notes: text("notes"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -124,6 +147,8 @@ export const insertUserAssignmentSchema = createInsertSchema(userAssignments).om
 export const insertBadgeSchema = createInsertSchema(badges).omit({ id: true });
 export const insertUserBadgeSchema = createInsertSchema(userBadges).omit({ id: true, earnedAt: true });
 export const insertCourseRecommendationSchema = createInsertSchema(courseRecommendations).omit({ id: true, createdAt: true });
+export const insertLearningPathSchema = createInsertSchema(learningPaths).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertLearningPathStepSchema = createInsertSchema(learningPathSteps).omit({ id: true });
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -138,3 +163,7 @@ export type UserAssignment = typeof userAssignments.$inferSelect;
 export type Badge = typeof badges.$inferSelect;
 export type UserBadge = typeof userBadges.$inferSelect;
 export type CourseRecommendation = typeof courseRecommendations.$inferSelect;
+export type LearningPath = typeof learningPaths.$inferSelect;
+export type LearningPathStep = typeof learningPathSteps.$inferSelect;
+export type InsertLearningPath = z.infer<typeof insertLearningPathSchema>;
+export type InsertLearningPathStep = z.infer<typeof insertLearningPathStepSchema>;

@@ -11,6 +11,10 @@ import {
   type Badge,
   type UserBadge,
   type CourseRecommendation,
+  type LearningPath,
+  type LearningPathStep,
+  type InsertLearningPath,
+  type InsertLearningPathStep,
   insertCourseSchema,
   insertModuleSchema,
   insertLessonSchema,
@@ -21,6 +25,8 @@ import {
   insertBadgeSchema,
   insertUserBadgeSchema,
   insertCourseRecommendationSchema,
+  insertLearningPathSchema,
+  insertLearningPathStepSchema,
   users,
   courses,
   modules,
@@ -31,7 +37,9 @@ import {
   userAssignments,
   badges,
   userBadges,
-  courseRecommendations
+  courseRecommendations,
+  learningPaths,
+  learningPathSteps
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -103,6 +111,15 @@ export interface IStorage {
   // Course recommendation operations
   getCourseRecommendations(userId: number): Promise<CourseRecommendation | undefined>;
   saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation>;
+  
+  // Learning path operations
+  getLearningPaths(userId: number): Promise<LearningPath[]>;
+  getLearningPath(id: number): Promise<(LearningPath & { steps: (LearningPathStep & { course: Course })[] }) | undefined>;
+  createLearningPath(path: InsertLearningPath): Promise<LearningPath>;
+  addLearningPathStep(step: InsertLearningPathStep): Promise<LearningPathStep>;
+  updateLearningPathProgress(id: number, progress: number): Promise<LearningPath | undefined>;
+  markStepAsCompleted(id: number): Promise<LearningPathStep | undefined>;
+  generateLearningPath(userId: number, goal: string): Promise<LearningPath>;
   
   // Session store
   sessionStore: SessionStore;
@@ -535,6 +552,109 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return newRecommendations;
+  }
+
+  // Learning path operations
+  async getLearningPaths(userId: number): Promise<LearningPath[]> {
+    return db
+      .select()
+      .from(learningPaths)
+      .where(eq(learningPaths.userId, userId))
+      .orderBy(desc(learningPaths.createdAt));
+  }
+
+  async getLearningPath(id: number): Promise<(LearningPath & { steps: (LearningPathStep & { course: Course })[] }) | undefined> {
+    const [path] = await db
+      .select()
+      .from(learningPaths)
+      .where(eq(learningPaths.id, id));
+
+    if (!path) {
+      return undefined;
+    }
+
+    const stepsResult = await db
+      .select({
+        step: learningPathSteps,
+        course: courses
+      })
+      .from(learningPathSteps)
+      .leftJoin(courses, eq(learningPathSteps.courseId, courses.id))
+      .where(eq(learningPathSteps.pathId, id))
+      .orderBy(learningPathSteps.order);
+
+    const steps = stepsResult.map(({ step, course }) => ({
+      ...step,
+      course: course as Course
+    })) as (LearningPathStep & { course: Course })[];
+
+    return {
+      ...path,
+      steps
+    };
+  }
+
+  async createLearningPath(path: InsertLearningPath): Promise<LearningPath> {
+    const [newPath] = await db
+      .insert(learningPaths)
+      .values({
+        ...path,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newPath;
+  }
+
+  async addLearningPathStep(step: InsertLearningPathStep): Promise<LearningPathStep> {
+    const [newStep] = await db
+      .insert(learningPathSteps)
+      .values(step)
+      .returning();
+    
+    return newStep;
+  }
+
+  async updateLearningPathProgress(id: number, progress: number): Promise<LearningPath | undefined> {
+    const [updatedPath] = await db
+      .update(learningPaths)
+      .set({ 
+        progress,
+        updatedAt: new Date()
+      })
+      .where(eq(learningPaths.id, id))
+      .returning();
+    
+    return updatedPath;
+  }
+
+  async markStepAsCompleted(id: number): Promise<LearningPathStep | undefined> {
+    const [updatedStep] = await db
+      .update(learningPathSteps)
+      .set({ completed: true })
+      .where(eq(learningPathSteps.id, id))
+      .returning();
+    
+    return updatedStep;
+  }
+
+  async generateLearningPath(userId: number, goal: string): Promise<LearningPath> {
+    // We'll implement the AI generation logic in the server routes
+    // This is just a placeholder that creates an empty learning path
+    const [newPath] = await db
+      .insert(learningPaths)
+      .values({
+        userId,
+        title: `Path toward ${goal}`,
+        description: "AI-generated learning path",
+        goal,
+        progress: 0,
+        isAiGenerated: true,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newPath;
   }
 }
 

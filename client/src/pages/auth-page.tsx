@@ -9,7 +9,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Book, Laptop, Users } from "lucide-react";
+import { Book, Laptop, Users, Globe } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -28,6 +30,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const { t } = useLanguage();
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

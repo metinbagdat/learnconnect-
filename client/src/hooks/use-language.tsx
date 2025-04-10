@@ -226,17 +226,30 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 // Provider component
 export function LanguageProvider({ children }: { children: ReactNode }) {
   // Get initially saved language or use 'en' as default
-  const savedLanguage = localStorage.getItem('language') as Language || 'en';
-  const [language, setLanguage] = useState<Language>(savedLanguage);
+  const getSavedLanguage = (): Language => {
+    try {
+      const saved = localStorage.getItem('language');
+      return (saved as Language) || 'en';
+    } catch (error) {
+      // In case of error (e.g., SSR or localStorage not available)
+      return 'en';
+    }
+  };
+  
+  const [language, setLanguage] = useState<Language>(getSavedLanguage());
 
   // Update localStorage when language changes
   useEffect(() => {
-    localStorage.setItem('language', language);
+    try {
+      localStorage.setItem('language', language);
+    } catch (error) {
+      console.error('Could not save language preference:', error);
+    }
   }, [language]);
 
   // Translation function
   const t = (key: keyof typeof translations.en): string => {
-    return translations[language][key] || translations.en[key] || key;
+    return (translations[language] as Record<string, string>)[key] || translations.en[key] || key;
   };
 
   const value = { language, setLanguage, t };

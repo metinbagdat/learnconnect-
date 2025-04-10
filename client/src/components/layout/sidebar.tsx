@@ -28,14 +28,14 @@ interface SidebarLinkProps {
 
 const SidebarLink = ({ href, icon, children, isActive }: SidebarLinkProps) => (
   <Link href={href}>
-    <a className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+    <div className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
       isActive 
         ? "bg-primary-50 text-primary" 
         : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
     }`}>
       {icon}
       <span className="ml-3">{children}</span>
-    </a>
+    </div>
   </Link>
 );
 

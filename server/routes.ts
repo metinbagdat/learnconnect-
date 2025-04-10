@@ -263,9 +263,12 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       res.json({ content });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating lesson content:", error);
-      res.status(500).json({ message: "Failed to generate lesson content", error: error.message });
+      res.status(500).json({ 
+        message: "Failed to generate lesson content", 
+        error: error.message || "Unknown error" 
+      });
     }
   });
   

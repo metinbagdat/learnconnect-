@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { ProgressCircle } from "./progress-circle";
 import { Course, UserCourse } from "@shared/schema";
+import { useLocation } from "wouter";
 
 interface CourseCardProps {
   course: Course;
@@ -22,6 +23,7 @@ export function CourseCard({
   onEnroll,
   onContinue
 }: CourseCardProps) {
+  const [, navigate] = useLocation();
   const {
     title,
     description,
@@ -52,8 +54,20 @@ export function CourseCard({
   
   const categoryColor = getCategoryColor(category);
   
+  // Handle clicking on the course card
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on buttons
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    navigate(`/courses/${course.id}`);
+  };
+  
   return (
-    <Card className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+    <Card 
+      className="overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg cursor-pointer" 
+      onClick={handleCardClick}
+    >
       <div className="relative h-40 overflow-hidden">
         <img 
           className="w-full h-full object-cover" 
@@ -101,7 +115,14 @@ export function CourseCard({
           
           {showContinue && (
             <Button 
-              onClick={onContinue}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click
+                if (onContinue) {
+                  onContinue();
+                } else {
+                  navigate(`/courses/${course.id}`);
+                }
+              }}
               size="sm"
             >
               Continue
@@ -110,7 +131,14 @@ export function CourseCard({
           
           {showEnroll && (
             <Button 
-              onClick={onEnroll}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent card click
+                if (onEnroll) {
+                  onEnroll();
+                } else {
+                  navigate(`/courses/${course.id}`);
+                }
+              }}
               size="sm"
             >
               Enroll

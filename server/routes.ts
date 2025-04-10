@@ -8,10 +8,16 @@ import { generateCourse, saveGeneratedCourse, generateCourseRecommendations } fr
 import * as fs from "fs";
 import * as path from "path";
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
 // Initialize the OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Initialize the Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -196,8 +202,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let content = "";
       
       try {
-        // Try using OpenAI API if available
-        if (process.env.OPENAI_API_KEY) {
+        // Try Anthropic Claude first (higher quality content)
+        if (process.env.ANTHROPIC_API_KEY) {
+          try {
+            // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+            const message = await anthropic.messages.create({
+              model: "claude-3-7-sonnet-20250219",
+              max_tokens: 2000,
+              system: "You are an expert educational content creator with deep knowledge across various subjects. Create detailed, accurate, and engaging lesson content that includes explanations, examples, and practice activities. Format the content in Markdown.",
+              messages: [
+                {
+                  role: "user",
+                  content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". 
+                  
+Format the content with these sections:
+1. Introduction
+2. Core Concepts
+3. Examples
+4. Practice Activities
+5. Summary
+
+Use markdown formatting. Be comprehensive and educational.`
+                }
+              ],
+            });
+            
+            content = message.content[0].text || "";
+            console.log("Generated content with Anthropic Claude");
+          } catch (claudeError) {
+            console.error("Error generating content with Anthropic Claude:", claudeError);
+            throw claudeError; // Fall through to OpenAI
+          }
+        } 
+        // Try using OpenAI API if Anthropic is not available or failed
+        else if (process.env.OPENAI_API_KEY) {
           const generatedContent = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [
@@ -207,18 +245,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
               },
               { 
                 role: "user", 
-                content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". Include introduction, core concepts, examples, and practice activities.` 
+                content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". 
+                
+Format the content with these sections:
+1. Introduction
+2. Core Concepts
+3. Examples
+4. Practice Activities
+5. Summary
+
+Use markdown formatting. Be comprehensive and educational.` 
               }
             ],
             temperature: 0.7,
           });
           
           content = generatedContent.choices[0].message.content || "";
+          console.log("Generated content with OpenAI");
         } else {
-          throw new Error("OpenAI API key not available");
+          throw new Error("No AI provider API keys available");
         }
       } catch (error) {
-        console.error("Error generating content with OpenAI:", error);
+        console.error("Error generating content with AI providers:", error);
         
         // Fallback content generation
         content = `

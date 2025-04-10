@@ -334,24 +334,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create admin account (special endpoint for initial setup)
   app.post("/api/create-admin", async (req, res) => {
     try {
-      // Check if an admin user already exists
-      const existingUsers = await storage.getCourses(); // Just to ensure DB connection works
+      // Import the admin creation function
+      const { default: createAdminAccount } = await import("./create-admin");
       
-      // Create a new admin user
-      const admin = await storage.createUser({
-        username: "admin",
-        password: "$2b$10$D8OXXrBpHCqB/JikS6UT5Or2w9K1q4kBTfTa9L4cFbz/5lxDxjOe.", // admin123
-        displayName: "Admin User",
-        role: "admin"
-      });
+      // Create an admin with default credentials
+      const result = await createAdminAccount("admin", "admin123", "Admin User");
       
-      // Don't return the password
-      const { password, ...adminWithoutPassword } = admin;
-      
-      res.status(201).json({
-        message: "Admin account created successfully",
-        admin: adminWithoutPassword
-      });
+      if (result.success) {
+        res.status(201).json(result);
+      } else {
+        res.status(400).json(result);
+      }
     } catch (error) {
       console.error("Error creating admin account:", error);
       res.status(500).json({ message: "Failed to create admin account" });

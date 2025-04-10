@@ -5,6 +5,8 @@ import { setupAuth } from "./auth";
 import { insertCourseSchema, insertUserCourseSchema, insertAssignmentSchema, insertModuleSchema, insertLessonSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations } from "./ai-service";
+import * as fs from "fs";
+import * as path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -326,6 +328,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching module lessons:", error);
       res.status(500).json({ message: "Failed to fetch module lessons" });
+    }
+  });
+  
+  // Add Turkish university entrance exam courses
+  app.post("/api/admin/add-turkish-courses", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin users can access this endpoint" });
+    }
+    
+    try {
+      // Import the add-turkish-courses module dynamically
+      const turkishCoursesModule = await import("./add-turkish-courses");
+      
+      // The default export should be a function that adds the courses
+      await turkishCoursesModule.default();
+      
+      res.json({ message: "Turkish university entrance exam courses added successfully" });
+    } catch (error) {
+      console.error("Error adding Turkish courses:", error);
+      res.status(500).json({ message: "Failed to add Turkish courses" });
     }
   });
 

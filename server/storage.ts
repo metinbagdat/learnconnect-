@@ -2,21 +2,36 @@ import {
   type User, 
   type InsertUser, 
   type Course,
+  type Module,
+  type Lesson,
   type UserCourse,
+  type UserLesson,
   type Assignment,
+  type UserAssignment,
   type Badge,
   type UserBadge,
+  type CourseRecommendation,
   insertCourseSchema,
+  insertModuleSchema,
+  insertLessonSchema,
   insertUserCourseSchema,
+  insertUserLessonSchema,
   insertAssignmentSchema,
+  insertUserAssignmentSchema,
   insertBadgeSchema,
   insertUserBadgeSchema,
+  insertCourseRecommendationSchema,
   users,
   courses,
+  modules,
+  lessons,
   userCourses,
+  userLessons,
   assignments,
+  userAssignments,
   badges,
-  userBadges
+  userBadges,
+  courseRecommendations
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -27,10 +42,15 @@ import { pool } from "./db";
 
 // Define insert types based on the schemas
 type InsertCourse = z.infer<typeof insertCourseSchema>;
+type InsertModule = z.infer<typeof insertModuleSchema>;
+type InsertLesson = z.infer<typeof insertLessonSchema>;
 type InsertUserCourse = z.infer<typeof insertUserCourseSchema>;
+type InsertUserLesson = z.infer<typeof insertUserLessonSchema>;
 type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
+type InsertUserAssignment = z.infer<typeof insertUserAssignmentSchema>;
 type InsertBadge = z.infer<typeof insertBadgeSchema>;
 type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
+type InsertCourseRecommendation = z.infer<typeof insertCourseRecommendationSchema>;
 
 const PostgresSessionStore = connectPg(session);
 
@@ -44,17 +64,31 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
+  updateUserInterests(userId: number, interests: string[]): Promise<User | undefined>;
   
   // Course operations
   getCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
   createCourse(course: InsertCourse): Promise<Course>;
   updateCourse(id: number, data: Partial<Course>): Promise<Course | undefined>;
+  getAiGeneratedCourses(): Promise<Course[]>;
+  
+  // Module operations
+  getModules(courseId: number): Promise<Module[]>;
+  createModule(module: InsertModule): Promise<Module>;
+  
+  // Lesson operations
+  getLessons(moduleId: number): Promise<Lesson[]>;
+  createLesson(lesson: InsertLesson): Promise<Lesson>;
   
   // UserCourse operations
   getUserCourses(userId: number): Promise<(UserCourse & { course: Course })[]>;
   enrollUserInCourse(userCourse: InsertUserCourse): Promise<UserCourse>;
   updateUserCourseProgress(id: number, progress: number): Promise<UserCourse | undefined>;
+  
+  // UserLesson operations
+  getUserLessons(userId: number): Promise<(UserLesson & { lesson: Lesson })[]>;
+  updateUserLessonProgress(userId: number, lessonId: number, progress: number): Promise<UserLesson>;
   
   // Assignment operations
   getAssignments(): Promise<Assignment[]>;
@@ -65,6 +99,10 @@ export interface IStorage {
   getBadges(): Promise<Badge[]>;
   getUserBadges(userId: number): Promise<(UserBadge & { badge: Badge })[]>;
   awardBadgeToUser(userBadge: InsertUserBadge): Promise<UserBadge>;
+  
+  // Course recommendation operations
+  getCourseRecommendations(userId: number): Promise<CourseRecommendation | undefined>;
+  saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation>;
   
   // Session store
   sessionStore: SessionStore;
@@ -363,6 +401,140 @@ export class DatabaseStorage implements IStorage {
       .values(userBadge)
       .returning();
     return newUserBadge;
+  }
+  
+  // User Interest operations
+  async updateUserInterests(userId: number, interests: string[]): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ interests })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  // AI Generated Courses
+  async getAiGeneratedCourses(): Promise<Course[]> {
+    return db
+      .select()
+      .from(courses)
+      .where(eq(courses.isAiGenerated, true))
+      .orderBy(desc(courses.createdAt));
+  }
+
+  // Module operations
+  async getModules(courseId: number): Promise<Module[]> {
+    return db
+      .select()
+      .from(modules)
+      .where(eq(modules.courseId, courseId))
+      .orderBy(modules.order);
+  }
+
+  async createModule(module: InsertModule): Promise<Module> {
+    const [newModule] = await db
+      .insert(modules)
+      .values(module)
+      .returning();
+    return newModule;
+  }
+
+  // Lesson operations
+  async getLessons(moduleId: number): Promise<Lesson[]> {
+    return db
+      .select()
+      .from(lessons)
+      .where(eq(lessons.moduleId, moduleId))
+      .orderBy(lessons.order);
+  }
+
+  async createLesson(lesson: InsertLesson): Promise<Lesson> {
+    const [newLesson] = await db
+      .insert(lessons)
+      .values(lesson)
+      .returning();
+    return newLesson;
+  }
+
+  // UserLesson operations
+  async getUserLessons(userId: number): Promise<(UserLesson & { lesson: Lesson })[]> {
+    const userLessonsResult = await db
+      .select({
+        userLesson: userLessons,
+        lesson: lessons
+      })
+      .from(userLessons)
+      .leftJoin(lessons, eq(userLessons.lessonId, lessons.id))
+      .where(eq(userLessons.userId, userId));
+    
+    return userLessonsResult.map(({ userLesson, lesson }) => ({
+      ...userLesson,
+      lesson: lesson as Lesson
+    })) as (UserLesson & { lesson: Lesson })[];
+  }
+
+  async updateUserLessonProgress(userId: number, lessonId: number, progress: number): Promise<UserLesson> {
+    // Check if the user-lesson record exists
+    const [existingUserLesson] = await db
+      .select()
+      .from(userLessons)
+      .where(and(
+        eq(userLessons.userId, userId),
+        eq(userLessons.lessonId, lessonId)
+      ));
+    
+    if (existingUserLesson) {
+      // Update existing record
+      const completed = progress >= 100;
+      const [updatedUserLesson] = await db
+        .update(userLessons)
+        .set({ 
+          progress, 
+          completed,
+          lastAccessedAt: new Date()
+        })
+        .where(eq(userLessons.id, existingUserLesson.id))
+        .returning();
+      return updatedUserLesson;
+    } else {
+      // Create new record
+      const [newUserLesson] = await db
+        .insert(userLessons)
+        .values({
+          userId,
+          lessonId,
+          progress,
+          completed: progress >= 100,
+          lastAccessedAt: new Date()
+        })
+        .returning();
+      return newUserLesson;
+    }
+  }
+
+  // Course recommendation operations
+  async getCourseRecommendations(userId: number): Promise<CourseRecommendation | undefined> {
+    const [recommendations] = await db
+      .select()
+      .from(courseRecommendations)
+      .where(eq(courseRecommendations.userId, userId))
+      .orderBy(desc(courseRecommendations.createdAt))
+      .limit(1);
+    
+    return recommendations;
+  }
+
+  async saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation> {
+    const [newRecommendations] = await db
+      .insert(courseRecommendations)
+      .values({
+        userId,
+        recommendations,
+        createdAt: new Date()
+      })
+      .returning();
+    
+    return newRecommendations;
   }
 }
 

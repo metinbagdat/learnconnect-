@@ -331,28 +331,28 @@ export async function generateLearningPath(
     }
     
     // If we reach here, both API calls failed or returned invalid data
-    throw new Error("Failed to generate learning path with AI services");
+    console.log("API calls failed, using fallback learning path generator");
     
   } catch (error) {
     console.error("Error generating learning path:", error);
-    
-    // Create a fallback plan if AI generation fails
-    const fallbackPath: GeneratedLearningPath = {
-      title: `Learning Path: ${goal}`,
-      description: `A carefully structured learning journey to help you achieve your goal: ${goal}. This path has been curated based on your interests and learning objectives.`,
-      goal,
-      estimatedDuration: 12, // Default to 12 weeks
-      steps: availableCourses.slice(0, 5).map((course, index) => ({
-        courseId: course.id,
-        courseName: course.title,
-        order: index + 1,
-        required: index < 3, // First 3 courses required
-        notes: `This course provides essential knowledge for your goal of ${goal}.`
-      }))
-    };
-    
-    return fallbackPath;
   }
+  
+  // Always return a fallback plan (either if APIs aren't available or if they fail)
+  const fallbackPath: GeneratedLearningPath = {
+    title: `Learning Path: ${goal}`,
+    description: `A carefully structured learning journey to help you achieve your goal: ${goal}. This path has been curated based on your interests and learning objectives.`,
+    goal,
+    estimatedDuration: 12, // Default to 12 weeks
+    steps: availableCourses.slice(0, 5).map((course, index) => ({
+      courseId: course.id,
+      courseName: course.title,
+      order: index + 1,
+      required: index < 3, // First 3 courses required
+      notes: `This course provides essential knowledge for your goal of ${goal}.`
+    }))
+  };
+  
+  return fallbackPath;
 }
 
 /**

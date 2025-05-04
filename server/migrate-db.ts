@@ -99,6 +99,35 @@ async function runMigration() {
       );
     `);
     
+    // Create learning_paths table if it doesn't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS learning_paths (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        goal TEXT NOT NULL,
+        estimated_duration INTEGER,
+        progress INTEGER DEFAULT 0,
+        is_ai_generated BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    
+    // Create learning_path_steps table if it doesn't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS learning_path_steps (
+        id SERIAL PRIMARY KEY,
+        path_id INTEGER NOT NULL,
+        course_id INTEGER NOT NULL,
+        "order" INTEGER NOT NULL,
+        required BOOLEAN DEFAULT FALSE,
+        notes TEXT,
+        completed BOOLEAN DEFAULT FALSE
+      );
+    `);
+    
     console.log("Database migration completed successfully!");
   } catch (error) {
     console.error("Error during migration:", error);

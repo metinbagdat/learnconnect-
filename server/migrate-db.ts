@@ -107,7 +107,7 @@ async function runMigration() {
         title TEXT NOT NULL,
         description TEXT,
         goal TEXT NOT NULL,
-        estimated_duration INTEGER,
+        estimated_duration_hours INTEGER,
         progress INTEGER DEFAULT 0,
         is_ai_generated BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW(),

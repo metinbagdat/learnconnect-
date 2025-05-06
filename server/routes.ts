@@ -676,6 +676,198 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Analytics routes
+  
+  // Log user activity
+  app.post("/api/analytics/activity", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const activity = {
+        userId: req.user.id,
+        action: req.body.action,
+        resourceType: req.body.resourceType,
+        resourceId: req.body.resourceId,
+        metadata: req.body.metadata || {},
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
+      };
+      
+      const result = await storage.logUserActivity(activity);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error logging user activity:", error);
+      res.status(500).json({ message: "Failed to log user activity" });
+    }
+  });
+  
+  // Get user activities
+  app.get("/api/analytics/user-activities", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const activities = await storage.getUserActivities(req.user.id, limit);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error getting user activities:", error);
+      res.status(500).json({ message: "Failed to get user activities" });
+    }
+  });
+  
+  // Get user activities by timeframe
+  app.get("/api/analytics/user-activities/timeframe", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to last 30 days
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      
+      const activities = await storage.getUserActivityByTimeframe(req.user.id, startDate, endDate);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error getting user activities by timeframe:", error);
+      res.status(500).json({ message: "Failed to get user activities by timeframe" });
+    }
+  });
+  
+  // Get course analytics
+  app.get("/api/analytics/courses/:courseId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Only allow instructors and admins to access course analytics
+    if (!["instructor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const analytics = await storage.getCourseAnalytics(courseId);
+      
+      if (!analytics) {
+        return res.status(404).json({ message: "Course analytics not found" });
+      }
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error getting course analytics:", error);
+      res.status(500).json({ message: "Failed to get course analytics" });
+    }
+  });
+  
+  // Update course analytics
+  app.patch("/api/analytics/courses/:courseId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Only allow instructors and admins to update course analytics
+    if (!["instructor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const data = req.body;
+      
+      const updatedAnalytics = await storage.updateCourseAnalytics(courseId, data);
+      res.json(updatedAnalytics);
+    } catch (error) {
+      console.error("Error updating course analytics:", error);
+      res.status(500).json({ message: "Failed to update course analytics" });
+    }
+  });
+  
+  // Get popular courses
+  app.get("/api/analytics/popular-courses", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const popularCourses = await storage.getPopularCourses(limit);
+      res.json(popularCourses);
+    } catch (error) {
+      console.error("Error getting popular courses:", error);
+      res.status(500).json({ message: "Failed to get popular courses" });
+    }
+  });
+  
+  // Get user progress over time
+  app.get("/api/analytics/user-progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // Default to last 90 days
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+      
+      const progress = await storage.getUserProgressOverTime(req.user.id, startDate, endDate);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error getting user progress over time:", error);
+      res.status(500).json({ message: "Failed to get user progress over time" });
+    }
+  });
+  
+  // Create user progress snapshot
+  app.post("/api/analytics/user-progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      // Only allow creating a snapshot for the authenticated user
+      const snapshot = {
+        userId: req.user.id,
+        snapshotDate: req.body.snapshotDate ? new Date(req.body.snapshotDate) : new Date(),
+        coursesEnrolled: req.body.coursesEnrolled || 0,
+        coursesCompleted: req.body.coursesCompleted || 0,
+        lessonsCompleted: req.body.lessonsCompleted || 0,
+        assignmentsCompleted: req.body.assignmentsCompleted || 0,
+        totalPoints: req.body.totalPoints || 0,
+        badgesEarned: req.body.badgesEarned || 0,
+        averageGrade: req.body.averageGrade
+      };
+      
+      const result = await storage.createUserProgressSnapshot(snapshot);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error creating user progress snapshot:", error);
+      res.status(500).json({ message: "Failed to create user progress snapshot" });
+    }
+  });
+  
+  // Get platform stats (admin only)
+  app.get("/api/analytics/platform-stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Only allow admins to access platform stats
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    
+    try {
+      const stats = await storage.getPlatformStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting platform stats:", error);
+      res.status(500).json({ message: "Failed to get platform stats" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

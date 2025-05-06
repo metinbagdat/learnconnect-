@@ -25,6 +25,52 @@ import { format, subDays } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 
+// Define types for the analytics data
+interface UserActivity {
+  id: number;
+  userId: number;
+  action: string;
+  resourceType?: string;
+  resourceId?: number;
+  details?: string;
+  createdAt: string;
+}
+
+interface UserProgressSnapshot {
+  id: number;
+  userId: number;
+  snapshotDate: string;
+  coursesEnrolled: number;
+  coursesCompleted: number;
+  lessonsCompleted: number;
+  assignmentsCompleted: number;
+  totalPoints: number;
+  badgesEarned: number;
+  averageGrade: number;
+}
+
+interface CourseAnalytic {
+  id: number;
+  courseId: number;
+  totalEnrollments: number;
+  completionRate: number;
+  averageRating: number;
+  averageCompletionTime?: number;
+  course: {
+    id: number;
+    title: string;
+    category: string;
+  };
+}
+
+interface PlatformStats {
+  totalUsers: number;
+  totalCourses: number;
+  totalLessonsCompleted: number;
+  totalAssignmentsCompleted: number;
+  averageGrade: number;
+}
+
 // Define color schemes
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A020F0", "#3CB371", "#FF6347"];
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -46,18 +92,18 @@ export default function AnalyticsDashboard() {
   });
   
   // Platform-level statistics (admin only)
-  const { data: platformStats, isLoading: loadingPlatformStats } = useQuery({
+  const { data: platformStats, isLoading: loadingPlatformStats } = useQuery<PlatformStats>({
     queryKey: ["/api/analytics/platform-stats"],
     enabled: user?.role === "admin", // Only run this query for admins
   });
   
   // User activity data
-  const { data: userActivities, isLoading: loadingUserActivities } = useQuery({
+  const { data: userActivities, isLoading: loadingUserActivities } = useQuery<UserActivity[]>({
     queryKey: ["/api/analytics/user-activities"],
   });
   
   // User progress over time
-  const { data: userProgress, isLoading: loadingUserProgress } = useQuery({
+  const { data: userProgress, isLoading: loadingUserProgress } = useQuery<UserProgressSnapshot[]>({
     queryKey: [
       "/api/analytics/user-progress", 
       {
@@ -69,7 +115,7 @@ export default function AnalyticsDashboard() {
   });
   
   // Popular courses data
-  const { data: popularCourses, isLoading: loadingPopularCourses } = useQuery({
+  const { data: popularCourses, isLoading: loadingPopularCourses } = useQuery<CourseAnalytic[]>({
     queryKey: ["/api/analytics/popular-courses"]
   });
   

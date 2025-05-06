@@ -122,18 +122,18 @@ export default function AnalyticsDashboard() {
   // Process activity data for visualization
   const activityData = userActivities ? 
     Object.entries(
-      userActivities.reduce((acc: Record<string, number>, item: any) => {
+      userActivities.reduce((acc: Record<string, number>, item: UserActivity) => {
         const action = item.action;
         if (!acc[action]) acc[action] = 0;
         acc[action]++;
         return acc;
-      }, {})
+      }, {} as Record<string, number>)
     ).map(([name, value]) => ({ name, value })) 
     : [];
   
   // Format progress data for line chart
   const progressData = userProgress ? 
-    userProgress.map((snapshot: any) => ({
+    userProgress.map((snapshot: UserProgressSnapshot) => ({
       date: format(new Date(snapshot.snapshotDate), 'MMM dd'),
       coursesCompleted: snapshot.coursesCompleted,
       lessonsCompleted: snapshot.lessonsCompleted,
@@ -144,7 +144,7 @@ export default function AnalyticsDashboard() {
   
   // Format popular courses for bar chart
   const coursesData = popularCourses ? 
-    popularCourses.map((item: any) => ({
+    popularCourses.map((item: CourseAnalytic) => ({
       name: item.course.title.length > 15 ? 
         item.course.title.substring(0, 15) + '...' : 
         item.course.title,
@@ -388,7 +388,7 @@ export default function AnalyticsDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {userActivities.map((activity: any, index: number) => (
+                      {userActivities.map((activity: UserActivity, index: number) => (
                         <tr key={index} className="border-b">
                           <td className="py-2 px-4 capitalize">
                             {activity.action.replace(/_/g, ' ')}
@@ -666,7 +666,7 @@ export default function AnalyticsDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {popularCourses.map((item: any, index: number) => (
+                      {popularCourses.map((item: CourseAnalytic, index: number) => (
                         <tr key={index} className="border-b">
                           <td className="py-2 px-4 font-medium">{item.course.title}</td>
                           <td className="py-2 px-4">{item.totalEnrollments}</td>

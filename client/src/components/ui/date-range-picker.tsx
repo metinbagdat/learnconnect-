@@ -14,7 +14,7 @@ import {
 
 interface DatePickerWithRangeProps {
   date: DateRange | undefined;
-  setDate: (date: DateRange) => void;
+  setDate: React.Dispatch<React.SetStateAction<DateRange>>;
   className?: string;
 }
 
@@ -56,9 +56,9 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={(selectedDate) => {
-              if (selectedDate) {
-                setDate(selectedDate);
+            onSelect={(newDate) => {
+              if (newDate) {
+                setDate(newDate);
               }
             }}
             numberOfMonths={2}

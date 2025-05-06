@@ -808,21 +808,27 @@ export class DatabaseStorage implements IStorage {
       if (date) {
         // Convert Date to string in YYYY-MM-DD format
         const dateStr = date.toISOString().split('T')[0];
-        const [snapshot] = await db.select()
+        
+        // Directly execute the query without chaining
+        const result = await db
+          .select()
           .from(userProgressSnapshots)
           .where(and(
             eq(userProgressSnapshots.userId, userId),
             eq(userProgressSnapshots.snapshotDate, dateStr)
           ));
-        return snapshot;
+          
+        return result[0];
       } else {
         // Get the most recent snapshot if no date specified
-        const [snapshot] = await db.select()
+        const result = await db
+          .select()
           .from(userProgressSnapshots)
           .where(eq(userProgressSnapshots.userId, userId))
           .orderBy(desc(userProgressSnapshots.snapshotDate))
           .limit(1);
-        return snapshot;
+          
+        return result[0];
       }
     } catch (error) {
       console.error("Error getting user progress snapshot:", error);

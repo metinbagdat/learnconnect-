@@ -38,10 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      // Store user in localStorage as fallback mechanism
-      localStorage.setItem('edulearn_user', JSON.stringify(user));
-      
+      // Update query cache with user data
       queryClient.setQueryData(["/api/user"], user);
+      
       // Force cache invalidation of other queries after login
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
       queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
@@ -51,9 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${user.displayName}`,
       });
-      
-      // Manually redirect to main dashboard page (protected route)
-      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({
@@ -70,10 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      // Store user in localStorage as fallback mechanism
-      localStorage.setItem('edulearn_user', JSON.stringify(user));
-      
+      // Update query cache with user data
       queryClient.setQueryData(["/api/user"], user);
+      
       // Force cache invalidation of other queries after registration
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
       queryClient.invalidateQueries({ queryKey: ["/api/assignments"] });
@@ -82,9 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome to EduLearn, ${user.displayName}`,
       });
-      
-      // Manually redirect to main dashboard page (protected route)
-      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({
@@ -100,9 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      // Remove user from local storage
-      localStorage.removeItem('edulearn_user');
-      
       // Clear query cache
       queryClient.setQueryData(["/api/user"], null);
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
@@ -112,9 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Logged out",
         description: "You have been successfully logged out",
       });
-      
-      // Redirect to auth page
-      window.location.href = '/auth';
     },
     onError: (error: Error) => {
       toast({

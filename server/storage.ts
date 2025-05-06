@@ -805,30 +805,25 @@ export class DatabaseStorage implements IStorage {
   // User progress operations
   async getUserProgressSnapshot(userId: number, date?: Date): Promise<UserProgressSnapshot | undefined> {
     try {
-      let query = db.select()
-        .from(userProgressSnapshots)
-        .where(eq(userProgressSnapshots.userId, userId));
-      
       if (date) {
         // Convert Date to string in YYYY-MM-DD format
         const dateStr = date.toISOString().split('T')[0];
-        query = db.select()
+        const [snapshot] = await db.select()
           .from(userProgressSnapshots)
           .where(and(
             eq(userProgressSnapshots.userId, userId),
             eq(userProgressSnapshots.snapshotDate, dateStr)
           ));
+        return snapshot;
       } else {
         // Get the most recent snapshot if no date specified
-        query = db.select()
+        const [snapshot] = await db.select()
           .from(userProgressSnapshots)
           .where(eq(userProgressSnapshots.userId, userId))
           .orderBy(desc(userProgressSnapshots.snapshotDate))
           .limit(1);
+        return snapshot;
       }
-      
-      const [snapshot] = await query;
-      return snapshot;
     } catch (error) {
       console.error("Error getting user progress snapshot:", error);
       throw error;

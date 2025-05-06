@@ -136,6 +136,28 @@ export interface IStorage {
   markStepAsCompleted(id: number): Promise<LearningPathStep | undefined>;
   generateLearningPath(userId: number, goal: string): Promise<LearningPath>;
   
+  // Analytics operations
+  logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
+  getUserActivities(userId: number, limit?: number): Promise<UserActivityLog[]>;
+  getUserActivityByTimeframe(userId: number, startDate: Date, endDate: Date): Promise<UserActivityLog[]>;
+  
+  // Course analytics operations
+  getCourseAnalytics(courseId: number): Promise<CourseAnalytic | undefined>;
+  updateCourseAnalytics(courseId: number, data: Partial<InsertCourseAnalytic>): Promise<CourseAnalytic>;
+  getPopularCourses(limit?: number): Promise<(CourseAnalytic & { course: Course })[]>;
+  
+  // User progress operations
+  getUserProgressSnapshot(userId: number, date?: Date): Promise<UserProgressSnapshot | undefined>;
+  createUserProgressSnapshot(data: InsertUserProgressSnapshot): Promise<UserProgressSnapshot>;
+  getUserProgressOverTime(userId: number, startDate: Date, endDate: Date): Promise<UserProgressSnapshot[]>;
+  getPlatformStats(): Promise<{
+    totalUsers: number,
+    totalCourses: number,
+    totalLessonsCompleted: number,
+    totalAssignmentsCompleted: number,
+    averageGrade: number
+  }>;
+  
   // Session store
   sessionStore: SessionStore;
 }
@@ -670,6 +692,211 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return newPath;
+  }
+
+  // Analytics operations
+  async logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog> {
+    try {
+      const [logEntry] = await db.insert(userActivityLogs).values(activity).returning();
+      return logEntry;
+    } catch (error) {
+      console.error("Error logging user activity:", error);
+      throw error;
+    }
+  }
+
+  async getUserActivities(userId: number, limit = 20): Promise<UserActivityLog[]> {
+    try {
+      return db.select()
+        .from(userActivityLogs)
+        .where(eq(userActivityLogs.userId, userId))
+        .orderBy(desc(userActivityLogs.createdAt))
+        .limit(limit);
+    } catch (error) {
+      console.error("Error getting user activities:", error);
+      throw error;
+    }
+  }
+
+  async getUserActivityByTimeframe(userId: number, startDate: Date, endDate: Date): Promise<UserActivityLog[]> {
+    try {
+      return db.select()
+        .from(userActivityLogs)
+        .where(and(
+          eq(userActivityLogs.userId, userId),
+          sql`${userActivityLogs.createdAt} >= ${startDate}`,
+          sql`${userActivityLogs.createdAt} <= ${endDate}`
+        ))
+        .orderBy(asc(userActivityLogs.createdAt));
+    } catch (error) {
+      console.error("Error getting user activities by timeframe:", error);
+      throw error;
+    }
+  }
+
+  // Course analytics operations
+  async getCourseAnalytics(courseId: number): Promise<CourseAnalytic | undefined> {
+    try {
+      const [analytics] = await db.select()
+        .from(courseAnalytics)
+        .where(eq(courseAnalytics.courseId, courseId));
+      return analytics;
+    } catch (error) {
+      console.error("Error getting course analytics:", error);
+      throw error;
+    }
+  }
+
+  async updateCourseAnalytics(courseId: number, data: Partial<InsertCourseAnalytic>): Promise<CourseAnalytic> {
+    try {
+      // Check if analytics exist for this course
+      const existing = await this.getCourseAnalytics(courseId);
+      
+      if (existing) {
+        // Update existing analytics
+        const [updated] = await db.update(courseAnalytics)
+          .set({
+            ...data,
+            updatedAt: new Date()
+          })
+          .where(eq(courseAnalytics.courseId, courseId))
+          .returning();
+        return updated;
+      } else {
+        // Create new analytics entry
+        const [created] = await db.insert(courseAnalytics)
+          .values({
+            courseId,
+            ...data,
+            totalEnrollments: data.totalEnrollments || 0,
+            completionRate: data.completionRate || 0,
+            dropoffRate: data.dropoffRate || 0
+          })
+          .returning();
+        return created;
+      }
+    } catch (error) {
+      console.error("Error updating course analytics:", error);
+      throw error;
+    }
+  }
+
+  async getPopularCourses(limit = 10): Promise<(CourseAnalytic & { course: Course })[]> {
+    try {
+      const result = await db.select({
+        analytics: courseAnalytics,
+        course: courses
+      })
+      .from(courseAnalytics)
+      .leftJoin(courses, eq(courseAnalytics.courseId, courses.id))
+      .orderBy(desc(courseAnalytics.totalEnrollments))
+      .limit(limit);
+      
+      return result.map(({ analytics, course }) => ({
+        ...analytics,
+        course: course as Course
+      })) as (CourseAnalytic & { course: Course })[];
+    } catch (error) {
+      console.error("Error getting popular courses:", error);
+      throw error;
+    }
+  }
+
+  // User progress operations
+  async getUserProgressSnapshot(userId: number, date?: Date): Promise<UserProgressSnapshot | undefined> {
+    try {
+      let query = db.select()
+        .from(userProgressSnapshots)
+        .where(eq(userProgressSnapshots.userId, userId));
+      
+      if (date) {
+        query = query.where(eq(userProgressSnapshots.snapshotDate, date));
+      } else {
+        // Get the most recent snapshot if no date specified
+        query = query.orderBy(desc(userProgressSnapshots.snapshotDate)).limit(1);
+      }
+      
+      const [snapshot] = await query;
+      return snapshot;
+    } catch (error) {
+      console.error("Error getting user progress snapshot:", error);
+      throw error;
+    }
+  }
+
+  async createUserProgressSnapshot(data: InsertUserProgressSnapshot): Promise<UserProgressSnapshot> {
+    try {
+      const [snapshot] = await db.insert(userProgressSnapshots)
+        .values(data)
+        .returning();
+      return snapshot;
+    } catch (error) {
+      console.error("Error creating user progress snapshot:", error);
+      throw error;
+    }
+  }
+
+  async getUserProgressOverTime(userId: number, startDate: Date, endDate: Date): Promise<UserProgressSnapshot[]> {
+    try {
+      return db.select()
+        .from(userProgressSnapshots)
+        .where(and(
+          eq(userProgressSnapshots.userId, userId),
+          sql`${userProgressSnapshots.snapshotDate} >= ${startDate}`,
+          sql`${userProgressSnapshots.snapshotDate} <= ${endDate}`
+        ))
+        .orderBy(asc(userProgressSnapshots.snapshotDate));
+    } catch (error) {
+      console.error("Error getting user progress over time:", error);
+      throw error;
+    }
+  }
+
+  async getPlatformStats(): Promise<{
+    totalUsers: number,
+    totalCourses: number,
+    totalLessonsCompleted: number,
+    totalAssignmentsCompleted: number,
+    averageGrade: number
+  }> {
+    try {
+      // Get total users
+      const [usersResult] = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const totalUsers = usersResult ? Number(usersResult.count) : 0;
+      
+      // Get total courses
+      const [coursesResult] = await db.select({ count: sql<number>`count(*)` }).from(courses);
+      const totalCourses = coursesResult ? Number(coursesResult.count) : 0;
+      
+      // Get lessons completed
+      const [lessonsResult] = await db.select({ 
+        count: sql<number>`count(*)`
+      }).from(userLessons).where(eq(userLessons.completed, true));
+      const totalLessonsCompleted = lessonsResult ? Number(lessonsResult.count) : 0;
+      
+      // Get assignments completed
+      const [assignmentsResult] = await db.select({ 
+        count: sql<number>`count(*)`
+      }).from(userAssignments).where(eq(userAssignments.status, "submitted"));
+      const totalAssignmentsCompleted = assignmentsResult ? Number(assignmentsResult.count) : 0;
+      
+      // Calculate average grade
+      const [gradesResult] = await db.select({ 
+        average: sql<number>`avg(grade)`
+      }).from(userAssignments).where(sql`grade is not null`);
+      const averageGrade = gradesResult && gradesResult.average ? Number(gradesResult.average) : 0;
+      
+      return {
+        totalUsers,
+        totalCourses,
+        totalLessonsCompleted,
+        totalAssignmentsCompleted,
+        averageGrade
+      };
+    } catch (error) {
+      console.error("Error getting platform stats:", error);
+      throw error;
+    }
   }
 }
 

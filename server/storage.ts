@@ -810,10 +810,21 @@ export class DatabaseStorage implements IStorage {
         .where(eq(userProgressSnapshots.userId, userId));
       
       if (date) {
-        query = query.where(eq(userProgressSnapshots.snapshotDate, date));
+        // Convert Date to string in YYYY-MM-DD format
+        const dateStr = date.toISOString().split('T')[0];
+        query = db.select()
+          .from(userProgressSnapshots)
+          .where(and(
+            eq(userProgressSnapshots.userId, userId),
+            eq(userProgressSnapshots.snapshotDate, dateStr)
+          ));
       } else {
         // Get the most recent snapshot if no date specified
-        query = query.orderBy(desc(userProgressSnapshots.snapshotDate)).limit(1);
+        query = db.select()
+          .from(userProgressSnapshots)
+          .where(eq(userProgressSnapshots.userId, userId))
+          .orderBy(desc(userProgressSnapshots.snapshotDate))
+          .limit(1);
       }
       
       const [snapshot] = await query;
@@ -838,12 +849,16 @@ export class DatabaseStorage implements IStorage {
 
   async getUserProgressOverTime(userId: number, startDate: Date, endDate: Date): Promise<UserProgressSnapshot[]> {
     try {
+      // Convert dates to string in YYYY-MM-DD format
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
       return db.select()
         .from(userProgressSnapshots)
         .where(and(
           eq(userProgressSnapshots.userId, userId),
-          sql`${userProgressSnapshots.snapshotDate} >= ${startDate}`,
-          sql`${userProgressSnapshots.snapshotDate} <= ${endDate}`
+          sql`${userProgressSnapshots.snapshotDate} >= ${startDateStr}`,
+          sql`${userProgressSnapshots.snapshotDate} <= ${endDateStr}`
         ))
         .orderBy(asc(userProgressSnapshots.snapshotDate));
     } catch (error) {

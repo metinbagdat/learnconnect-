@@ -830,7 +830,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       // Only allow creating a snapshot for the authenticated user
       const snapshot = {
         userId: req.user.id,
-        snapshotDate: req.body.snapshotDate ? new Date(req.body.snapshotDate) : new Date(),
+        snapshotDate: req.body.snapshotDate || new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
         coursesEnrolled: req.body.coursesEnrolled || 0,
         coursesCompleted: req.body.coursesCompleted || 0,
         lessonsCompleted: req.body.lessonsCompleted || 0,

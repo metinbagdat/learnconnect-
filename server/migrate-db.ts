@@ -128,6 +128,49 @@ async function runMigration() {
       );
     `);
     
+    // Create analytics tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        resource_type TEXT,
+        resource_id INTEGER,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT NOW(),
+        ip_address TEXT,
+        user_agent TEXT
+      );
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS course_analytics (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER NOT NULL,
+        total_enrollments INTEGER NOT NULL DEFAULT 0,
+        completion_rate INTEGER DEFAULT 0,
+        average_rating INTEGER,
+        average_completion_time INTEGER,
+        dropoff_rate INTEGER DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_progress_snapshots (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        snapshot_date DATE NOT NULL,
+        courses_enrolled INTEGER NOT NULL DEFAULT 0,
+        courses_completed INTEGER NOT NULL DEFAULT 0,
+        lessons_completed INTEGER NOT NULL DEFAULT 0,
+        assignments_completed INTEGER NOT NULL DEFAULT 0,
+        total_points INTEGER NOT NULL DEFAULT 0,
+        badges_earned INTEGER NOT NULL DEFAULT 0,
+        average_grade INTEGER
+      );
+    `);
+    
     console.log("Database migration completed successfully!");
   } catch (error) {
     console.error("Error during migration:", error);

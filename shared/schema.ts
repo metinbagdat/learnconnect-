@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -128,6 +128,43 @@ export const learningPathSteps = pgTable("learning_path_steps", {
   notes: text("notes"),
 });
 
+// Analytics tables
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  action: text("action").notNull(), // login, view_course, complete_lesson, etc.
+  resourceType: text("resource_type"), // course, lesson, assignment, etc.
+  resourceId: integer("resource_id"),
+  metadata: jsonb("metadata"), // Additional context about the activity
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+export const courseAnalytics = pgTable("course_analytics", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull(),
+  totalEnrollments: integer("total_enrollments").notNull().default(0),
+  completionRate: integer("completion_rate").default(0), // Percentage (0-100)
+  averageRating: integer("average_rating"), // Rating (1-5)
+  averageCompletionTime: integer("average_completion_time"), // In minutes
+  dropoffRate: integer("dropoff_rate").default(0), // Percentage (0-100)
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const userProgressSnapshots = pgTable("user_progress_snapshots", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  snapshotDate: date("snapshot_date").notNull(),
+  coursesEnrolled: integer("courses_enrolled").notNull().default(0),
+  coursesCompleted: integer("courses_completed").notNull().default(0),
+  lessonsCompleted: integer("lessons_completed").notNull().default(0),
+  assignmentsCompleted: integer("assignments_completed").notNull().default(0),
+  totalPoints: integer("total_points").notNull().default(0),
+  badgesEarned: integer("badges_earned").notNull().default(0),
+  averageGrade: integer("average_grade"), // Percentage (0-100)
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -150,6 +187,21 @@ export const insertCourseRecommendationSchema = createInsertSchema(courseRecomme
 export const insertLearningPathSchema = createInsertSchema(learningPaths).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertLearningPathStepSchema = createInsertSchema(learningPathSteps).omit({ id: true });
 
+// Analytics insert schemas
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertCourseAnalyticsSchema = createInsertSchema(courseAnalytics).omit({ 
+  id: true, 
+  updatedAt: true 
+});
+
+export const insertUserProgressSnapshotSchema = createInsertSchema(userProgressSnapshots).omit({ 
+  id: true 
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -167,3 +219,11 @@ export type LearningPath = typeof learningPaths.$inferSelect;
 export type LearningPathStep = typeof learningPathSteps.$inferSelect;
 export type InsertLearningPath = z.infer<typeof insertLearningPathSchema>;
 export type InsertLearningPathStep = z.infer<typeof insertLearningPathStepSchema>;
+
+// Analytics types
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
+export type CourseAnalytic = typeof courseAnalytics.$inferSelect;
+export type InsertCourseAnalytic = z.infer<typeof insertCourseAnalyticsSchema>;
+export type UserProgressSnapshot = typeof userProgressSnapshots.$inferSelect;
+export type InsertUserProgressSnapshot = z.infer<typeof insertUserProgressSnapshotSchema>;

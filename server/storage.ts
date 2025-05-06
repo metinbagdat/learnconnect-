@@ -15,6 +15,13 @@ import {
   type LearningPathStep,
   type InsertLearningPath,
   type InsertLearningPathStep,
+  // Analytics types
+  type UserActivityLog,
+  type InsertUserActivityLog,
+  type CourseAnalytic,
+  type InsertCourseAnalytic,
+  type UserProgressSnapshot,
+  type InsertUserProgressSnapshot,
   insertCourseSchema,
   insertModuleSchema,
   insertLessonSchema,
@@ -27,6 +34,10 @@ import {
   insertCourseRecommendationSchema,
   insertLearningPathSchema,
   insertLearningPathStepSchema,
+  // Analytics schemas
+  insertUserActivityLogSchema,
+  insertCourseAnalyticsSchema,
+  insertUserProgressSnapshotSchema,
   users,
   courses,
   modules,
@@ -39,7 +50,11 @@ import {
   userBadges,
   courseRecommendations,
   learningPaths,
-  learningPathSteps
+  learningPathSteps,
+  // Analytics tables
+  userActivityLogs,
+  courseAnalytics,
+  userProgressSnapshots
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

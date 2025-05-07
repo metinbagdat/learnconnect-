@@ -44,7 +44,8 @@ export function setupAuth(app: Express) {
       httpOnly: true,
       secure: false, // For development. Set to true in production with HTTPS
       sameSite: 'lax'
-    }
+    },
+    name: 'edulearn.sid' // Custom session ID name
   };
 
   app.set("trust proxy", 1);
@@ -108,12 +109,28 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    console.log("POST /api/login - User attempting login:", req.body.username);
+    
     passport.authenticate("local", (err: Error | null, user: any, info: { message?: string } | undefined) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: info?.message || "Authentication failed" });
+      if (err) {
+        console.log("Login error:", err);
+        return next(err);
+      }
+      if (!user) {
+        console.log("Authentication failed:", info?.message);
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
       
       req.login(user, (err: Error | null) => {
-        if (err) return next(err);
+        if (err) {
+          console.log("Login session error:", err);
+          return next(err);
+        }
+        
+        // Log session details
+        console.log("User logged in successfully, session ID:", req.session.id);
+        console.log("Session cookie:", req.session.cookie);
+        
         // Return user without password
         const { password, ...userWithoutPassword } = user;
         res.status(200).json(userWithoutPassword);
@@ -126,16 +143,21 @@ export function setupAuth(app: Express) {
       if (err) return next(err);
       req.session.destroy((err) => {
         if (err) return next(err);
-        res.clearCookie('connect.sid');
+        res.clearCookie('edulearn.sid');
         res.sendStatus(200);
       });
     });
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("GET /api/user - isAuthenticated:", req.isAuthenticated(), "session:", req.session.id);
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated");
+      return res.sendStatus(401);
+    }
     // Return user without password
     const { password, ...userWithoutPassword } = req.user;
+    console.log("Returning user:", userWithoutPassword);
     res.json(userWithoutPassword);
   });
 }

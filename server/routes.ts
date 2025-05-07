@@ -68,16 +68,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // User Courses API
   app.get("/api/user/courses", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    // First check if the user is authenticated via session
+    if (req.isAuthenticated()) {
+      try {
+        const userCourses = await storage.getUserCourses(req.user.id);
+        return res.json(userCourses);
+      } catch (error) {
+        return res.status(500).json({ message: "Failed to fetch user courses" });
+      }
     }
     
-    try {
-      const userCourses = await storage.getUserCourses(req.user.id);
-      res.json(userCourses);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user courses" });
+    // If not authenticated via session, try header auth
+    const userId = req.headers['x-user-id'];
+    if (userId) {
+      console.log("Attempting header auth for user courses. User ID:", userId);
+      try {
+        const userCourses = await storage.getUserCourses(Number(userId));
+        return res.json(userCourses);
+      } catch (error) {
+        console.error("Error fetching user courses with header auth:", error);
+      }
     }
+    
+    // If no auth method succeeded
+    return res.status(401).json({ message: "Unauthorized" });
   });
   
   app.post("/api/user/courses", async (req, res) => {
@@ -128,16 +142,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Assignments API
   app.get("/api/assignments", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    // First try session authentication
+    if (req.isAuthenticated()) {
+      try {
+        const assignments = await storage.getUserAssignments(req.user.id);
+        return res.json(assignments);
+      } catch (error) {
+        return res.status(500).json({ message: "Failed to fetch assignments" });
+      }
     }
     
-    try {
-      const assignments = await storage.getUserAssignments(req.user.id);
-      res.json(assignments);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch assignments" });
+    // Try header authentication fallback
+    const userId = req.headers['x-user-id'];
+    if (userId) {
+      console.log("Attempting header auth for assignments. User ID:", userId);
+      try {
+        const assignments = await storage.getUserAssignments(Number(userId));
+        return res.json(assignments);
+      } catch (error) {
+        console.error("Error fetching assignments with header auth:", error);
+      }
     }
+    
+    // If no auth method succeeded
+    return res.status(401).json({ message: "Unauthorized" });
   });
   
   app.post("/api/assignments", async (req, res) => {

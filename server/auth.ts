@@ -150,15 +150,43 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
     console.log("GET /api/user - isAuthenticated:", req.isAuthenticated(), "session:", req.session.id);
-    if (!req.isAuthenticated()) {
-      console.log("User not authenticated");
-      return res.sendStatus(401);
+    
+    // First try standard session-based authentication
+    if (req.isAuthenticated()) {
+      // Return user without password
+      const { password, ...userWithoutPassword } = req.user;
+      console.log("Returning authenticated user:", userWithoutPassword);
+      return res.json(userWithoutPassword);
     }
-    // Return user without password
-    const { password, ...userWithoutPassword } = req.user;
-    console.log("Returning user:", userWithoutPassword);
-    res.json(userWithoutPassword);
+    
+    // If session auth fails, check for user ID in custom header
+    const userId = req.headers['x-user-id'];
+    if (userId) {
+      console.log("Attempting to authenticate via header. User ID:", userId);
+      try {
+        const user = await storage.getUser(Number(userId));
+        if (user) {
+          // Manually set the authenticated session
+          req.login(user, (err) => {
+            if (err) {
+              console.log("Header auth login error:", err);
+              return res.sendStatus(401);
+            }
+            const { password, ...userWithoutPassword } = user;
+            console.log("Returning header-authenticated user:", userWithoutPassword);
+            return res.json(userWithoutPassword);
+          });
+          return; // This return is important to prevent the next line from executing
+        }
+      } catch (error) {
+        console.log("Error retrieving user from header ID:", error);
+      }
+    }
+    
+    // No authentication succeeded
+    console.log("User not authenticated");
+    return res.sendStatus(401);
   });
 }

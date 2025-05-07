@@ -12,9 +12,23 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Get auth token from localStorage if available
+  const user = localStorage.getItem('edulearn_user');
+  const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
+  
+  // If we have a user in localStorage, add it as a custom header
+  if (user) {
+    try {
+      const userData = JSON.parse(user);
+      headers['X-User-Id'] = userData.id?.toString() || '';
+    } catch (e) {
+      console.error('Failed to parse user data from localStorage', e);
+    }
+  }
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,8 +43,23 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Get auth token from localStorage if available
+    const user = localStorage.getItem('edulearn_user');
+    const headers: Record<string, string> = {};
+    
+    // If we have a user in localStorage, add it as a custom header
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        headers['X-User-Id'] = userData.id?.toString() || '';
+      } catch (e) {
+        console.error('Failed to parse user data from localStorage', e);
+      }
+    }
+    
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

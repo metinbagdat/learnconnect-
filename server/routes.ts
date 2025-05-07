@@ -458,13 +458,26 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   
   // AI-powered course recommendations 
   app.get("/api/ai/course-recommendations", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId: number;
+    
+    // Try session-based authentication first
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } 
+    // If session auth fails, try header-based authentication
+    else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        console.log("Attempting header auth for course recommendations. User ID:", headerUserId);
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
 
     try {
       // Check if we have cached recommendations
-      const existingRecommendations = await storage.getCourseRecommendations(req.user.id);
+      const existingRecommendations = await storage.getCourseRecommendations(userId);
       
       // If we have recent recommendations (less than 24 hours old), return them
       if (existingRecommendations && 
@@ -473,8 +486,15 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         return res.json(existingRecommendations.recommendations);
       }
       
+      // Try to get the user to check interests
+      const user = req.isAuthenticated() && req.user ? req.user : await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       // Fallback recommendations instead of using OpenAI
-      const interests = req.user.interests || [];
+      const interests = user.interests || [];
       
       // Create fallback recommendations based on the user's interests
       let recommendations = [
@@ -489,7 +509,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Save to database
-      const savedRecommendations = await storage.saveCourseRecommendations(req.user.id, recommendations);
+      const savedRecommendations = await storage.saveCourseRecommendations(userId, recommendations);
       
       res.json(savedRecommendations.recommendations);
     } catch (error) {

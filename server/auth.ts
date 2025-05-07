@@ -34,8 +34,8 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "edulearn-platform-dev-secret",
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
     }),
@@ -43,7 +43,8 @@ export function setupAuth(app: Express) {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,
       secure: false, // For development. Set to true in production with HTTPS
-      sameSite: 'lax'
+      sameSite: 'none',
+      path: '/'
     },
     name: 'edulearn.sid' // Custom session ID name
   };

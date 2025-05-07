@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,7 @@ import {
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AuthUtils } from "@/lib/utils";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -23,6 +24,18 @@ type RegisterData = InsertUser;
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [localUser, setLocalUser] = useState<SelectUser | null>(null);
+  
+  // Load user from localStorage if available
+  useEffect(() => {
+    const storedUser = AuthUtils.getStoredUser();
+    if (storedUser) {
+      setLocalUser(storedUser);
+      // Pre-populate the query cache with the stored user
+      queryClient.setQueryData(["/api/user"], storedUser);
+    }
+  }, []);
+  
   const {
     data: user,
     error,
@@ -30,6 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<SelectUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    // Skip the API call if we already have a user from localStorage
+    enabled: !localUser,
   });
 
   const loginMutation = useMutation({
@@ -129,11 +144,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Use local user as fallback if API user is not available
+  const effectiveUser = user || localUser;
+
   return (
     <AuthContext.Provider
       value={{
-        user: user ?? null,
-        isLoading,
+        user: effectiveUser,
+        isLoading: isLoading && !localUser,
         error,
         loginMutation,
         logoutMutation,

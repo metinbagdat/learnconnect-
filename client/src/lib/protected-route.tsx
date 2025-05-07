@@ -1,6 +1,8 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { useEffect, useState } from "react";
+import { AuthUtils } from "@/lib/utils";
 
 export function ProtectedRoute({
   path,
@@ -10,8 +12,17 @@ export function ProtectedRoute({
   component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
+  const [localUser, setLocalUser] = useState(AuthUtils.getStoredUser());
+  
+  // Check localStorage for user data as a fallback
+  useEffect(() => {
+    const storedUser = AuthUtils.getStoredUser();
+    setLocalUser(storedUser);
+  }, []);
+  
+  const effectiveUser = user || localUser;
 
-  if (isLoading) {
+  if (isLoading && !localUser) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
@@ -21,7 +32,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (!user) {
+  if (!effectiveUser) {
     return (
       <Route path={path}>
         <Redirect to="/auth" />

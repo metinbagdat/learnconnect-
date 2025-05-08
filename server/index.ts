@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { seedChallenges } from "./seed-challenges";
 
 const app = express();
 app.use(express.json());
@@ -64,7 +65,15 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Seed challenges on server startup
+    try {
+      await seedChallenges();
+      log("Challenge system initialized successfully");
+    } catch (error) {
+      log(`Failed to seed challenges: ${error}`);
+    }
   });
 })();

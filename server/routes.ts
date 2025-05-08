@@ -1214,6 +1214,37 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       res.status(500).json({ message: "Failed to add XP" });
     }
   });
+  
+  // Admin routes
+  app.post("/api/admin/seed-challenges", async (req, res) => {
+    // First check session authentication
+    if (req.isAuthenticated() && req.user.role === "admin") {
+      try {
+        await seedChallenges();
+        res.json({ message: "Challenges seeded successfully" });
+      } catch (error) {
+        console.error("Failed to seed challenges:", error);
+        res.status(500).json({ message: "Failed to seed challenges" });
+      }
+      return;
+    }
+    
+    // Try header authentication as a fallback
+    const userId = req.headers['x-user-id'];
+    if (userId) {
+      try {
+        const user = await storage.getUser(Number(userId));
+        if (user && user.role === "admin") {
+          await seedChallenges();
+          return res.json({ message: "Challenges seeded successfully" });
+        }
+      } catch (error) {
+        console.error("Error with header auth for seeding challenges:", error);
+      }
+    }
+    
+    return res.status(403).json({ message: "Only administrators can seed challenges" });
+  });
 
   const httpServer = createServer(app);
   return httpServer;

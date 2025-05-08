@@ -22,6 +22,13 @@ import {
   type InsertCourseAnalytic,
   type UserProgressSnapshot,
   type InsertUserProgressSnapshot,
+  // Adaptive Learning Reward System types
+  type Challenge,
+  type InsertChallenge,
+  type UserChallenge,
+  type InsertUserChallenge,
+  type UserLevel,
+  type InsertUserLevel,
   insertCourseSchema,
   insertModuleSchema,
   insertLessonSchema,
@@ -38,6 +45,10 @@ import {
   insertUserActivityLogSchema,
   insertCourseAnalyticsSchema,
   insertUserProgressSnapshotSchema,
+  // Adaptive Learning Reward System schemas
+  insertChallengeSchema,
+  insertUserChallengeSchema,
+  insertUserLevelSchema,
   users,
   courses,
   modules,
@@ -54,7 +65,11 @@ import {
   // Analytics tables
   userActivityLogs,
   courseAnalytics,
-  userProgressSnapshots
+  userProgressSnapshots,
+  // Adaptive Learning Reward System tables
+  challenges,
+  userChallenges,
+  userLevels
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

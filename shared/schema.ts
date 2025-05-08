@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, varchar, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -165,6 +165,53 @@ export const userProgressSnapshots = pgTable("user_progress_snapshots", {
   averageGrade: integer("average_grade"), // Percentage (0-100)
 });
 
+// Adaptive Learning Reward System tables
+
+// Challenges
+export const challenges = pgTable("challenges", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // daily, skill, course, streak
+  category: varchar("category", { length: 50 }).notNull(),
+  difficulty: varchar("difficulty", { length: 20 }).notNull().default("medium"), // easy, medium, hard
+  pointsReward: integer("points_reward").notNull().default(10),
+  xpReward: integer("xp_reward").notNull().default(5),
+  badgeId: integer("badge_id").references(() => badges.id),
+  requirements: jsonb("requirements").notNull().default({}), // JSON with completion criteria
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  courseId: integer("course_id").references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+});
+
+// User challenge progress
+export const userChallenges = pgTable("user_challenges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id),
+  progress: integer("progress").notNull().default(0), // 0-100
+  isCompleted: boolean("is_completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  pointsEarned: integer("points_earned").default(0),
+  xpEarned: integer("xp_earned").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// User level and experience tracking
+export const userLevels = pgTable("user_levels", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  level: integer("level").notNull().default(1),
+  currentXp: integer("current_xp").notNull().default(0),
+  totalXp: integer("total_xp").notNull().default(0),
+  nextLevelXp: integer("next_level_xp").notNull().default(100),
+  streak: integer("streak").notNull().default(0), // consecutive days of activity
+  lastActivityDate: date("last_activity_date"),
+  totalPoints: integer("total_points").notNull().default(0),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -202,6 +249,25 @@ export const insertUserProgressSnapshotSchema = createInsertSchema(userProgressS
   id: true 
 });
 
+// Adaptive Learning Reward System insert schemas
+export const insertChallengeSchema = createInsertSchema(challenges, {
+  type: z.enum(["daily", "skill", "course", "streak", "assignment"]),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+}).omit({ 
+  id: true,
+  createdAt: true
+});
+
+export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit({ 
+  id: true,
+  createdAt: true,
+  completedAt: true
+});
+
+export const insertUserLevelSchema = createInsertSchema(userLevels).omit({ 
+  id: true 
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -227,3 +293,11 @@ export type CourseAnalytic = typeof courseAnalytics.$inferSelect;
 export type InsertCourseAnalytic = z.infer<typeof insertCourseAnalyticsSchema>;
 export type UserProgressSnapshot = typeof userProgressSnapshots.$inferSelect;
 export type InsertUserProgressSnapshot = z.infer<typeof insertUserProgressSnapshotSchema>;
+
+// Adaptive Learning Reward System types
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
+export type UserLevel = typeof userLevels.$inferSelect;
+export type InsertUserLevel = z.infer<typeof insertUserLevelSchema>;

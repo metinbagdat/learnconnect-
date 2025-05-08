@@ -173,6 +173,33 @@ export interface IStorage {
     averageGrade: number
   }>;
   
+  // Adaptive Learning Reward System operations
+  // Challenge operations
+  getChallenges(filters?: { type?: string; active?: boolean; category?: string }): Promise<Challenge[]>;
+  getChallenge(id: number): Promise<Challenge | undefined>;
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  updateChallenge(id: number, data: Partial<Challenge>): Promise<Challenge | undefined>;
+  deactivateChallenge(id: number): Promise<Challenge | undefined>;
+  getCourseRelatedChallenges(courseId: number): Promise<Challenge[]>;
+  
+  // User challenge operations
+  getUserChallenges(userId: number): Promise<(UserChallenge & { challenge: Challenge })[]>;
+  getUserActiveAndCompletedChallenges(userId: number): Promise<{
+    active: (UserChallenge & { challenge: Challenge })[];
+    completed: (UserChallenge & { challenge: Challenge })[];
+  }>;
+  assignChallengeToUser(userId: number, challengeId: number): Promise<UserChallenge>;
+  updateUserChallengeProgress(userId: number, challengeId: number, progress: number): Promise<UserChallenge | undefined>;
+  completeUserChallenge(userId: number, challengeId: number): Promise<UserChallenge | undefined>;
+  
+  // User level operations
+  getUserLevel(userId: number): Promise<UserLevel | undefined>;
+  initializeUserLevel(userId: number): Promise<UserLevel>;
+  addUserXp(userId: number, xpAmount: number): Promise<UserLevel | undefined>;
+  addUserPoints(userId: number, pointsAmount: number): Promise<UserLevel | undefined>;
+  updateUserStreak(userId: number): Promise<UserLevel | undefined>;
+  resetUserStreak(userId: number): Promise<UserLevel | undefined>;
+  
   // Session store
   sessionStore: SessionStore;
 }
@@ -482,7 +509,7 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
-  // AI Generated Courses
+  // AI Generated Courses  
   async getAiGeneratedCourses(): Promise<Course[]> {
     return db
       .select()
@@ -490,41 +517,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(courses.isAiGenerated, true))
       .orderBy(desc(courses.createdAt));
   }
-
+  
   // Module operations
   async getModules(courseId: number): Promise<Module[]> {
     return db
       .select()
       .from(modules)
       .where(eq(modules.courseId, courseId))
-      .orderBy(modules.order);
+      .orderBy(modules.orderIndex);
   }
-
+  
   async createModule(module: InsertModule): Promise<Module> {
-    const [newModule] = await db
-      .insert(modules)
-      .values(module)
-      .returning();
+    const [newModule] = await db.insert(modules).values(module).returning();
     return newModule;
   }
-
+  
   // Lesson operations
   async getLessons(moduleId: number): Promise<Lesson[]> {
     return db
       .select()
       .from(lessons)
       .where(eq(lessons.moduleId, moduleId))
-      .orderBy(lessons.order);
+      .orderBy(lessons.orderIndex);
   }
-
+  
   async createLesson(lesson: InsertLesson): Promise<Lesson> {
-    const [newLesson] = await db
-      .insert(lessons)
-      .values(lesson)
-      .returning();
+    const [newLesson] = await db.insert(lessons).values(lesson).returning();
     return newLesson;
   }
-
+  
   // UserLesson operations
   async getUserLessons(userId: number): Promise<(UserLesson & { lesson: Lesson })[]> {
     const userLessonsResult = await db
@@ -534,79 +555,89 @@ export class DatabaseStorage implements IStorage {
       })
       .from(userLessons)
       .leftJoin(lessons, eq(userLessons.lessonId, lessons.id))
-      .where(eq(userLessons.userId, userId));
+      .where(eq(userLessons.userId, userId))
+      .orderBy(desc(userLessons.lastAccessedAt));
     
     return userLessonsResult.map(({ userLesson, lesson }) => ({
       ...userLesson,
       lesson: lesson as Lesson
     })) as (UserLesson & { lesson: Lesson })[];
   }
-
+  
   async updateUserLessonProgress(userId: number, lessonId: number, progress: number): Promise<UserLesson> {
-    // Check if the user-lesson record exists
-    const [existingUserLesson] = await db
+    // Check if a record already exists
+    const existingRecord = await db
       .select()
       .from(userLessons)
-      .where(and(
-        eq(userLessons.userId, userId),
-        eq(userLessons.lessonId, lessonId)
-      ));
+      .where(
+        and(
+          eq(userLessons.userId, userId),
+          eq(userLessons.lessonId, lessonId)
+        )
+      );
     
-    if (existingUserLesson) {
+    const completed = progress >= 100;
+    const now = new Date();
+    
+    if (existingRecord.length > 0) {
       // Update existing record
-      const completed = progress >= 100;
-      const [updatedUserLesson] = await db
+      const [updatedRecord] = await db
         .update(userLessons)
-        .set({ 
-          progress, 
+        .set({
+          progress,
           completed,
-          lastAccessedAt: new Date()
+          lastAccessedAt: now
         })
-        .where(eq(userLessons.id, existingUserLesson.id))
+        .where(
+          and(
+            eq(userLessons.userId, userId),
+            eq(userLessons.lessonId, lessonId)
+          )
+        )
         .returning();
-      return updatedUserLesson;
+      
+      return updatedRecord;
     } else {
       // Create new record
-      const [newUserLesson] = await db
+      const [newRecord] = await db
         .insert(userLessons)
         .values({
           userId,
           lessonId,
           progress,
-          completed: progress >= 100,
-          lastAccessedAt: new Date()
+          completed,
+          lastAccessedAt: now
         })
         .returning();
-      return newUserLesson;
+      
+      return newRecord;
     }
   }
-
-  // Course recommendation operations
+  
+  // Course Recommendation operations
   async getCourseRecommendations(userId: number): Promise<CourseRecommendation | undefined> {
-    const [recommendations] = await db
+    const [recommendation] = await db
       .select()
       .from(courseRecommendations)
       .where(eq(courseRecommendations.userId, userId))
-      .orderBy(desc(courseRecommendations.createdAt))
-      .limit(1);
+      .orderBy(desc(courseRecommendations.createdAt));
     
-    return recommendations;
+    return recommendation;
   }
-
+  
   async saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation> {
-    const [newRecommendations] = await db
+    const [newRecommendation] = await db
       .insert(courseRecommendations)
       .values({
         userId,
-        recommendations,
-        createdAt: new Date()
+        recommendations: recommendations,
       })
       .returning();
     
-    return newRecommendations;
+    return newRecommendation;
   }
-
-  // Learning path operations
+  
+  // Learning Path operations
   async getLearningPaths(userId: number): Promise<LearningPath[]> {
     return db
       .select()
@@ -614,17 +645,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(learningPaths.userId, userId))
       .orderBy(desc(learningPaths.createdAt));
   }
-
+  
   async getLearningPath(id: number): Promise<(LearningPath & { steps: (LearningPathStep & { course: Course })[] }) | undefined> {
-    const [path] = await db
+    // Get learning path
+    const [learningPath] = await db
       .select()
       .from(learningPaths)
       .where(eq(learningPaths.id, id));
-
-    if (!path) {
+    
+    if (!learningPath) {
       return undefined;
     }
-
+    
+    // Get steps with course details
     const stepsResult = await db
       .select({
         step: learningPathSteps,
@@ -633,31 +666,28 @@ export class DatabaseStorage implements IStorage {
       .from(learningPathSteps)
       .leftJoin(courses, eq(learningPathSteps.courseId, courses.id))
       .where(eq(learningPathSteps.pathId, id))
-      .orderBy(learningPathSteps.order);
-
+      .orderBy(learningPathSteps.orderIndex);
+    
     const steps = stepsResult.map(({ step, course }) => ({
       ...step,
       course: course as Course
     })) as (LearningPathStep & { course: Course })[];
-
+    
     return {
-      ...path,
+      ...learningPath,
       steps
     };
   }
-
+  
   async createLearningPath(path: InsertLearningPath): Promise<LearningPath> {
     const [newPath] = await db
       .insert(learningPaths)
-      .values({
-        ...path,
-        createdAt: new Date()
-      })
+      .values(path)
       .returning();
     
     return newPath;
   }
-
+  
   async addLearningPathStep(step: InsertLearningPathStep): Promise<LearningPathStep> {
     const [newStep] = await db
       .insert(learningPathSteps)
@@ -666,12 +696,15 @@ export class DatabaseStorage implements IStorage {
     
     return newStep;
   }
-
+  
   async updateLearningPathProgress(id: number, progress: number): Promise<LearningPath | undefined> {
+    const completed = progress >= 100;
+    
     const [updatedPath] = await db
       .update(learningPaths)
-      .set({ 
+      .set({
         progress,
+        completed,
         updatedAt: new Date()
       })
       .where(eq(learningPaths.id, id))
@@ -679,210 +712,187 @@ export class DatabaseStorage implements IStorage {
     
     return updatedPath;
   }
-
+  
   async markStepAsCompleted(id: number): Promise<LearningPathStep | undefined> {
-    const [updatedStep] = await db
+    const [completedStep] = await db
       .update(learningPathSteps)
-      .set({ completed: true })
+      .set({
+        completed: true
+      })
       .where(eq(learningPathSteps.id, id))
       .returning();
     
-    return updatedStep;
+    if (completedStep) {
+      // Update path progress
+      const pathId = completedStep.pathId;
+      
+      // Get all steps for the path
+      const allSteps = await db
+        .select()
+        .from(learningPathSteps)
+        .where(eq(learningPathSteps.pathId, pathId));
+      
+      const completedSteps = allSteps.filter(step => step.completed).length;
+      const totalSteps = allSteps.length;
+      
+      // Calculate progress percentage
+      const progress = Math.round((completedSteps / totalSteps) * 100);
+      
+      // Update learning path progress
+      await this.updateLearningPathProgress(pathId, progress);
+    }
+    
+    return completedStep;
   }
-
+  
   async generateLearningPath(userId: number, goal: string): Promise<LearningPath> {
-    // We'll implement the AI generation logic in the server routes
-    // This is just a placeholder that creates an empty learning path
-    const [newPath] = await db
-      .insert(learningPaths)
-      .values({
-        userId,
-        title: `Path toward ${goal}`,
-        description: "AI-generated learning path",
-        goal,
-        progress: 0,
-        isAiGenerated: true,
-        createdAt: new Date()
-      })
-      .returning();
+    // This is a stub for now - the actual implementation will be in the AI service
+    const newPath = await this.createLearningPath({
+      userId,
+      title: `Learning Path for: ${goal}`,
+      description: `A custom learning path to achieve your goal: ${goal}`,
+      goal,
+      progress: 0,
+      completed: false
+    });
     
     return newPath;
   }
-
+  
   // Analytics operations
   async logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog> {
-    try {
-      const [logEntry] = await db.insert(userActivityLogs).values(activity).returning();
-      return logEntry;
-    } catch (error) {
-      console.error("Error logging user activity:", error);
-      throw error;
-    }
+    const [newLog] = await db
+      .insert(userActivityLogs)
+      .values(activity)
+      .returning();
+    
+    return newLog;
   }
-
+  
   async getUserActivities(userId: number, limit = 20): Promise<UserActivityLog[]> {
-    try {
-      return db.select()
-        .from(userActivityLogs)
-        .where(eq(userActivityLogs.userId, userId))
-        .orderBy(desc(userActivityLogs.createdAt))
-        .limit(limit);
-    } catch (error) {
-      console.error("Error getting user activities:", error);
-      throw error;
-    }
+    return db
+      .select()
+      .from(userActivityLogs)
+      .where(eq(userActivityLogs.userId, userId))
+      .orderBy(desc(userActivityLogs.timestamp))
+      .limit(limit);
   }
-
+  
   async getUserActivityByTimeframe(userId: number, startDate: Date, endDate: Date): Promise<UserActivityLog[]> {
-    try {
-      return db.select()
-        .from(userActivityLogs)
-        .where(and(
+    return db
+      .select()
+      .from(userActivityLogs)
+      .where(
+        and(
           eq(userActivityLogs.userId, userId),
-          sql`${userActivityLogs.createdAt} >= ${startDate}`,
-          sql`${userActivityLogs.createdAt} <= ${endDate}`
-        ))
-        .orderBy(asc(userActivityLogs.createdAt));
-    } catch (error) {
-      console.error("Error getting user activities by timeframe:", error);
-      throw error;
-    }
+          sql`${userActivityLogs.timestamp} >= ${startDate}`,
+          sql`${userActivityLogs.timestamp} <= ${endDate}`
+        )
+      )
+      .orderBy(desc(userActivityLogs.timestamp));
   }
-
-  // Course analytics operations
+  
+  // Course Analytics operations
   async getCourseAnalytics(courseId: number): Promise<CourseAnalytic | undefined> {
-    try {
-      const [analytics] = await db.select()
-        .from(courseAnalytics)
-        .where(eq(courseAnalytics.courseId, courseId));
-      return analytics;
-    } catch (error) {
-      console.error("Error getting course analytics:", error);
-      throw error;
-    }
+    const [analytic] = await db
+      .select()
+      .from(courseAnalytics)
+      .where(eq(courseAnalytics.courseId, courseId));
+    
+    return analytic;
   }
-
+  
   async updateCourseAnalytics(courseId: number, data: Partial<InsertCourseAnalytic>): Promise<CourseAnalytic> {
-    try {
-      // Check if analytics exist for this course
-      const existing = await this.getCourseAnalytics(courseId);
+    const existing = await this.getCourseAnalytics(courseId);
+    
+    if (existing) {
+      // Update existing analytics
+      const [updated] = await db
+        .update(courseAnalytics)
+        .set(data)
+        .where(eq(courseAnalytics.id, existing.id))
+        .returning();
       
-      if (existing) {
-        // Update existing analytics
-        const [updated] = await db.update(courseAnalytics)
-          .set({
-            ...data,
-            updatedAt: new Date()
-          })
-          .where(eq(courseAnalytics.courseId, courseId))
-          .returning();
-        return updated;
-      } else {
-        // Create new analytics entry
-        const [created] = await db.insert(courseAnalytics)
-          .values({
-            courseId,
-            ...data,
-            totalEnrollments: data.totalEnrollments || 0,
-            completionRate: data.completionRate || 0,
-            dropoffRate: data.dropoffRate || 0
-          })
-          .returning();
-        return created;
-      }
-    } catch (error) {
-      console.error("Error updating course analytics:", error);
-      throw error;
+      return updated;
+    } else {
+      // Create new analytics
+      const [created] = await db
+        .insert(courseAnalytics)
+        .values({
+          courseId,
+          ...data,
+          views: data.views || 0,
+          enrollments: data.enrollments || 0,
+          completions: data.completions || 0,
+          averageRating: data.averageRating || 0,
+          totalReviews: data.totalReviews || 0
+        })
+        .returning();
+      
+      return created;
     }
   }
-
+  
   async getPopularCourses(limit = 10): Promise<(CourseAnalytic & { course: Course })[]> {
-    try {
-      const result = await db.select({
+    const popularCoursesResult = await db
+      .select({
         analytics: courseAnalytics,
         course: courses
       })
       .from(courseAnalytics)
       .leftJoin(courses, eq(courseAnalytics.courseId, courses.id))
-      .orderBy(desc(courseAnalytics.totalEnrollments))
+      .orderBy(desc(courseAnalytics.enrollments))
       .limit(limit);
-      
-      return result.map(({ analytics, course }) => ({
-        ...analytics,
-        course: course as Course
-      })) as (CourseAnalytic & { course: Course })[];
-    } catch (error) {
-      console.error("Error getting popular courses:", error);
-      throw error;
-    }
+    
+    return popularCoursesResult.map(({ analytics, course }) => ({
+      ...analytics,
+      course: course as Course
+    })) as (CourseAnalytic & { course: Course })[];
   }
-
-  // User progress operations
+  
+  // User Progress Snapshot operations
   async getUserProgressSnapshot(userId: number, date?: Date): Promise<UserProgressSnapshot | undefined> {
-    try {
-      if (date) {
-        // Convert Date to string in YYYY-MM-DD format
-        const dateStr = date.toISOString().split('T')[0];
-        
-        // Directly execute the query without chaining
-        const result = await db
-          .select()
-          .from(userProgressSnapshots)
-          .where(and(
-            eq(userProgressSnapshots.userId, userId),
-            eq(userProgressSnapshots.snapshotDate, dateStr)
-          ));
-          
-        return result[0];
-      } else {
-        // Get the most recent snapshot if no date specified
-        const result = await db
-          .select()
-          .from(userProgressSnapshots)
-          .where(eq(userProgressSnapshots.userId, userId))
-          .orderBy(desc(userProgressSnapshots.snapshotDate))
-          .limit(1);
-          
-        return result[0];
-      }
-    } catch (error) {
-      console.error("Error getting user progress snapshot:", error);
-      throw error;
+    let query = db
+      .select()
+      .from(userProgressSnapshots)
+      .where(eq(userProgressSnapshots.userId, userId))
+      .orderBy(desc(userProgressSnapshots.createdAt));
+    
+    if (date) {
+      query = query.where(
+        sql`DATE(${userProgressSnapshots.createdAt}) = DATE(${date})`
+      );
     }
+    
+    query = query.limit(1);
+    
+    const [snapshot] = await query;
+    return snapshot;
   }
-
+  
   async createUserProgressSnapshot(data: InsertUserProgressSnapshot): Promise<UserProgressSnapshot> {
-    try {
-      const [snapshot] = await db.insert(userProgressSnapshots)
-        .values(data)
-        .returning();
-      return snapshot;
-    } catch (error) {
-      console.error("Error creating user progress snapshot:", error);
-      throw error;
-    }
+    const [snapshot] = await db
+      .insert(userProgressSnapshots)
+      .values(data)
+      .returning();
+    
+    return snapshot;
   }
-
+  
   async getUserProgressOverTime(userId: number, startDate: Date, endDate: Date): Promise<UserProgressSnapshot[]> {
-    try {
-      // Convert dates to string in YYYY-MM-DD format
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-      
-      return db.select()
-        .from(userProgressSnapshots)
-        .where(and(
+    return db
+      .select()
+      .from(userProgressSnapshots)
+      .where(
+        and(
           eq(userProgressSnapshots.userId, userId),
-          sql`${userProgressSnapshots.snapshotDate} >= ${startDateStr}`,
-          sql`${userProgressSnapshots.snapshotDate} <= ${endDateStr}`
-        ))
-        .orderBy(asc(userProgressSnapshots.snapshotDate));
-    } catch (error) {
-      console.error("Error getting user progress over time:", error);
-      throw error;
-    }
+          sql`${userProgressSnapshots.createdAt} >= ${startDate}`,
+          sql`${userProgressSnapshots.createdAt} <= ${endDate}`
+        )
+      )
+      .orderBy(asc(userProgressSnapshots.createdAt));
   }
-
+  
   async getPlatformStats(): Promise<{
     totalUsers: number,
     totalCourses: number,
@@ -891,45 +901,380 @@ export class DatabaseStorage implements IStorage {
     averageGrade: number
   }> {
     try {
-      // Get total users
-      const [usersResult] = await db.select({ count: sql<number>`count(*)` }).from(users);
-      const totalUsers = usersResult ? Number(usersResult.count) : 0;
+      // Count total users
+      const [userCount] = await db
+        .select({ count: sql`count(*)` })
+        .from(users);
       
-      // Get total courses
-      const [coursesResult] = await db.select({ count: sql<number>`count(*)` }).from(courses);
-      const totalCourses = coursesResult ? Number(coursesResult.count) : 0;
+      // Count total courses
+      const [courseCount] = await db
+        .select({ count: sql`count(*)` })
+        .from(courses);
       
-      // Get lessons completed
-      const [lessonsResult] = await db.select({ 
-        count: sql<number>`count(*)`
-      }).from(userLessons).where(eq(userLessons.completed, true));
-      const totalLessonsCompleted = lessonsResult ? Number(lessonsResult.count) : 0;
+      // Count completed lessons
+      const [lessonCount] = await db
+        .select({ count: sql`count(*)` })
+        .from(userLessons)
+        .where(eq(userLessons.completed, true));
       
-      // Get assignments completed
-      const [assignmentsResult] = await db.select({ 
-        count: sql<number>`count(*)`
-      }).from(userAssignments).where(eq(userAssignments.status, "submitted"));
-      const totalAssignmentsCompleted = assignmentsResult ? Number(assignmentsResult.count) : 0;
+      // Count completed assignments
+      const [assignmentCount] = await db
+        .select({ count: sql`count(*)` })
+        .from(userAssignments)
+        .where(eq(userAssignments.submitted, true));
       
-      // Calculate average grade
-      const [gradesResult] = await db.select({ 
-        average: sql<number>`avg(grade)`
-      }).from(userAssignments).where(sql`grade is not null`);
-      const averageGrade = gradesResult && gradesResult.average ? Number(gradesResult.average) : 0;
+      // Calculate average grade from assignments
+      const [averageGradeResult] = await db
+        .select({ average: sql`avg(grade)` })
+        .from(userAssignments)
+        .where(
+          and(
+            eq(userAssignments.submitted, true),
+            eq(userAssignments.graded, true)
+          )
+        );
       
       return {
-        totalUsers,
-        totalCourses,
-        totalLessonsCompleted,
-        totalAssignmentsCompleted,
-        averageGrade
+        totalUsers: Number(userCount.count) || 0,
+        totalCourses: Number(courseCount.count) || 0,
+        totalLessonsCompleted: Number(lessonCount.count) || 0,
+        totalAssignmentsCompleted: Number(assignmentCount.count) || 0,
+        averageGrade: Number(averageGradeResult.average) || 0
       };
     } catch (error) {
       console.error("Error getting platform stats:", error);
       throw error;
     }
   }
+
+  // Challenge operations
+  async getChallenges(filters?: { type?: string; active?: boolean; category?: string }): Promise<Challenge[]> {
+    let query = db.select().from(challenges);
+    
+    if (filters) {
+      if (filters.type) {
+        query = query.where(eq(challenges.type, filters.type));
+      }
+      
+      if (filters.category) {
+        query = query.where(eq(challenges.category, filters.category));
+      }
+      
+      if (filters.active !== undefined) {
+        query = query.where(eq(challenges.isActive, filters.active));
+      }
+    }
+    
+    return query.orderBy(challenges.title);
+  }
+  
+  async getChallenge(id: number): Promise<Challenge | undefined> {
+    const [challenge] = await db.select().from(challenges).where(eq(challenges.id, id));
+    return challenge;
+  }
+  
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const [newChallenge] = await db.insert(challenges).values(challenge).returning();
+    return newChallenge;
+  }
+  
+  async updateChallenge(id: number, data: Partial<Challenge>): Promise<Challenge | undefined> {
+    const [updatedChallenge] = await db
+      .update(challenges)
+      .set(data)
+      .where(eq(challenges.id, id))
+      .returning();
+    return updatedChallenge;
+  }
+  
+  async deactivateChallenge(id: number): Promise<Challenge | undefined> {
+    const [deactivatedChallenge] = await db
+      .update(challenges)
+      .set({ isActive: false })
+      .where(eq(challenges.id, id))
+      .returning();
+    return deactivatedChallenge;
+  }
+  
+  async getCourseRelatedChallenges(courseId: number): Promise<Challenge[]> {
+    return db
+      .select()
+      .from(challenges)
+      .where(and(
+        eq(challenges.courseId, courseId),
+        eq(challenges.isActive, true)
+      ));
+  }
+  
+  // User challenge operations
+  async getUserChallenges(userId: number): Promise<(UserChallenge & { challenge: Challenge })[]> {
+    const userChallengesResult = await db
+      .select({
+        userChallenge: userChallenges,
+        challenge: challenges
+      })
+      .from(userChallenges)
+      .leftJoin(challenges, eq(userChallenges.challengeId, challenges.id))
+      .where(eq(userChallenges.userId, userId))
+      .orderBy(desc(userChallenges.createdAt));
+    
+    return userChallengesResult.map(({ userChallenge, challenge }) => ({
+      ...userChallenge,
+      challenge: challenge as Challenge
+    })) as (UserChallenge & { challenge: Challenge })[];
+  }
+  
+  async getUserActiveAndCompletedChallenges(userId: number): Promise<{
+    active: (UserChallenge & { challenge: Challenge })[];
+    completed: (UserChallenge & { challenge: Challenge })[];
+  }> {
+    const userChallenges = await this.getUserChallenges(userId);
+    
+    const active = userChallenges.filter(uc => !uc.isCompleted);
+    const completed = userChallenges.filter(uc => uc.isCompleted);
+    
+    return { active, completed };
+  }
+  
+  async assignChallengeToUser(userId: number, challengeId: number): Promise<UserChallenge> {
+    // Check if this challenge has already been assigned to the user
+    const existing = await db
+      .select()
+      .from(userChallenges)
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ));
+    
+    if (existing.length > 0) {
+      return existing[0];
+    }
+    
+    // Assign new challenge
+    const [newUserChallenge] = await db
+      .insert(userChallenges)
+      .values({
+        userId,
+        challengeId,
+        progress: 0,
+        isCompleted: false,
+        pointsEarned: 0,
+        xpEarned: 0
+      })
+      .returning();
+    
+    return newUserChallenge;
+  }
+  
+  async updateUserChallengeProgress(userId: number, challengeId: number, progress: number): Promise<UserChallenge | undefined> {
+    // Handle out-of-range progress values
+    const sanitizedProgress = Math.max(0, Math.min(100, progress));
+    
+    const [updatedUserChallenge] = await db
+      .update(userChallenges)
+      .set({ 
+        progress: sanitizedProgress,
+        // Mark as completed if progress reaches 100%
+        ...(sanitizedProgress >= 100 ? { isCompleted: true } : {})
+      })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ))
+      .returning();
+    
+    return updatedUserChallenge;
+  }
+  
+  async completeUserChallenge(userId: number, challengeId: number): Promise<UserChallenge | undefined> {
+    // Get the challenge to determine rewards
+    const challenge = await this.getChallenge(challengeId);
+    if (!challenge) {
+      return undefined;
+    }
+    
+    // Update the user challenge
+    const [completedUserChallenge] = await db
+      .update(userChallenges)
+      .set({ 
+        isCompleted: true,
+        progress: 100,
+        completedAt: new Date(),
+        pointsEarned: challenge.pointsReward,
+        xpEarned: challenge.xpReward
+      })
+      .where(and(
+        eq(userChallenges.userId, userId),
+        eq(userChallenges.challengeId, challengeId)
+      ))
+      .returning();
+    
+    if (completedUserChallenge) {
+      // Add XP and points to user level
+      await this.addUserXp(userId, challenge.xpReward);
+      await this.addUserPoints(userId, challenge.pointsReward);
+      
+      // Award badge if applicable
+      if (challenge.badgeId) {
+        await this.awardBadgeToUser({
+          userId,
+          badgeId: challenge.badgeId
+        });
+      }
+    }
+    
+    return completedUserChallenge;
+  }
+  
+  // User level operations
+  async getUserLevel(userId: number): Promise<UserLevel | undefined> {
+    const [level] = await db
+      .select()
+      .from(userLevels)
+      .where(eq(userLevels.userId, userId));
+    
+    return level;
+  }
+  
+  async initializeUserLevel(userId: number): Promise<UserLevel> {
+    // Check if user level already exists
+    const existingLevel = await this.getUserLevel(userId);
+    if (existingLevel) {
+      return existingLevel;
+    }
+    
+    // Create new user level
+    const [newUserLevel] = await db
+      .insert(userLevels)
+      .values({
+        userId,
+        level: 1,
+        currentXp: 0,
+        totalXp: 0,
+        nextLevelXp: 100,
+        streak: 0,
+        totalPoints: 0,
+        lastActivityDate: new Date()
+      })
+      .returning();
+    
+    return newUserLevel;
+  }
+  
+  async addUserXp(userId: number, xpAmount: number): Promise<UserLevel | undefined> {
+    // Ensure user level exists
+    let userLevel = await this.getUserLevel(userId);
+    if (!userLevel) {
+      userLevel = await this.initializeUserLevel(userId);
+    }
+    
+    const newCurrentXp = userLevel.currentXp + xpAmount;
+    const newTotalXp = userLevel.totalXp + xpAmount;
+    
+    // Check if user should level up
+    let { level, nextLevelXp } = userLevel;
+    let remainingXp = newCurrentXp;
+    
+    while (remainingXp >= nextLevelXp) {
+      // Level up
+      level += 1;
+      remainingXp -= nextLevelXp;
+      // Increase XP required for next level (formula: nextLevelXp = currentLevel * 100)
+      nextLevelXp = level * 100;
+    }
+    
+    // Update user level
+    const [updatedUserLevel] = await db
+      .update(userLevels)
+      .set({
+        level,
+        currentXp: remainingXp,
+        totalXp: newTotalXp,
+        nextLevelXp,
+        lastActivityDate: new Date()
+      })
+      .where(eq(userLevels.userId, userId))
+      .returning();
+    
+    return updatedUserLevel;
+  }
+  
+  async addUserPoints(userId: number, pointsAmount: number): Promise<UserLevel | undefined> {
+    // Ensure user level exists
+    let userLevel = await this.getUserLevel(userId);
+    if (!userLevel) {
+      userLevel = await this.initializeUserLevel(userId);
+    }
+    
+    const newTotalPoints = userLevel.totalPoints + pointsAmount;
+    
+    // Update user level
+    const [updatedUserLevel] = await db
+      .update(userLevels)
+      .set({
+        totalPoints: newTotalPoints,
+        lastActivityDate: new Date()
+      })
+      .where(eq(userLevels.userId, userId))
+      .returning();
+    
+    return updatedUserLevel;
+  }
+  
+  async updateUserStreak(userId: number): Promise<UserLevel | undefined> {
+    // Ensure user level exists
+    let userLevel = await this.getUserLevel(userId);
+    if (!userLevel) {
+      userLevel = await this.initializeUserLevel(userId);
+      return userLevel;
+    }
+    
+    const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const lastActivity = userLevel.lastActivityDate ? 
+      userLevel.lastActivityDate.toISOString().split('T')[0] : null;
+    
+    // If already logged activity today, no streak update needed
+    if (lastActivity === today) {
+      return userLevel;
+    }
+    
+    // If last activity was yesterday, increment streak
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    let newStreak = userLevel.streak;
+    if (lastActivity === yesterdayStr) {
+      newStreak += 1;
+    } else {
+      // Reset streak if more than a day has passed
+      newStreak = 1;
+    }
+    
+    // Update streak
+    const [updatedUserLevel] = await db
+      .update(userLevels)
+      .set({
+        streak: newStreak,
+        lastActivityDate: new Date()
+      })
+      .where(eq(userLevels.userId, userId))
+      .returning();
+    
+    return updatedUserLevel;
+  }
+  
+  async resetUserStreak(userId: number): Promise<UserLevel | undefined> {
+    const [updatedUserLevel] = await db
+      .update(userLevels)
+      .set({
+        streak: 0
+      })
+      .where(eq(userLevels.userId, userId))
+      .returning();
+    
+    return updatedUserLevel;
+  }
 }
 
-// Export a singleton instance of the storage
 export const storage = new DatabaseStorage();

@@ -923,6 +923,297 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Adaptive Learning Reward System - Challenge API
+  app.get("/api/challenges", async (req, res) => {
+    try {
+      const filters = req.query as { type?: string; active?: boolean; category?: string };
+      // Convert 'active' string to boolean if present
+      if (filters.active !== undefined) {
+        filters.active = filters.active === 'true';
+      }
+      
+      const challenges = await storage.getChallenges(filters);
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+      res.status(500).json({ message: "Failed to fetch challenges" });
+    }
+  });
+
+  app.get("/api/challenges/:id", async (req, res) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      const challenge = await storage.getChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: "Challenge not found" });
+      }
+      
+      res.json(challenge);
+    } catch (error) {
+      console.error("Error fetching challenge:", error);
+      res.status(500).json({ message: "Failed to fetch challenge" });
+    }
+  });
+  
+  app.post("/api/challenges", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only administrators can create challenges" });
+    }
+    
+    try {
+      const challenge = await storage.createChallenge(req.body);
+      res.status(201).json(challenge);
+    } catch (error) {
+      console.error("Error creating challenge:", error);
+      res.status(500).json({ message: "Failed to create challenge" });
+    }
+  });
+  
+  app.put("/api/challenges/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only administrators can update challenges" });
+    }
+    
+    try {
+      const challengeId = parseInt(req.params.id);
+      const updatedChallenge = await storage.updateChallenge(challengeId, req.body);
+      
+      if (!updatedChallenge) {
+        return res.status(404).json({ message: "Challenge not found" });
+      }
+      
+      res.json(updatedChallenge);
+    } catch (error) {
+      console.error("Error updating challenge:", error);
+      res.status(500).json({ message: "Failed to update challenge" });
+    }
+  });
+  
+  app.delete("/api/challenges/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only administrators can deactivate challenges" });
+    }
+    
+    try {
+      const challengeId = parseInt(req.params.id);
+      const deactivatedChallenge = await storage.deactivateChallenge(challengeId);
+      
+      if (!deactivatedChallenge) {
+        return res.status(404).json({ message: "Challenge not found" });
+      }
+      
+      res.json({ message: "Challenge deactivated successfully" });
+    } catch (error) {
+      console.error("Error deactivating challenge:", error);
+      res.status(500).json({ message: "Failed to deactivate challenge" });
+    }
+  });
+  
+  app.get("/api/courses/:id/challenges", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const challenges = await storage.getCourseRelatedChallenges(courseId);
+      res.json(challenges);
+    } catch (error) {
+      console.error("Error fetching course challenges:", error);
+      res.status(500).json({ message: "Failed to fetch course challenges" });
+    }
+  });
+  
+  // User Challenge API
+  app.get("/api/user/challenges", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      // Try header auth
+      const userId = req.headers['x-user-id'];
+      if (userId) {
+        try {
+          const userChallenges = await storage.getUserChallenges(Number(userId));
+          return res.json(userChallenges);
+        } catch (error) {
+          console.error("Error fetching user challenges with header auth:", error);
+          return res.status(500).json({ message: "Failed to fetch user challenges" });
+        }
+      }
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userChallenges = await storage.getUserChallenges(req.user.id);
+      res.json(userChallenges);
+    } catch (error) {
+      console.error("Error fetching user challenges:", error);
+      res.status(500).json({ message: "Failed to fetch user challenges" });
+    }
+  });
+  
+  app.get("/api/user/challenges/status", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      // Try header auth
+      const userId = req.headers['x-user-id'];
+      if (userId) {
+        try {
+          const challengeStatus = await storage.getUserActiveAndCompletedChallenges(Number(userId));
+          return res.json(challengeStatus);
+        } catch (error) {
+          console.error("Error fetching challenge status with header auth:", error);
+          return res.status(500).json({ message: "Failed to fetch challenge status" });
+        }
+      }
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const challengeStatus = await storage.getUserActiveAndCompletedChallenges(req.user.id);
+      res.json(challengeStatus);
+    } catch (error) {
+      console.error("Error fetching challenge status:", error);
+      res.status(500).json({ message: "Failed to fetch challenge status" });
+    }
+  });
+  
+  app.post("/api/user/challenges/:challengeId/assign", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const challengeId = parseInt(req.params.challengeId);
+      const userChallenge = await storage.assignChallengeToUser(req.user.id, challengeId);
+      res.status(201).json(userChallenge);
+    } catch (error) {
+      console.error("Error assigning challenge:", error);
+      res.status(500).json({ message: "Failed to assign challenge" });
+    }
+  });
+  
+  app.patch("/api/user/challenges/:challengeId/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const challengeId = parseInt(req.params.challengeId);
+      const { progress } = req.body;
+      
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return res.status(400).json({ message: "Invalid progress value" });
+      }
+      
+      const updatedUserChallenge = await storage.updateUserChallengeProgress(
+        req.user.id, 
+        challengeId, 
+        progress
+      );
+      
+      if (!updatedUserChallenge) {
+        return res.status(404).json({ message: "User challenge not found" });
+      }
+      
+      res.json(updatedUserChallenge);
+    } catch (error) {
+      console.error("Error updating challenge progress:", error);
+      res.status(500).json({ message: "Failed to update challenge progress" });
+    }
+  });
+  
+  app.post("/api/user/challenges/:challengeId/complete", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const challengeId = parseInt(req.params.challengeId);
+      const completedChallenge = await storage.completeUserChallenge(req.user.id, challengeId);
+      
+      if (!completedChallenge) {
+        return res.status(404).json({ message: "Challenge not found" });
+      }
+      
+      res.json(completedChallenge);
+    } catch (error) {
+      console.error("Error completing challenge:", error);
+      res.status(500).json({ message: "Failed to complete challenge" });
+    }
+  });
+  
+  // User Level API
+  app.get("/api/user/level", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      // Try header auth
+      const userId = req.headers['x-user-id'];
+      if (userId) {
+        try {
+          const userLevel = await storage.getUserLevel(Number(userId));
+          if (!userLevel) {
+            // Initialize level if it doesn't exist
+            const newUserLevel = await storage.initializeUserLevel(Number(userId));
+            return res.json(newUserLevel);
+          }
+          return res.json(userLevel);
+        } catch (error) {
+          console.error("Error fetching user level with header auth:", error);
+          return res.status(500).json({ message: "Failed to fetch user level" });
+        }
+      }
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userLevel = await storage.getUserLevel(req.user.id);
+      
+      if (!userLevel) {
+        // Initialize level if it doesn't exist
+        const newUserLevel = await storage.initializeUserLevel(req.user.id);
+        return res.json(newUserLevel);
+      }
+      
+      res.json(userLevel);
+    } catch (error) {
+      console.error("Error fetching user level:", error);
+      res.status(500).json({ message: "Failed to fetch user level" });
+    }
+  });
+  
+  app.post("/api/user/level/streak/update", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const updatedLevel = await storage.updateUserStreak(req.user.id);
+      res.json(updatedLevel);
+    } catch (error) {
+      console.error("Error updating user streak:", error);
+      res.status(500).json({ message: "Failed to update user streak" });
+    }
+  });
+  
+  app.post("/api/user/level/xp", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only administrators can manually award XP" });
+    }
+    
+    try {
+      const { userId, xpAmount } = req.body;
+      
+      if (!userId || typeof xpAmount !== 'number' || xpAmount <= 0) {
+        return res.status(400).json({ message: "Valid user ID and positive XP amount required" });
+      }
+      
+      const updatedLevel = await storage.addUserXp(userId, xpAmount);
+      
+      if (!updatedLevel) {
+        return res.status(404).json({ message: "User level not found" });
+      }
+      
+      res.json(updatedLevel);
+    } catch (error) {
+      console.error("Error adding XP:", error);
+      res.status(500).json({ message: "Failed to add XP" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -215,27 +215,35 @@ export type GeneratedLearningPath = {
 };
 
 const LEARNING_PATH_SYSTEM_PROMPT = `
-You are an expert educational advisor specialized in creating personalized learning paths.
-Your task is to create a structured learning path based on a user's goal and the available courses.
+You are an expert educational advisor specialized in creating personalized learning paths that are tailored to specific career goals.
+Your task is to create a structured learning path based on a user's goal, career field, timeframe, and the available courses.
 The output should be in JSON format and should include:
-- title: A concise and engaging title for the learning path
-- description: A detailed overview of what this learning path will help the user achieve (100-150 words)
+- title: A concise and engaging title for the learning path that reflects both the learning goal and career path
+- description: A detailed overview of what this learning path will help the user achieve professionally (100-150 words), with emphasis on career relevance
 - goal: The main learning goal (copied from the user's input)
-- estimatedDuration: Estimated weeks to complete the learning path (integer, 4-52)
+- estimatedDuration: Estimated weeks to complete the learning path (integer, adjust based on the user's timeframe)
 - steps: An array of step objects, each containing:
   - courseId: The ID of the course (from the provided course list)
   - courseName: The name of the course (from the provided course list)
   - order: The sequence number (starting from 1)
   - required: Boolean indicating if this course is essential (true) or optional (false)
-  - notes: A brief note on why this course is relevant to the goal (1-2 sentences)
+  - notes: A brief note explaining the course's relevance to both the learning goal and career aspirations (1-2 sentences)
+
+Be sure to structure the path in a logical progression that builds skills incrementally toward the career goal.
+Focus on practical, career-relevant skills that would be valuable in the specified profession.
+For career transitions or upskilling, emphasize the most directly transferable and in-demand skills first.
 `;
 
 /**
- * Generates a learning path based on a user's goal and available courses
+ * Generates a learning path based on a user's goal, career field, and available courses
  */
 export async function generateLearningPath(
   userId: number,
-  goal: string
+  goal: string,
+  options: {
+    careerField?: string;
+    timeframe?: string;
+  } = {}
 ): Promise<GeneratedLearningPath> {
   // Get all available courses
   const allCourses = await storage.getCourses();
@@ -259,8 +267,25 @@ export async function generateLearningPath(
       durationHours: course.durationHours || 10
     }));
   
+  // Extract career field and timeframe from options
+  const careerField = options.careerField || '';
+  const timeframe = options.timeframe || '6 months';
+  
+  // Estimate number of weeks based on timeframe
+  let estimatedWeeks = 12; // default to 12 weeks
+  if (timeframe.includes('month')) {
+    const months = parseInt(timeframe.split(' ')[0]) || 6;
+    estimatedWeeks = months * 4; // roughly 4 weeks per month
+  } else if (timeframe.includes('year')) {
+    const years = parseInt(timeframe.split(' ')[0]) || 1;
+    estimatedWeeks = years * 52; // 52 weeks per year
+  }
+
   const prompt = `
     Create a personalized learning path to help the user achieve this goal: "${goal}"
+    
+    ${careerField ? `The user's target career field is: ${careerField}` : ''}
+    ${timeframe ? `The user plans to complete this learning path in approximately: ${timeframe}` : ''}
     
     Available courses to include in the path:
     ${availableCourses.map(c => `- ID: ${c.id}, Title: "${c.title}", Category: ${c.category}, Level: ${c.level || "Intermediate"}, Duration: ${c.durationHours || 10}h`).join('\n')}
@@ -269,10 +294,12 @@ export async function generateLearningPath(
     
     Important:
     1. Only include courses from the available list
-    2. Order courses in a logical progression
+    2. Order courses in a logical progression that builds career-relevant skills step by step
     3. Include 3-7 courses that would help achieve the goal
     4. Mark essential courses as required
-    5. Add brief notes for each course explaining its relevance to the goal
+    5. Add brief notes for each course explaining its relevance to the goal and the target career field
+    6. Focus particularly on skills essential for someone pursuing a career in ${careerField || "the user's field of interest"}
+    7. Structure the learning path to be completable within the ${timeframe} timeframe
   `;
   
   try {
@@ -338,17 +365,18 @@ export async function generateLearningPath(
   }
   
   // Always return a fallback plan (either if APIs aren't available or if they fail)
+  const careerFieldText = careerField ? ` for a career in ${careerField}` : '';
   const fallbackPath: GeneratedLearningPath = {
-    title: `Learning Path: ${goal}`,
-    description: `A carefully structured learning journey to help you achieve your goal: ${goal}. This path has been curated based on your interests and learning objectives.`,
+    title: `Learning Path: ${goal}${careerFieldText}`,
+    description: `A carefully structured learning journey to help you achieve your goal: ${goal}${careerFieldText}. This path has been curated based on your interests, career aspirations, and learning objectives to be completed within ${timeframe}.`,
     goal,
-    estimatedDuration: 12, // Default to 12 weeks
+    estimatedDuration: estimatedWeeks,
     steps: availableCourses.slice(0, 5).map((course, index) => ({
       courseId: course.id,
       courseName: course.title,
       order: index + 1,
       required: index < 3, // First 3 courses required
-      notes: `This course provides essential knowledge for your goal of ${goal}.`
+      notes: `This course provides essential knowledge ${careerFieldText ? `and skills for ${careerField}` : ''} to achieve your goal of ${goal}.`
     }))
   };
   

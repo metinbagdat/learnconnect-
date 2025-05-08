@@ -133,9 +133,9 @@ export default function LearningPathPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create a Learning Path</DialogTitle>
+                <DialogTitle>Create a Career-Focused Learning Path</DialogTitle>
                 <DialogDescription>
-                  Enter a specific learning goal, and our AI will generate a personalized learning path for you.
+                  Enter your learning goal, target career field, and timeframe to have our AI generate a personalized curriculum that prepares you for your desired profession.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">

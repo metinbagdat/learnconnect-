@@ -661,14 +661,21 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
     
     try {
-      const { goal } = req.body;
+      const { goal, careerField, timeframe } = req.body;
       
       if (!goal || typeof goal !== "string") {
         return res.status(400).json({ message: "Goal is required" });
       }
       
-      // Generate learning path with AI
-      const generatedPath = await generateLearningPath(req.user.id, goal);
+      // Generate learning path with AI, now including career field and timeframe
+      const generatedPath = await generateLearningPath(
+        req.user.id, 
+        goal, 
+        { 
+          careerField: careerField || '', 
+          timeframe: timeframe || '6 months' 
+        }
+      );
       
       // Save to database
       const learningPath = await saveLearningPath(req.user.id, generatedPath);

@@ -9,6 +9,7 @@ import * as fs from "fs";
 import * as path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { seedChallenges } from "./seed-challenges";
 
 // Initialize the OpenAI client
 const openai = new OpenAI({

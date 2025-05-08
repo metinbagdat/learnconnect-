@@ -24,6 +24,8 @@ export default function LearningPathPage() {
   const queryClient = useQueryClient();
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [goalInput, setGoalInput] = useState("");
+  const [careerField, setCareerField] = useState("");
+  const [timeframe, setTimeframe] = useState("6 months");
 
   // Fetch user's learning paths or a specific learning path
   const { data: learningPath, isLoading: pathLoading } = useQuery({
@@ -48,8 +50,8 @@ export default function LearningPathPage() {
 
   // Mutation to generate a new learning path
   const generatePathMutation = useMutation({
-    mutationFn: async (goal: string) => {
-      const res = await apiRequest("POST", "/api/learning-paths", { goal });
+    mutationFn: async (data: { goal: string, careerField: string, timeframe: string }) => {
+      const res = await apiRequest("POST", "/api/learning-paths", data);
       return await res.json();
     },
     onSuccess: (data) => {
@@ -104,7 +106,11 @@ export default function LearningPathPage() {
       });
       return;
     }
-    generatePathMutation.mutate(goalInput);
+    generatePathMutation.mutate({
+      goal: goalInput,
+      careerField: careerField,
+      timeframe: timeframe
+    });
   };
 
   // Mark a learning path step as completed
@@ -141,6 +147,33 @@ export default function LearningPathPage() {
                     value={goalInput}
                     onChange={(e) => setGoalInput(e.target.value)}
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="careerField">Target Career Field</Label>
+                  <Input
+                    id="careerField"
+                    placeholder="e.g., Software Engineering, Data Science, UI/UX Design"
+                    value={careerField}
+                    onChange={(e) => setCareerField(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Specify your target profession or career path</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="timeframe">Learning Timeframe</Label>
+                  <select
+                    id="timeframe"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={timeframe}
+                    onChange={(e) => setTimeframe(e.target.value)}
+                  >
+                    <option value="3 months">3 months</option>
+                    <option value="6 months">6 months</option>
+                    <option value="1 year">1 year</option>
+                    <option value="2 years">2 years</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">How much time you plan to dedicate to this learning path</p>
                 </div>
               </div>
               <DialogFooter>

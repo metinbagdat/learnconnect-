@@ -171,6 +171,58 @@ async function runMigration() {
       );
     `);
     
+    // Create Adaptive Learning Reward System tables
+    // Create challenges table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS challenges (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(100) NOT NULL,
+        description TEXT NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        category VARCHAR(50) NOT NULL,
+        difficulty VARCHAR(20) NOT NULL DEFAULT 'medium',
+        points_reward INTEGER NOT NULL DEFAULT 10,
+        xp_reward INTEGER NOT NULL DEFAULT 5,
+        badge_id INTEGER REFERENCES badges(id),
+        requirements JSONB NOT NULL DEFAULT '{}',
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMP,
+        course_id INTEGER REFERENCES courses(id),
+        lesson_id INTEGER REFERENCES lessons(id)
+      );
+    `);
+    
+    // Create user_challenges table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_challenges (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        challenge_id INTEGER NOT NULL REFERENCES challenges(id),
+        progress INTEGER NOT NULL DEFAULT 0,
+        is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+        completed_at TIMESTAMP,
+        points_earned INTEGER DEFAULT 0,
+        xp_earned INTEGER DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    // Create user_levels table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_levels (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        level INTEGER NOT NULL DEFAULT 1,
+        current_xp INTEGER NOT NULL DEFAULT 0,
+        total_xp INTEGER NOT NULL DEFAULT 0,
+        next_level_xp INTEGER NOT NULL DEFAULT 100,
+        streak INTEGER NOT NULL DEFAULT 0,
+        last_activity_date DATE,
+        total_points INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+    
     console.log("Database migration completed successfully!");
   } catch (error) {
     console.error("Error during migration:", error);

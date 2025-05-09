@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useSkillChallenge } from "@/hooks/use-skill-challenge";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -11,11 +12,12 @@ import { UserInterests } from "@/components/ui/user-interests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
-import { Book, CheckCircle, FileText, Award, Search } from "lucide-react";
+import { Book, CheckCircle, FileText, Award, Search, Zap } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { triggerSkillChallenge } = useSkillChallenge();
   const [, navigate] = useLocation();
   
   const { data: userCourses = [], isLoading: coursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
@@ -99,6 +101,17 @@ export default function Dashboard() {
             
             {/* Stats */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-neutral-900">Your Progress</h2>
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center text-primary hover:text-primary-600 hover:bg-primary-50"
+                  onClick={() => triggerSkillChallenge("daily")}
+                >
+                  <Zap className="mr-1 h-4 w-4" />
+                  Daily Challenge
+                </Button>
+              </div>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard 
                   icon={Book} 

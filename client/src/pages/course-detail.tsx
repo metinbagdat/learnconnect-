@@ -100,15 +100,27 @@ export default function CourseDetail() {
   
   // Update progress when a lesson is completed
   const markLessonAsCompleted = async () => {
-    if (!user || !course) return;
+    if (!user || !course || !selectedLessonId) return;
     
     try {
-      // This is a simplified implementation
-      // In a real application, you would update the user's progress for this specific lesson
+      // Update lesson progress (simplified implementation)
+      // In a real implementation, call the API to update lesson progress
+      // await apiRequest("POST", `/api/user/lessons/${selectedLessonId}/progress`, { progress: 100 });
+      
+      // Show success toast
       toast({
         title: "Progress updated",
         description: "Your progress has been saved.",
       });
+      
+      // 30% chance to trigger a skill challenge after completing a lesson
+      const triggerChance = Math.random();
+      if (triggerChance < 0.3) {
+        // Small delay to show the challenge after the progress toast
+        setTimeout(() => {
+          triggerSkillChallenge("skill");
+        }, 1500);
+      }
     } catch (error) {
       toast({
         title: "Error",

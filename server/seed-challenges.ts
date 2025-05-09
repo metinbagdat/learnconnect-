@@ -11,7 +11,7 @@ export async function seedChallenges() {
       console.log("Seeding challenges...");
       
       // Create a variety of challenges
-      const challengesToCreate = [
+      const basicChallenges = [
         {
           title: "Complete Your First Course",
           description: "Enroll and complete your first course with 100% progress",
@@ -68,6 +68,127 @@ export async function seedChallenges() {
           requirements: { completionDays: 2 }
         }
       ];
+      
+      // Bite-sized skill challenges for popups
+      const skillChallenges = [
+        {
+          title: "Quick Quiz Master",
+          description: "Complete 3 module quizzes with a score of 80% or higher",
+          type: "skill" as const,
+          category: "Knowledge",
+          difficulty: "easy" as const,
+          pointsReward: 75,
+          xpReward: 30,
+          isActive: true,
+          requirements: { quizScore: 80, quizCount: 3 }
+        },
+        {
+          title: "Fast Learner",
+          description: "Complete a lesson in under 10 minutes",
+          type: "skill" as const,
+          category: "Time",
+          difficulty: "easy" as const,
+          pointsReward: 50,
+          xpReward: 25,
+          isActive: true,
+          requirements: { lessonTimeMinutes: 10 }
+        },
+        {
+          title: "Note Taker",
+          description: "Take notes on 5 different lessons",
+          type: "skill" as const,
+          category: "Engagement",
+          difficulty: "easy" as const,
+          pointsReward: 60,
+          xpReward: 30,
+          isActive: true,
+          requirements: { notesCount: 5 }
+        },
+        {
+          title: "Code Snippet Master",
+          description: "Complete 3 coding exercises in a programming course",
+          type: "skill" as const,
+          category: "Mastery",
+          difficulty: "medium" as const,
+          pointsReward: 120,
+          xpReward: 60,
+          isActive: true,
+          requirements: { codingExercises: 3 }
+        },
+        {
+          title: "Weekend Warrior",
+          description: "Study for at least 2 hours during the weekend",
+          type: "skill" as const,
+          category: "Dedication",
+          difficulty: "medium" as const,
+          pointsReward: 100,
+          xpReward: 50,
+          isActive: true,
+          requirements: { weekendHours: 2 }
+        },
+        {
+          title: "Morning Learner",
+          description: "Complete a lesson before 9 AM",
+          type: "skill" as const,
+          category: "Timing",
+          difficulty: "medium" as const,
+          pointsReward: 80,
+          xpReward: 40,
+          isActive: true,
+          requirements: { beforeHour: 9 }
+        },
+        {
+          title: "Visual Learner",
+          description: "Watch all video content in a module",
+          type: "skill" as const,
+          category: "Content",
+          difficulty: "easy" as const,
+          pointsReward: 70,
+          xpReward: 35,
+          isActive: true,
+          requirements: { videosWatched: "all" }
+        }
+      ];
+      
+      // Daily popup challenges
+      const dailyChallenges = [
+        {
+          title: "Daily Focus Session",
+          description: "Complete at least one lesson today",
+          type: "daily" as const,
+          category: "Consistency",
+          difficulty: "easy" as const,
+          pointsReward: 40,
+          xpReward: 20,
+          isActive: true,
+          requirements: { dailyLessons: 1 }
+        },
+        {
+          title: "Daily Practice",
+          description: "Complete at least one exercise today",
+          type: "daily" as const,
+          category: "Practice",
+          difficulty: "easy" as const,
+          pointsReward: 45,
+          xpReward: 25,
+          isActive: true,
+          requirements: { dailyExercises: 1 }
+        },
+        {
+          title: "Study Milestone",
+          description: "Study for at least 30 minutes today",
+          type: "daily" as const,
+          category: "Time",
+          difficulty: "easy" as const,
+          pointsReward: 50,
+          xpReward: 25,
+          isActive: true,
+          requirements: { dailyMinutes: 30 }
+        }
+      ];
+      
+      // Combine all challenges
+      const challengesToCreate = [...basicChallenges, ...skillChallenges, ...dailyChallenges];
       
       for (const challenge of challengesToCreate) {
         await storage.createChallenge(challenge);

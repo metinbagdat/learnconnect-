@@ -38,16 +38,22 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
   });
 
   // Fetch available skill challenges
-  const { data: challenges } = useQuery({
+  const { data: challenges = [] } = useQuery<Challenge[]>({
     queryKey: ["/api/challenges"],
     enabled: !!user,
   });
 
   // Fetch user's active challenges to avoid showing challenges already accepted
-  const { data: userChallenges = { active: [], completed: [] } } = useQuery({
+  const { data: userChallengesData } = useQuery<UserChallengeStatus>({
     queryKey: ["/api/user/challenges/status"],
     enabled: !!user,
   });
+  
+  // Default empty status if data is not yet available
+  const userChallenges: UserChallengeStatus = userChallengesData || { 
+    active: [], 
+    completed: [] 
+  };
 
   // Update session storage when shown challenges change
   useEffect(() => {
@@ -58,15 +64,15 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
 
   // Get random skill challenge that hasn't been shown or accepted yet
   const getRandomSkillChallenge = (type?: string) => {
-    if (!challenges || !userChallenges) return null;
+    if (challenges.length === 0) return null;
 
     // Get active challenge IDs
-    const activeIds = (userChallenges.active || []).map((uc: any) => uc.challenge.id);
-    const completedIds = (userChallenges.completed || []).map((uc: any) => uc.challenge.id);
+    const activeIds = userChallenges.active.map((uc) => uc.challenge.id);
+    const completedIds = userChallenges.completed.map((uc) => uc.challenge.id);
     
     // Find eligible challenges
-    const eligibleChallenges = (challenges || []).filter(
-      (challenge: Challenge) => 
+    const eligibleChallenges = challenges.filter(
+      (challenge) => 
         // Not already active or completed
         !activeIds.includes(challenge.id) && 
         !completedIds.includes(challenge.id) &&

@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { useSkillChallenge } from "@/hooks/use-skill-challenge";
 import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -22,6 +23,7 @@ export default function CourseDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { triggerSkillChallenge } = useSkillChallenge();
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [lessonContent, setLessonContent] = useState<string | null>(null);
   const [loadingContent, setLoadingContent] = useState<boolean>(false);

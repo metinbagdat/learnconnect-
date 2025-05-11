@@ -927,10 +927,17 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // Adaptive Learning Reward System - Challenge API
   app.get("/api/challenges", async (req, res) => {
     try {
-      const filters = req.query as { type?: string; active?: boolean; category?: string };
+      const query = req.query as { type?: string; active?: string; category?: string };
+      
+      // Create filters object with correct types
+      const filters: { type?: string; active?: boolean; category?: string } = {
+        type: query.type,
+        category: query.category
+      };
+      
       // Convert 'active' string to boolean if present
-      if (filters.active !== undefined) {
-        filters.active = filters.active === 'true';
+      if (query.active !== undefined) {
+        filters.active = query.active === 'true';
       }
       
       const challenges = await storage.getChallenges(filters);
@@ -1141,13 +1148,24 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   app.post("/api/user/challenges/:challengeId/complete", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId: number;
+    
+    // Check for session auth
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header auth
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
     
     try {
       const challengeId = parseInt(req.params.challengeId);
-      const completedChallenge = await storage.completeUserChallenge(req.user.id, challengeId);
+      const completedChallenge = await storage.completeUserChallenge(userId, challengeId);
       
       if (!completedChallenge) {
         return res.status(404).json({ message: "Challenge not found" });

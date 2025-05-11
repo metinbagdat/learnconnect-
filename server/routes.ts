@@ -1074,13 +1074,24 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   app.post("/api/user/challenges/:challengeId/assign", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId: number;
+    
+    // Check for session auth
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header auth
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
     
     try {
       const challengeId = parseInt(req.params.challengeId);
-      const userChallenge = await storage.assignChallengeToUser(req.user.id, challengeId);
+      const userChallenge = await storage.assignChallengeToUser(userId, challengeId);
       res.status(201).json(userChallenge);
     } catch (error) {
       console.error("Error assigning challenge:", error);
@@ -1089,8 +1100,19 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   app.patch("/api/user/challenges/:challengeId/progress", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId: number;
+    
+    // Check for session auth
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header auth
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
     
     try {
@@ -1102,7 +1124,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       const updatedUserChallenge = await storage.updateUserChallengeProgress(
-        req.user.id, 
+        userId, 
         challengeId, 
         progress
       );

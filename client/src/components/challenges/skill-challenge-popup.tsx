@@ -30,12 +30,22 @@ export function SkillChallengePopup({
   open,
   setOpen,
 }: SkillChallengePopupProps) {
+  console.log("SkillChallengePopup rendered with:", { 
+    challenge, 
+    open, 
+    challengeTitle: challenge?.title,
+    challengeType: challenge?.type 
+  });
+
   const [acceptingChallenge, setAcceptingChallenge] = useState(false);
 
   const handleAccept = async () => {
+    console.log("Accepting challenge:", challenge?.id);
     try {
       setAcceptingChallenge(true);
-      await apiRequest("POST", `/api/user/challenges/${challenge.id}/assign`);
+      const response = await apiRequest("POST", `/api/user/challenges/${challenge.id}/assign`);
+      console.log("Challenge accepted response:", response);
+      
       toast({
         title: "Challenge Accepted!",
         description: "New challenge has been added to your active challenges.",
@@ -43,6 +53,7 @@ export function SkillChallengePopup({
       onAccept();
       setOpen(false);
     } catch (error) {
+      console.error("Failed to accept challenge:", error);
       toast({
         title: "Failed to accept challenge",
         description: "Please try again later.",
@@ -54,6 +65,7 @@ export function SkillChallengePopup({
   };
 
   const handleSkip = () => {
+    console.log("Skipping challenge:", challenge?.id);
     onSkip();
     setOpen(false);
   };

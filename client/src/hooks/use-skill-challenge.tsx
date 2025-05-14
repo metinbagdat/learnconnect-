@@ -38,15 +38,27 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
   });
 
   // Fetch available skill challenges
-  const { data: challenges = [] } = useQuery<Challenge[]>({
+  const { data: challenges = [], isLoading: isChallengesLoading } = useQuery<Challenge[]>({
     queryKey: ["/api/challenges"],
     enabled: !!user,
+    onSuccess: (data) => {
+      console.log("Challenges fetched successfully:", data);
+    },
+    onError: (error) => {
+      console.error("Error fetching challenges:", error);
+    }
   });
 
   // Fetch user's active challenges to avoid showing challenges already accepted
-  const { data: userChallengesData } = useQuery<UserChallengeStatus>({
+  const { data: userChallengesData, isLoading: isUserChallengesLoading } = useQuery<UserChallengeStatus>({
     queryKey: ["/api/user/challenges/status"],
     enabled: !!user,
+    onSuccess: (data) => {
+      console.log("User challenges fetched successfully:", data);
+    },
+    onError: (error) => {
+      console.error("Error fetching user challenges:", error);
+    }
   });
   
   // Default empty status if data is not yet available

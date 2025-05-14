@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Challenge, UserChallenge } from "@shared/schema";
 import { SkillChallengePopup } from "@/components/challenges/skill-challenge-popup";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
+import { toast } from "@/hooks/use-toast";
 
 // Define types for challenge status data structure
 interface UserChallengeWithChallenge extends UserChallenge {
@@ -22,43 +23,24 @@ interface SkillChallengeContextType {
 
 const SkillChallengeContext = createContext<SkillChallengeContextType | undefined>(undefined);
 
-// Session storage key to track shown challenges
-const SHOWN_CHALLENGES_KEY = "shown_skill_challenges";
-
 export function SkillChallengeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const queryClient = useQueryClient();
-
+  
   // Track which challenges have been shown to the user in this session
-  const [shownChallenges, setShownChallenges] = useState<number[]>(() => {
-    const stored = sessionStorage.getItem(SHOWN_CHALLENGES_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
-
+  const [shownChallenges, setShownChallenges] = useState<number[]>([]);
+  
   // Fetch available skill challenges
-  const { data: challenges = [], isLoading: isChallengesLoading } = useQuery<Challenge[]>({
+  const { data: challenges = [] } = useQuery<Challenge[]>({
     queryKey: ["/api/challenges"],
-    enabled: !!user,
-    onSuccess: (data) => {
-      console.log("Challenges fetched successfully:", data);
-    },
-    onError: (error) => {
-      console.error("Error fetching challenges:", error);
-    }
+    enabled: !!user
   });
-
+  
   // Fetch user's active challenges to avoid showing challenges already accepted
-  const { data: userChallengesData, isLoading: isUserChallengesLoading } = useQuery<UserChallengeStatus>({
+  const { data: userChallengesData } = useQuery<UserChallengeStatus>({
     queryKey: ["/api/user/challenges/status"],
-    enabled: !!user,
-    onSuccess: (data) => {
-      console.log("User challenges fetched successfully:", data);
-    },
-    onError: (error) => {
-      console.error("Error fetching user challenges:", error);
-    }
+    enabled: !!user
   });
   
   // Default empty status if data is not yet available
@@ -66,18 +48,32 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
     active: [], 
     completed: [] 
   };
-
-  // Update session storage when shown challenges change
+  
+  // Debug logging
   useEffect(() => {
-    if (shownChallenges.length > 0) {
-      sessionStorage.setItem(SHOWN_CHALLENGES_KEY, JSON.stringify(shownChallenges));
+    if (challenges && challenges.length > 0) {
+      console.log("Challenges loaded:", challenges.length);
     }
-  }, [shownChallenges]);
-
-  // Get random skill challenge that hasn't been shown or accepted yet
-  const getRandomSkillChallenge = (type?: string) => {
-    if (challenges.length === 0) return null;
-
+  }, [challenges]);
+  
+  useEffect(() => {
+    if (userChallengesData) {
+      console.log("User challenges loaded:", 
+        userChallengesData.active.length, "active,",
+        userChallengesData.completed.length, "completed"
+      );
+    }
+  }, [userChallengesData]);
+  
+  // Function to find a suitable challenge
+  const findSuitableChallenge = (type?: string): Challenge | null => {
+    console.log("Finding challenge of type:", type);
+    
+    if (!challenges || challenges.length === 0) {
+      console.log("No challenges available");
+      return null;
+    }
+    
     // Get active challenge IDs
     const activeIds = userChallenges.active.map((uc) => uc.challenge.id);
     const completedIds = userChallenges.completed.map((uc) => uc.challenge.id);
@@ -95,70 +91,59 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
         // Only skill challenges or specific popup-worthy types
         (challenge.type === 'skill' || challenge.type === 'daily')
     );
-
-    if (eligibleChallenges.length === 0) return null;
+    
+    console.log("Eligible challenges:", eligibleChallenges.length);
+    
+    if (eligibleChallenges.length === 0) {
+      // Fallback to any challenge for daily challenges
+      if (type === "daily") {
+        const anyChallenge = challenges.find(c => 
+          !activeIds.includes(c.id) && 
+          (c.type === 'daily' || c.type === 'skill')
+        );
+        
+        if (anyChallenge) {
+          console.log("Using fallback challenge:", anyChallenge.title);
+          return anyChallenge;
+        }
+        
+        // Last resort: just pick the first challenge that's not active
+        if (challenges.length > 0) {
+          const firstAvailable = challenges[0];
+          console.log("Using first available challenge:", firstAvailable.title);
+          return firstAvailable;
+        }
+      }
+      
+      console.log("No suitable challenges found");
+      return null;
+    }
     
     // Return a random challenge from eligible ones
-    return eligibleChallenges[Math.floor(Math.random() * eligibleChallenges.length)];
+    const selectedChallenge = eligibleChallenges[Math.floor(Math.random() * eligibleChallenges.length)];
+    console.log("Selected challenge:", selectedChallenge.title);
+    return selectedChallenge;
   };
-
+  
   const triggerSkillChallenge = async (challengeType?: string) => {
+    console.log("Triggering skill challenge of type:", challengeType);
+    
     if (!user) {
       console.error("Cannot trigger challenge: No user logged in");
       return;
     }
-
-    console.log("Attempting to trigger skill challenge of type:", challengeType);
     
-    // If no challenges are loaded yet, fetch them directly
-    if (challenges.length === 0) {
-      console.log("No challenges found in state, fetching directly");
-      try {
-        const response = await fetch('/api/challenges');
-        const fetchedChallenges: Challenge[] = await response.json();
-        console.log("Fetched challenges:", fetchedChallenges);
-        
-        // Get a default challenge for demonstration if no challenges available
-        if (fetchedChallenges.length === 0) {
-          console.log("No challenges returned from API");
-          return;
-        }
-        
-        // Pick a valid challenge
-        const validChallenge = fetchedChallenges.find(c => 
-          (challengeType ? c.type === challengeType : (c.type === 'skill' || c.type === 'daily'))
-        );
-        
-        if (!validChallenge) {
-          console.log("No matching challenge found in fetched data");
-          return;
-        }
-        
-        setCurrentChallenge(validChallenge);
-        setIsPopupOpen(true);
-        setShownChallenges((prev) => [...prev, validChallenge.id]);
-        return;
-      } catch (error) {
-        console.error("Failed to fetch challenges:", error);
-        return;
-      }
-    }
-
-    const challenge = getRandomSkillChallenge(challengeType);
+    const challenge = findSuitableChallenge(challengeType);
+    
     if (!challenge) {
-      console.log("No eligible challenge found for type:", challengeType);
-      // Fallback to any challenge type if specific type not found
-      const anyChallenge = challenges[0];
-      if (anyChallenge) {
-        console.log("Using fallback challenge:", anyChallenge.title);
-        setCurrentChallenge(anyChallenge);
-        setIsPopupOpen(true);
-        setShownChallenges((prev) => [...prev, anyChallenge.id]);
-        return;
-      }
+      console.log("No suitable challenge found");
+      toast({
+        title: "No challenges available",
+        description: "Try again later when new challenges are available.",
+      });
       return;
     }
-
+    
     console.log("Showing challenge:", challenge.title);
     setCurrentChallenge(challenge);
     setIsPopupOpen(true);
@@ -166,21 +151,24 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
     // Add to shown challenges
     setShownChallenges((prev) => [...prev, challenge.id]);
   };
-
+  
   const dismissCurrentChallenge = () => {
+    console.log("Dismissing current challenge");
     setIsPopupOpen(false);
     setTimeout(() => setCurrentChallenge(null), 300);
   };
-
+  
+  // Handle accepting a challenge
   const handleAcceptChallenge = async () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/user/challenges/status"] });
+    console.log("Challenge accepted");
+    dismissCurrentChallenge();
   };
-
+  
   const contextValue: SkillChallengeContextType = {
     triggerSkillChallenge,
     dismissCurrentChallenge,
   };
-
+  
   return (
     <SkillChallengeContext.Provider value={contextValue}>
       {children}

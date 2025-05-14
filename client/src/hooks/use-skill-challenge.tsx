@@ -91,11 +91,63 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
   };
 
   const triggerSkillChallenge = async (challengeType?: string) => {
-    if (!user) return;
+    if (!user) {
+      console.error("Cannot trigger challenge: No user logged in");
+      return;
+    }
+
+    console.log("Attempting to trigger skill challenge of type:", challengeType);
+    
+    // If no challenges are loaded yet, fetch them directly
+    if (challenges.length === 0) {
+      console.log("No challenges found in state, fetching directly");
+      try {
+        const response = await fetch('/api/challenges');
+        const fetchedChallenges: Challenge[] = await response.json();
+        console.log("Fetched challenges:", fetchedChallenges);
+        
+        // Get a default challenge for demonstration if no challenges available
+        if (fetchedChallenges.length === 0) {
+          console.log("No challenges returned from API");
+          return;
+        }
+        
+        // Pick a valid challenge
+        const validChallenge = fetchedChallenges.find(c => 
+          (challengeType ? c.type === challengeType : (c.type === 'skill' || c.type === 'daily'))
+        );
+        
+        if (!validChallenge) {
+          console.log("No matching challenge found in fetched data");
+          return;
+        }
+        
+        setCurrentChallenge(validChallenge);
+        setIsPopupOpen(true);
+        setShownChallenges((prev) => [...prev, validChallenge.id]);
+        return;
+      } catch (error) {
+        console.error("Failed to fetch challenges:", error);
+        return;
+      }
+    }
 
     const challenge = getRandomSkillChallenge(challengeType);
-    if (!challenge) return;
+    if (!challenge) {
+      console.log("No eligible challenge found for type:", challengeType);
+      // Fallback to any challenge type if specific type not found
+      const anyChallenge = challenges[0];
+      if (anyChallenge) {
+        console.log("Using fallback challenge:", anyChallenge.title);
+        setCurrentChallenge(anyChallenge);
+        setIsPopupOpen(true);
+        setShownChallenges((prev) => [...prev, anyChallenge.id]);
+        return;
+      }
+      return;
+    }
 
+    console.log("Showing challenge:", challenge.title);
     setCurrentChallenge(challenge);
     setIsPopupOpen(true);
     

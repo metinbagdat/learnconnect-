@@ -104,9 +104,12 @@ export default function Dashboard() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-neutral-900">Your Progress</h2>
                 <Button 
-                  variant="ghost" 
-                  className="flex items-center text-primary hover:text-primary-600 hover:bg-primary-50"
-                  onClick={() => triggerSkillChallenge("daily")}
+                  variant="outline" 
+                  className="flex items-center bg-primary/10 text-primary hover:text-primary-600 hover:bg-primary/20"
+                  onClick={() => {
+                    console.log("Daily Challenge button clicked");
+                    triggerSkillChallenge("daily");
+                  }}
                 >
                   <Zap className="mr-1 h-4 w-4" />
                   Daily Challenge

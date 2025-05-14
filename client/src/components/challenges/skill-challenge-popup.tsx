@@ -117,13 +117,16 @@ export function SkillChallengePopup({
           <div className="rounded-lg bg-muted p-4">
             <h4 className="font-medium mb-2">Requirements</h4>
             <ul className="list-disc list-inside text-sm space-y-1">
-              {Object.entries(challenge.requirements as Record<string, any>).map(
-                ([key, value]) => (
-                  <li key={key}>
-                    {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}: {value}
-                  </li>
-                )
-              )}
+              {challenge.requirements && typeof challenge.requirements === 'object' 
+                ? Object.entries(challenge.requirements as Record<string, any>).map(
+                    ([key, value]) => (
+                      <li key={key}>
+                        {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}: {value}
+                      </li>
+                    )
+                  )
+                : <li>Complete this challenge to earn rewards</li>
+              }
             </ul>
           </div>
         </div>

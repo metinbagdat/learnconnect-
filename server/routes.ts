@@ -1285,6 +1285,95 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     
     return res.status(403).json({ message: "Only administrators can seed challenges" });
   });
+  
+  // Suggestions API for goals, fields, lessons, etc.
+  app.get("/api/suggestions", async (req, res) => {
+    try {
+      const type = req.query.type as string;
+      const query = req.query.query as string || '';
+      
+      // Load suggestions based on the requested type
+      let suggestions: string[] = [];
+      
+      switch (type) {
+        case 'goals':
+          suggestions = [
+            "Become a Full Stack Developer",
+            "Master Data Science",
+            "Learn Mobile App Development",
+            "Prepare for College Entrance Exams",
+            "Improve Coding Skills",
+            "Learn UI/UX Design",
+            "Master Mathematics",
+            "Prepare for YKS Exam",
+            "Learn Machine Learning",
+            "Develop Game Design Skills"
+          ];
+          break;
+          
+        case 'fields':
+          suggestions = [
+            "Computer Science",
+            "Mathematics",
+            "Data Science",
+            "Web Development",
+            "Mobile Development",
+            "UI/UX Design",
+            "Game Development",
+            "Artificial Intelligence",
+            "Software Engineering",
+            "College Preparation",
+            "YKS Exam Preparation",
+            "Science and Research"
+          ];
+          break;
+          
+        case 'courseTopics':
+          suggestions = [
+            "JavaScript Fundamentals",
+            "Advanced Mathematics",
+            "React Development",
+            "Database Design",
+            "Python Programming",
+            "Mobile App Development",
+            "Data Structures and Algorithms",
+            "Machine Learning Basics",
+            "User Interface Design",
+            "TYT Mathematics",
+            "AYT Physics",
+            "YDT English Preparation",
+            "Node.js Backend Development"
+          ];
+          break;
+          
+        case 'timeframes':
+          suggestions = [
+            "3 months",
+            "6 months",
+            "1 year",
+            "18 months",
+            "2 years"
+          ];
+          break;
+          
+        default:
+          return res.status(400).json({ message: "Invalid suggestion type" });
+      }
+      
+      // Filter suggestions by query if provided
+      if (query) {
+        const lowerQuery = query.toLowerCase();
+        suggestions = suggestions.filter(item => 
+          item.toLowerCase().includes(lowerQuery)
+        );
+      }
+      
+      res.json(suggestions);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      res.status(500).json({ message: "Failed to fetch suggestions" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

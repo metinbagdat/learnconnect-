@@ -16,6 +16,7 @@ import AuthPage from "@/pages/auth-page";
 import LearningPathPage from "@/pages/learning-path-page";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import ChallengesPage from "@/pages/challenges";
+import SuggestionsDemoPage from "@/pages/suggestions-demo";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <ProtectedRoute path="/challenges" component={ChallengesPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/admin" component={AdminPanel} />
+      <ProtectedRoute path="/suggestions" component={SuggestionsDemoPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

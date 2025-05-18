@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Sparkles,
   Shield,
-  Map
+  Map,
+  Lightbulb
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/hooks/use-language";
@@ -104,6 +105,19 @@ export function Sidebar() {
             isActive={location === '/resources'}
           >
             {t('resources')}
+          </SidebarLink>
+          
+          <SidebarLink 
+            href="/suggestions" 
+            icon={<Lightbulb className="h-5 w-5" />}
+            isActive={location === '/suggestions'}
+          >
+            <span className="flex items-center">
+              Smart Suggestions
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-green-500 to-teal-500 text-white">
+                New
+              </span>
+            </span>
           </SidebarLink>
           
           <SidebarLink 

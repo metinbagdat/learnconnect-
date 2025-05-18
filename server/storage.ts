@@ -29,6 +29,16 @@ import {
   type InsertUserChallenge,
   type UserLevel,
   type InsertUserLevel,
+  // Achievement types
+  type Achievement,
+  type InsertAchievement,
+  type UserAchievement,
+  type InsertUserAchievement,
+  // Leaderboard types
+  type Leaderboard,
+  type InsertLeaderboard,
+  type LeaderboardEntry,
+  type InsertLeaderboardEntry,
   insertCourseSchema,
   insertModuleSchema,
   insertLessonSchema,
@@ -69,7 +79,12 @@ import {
   // Adaptive Learning Reward System tables
   challenges,
   userChallenges,
-  userLevels
+  userLevels,
+  // Achievements and Leaderboards tables
+  achievements,
+  userAchievements,
+  leaderboards,
+  leaderboardEntries
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

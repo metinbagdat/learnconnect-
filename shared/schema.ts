@@ -167,6 +167,55 @@ export const userProgressSnapshots = pgTable("user_progress_snapshots", {
 
 // Adaptive Learning Reward System tables
 
+// Achievements
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // academic, engagement, mastery, social
+  imageUrl: text("image_url"),
+  criteria: jsonb("criteria").notNull().default({}), // Criteria for earning the achievement
+  pointsReward: integer("points_reward").notNull().default(50),
+  xpReward: integer("xp_reward").notNull().default(25),
+  badgeId: integer("badge_id").references(() => badges.id),
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"), // common, uncommon, rare, epic, legendary
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// User Achievements
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id),
+  earnedAt: timestamp("earned_at").notNull().defaultNow(),
+  pointsEarned: integer("points_earned").default(0),
+  xpEarned: integer("xp_earned").default(0),
+});
+
+// Leaderboards
+export const leaderboards = pgTable("leaderboards", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // points, xp, courses_completed, streaks
+  timeframe: varchar("timeframe", { length: 20 }).notNull().default("weekly"), // daily, weekly, monthly, all_time
+  isActive: boolean("is_active").notNull().default(true),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Leaderboard Entries
+export const leaderboardEntries = pgTable("leaderboard_entries", {
+  id: serial("id").primaryKey(),
+  leaderboardId: integer("leaderboard_id").notNull().references(() => leaderboards.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  score: integer("score").notNull().default(0),
+  rank: integer("rank"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Challenges
 export const challenges = pgTable("challenges", {
   id: serial("id").primaryKey(),
@@ -250,6 +299,36 @@ export const insertUserProgressSnapshotSchema = createInsertSchema(userProgressS
 });
 
 // Adaptive Learning Reward System insert schemas
+
+// Achievement schemas
+export const insertAchievementSchema = createInsertSchema(achievements, {
+  category: z.enum(["academic", "engagement", "mastery", "social"]),
+  rarity: z.enum(["common", "uncommon", "rare", "epic", "legendary"]),
+}).omit({ 
+  id: true,
+  createdAt: true
+});
+
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).omit({ 
+  id: true,
+  earnedAt: true
+});
+
+// Leaderboard schemas
+export const insertLeaderboardSchema = createInsertSchema(leaderboards, {
+  type: z.enum(["points", "xp", "courses_completed", "streaks"]),
+  timeframe: z.enum(["daily", "weekly", "monthly", "all_time"]),
+}).omit({ 
+  id: true,
+  createdAt: true
+});
+
+export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).omit({ 
+  id: true,
+  updatedAt: true
+});
+
+// Challenge schemas
 export const insertChallengeSchema = createInsertSchema(challenges, {
   type: z.enum(["daily", "skill", "course", "streak", "assignment"]),
   difficulty: z.enum(["easy", "medium", "hard"]),
@@ -295,6 +374,20 @@ export type UserProgressSnapshot = typeof userProgressSnapshots.$inferSelect;
 export type InsertUserProgressSnapshot = z.infer<typeof insertUserProgressSnapshotSchema>;
 
 // Adaptive Learning Reward System types
+
+// Achievement types
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+
+// Leaderboard types
+export type Leaderboard = typeof leaderboards.$inferSelect;
+export type InsertLeaderboard = z.infer<typeof insertLeaderboardSchema>;
+export type LeaderboardEntry = typeof leaderboardEntries.$inferSelect;
+export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardEntrySchema>;
+
+// Challenge types
 export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 export type UserChallenge = typeof userChallenges.$inferSelect;

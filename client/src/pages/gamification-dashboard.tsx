@@ -100,7 +100,8 @@ export default function GamificationDashboard() {
     queryKey: ["/api/user/activities", { limit: 5 }],
     queryFn: async ({ queryKey }) => {
       const [url, params] = queryKey;
-      const response = await fetch(`${url}?limit=${params.limit}`);
+      const limit = typeof params === 'object' && 'limit' in params ? params.limit : 5;
+      const response = await fetch(`${url}?limit=${limit}`);
       if (!response.ok) throw new Error("Failed to load activities");
       return await response.json();
     },

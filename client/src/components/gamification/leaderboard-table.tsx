@@ -96,7 +96,7 @@ export function LeaderboardTable({
             >
               <TableCell className="font-medium">
                 <div className="flex items-center justify-center">
-                  {renderRankIcon(entry.rank)}
+                  {renderRankIcon(entry.rank || 0)}
                 </div>
               </TableCell>
               <TableCell>

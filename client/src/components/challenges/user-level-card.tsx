@@ -1,102 +1,105 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Flame, Award, Star } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, Star, Flame, TrendingUp } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
-type UserLevel = {
-  id: number;
-  userId: number;
-  level: number;
-  currentXp: number;
-  totalXp: number;
-  nextLevelXp: number;
-  streak: number;
-  totalPoints: number;
-  lastActivityDate: string;
-};
+interface UserLevelCardProps {
+  hideTitle?: boolean;
+}
 
-export function UserLevelCard() {
-  const { data: userLevel, isLoading, error } = useQuery<UserLevel>({
-    queryKey: ['/api/user/level'],
-    retry: 1,
+export function UserLevelCard({ hideTitle = false }: UserLevelCardProps) {
+  const { toast } = useToast();
+  
+  const { data: userLevel, isLoading, error } = useQuery({
+    queryKey: ["/api/user/level"],
+    queryFn: async ({ queryKey }) => {
+      const response = await fetch(queryKey[0]);
+      if (!response.ok) throw new Error("Failed to load user level");
+      return await response.json();
+    },
   });
 
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-1/3 rounded"></CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="h-4 w-full animate-pulse bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-4 w-3/4 animate-pulse bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-4 w-1/2 animate-pulse bg-gray-200 dark:bg-gray-700 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center p-4">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
     );
   }
 
-  if (error || !userLevel) {
+  if (error) {
+    toast({
+      title: "Error loading user level",
+      description: (error as Error).message,
+      variant: "destructive",
+    });
+    return null;
+  }
+
+  if (!userLevel) {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Level Progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Unable to load your level data. Please try again later.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center p-4 text-muted-foreground">
+        <p>No level data available</p>
+      </div>
     );
   }
 
-  const xpPercentage = (userLevel.currentXp / userLevel.nextLevelXp) * 100;
+  // Calculate XP required for next level
+  const baseXpRequired = 100; // Base XP for level 1
+  const multiplier = 1.5; // Increase factor for each level
+  
+  const currentLevel = userLevel.level || 1;
+  const nextLevelXp = Math.floor(baseXpRequired * Math.pow(multiplier, currentLevel - 1));
+  
+  // Calculate progress to next level
+  const levelProgress = userLevel.currentXp ? Math.min(Math.floor((userLevel.currentXp / nextLevelXp) * 100), 100) : 0;
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span>Level {userLevel.level}</span>
-          <span className="text-sm font-normal flex items-center text-amber-500">
-            <Star className="h-4 w-4 mr-1" />
-            {userLevel.totalPoints} Points
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">Experience</span>
-              <span className="text-sm text-muted-foreground">
-                {userLevel.currentXp} / {userLevel.nextLevelXp} XP
-              </span>
-            </div>
-            <Progress value={xpPercentage} className="h-2" />
+    <div className="space-y-4">
+      {!hideTitle && (
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Your Level</CardTitle>
+        </CardHeader>
+      )}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <TrendingUp className="h-6 w-6 text-primary" />
           </div>
-
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <Award className="h-5 w-5 mr-2 text-blue-500" />
-              <div>
-                <div className="text-sm font-medium">Total XP</div>
-                <div className="text-xs text-muted-foreground">{userLevel.totalXp} experience points earned</div>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <Flame className={`h-5 w-5 mr-2 ${userLevel.streak > 0 ? 'text-orange-500' : 'text-gray-400'}`} />
-              <div>
-                <div className="text-sm font-medium">Streak</div>
-                <div className="text-xs text-muted-foreground">{userLevel.streak} day{userLevel.streak !== 1 ? 's' : ''} in a row</div>
-              </div>
-            </div>
+          <div>
+            <p className="text-xl font-bold">Level {userLevel.level}</p>
+            <p className="text-xs text-muted-foreground">
+              {userLevel.currentXp}/{nextLevelXp} XP to Level {currentLevel + 1}
+            </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        <Badge variant="outline" className="text-lg px-3 py-1">
+          {userLevel.totalXp} XP
+        </Badge>
+      </div>
+      
+      <Progress value={levelProgress} className="h-2" />
+      
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="bg-muted/50 rounded-md p-3 flex justify-between items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Points</p>
+            <p className="text-xl font-bold">{userLevel.totalPoints || 0}</p>
+          </div>
+          <Star className="h-5 w-5 text-yellow-500" />
+        </div>
+        
+        <div className="bg-muted/50 rounded-md p-3 flex justify-between items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Streak</p>
+            <p className="text-xl font-bold">{userLevel.streak || 0} days</p>
+          </div>
+          <Flame className="h-5 w-5 text-orange-500" />
+        </div>
+      </div>
+    </div>
   );
 }

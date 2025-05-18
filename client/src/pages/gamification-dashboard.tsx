@@ -165,7 +165,7 @@ export default function GamificationDashboard() {
             <CardTitle className="text-lg">Your Level</CardTitle>
           </CardHeader>
           <CardContent>
-            <UserLevelCard hideTitle />
+            <UserLevelCard hideTitle={true} />
           </CardContent>
         </Card>
         

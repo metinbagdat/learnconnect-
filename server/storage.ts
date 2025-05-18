@@ -215,6 +215,21 @@ export interface IStorage {
   updateUserStreak(userId: number): Promise<UserLevel | undefined>;
   resetUserStreak(userId: number): Promise<UserLevel | undefined>;
   
+  // Achievement operations
+  getAchievements(filters?: { category?: string; rarity?: string; }): Promise<Achievement[]>;
+  getAchievement(id: number): Promise<Achievement | undefined>;
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  getUserAchievements(userId: number): Promise<(UserAchievement & { achievement: Achievement })[]>;
+  awardAchievementToUser(userId: number, achievementId: number): Promise<UserAchievement>;
+  
+  // Leaderboard operations
+  getLeaderboards(filters?: { type?: string; timeframe?: string; }): Promise<Leaderboard[]>;
+  getLeaderboard(id: number): Promise<(Leaderboard & { entries: (LeaderboardEntry & { user: User })[] }) | undefined>;
+  createLeaderboard(leaderboard: InsertLeaderboard): Promise<Leaderboard>;
+  updateLeaderboardEntry(userId: number, leaderboardId: number, score: number): Promise<LeaderboardEntry>;
+  getLeaderboardEntries(leaderboardId: number, limit?: number): Promise<(LeaderboardEntry & { user: User })[]>;
+  getUserRankings(userId: number): Promise<(LeaderboardEntry & { leaderboard: Leaderboard })[]>;
+  
   // Session store
   sessionStore: SessionStore;
 }

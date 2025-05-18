@@ -520,11 +520,18 @@ export class DatabaseStorage implements IStorage {
   
   // Module operations
   async getModules(courseId: number): Promise<Module[]> {
-    return db
-      .select()
-      .from(modules)
-      .where(eq(modules.courseId, courseId))
-      .orderBy(modules.orderIndex);
+    try {
+      const result = await db
+        .select()
+        .from(modules)
+        .where(eq(modules.courseId, courseId))
+        .orderBy(asc(modules.orderIndex));
+      
+      return result;
+    } catch (error) {
+      console.error("Database error in getModules:", error);
+      return [];
+    }
   }
   
   async createModule(module: InsertModule): Promise<Module> {

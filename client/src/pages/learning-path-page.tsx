@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useLocation } from "wouter";
-import { Loader2, Plus, ChevronRight, Check, Award, FileText, ArrowRight } from "lucide-react";
+import { Loader2, Plus, ChevronRight, Check, Award, FileText, ArrowRight, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { LearningPath, LearningPathStep, Course } from "@shared/schema";
+import { SuggestionSelect, SuggestionAutocomplete } from "@/components/suggestions/suggestion-select";
 
 export default function LearningPathPage() {
   const { id } = useParams();
@@ -139,40 +140,46 @@ export default function LearningPathPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
+                <div className="flex items-center mb-2 text-primary">
+                  <Lightbulb className="w-4 h-4 mr-1" />
+                  <span className="text-sm font-medium">Smart suggestions enabled</span>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="goal">Learning Goal</Label>
-                  <Input
-                    id="goal"
+                  <SuggestionAutocomplete
+                    type="goals"
+                    label="What do you want to achieve?"
                     placeholder="e.g., Become a full-stack web developer"
                     value={goalInput}
-                    onChange={(e) => setGoalInput(e.target.value)}
+                    onChange={setGoalInput}
+                    required
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="careerField">Target Career Field</Label>
-                  <Input
-                    id="careerField"
-                    placeholder="e.g., Software Engineering, Data Science, UI/UX Design"
+                  <SuggestionAutocomplete
+                    type="fields"
+                    label="Your field of interest"
+                    placeholder="e.g., Software Engineering, Data Science"
                     value={careerField}
-                    onChange={(e) => setCareerField(e.target.value)}
+                    onChange={setCareerField}
+                    required
                   />
                   <p className="text-xs text-muted-foreground">Specify your target profession or career path</p>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="timeframe">Learning Timeframe</Label>
-                  <select
-                    id="timeframe"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  <SuggestionSelect
+                    type="timeframes"
+                    label="Duration"
+                    placeholder="Select a timeframe"
                     value={timeframe}
-                    onChange={(e) => setTimeframe(e.target.value)}
-                  >
-                    <option value="3 months">3 months</option>
-                    <option value="6 months">6 months</option>
-                    <option value="1 year">1 year</option>
-                    <option value="2 years">2 years</option>
-                  </select>
+                    onChange={setTimeframe}
+                    required
+                  />
                   <p className="text-xs text-muted-foreground">How much time you plan to dedicate to this learning path</p>
                 </div>
               </div>

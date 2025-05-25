@@ -9,10 +9,13 @@ import { AIAssistant } from "@/components/ui/ai-assistant";
 import { AssignmentList } from "@/components/ui/assignment-list";
 import { CourseRecommendations } from "@/components/ui/course-recommendations";
 import { UserInterests } from "@/components/ui/user-interests";
+import { UserLevelCard } from "@/components/challenges/user-level-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { Book, CheckCircle, FileText, Award, Search, Zap } from "lucide-react";
+import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 
 export default function Dashboard() {
@@ -33,12 +36,30 @@ export default function Dashboard() {
     refetchOnMount: true,
     retry: 3,
   });
+
+  // Fetch user level for gamification
+  const { data: userLevel } = useQuery({
+    queryKey: ["/api/user/level"],
+    enabled: !!user,
+  });
+
+  // Fetch user achievements
+  const { data: userAchievements = [] } = useQuery({
+    queryKey: ["/api/user/achievements"],
+    enabled: !!user,
+  });
+
+  // Fetch active challenges
+  const { data: challengeStatus } = useQuery({
+    queryKey: ["/api/user/challenges/status"],
+    enabled: !!user,
+  });
   
   // Compute stats
   const coursesInProgress = userCourses.filter(uc => !uc.completed).length;
   const completedCourses = userCourses.filter(uc => uc.completed).length;
   const pendingAssignments = assignments.length;
-  const achievementsCount = 8; // Example fixed value
+  const achievementsCount = userAchievements.length;
   
   // Get in-progress courses
   const inProgressCourses = userCourses
@@ -143,6 +164,190 @@ export default function Dashboard() {
                   value={achievementsCount} 
                   color="secondary" 
                 />
+              </div>
+            </div>
+
+            {/* Gamification Summary Widget */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg border border-primary/20 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/20 rounded-full p-2">
+                      <Trophy className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Your Achievements</h3>
+                      <p className="text-sm text-muted-foreground">Level up your learning journey</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate('/gamification')}
+                    className="bg-white/50 hover:bg-white/80"
+                  >
+                    View All
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* User Level */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-primary/10">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Target className="h-4 w-4 text-primary" />
+                        Your Level
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {userLevel ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl font-bold">Level {userLevel.level}</span>
+                            <Badge variant="secondary">{userLevel.totalXp} XP</Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-sm text-muted-foreground">
+                              <span>Progress to Level {userLevel.level + 1}</span>
+                              <span>{userLevel.currentXp}/100</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-primary h-2 rounded-full transition-all duration-300" 
+                                style={{ width: `${Math.min((userLevel.currentXp / 100) * 100, 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>Complete challenges to unlock your level!</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Active Challenges */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-primary/10">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Flame className="h-4 w-4 text-orange-500" />
+                        Active Challenges
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {challengeStatus?.active && challengeStatus.active.length > 0 ? (
+                        <div className="space-y-3">
+                          {challengeStatus.active.slice(0, 2).map((challenge: any) => (
+                            <div key={challenge.id} className="flex items-center justify-between p-2 bg-white/50 rounded">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium truncate">{challenge.challenge?.title}</p>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                                  <div 
+                                    className="bg-orange-500 h-1.5 rounded-full" 
+                                    style={{ width: `${challenge.progress || 0}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {challenge.progress || 0}%
+                              </Badge>
+                            </div>
+                          ))}
+                          {challengeStatus.active.length > 2 && (
+                            <p className="text-xs text-muted-foreground text-center">
+                              +{challengeStatus.active.length - 2} more challenges
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p className="text-sm">No active challenges</p>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="mt-2"
+                            onClick={() => navigate('/challenges')}
+                          >
+                            Start Challenge
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Achievements */}
+                  <Card className="bg-white/60 backdrop-blur-sm border-primary/10">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Award className="h-4 w-4 text-yellow-500" />
+                        Recent Achievements
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {userAchievements && userAchievements.length > 0 ? (
+                        <div className="space-y-3">
+                          {userAchievements.slice(0, 3).map((achievement: any) => (
+                            <div key={achievement.id} className="flex items-center gap-3 p-2 bg-white/50 rounded">
+                              <div className="bg-yellow-100 rounded-full p-1">
+                                <Award className="h-3 w-3 text-yellow-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                  {achievement.achievement?.title}
+                                </p>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {achievement.achievement?.rarity}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    +{achievement.xpEarned} XP
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p className="text-sm">No achievements yet</p>
+                          <p className="text-xs mt-1">Complete courses and challenges to earn achievements!</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-primary/10">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate('/challenges')}
+                    className="bg-white/50 hover:bg-white/80"
+                  >
+                    <Target className="h-4 w-4 mr-2" />
+                    View Challenges
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate('/gamification')}
+                    className="bg-white/50 hover:bg-white/80"
+                  >
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Leaderboards
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => triggerSkillChallenge("random")}
+                    className="bg-white/50 hover:bg-white/80"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Quick Challenge
+                  </Button>
+                </div>
               </div>
             </div>
             

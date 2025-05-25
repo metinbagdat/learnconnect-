@@ -15,7 +15,8 @@ import {
   Sparkles,
   Shield,
   Map,
-  Lightbulb
+  Lightbulb,
+  Trophy
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/hooks/use-language";
@@ -105,6 +106,19 @@ export function Sidebar() {
             isActive={location === '/resources'}
           >
             {t('resources')}
+          </SidebarLink>
+          
+          <SidebarLink 
+            href="/gamification" 
+            icon={<Trophy className="h-5 w-5" />}
+            isActive={location === '/gamification'}
+          >
+            <span className="flex items-center">
+              Achievements
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+                🏆
+              </span>
+            </span>
           </SidebarLink>
           
           <SidebarLink 

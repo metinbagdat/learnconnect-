@@ -2,17 +2,46 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Share2, Trophy, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Share2, Trophy, TrendingUp, Home, ArrowLeft } from "lucide-react";
 import { SocialFeed } from "@/components/social/social-feed";
 import { SocialProfile } from "@/components/social/social-profile";
 import { SocialShare } from "@/components/social/social-share";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 
 export default function SocialPage() {
   const { user } = useAuth();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Navigation Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <Link href="/">
+            <Button variant="outline" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          
+          <div className="flex gap-2">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Home className="h-4 w-4" />
+                Home
+              </Button>
+            </Link>
+            <Link href="/gamification">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Trophy className="h-4 w-4" />
+                Achievements
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">

@@ -217,15 +217,15 @@ export default function Dashboard() {
                       {userLevel ? (
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-2xl font-bold">Level {userLevel.level}</span>
-                            <Badge variant="secondary">{userLevel.totalXp} XP</Badge>
+                            <span className="text-2xl font-bold">Level {(userLevel as any)?.level || 1}</span>
+                            <Badge variant="secondary">{(userLevel as any)?.totalXp || 0} XP</Badge>
                           </div>
                           <InteractiveProgressBar
-                            current={userLevel.currentXp || 0}
+                            current={(userLevel as any)?.currentXp || 0}
                             max={100}
-                            label={`Progress to Level ${(userLevel.level || 1) + 1}`}
+                            label={`Progress to Level ${((userLevel as any)?.level || 1) + 1}`}
                             onLevelUp={() => {
-                              celebrateLevelUp((userLevel.level || 1) + 1);
+                              celebrateLevelUp(((userLevel as any)?.level || 1) + 1);
                               checkAndUnlockAchievements(user?.id || 0);
                             }}
                           />
@@ -247,9 +247,9 @@ export default function Dashboard() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {challengeStatus?.active && challengeStatus.active.length > 0 ? (
+                      {(challengeStatus as any)?.active && (challengeStatus as any).active.length > 0 ? (
                         <div className="space-y-3">
-                          {challengeStatus.active.slice(0, 2).map((challenge: any) => (
+                          {(challengeStatus as any).active.slice(0, 2).map((challenge: any) => (
                             <div key={challenge.id} className="flex items-center justify-between p-2 bg-white/50 rounded">
                               <div className="flex-1">
                                 <p className="text-sm font-medium truncate">{challenge.challenge?.title}</p>
@@ -265,9 +265,9 @@ export default function Dashboard() {
                               </Badge>
                             </div>
                           ))}
-                          {challengeStatus.active.length > 2 && (
+                          {(challengeStatus as any).active.length > 2 && (
                             <p className="text-xs text-muted-foreground text-center">
-                              +{challengeStatus.active.length - 2} more challenges
+                              +{(challengeStatus as any).active.length - 2} more challenges
                             </p>
                           )}
                         </div>
@@ -296,9 +296,9 @@ export default function Dashboard() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {userAchievements && userAchievements.length > 0 ? (
+                      {userAchievements && (userAchievements as any[]).length > 0 ? (
                         <div className="space-y-3">
-                          {userAchievements.slice(0, 3).map((achievement: any) => (
+                          {(userAchievements as any[]).slice(0, 3).map((achievement: any) => (
                             <div key={achievement.id} className="flex items-center gap-3 p-2 bg-white/50 rounded">
                               <div className="bg-yellow-100 rounded-full p-1">
                                 <Award className="h-3 w-3 text-yellow-600" />

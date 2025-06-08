@@ -19,7 +19,7 @@ export default function SocialPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <Link href="/">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 hover:shadow-md hover:scale-105 transition-all duration-200">
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
@@ -27,13 +27,13 @@ export default function SocialPage() {
           
           <div className="flex gap-2">
             <Link href="/">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary hover:scale-105 transition-all duration-200">
                 <Home className="h-4 w-4" />
                 Home
               </Button>
             </Link>
             <Link href="/gamification">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary hover:scale-105 transition-all duration-200">
                 <Trophy className="h-4 w-4" />
                 Achievements
               </Button>

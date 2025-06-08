@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
-import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame } from "lucide-react";
+import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 
 export default function Dashboard() {
@@ -41,19 +41,19 @@ export default function Dashboard() {
   });
 
   // Fetch user level for gamification
-  const { data: userLevel } = useQuery({
+  const { data: userLevel = {} } = useQuery<any>({
     queryKey: ["/api/user/level"],
     enabled: !!user,
   });
 
   // Fetch user achievements
-  const { data: userAchievements = [] } = useQuery({
+  const { data: userAchievements = [] } = useQuery<any[]>({
     queryKey: ["/api/user/achievements"],
     enabled: !!user,
   });
 
   // Fetch active challenges
-  const { data: challengeStatus } = useQuery({
+  const { data: challengeStatus = {} } = useQuery<any>({
     queryKey: ["/api/user/challenges/status"],
     enabled: !!user,
   });

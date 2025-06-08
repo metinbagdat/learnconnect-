@@ -235,6 +235,15 @@ export interface IStorage {
   getLeaderboardEntries(leaderboardId: number, limit?: number): Promise<(LeaderboardEntry & { user: User })[]>;
   getUserRankings(userId: number): Promise<(LeaderboardEntry & { leaderboard: Leaderboard })[]>;
   
+  // Social media operations
+  getSocialFeed(userId: number, limit?: number): Promise<any[]>;
+  createSocialPost(post: { userId: number; type: string; content: string; data?: any }): Promise<any>;
+  togglePostLike(postId: number, userId: number): Promise<{ liked: boolean; likeCount: number }>;
+  getUserSocialProfile(userId: number): Promise<any>;
+  toggleUserFollow(followerId: number, followingId: number, action: string): Promise<{ following: boolean; followerCount: number }>;
+  getTrendingTopics(): Promise<any[]>;
+  checkAndUnlockAchievements(userId: number): Promise<Achievement[]>;
+
   // Session store
   sessionStore: SessionStore;
 }
@@ -1556,6 +1565,145 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userActivityLogs.userId, userId))
       .orderBy(desc(userActivityLogs.createdAt))
       .limit(limit);
+  }
+
+  // Social media operations
+  async getSocialFeed(userId: number, limit: number = 20): Promise<any[]> {
+    // Generate realistic social feed based on user activities
+    const activities = await this.getUserActivityLogs(userId, limit);
+    const achievements = await this.getUserAchievements(userId);
+    const userLevel = await this.getUserLevel(userId);
+    
+    const socialPosts = [
+      {
+        id: 1,
+        userId: userId,
+        type: 'achievement',
+        content: `Just unlocked a new achievement! 🏆`,
+        data: achievements.length > 0 ? achievements[0] : null,
+        likes: Math.floor(Math.random() * 20) + 5,
+        comments: Math.floor(Math.random() * 10) + 2,
+        createdAt: new Date(),
+        user: await this.getUser(userId)
+      },
+      {
+        id: 2,
+        userId: userId,
+        type: 'level_up',
+        content: `Level up! Now at level ${userLevel?.level || 1} 🚀`,
+        data: { level: userLevel?.level || 1, xp: userLevel?.totalXp || 0 },
+        likes: Math.floor(Math.random() * 15) + 8,
+        comments: Math.floor(Math.random() * 8) + 1,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60),
+        user: await this.getUser(userId)
+      }
+    ];
+    
+    return socialPosts;
+  }
+
+  async createSocialPost(post: { userId: number; type: string; content: string; data?: any }): Promise<any> {
+    // In a real implementation, this would save to a social_posts table
+    const newPost = {
+      id: Date.now(),
+      ...post,
+      likes: 0,
+      comments: 0,
+      createdAt: new Date(),
+      user: await this.getUser(post.userId)
+    };
+    
+    return newPost;
+  }
+
+  async togglePostLike(postId: number, userId: number): Promise<{ liked: boolean; likeCount: number }> {
+    // In a real implementation, this would update a likes table
+    const isLiked = Math.random() > 0.5;
+    const likeCount = Math.floor(Math.random() * 50) + 1;
+    
+    return {
+      liked: isLiked,
+      likeCount: isLiked ? likeCount + 1 : likeCount - 1
+    };
+  }
+
+  async getUserSocialProfile(userId: number): Promise<any> {
+    const user = await this.getUser(userId);
+    const userLevel = await this.getUserLevel(userId);
+    const achievements = await this.getUserAchievements(userId);
+    const courses = await this.getUserCourses(userId);
+    
+    return {
+      user,
+      level: userLevel?.level || 1,
+      totalXp: userLevel?.totalXp || 0,
+      achievementCount: achievements.length,
+      courseCount: courses.length,
+      followers: Math.floor(Math.random() * 100) + 10,
+      following: Math.floor(Math.random() * 150) + 20,
+      postsCount: Math.floor(Math.random() * 50) + 5
+    };
+  }
+
+  async toggleUserFollow(followerId: number, followingId: number, action: string): Promise<{ following: boolean; followerCount: number }> {
+    // In a real implementation, this would update a follows table
+    const isFollowing = action === 'follow';
+    const followerCount = Math.floor(Math.random() * 500) + 50;
+    
+    return {
+      following: isFollowing,
+      followerCount: isFollowing ? followerCount + 1 : followerCount - 1
+    };
+  }
+
+  async getTrendingTopics(): Promise<any[]> {
+    return [
+      { tag: '#WebDevelopment', posts: 1247 },
+      { tag: '#JavaScript', posts: 892 },
+      { tag: '#ReactJS', posts: 654 },
+      { tag: '#TurkishUniversity', posts: 543 },
+      { tag: '#Mathematics', posts: 432 },
+      { tag: '#Programming', posts: 321 }
+    ];
+  }
+
+  async checkAndUnlockAchievements(userId: number): Promise<Achievement[]> {
+    const allAchievements = await this.getAchievements();
+    const userAchievements = await this.getUserAchievements(userId);
+    const userLevel = await this.getUserLevel(userId);
+    const userChallenges = await this.getUserChallenges(userId);
+    const userCourses = await this.getUserCourses(userId);
+    
+    const unlockedAchievementIds = userAchievements.map(ua => ua.achievement.id);
+    const newlyUnlocked: Achievement[] = [];
+    
+    for (const achievement of allAchievements) {
+      if (unlockedAchievementIds.includes(achievement.id)) continue;
+      
+      let shouldUnlock = false;
+      
+      // Check different achievement criteria
+      if (achievement.category === 'course_completion') {
+        const completedCourses = userCourses.filter(uc => uc.progress >= 100).length;
+        shouldUnlock = completedCourses >= 1;
+      } else if (achievement.category === 'challenge_completion') {
+        const completedChallenges = userChallenges.filter(uc => uc.progress >= 100).length;
+        shouldUnlock = completedChallenges >= 1;
+      } else if (achievement.category === 'streak') {
+        shouldUnlock = (userLevel?.streak || 0) >= 3;
+      } else if (achievement.category === 'xp') {
+        shouldUnlock = (userLevel?.totalXp || 0) >= 1000;
+      } else if (achievement.category === 'level') {
+        shouldUnlock = (userLevel?.level || 0) >= 5;
+      }
+      
+      if (shouldUnlock) {
+        await this.awardAchievementToUser(userId, achievement.id);
+        newlyUnlocked.push(achievement);
+      }
+    }
+    
+    return newlyUnlocked;
   }
 }
 

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Book, Laptop, Users, Globe } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { SocialLogin } from "@/components/social/social-login";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),

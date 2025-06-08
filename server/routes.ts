@@ -1255,6 +1255,97 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
+  // Check for new achievements after user actions
+  app.post("/api/user/check-achievements", async (req, res) => {
+    let userId: number;
+    
+    // Check for session auth
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header auth
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+    
+    try {
+      // Get user's current achievements
+      const currentAchievements = await storage.getUserAchievements(userId);
+      const currentAchievementIds = new Set(currentAchievements.map((ua: any) => ua.achievement.id));
+      
+      // Get all available achievements
+      const allAchievements = await storage.getAchievements();
+      
+      // Check which achievements can be unlocked
+      const newAchievements = [];
+      
+      for (const achievement of allAchievements) {
+        if (currentAchievementIds.has(achievement.id)) {
+          continue; // Already unlocked
+        }
+        
+        // Check achievement conditions based on type
+        let shouldUnlock = false;
+        
+        switch (achievement.type) {
+          case 'challenge_completion':
+            const completedChallenges = await storage.getUserCompletedChallengesCount(userId);
+            if (achievement.condition && completedChallenges >= parseInt(achievement.condition)) {
+              shouldUnlock = true;
+            }
+            break;
+            
+          case 'course_completion':
+            const completedCourses = await storage.getUserCompletedCoursesCount(userId);
+            if (achievement.condition && completedCourses >= parseInt(achievement.condition)) {
+              shouldUnlock = true;
+            }
+            break;
+            
+          case 'streak':
+            const userLevel = await storage.getUserLevel(userId);
+            if (achievement.condition && userLevel?.streak >= parseInt(achievement.condition)) {
+              shouldUnlock = true;
+            }
+            break;
+            
+          case 'xp_milestone':
+            const userLevelForXp = await storage.getUserLevel(userId);
+            if (achievement.condition && userLevelForXp?.totalXp >= parseInt(achievement.condition)) {
+              shouldUnlock = true;
+            }
+            break;
+            
+          case 'level_milestone':
+            const userLevelForLevel = await storage.getUserLevel(userId);
+            if (achievement.condition && userLevelForLevel?.level >= parseInt(achievement.condition)) {
+              shouldUnlock = true;
+            }
+            break;
+        }
+        
+        if (shouldUnlock) {
+          // Unlock the achievement
+          await storage.unlockUserAchievement(userId, achievement.id);
+          
+          // Award points and XP
+          await storage.addUserXp(userId, achievement.xpReward || 0);
+          
+          newAchievements.push(achievement);
+        }
+      }
+      
+      res.json({ newAchievements });
+    } catch (error) {
+      console.error("Error checking achievements:", error);
+      res.status(500).json({ message: "Failed to check achievements" });
+    }
+  });
+  
   // Admin routes
   app.post("/api/admin/seed-challenges", async (req, res) => {
     // First check session authentication

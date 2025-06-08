@@ -10,17 +10,20 @@ import { AssignmentList } from "@/components/ui/assignment-list";
 import { CourseRecommendations } from "@/components/ui/course-recommendations";
 import { UserInterests } from "@/components/ui/user-interests";
 import { UserLevelCard } from "@/components/challenges/user-level-card";
+import { InteractiveProgressBar } from "@/components/gamification/interactive-progress-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
+import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
 import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { triggerSkillChallenge } = useSkillChallenge();
+  const { showXpGain, celebrateLevelUp, checkAndUnlockAchievements } = useGamificationTracker();
   const [, navigate] = useLocation();
   
   const { data: userCourses = [], isLoading: coursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
@@ -206,18 +209,15 @@ export default function Dashboard() {
                             <span className="text-2xl font-bold">Level {userLevel.level}</span>
                             <Badge variant="secondary">{userLevel.totalXp} XP</Badge>
                           </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm text-muted-foreground">
-                              <span>Progress to Level {userLevel.level + 1}</span>
-                              <span>{userLevel.currentXp}/100</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-primary h-2 rounded-full transition-all duration-300" 
-                                style={{ width: `${Math.min((userLevel.currentXp / 100) * 100, 100)}%` }}
-                              ></div>
-                            </div>
-                          </div>
+                          <InteractiveProgressBar
+                            current={userLevel.currentXp || 0}
+                            max={100}
+                            label={`Progress to Level ${(userLevel.level || 1) + 1}`}
+                            onLevelUp={() => {
+                              celebrateLevelUp((userLevel.level || 1) + 1);
+                              checkAndUnlockAchievements(user?.id || 0);
+                            }}
+                          />
                         </div>
                       ) : (
                         <div className="text-center py-4 text-muted-foreground">

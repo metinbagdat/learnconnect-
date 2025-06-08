@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChallengeCard } from './challenge-card';
+import { InteractiveChallengeCard } from '@/components/gamification/interactive-challenge-card';
 import { UserLevelCard } from './user-level-card';
 import { 
   Tabs, 
@@ -118,12 +119,15 @@ export function ChallengeList() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {userChallenges.active.map(userChallenge => (
-                <ChallengeCard
+                <InteractiveChallengeCard
                   key={userChallenge.id}
                   challenge={userChallenge.challenge}
                   userChallenge={userChallenge}
+                  onProgress={(progress) => {
+                    console.log(`Challenge ${userChallenge.challengeId} progress: ${progress}%`);
+                  }}
                 />
               ))}
             </div>
@@ -207,12 +211,15 @@ export function ChallengeList() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {userChallenges.completed.map(userChallenge => (
-                <ChallengeCard
+                <InteractiveChallengeCard
                   key={userChallenge.id}
                   challenge={userChallenge.challenge}
                   userChallenge={userChallenge}
+                  onProgress={(progress) => {
+                    console.log(`Completed challenge ${userChallenge.challengeId} viewed`);
+                  }}
                 />
               ))}
             </div>

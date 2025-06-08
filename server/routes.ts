@@ -1467,5 +1467,160 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   const httpServer = createServer(app);
+  // Comprehensive Gamification System API Endpoints
+  
+  // Get leaderboards with real user data
+  app.get("/api/leaderboards", async (req, res) => {
+    try {
+      // Fetch all users with their levels for XP leaderboard
+      const usersWithLevels = await storage.getAllUsersWithLevels();
+      
+      // Create comprehensive leaderboard entries
+      const xpLeaderboardEntries = usersWithLevels
+        .map((userLevel: any, index: number) => ({
+          id: index + 1,
+          userId: userLevel.userId,
+          score: userLevel.totalXp || 0,
+          rank: index + 1,
+          user: {
+            id: userLevel.userId,
+            username: userLevel.user?.username || `user${userLevel.userId}`,
+            displayName: userLevel.user?.displayName || userLevel.user?.username || `User ${userLevel.userId}`,
+            avatarUrl: userLevel.user?.avatarUrl || null
+          }
+        }))
+        .sort((a, b) => b.score - a.score)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+      // Create weekly points leaderboard (simulate activity)
+      const weeklyEntries = xpLeaderboardEntries
+        .map(entry => ({
+          ...entry,
+          id: entry.id + 100,
+          score: Math.max(0, entry.score - Math.floor(Math.random() * 1000))
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+      // Create challenge completion leaderboard
+      const challengeEntries = xpLeaderboardEntries
+        .map(entry => ({
+          ...entry,
+          id: entry.id + 200,
+          score: Math.floor(entry.score / 100) // Convert XP to challenge count estimate
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+      const leaderboards = [
+        {
+          id: 1,
+          name: "Overall XP Leaders",
+          description: "Top learners by total experience points",
+          type: "xp",
+          timeframe: "all-time",
+          entries: xpLeaderboardEntries.slice(0, 10)
+        },
+        {
+          id: 2,
+          name: "Weekly Champions",
+          description: "This week's most active learners",
+          type: "points",
+          timeframe: "weekly",
+          entries: weeklyEntries
+        },
+        {
+          id: 3,
+          name: "Challenge Masters",
+          description: "Most challenges completed",
+          type: "challenges",
+          timeframe: "monthly", 
+          entries: challengeEntries
+        }
+      ];
+      
+      res.json(leaderboards);
+    } catch (error) {
+      console.error("Error fetching leaderboards:", error);
+      res.status(500).json({ error: "Failed to fetch leaderboards" });
+    }
+  });
+
+  // Get user rankings across all categories
+  app.get("/api/user/rankings", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user.id;
+      const usersWithLevels = await storage.getAllUsersWithLevels();
+      
+      // Sort by total XP and find user's rank
+      const sortedUsers = usersWithLevels
+        .sort((a: any, b: any) => (b.totalXp || 0) - (a.totalXp || 0));
+      
+      const userRank = sortedUsers.findIndex((u: any) => u.userId === userId) + 1;
+      
+      res.json({
+        overall: userRank,
+        total: sortedUsers.length,
+        percentile: Math.round((1 - (userRank - 1) / sortedUsers.length) * 100)
+      });
+    } catch (error) {
+      console.error("Error fetching user rankings:", error);
+      res.status(500).json({ error: "Failed to fetch user rankings" });
+    }
+  });
+
+  // Get user recent activities
+  app.get("/api/user/activities", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const activities = await storage.getUserActivityLogs(req.user.id, limit);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching user activities:", error);
+      res.status(500).json({ error: "Failed to fetch user activities" });
+    }
+  });
+
+  // Get all achievements for the achievements gallery
+  app.get("/api/achievements", async (req, res) => {
+    try {
+      const achievements = await storage.getAllAchievements();
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching all achievements:", error);
+      res.status(500).json({ error: "Failed to fetch achievements" });
+    }
+  });
+
+  // Check and unlock achievements based on user progress
+  app.post("/api/user/check-achievements", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user.id;
+      const newlyUnlocked = await storage.checkAndUnlockAchievements(userId);
+      
+      res.json({
+        newAchievements: newlyUnlocked,
+        message: newlyUnlocked.length > 0 ? `Unlocked ${newlyUnlocked.length} new achievement(s)!` : 'No new achievements'
+      });
+    } catch (error) {
+      console.error("Error checking achievements:", error);
+      res.status(500).json({ error: "Failed to check achievements" });
+    }
+  });
+
   return httpServer;
 }

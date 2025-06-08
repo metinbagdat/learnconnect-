@@ -1523,6 +1523,40 @@ export class DatabaseStorage implements IStorage {
       .where(eq(leaderboardEntries.userId, userId))
       .orderBy(desc(leaderboardEntries.score));
   }
+
+  // Get all users with their levels for leaderboard calculations
+  async getAllUsersWithLevels(): Promise<any[]> {
+    return db.select({
+      userId: userLevels.userId,
+      level: userLevels.level,
+      currentXp: userLevels.currentXp,
+      totalXp: userLevels.totalXp,
+      streak: userLevels.streak,
+      user: {
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl
+      }
+    })
+    .from(userLevels)
+    .innerJoin(users, eq(userLevels.userId, users.id))
+    .orderBy(desc(userLevels.totalXp));
+  }
+
+  // Get all achievements for the achievements gallery
+  async getAllAchievements(): Promise<Achievement[]> {
+    return db.select().from(achievements).where(eq(achievements.isActive, true));
+  }
+
+  // Get user activity logs
+  async getUserActivityLogs(userId: number, limit: number = 10): Promise<any[]> {
+    return db.select()
+      .from(userActivityLogs)
+      .where(eq(userActivityLogs.userId, userId))
+      .orderBy(desc(userActivityLogs.createdAt))
+      .limit(limit);
+  }
 }
 
 export const storage = new DatabaseStorage();

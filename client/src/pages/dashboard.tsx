@@ -183,14 +183,25 @@ export default function Dashboard() {
                       <p className="text-sm text-muted-foreground">Level up your learning journey</p>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/gamification')}
-                    className="bg-white/50 hover:bg-white/80"
-                  >
-                    View All
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate('/social')}
+                      className="bg-white/50 hover:bg-white/80"
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Share
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => navigate('/gamification')}
+                      className="bg-white/50 hover:bg-white/80"
+                    >
+                      View All
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

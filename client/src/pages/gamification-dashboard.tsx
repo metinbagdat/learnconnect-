@@ -13,13 +13,19 @@ import {
   ArrowUpCircle,
   BookOpen,
   Clock,
-  Loader2
+  Loader2,
+  Crown,
+  Target,
+  TrendingUp,
+  Activity
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
 import { LeaderboardTable } from "@/components/gamification/leaderboard-table";
 import { AchievementCard } from "@/components/gamification/achievement-card";
 import { UserLevelCard } from "@/components/challenges/user-level-card";
+import { InteractiveProgressBar } from "@/components/gamification/interactive-progress-bar";
 import { formatDistanceToNow } from "date-fns";
 
 import {
@@ -43,7 +49,9 @@ import { Progress } from "@/components/ui/progress";
 export default function GamificationDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { showXpGain, checkAndUnlockAchievements, celebrateLevelUp } = useGamificationTracker();
   const [achievementFilter, setAchievementFilter] = useState<string>("all");
+  const [selectedLeaderboard, setSelectedLeaderboard] = useState<string>("overall");
   
   // Fetch user level
   const { data: userLevel, isLoading: levelLoading } = useQuery({
@@ -264,8 +272,10 @@ export default function GamificationDashboard() {
                   </CardHeader>
                   <CardContent>
                     <LeaderboardTable 
-                      leaderboardId={leaderboard.id} 
-                      limit={5}
+                      entries={leaderboard.entries || []}
+                      title={leaderboard.name}
+                      type={leaderboard.type || 'xp'}
+                      currentUserId={user?.id}
                     />
                   </CardContent>
                 </Card>
@@ -374,13 +384,23 @@ export default function GamificationDashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAchievements && filteredAchievements.length > 0 ? (
-              filteredAchievements.map((achievement: any) => (
-                <AchievementCard 
-                  key={achievement.id} 
-                  achievement={achievement}
-                  userAchievement={userAchievementsMap.get(achievement.id)}
-                />
-              ))
+              filteredAchievements.map((achievement: any) => {
+                const userAchievement = userAchievementsMap.get(achievement.id);
+                return (
+                  <AchievementCard 
+                    key={achievement.id} 
+                    achievement={achievement}
+                    userAchievement={userAchievement}
+                    isUnlocked={!!userAchievement}
+                    onClaim={() => {
+                      toast({
+                        title: "Achievement Details",
+                        description: `${achievement.title}: ${achievement.description}`,
+                      });
+                    }}
+                  />
+                );
+              })
             ) : (
               <div className="col-span-full text-center py-12">
                 <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

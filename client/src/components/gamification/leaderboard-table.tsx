@@ -1,133 +1,145 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, Medal, Trophy, Award } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { LeaderboardEntry, User } from "@shared/schema";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trophy, Medal, Award, Crown, Star } from "lucide-react";
+import { motion } from "framer-motion";
 
-interface LeaderboardTableProps {
-  leaderboardId: number;
-  title?: string;
-  description?: string;
-  limit?: number;
+interface LeaderboardEntry {
+  id: number;
+  userId: number;
+  score: number;
+  rank: number;
+  user: {
+    id: number;
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+  };
 }
 
-export function LeaderboardTable({
-  leaderboardId,
-  title,
-  description,
-  limit = 10,
-}: LeaderboardTableProps) {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  
-  const { data, isLoading, error } = useQuery({
-    queryKey: [`/api/leaderboards/${leaderboardId}`],
-    queryFn: async ({ queryKey }) => {
-      const response = await fetch(queryKey[0]);
-      if (!response.ok) throw new Error("Failed to load leaderboard");
-      return await response.json();
-    },
-  });
+interface LeaderboardTableProps {
+  entries: LeaderboardEntry[];
+  title: string;
+  type: string;
+  currentUserId?: number;
+}
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    toast({
-      title: "Error loading leaderboard",
-      description: (error as Error).message,
-      variant: "destructive",
-    });
-    return null;
-  }
-
-  const renderRankIcon = (rank: number) => {
+export function LeaderboardTable({ entries, title, type, currentUserId }: LeaderboardTableProps) {
+  const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
-        return <Trophy className="h-5 w-5 text-yellow-500" />;
+        return <Crown className="h-5 w-5 text-yellow-500" />;
       case 2:
-        return <Medal className="h-5 w-5 text-gray-400" />;
+        return <Trophy className="h-5 w-5 text-gray-400" />;
       case 3:
-        return <Medal className="h-5 w-5 text-amber-700" />;
+        return <Medal className="h-5 w-5 text-amber-600" />;
       default:
-        return rank;
+        return <Award className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
-  const displayTitle = title || data?.name || "Leaderboard";
-  const displayDescription = description || data?.description || "";
+  const getRankBadgeVariant = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return "default";
+      case 2:
+        return "secondary";
+      case 3:
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
+  const getScoreLabel = (type: string) => {
+    switch (type) {
+      case 'xp':
+        return 'XP';
+      case 'points':
+        return 'Points';
+      case 'challenges':
+        return 'Challenges';
+      case 'courses':
+        return 'Courses';
+      default:
+        return 'Score';
+    }
+  };
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableCaption>{displayDescription}</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[60px]">Rank</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead className="text-right">Score</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data?.entries?.map((entry: LeaderboardEntry & { user: User }) => (
-            <TableRow 
-              key={entry.id}
-              className={cn(
-                entry.user.id === user?.id && "bg-muted/50"
-              )}
-            >
-              <TableCell className="font-medium">
-                <div className="flex items-center justify-center">
-                  {renderRankIcon(entry.rank || 0)}
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">{title}</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {entries.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
+              <p>No entries yet</p>
+              <p className="text-sm">Be the first to make the leaderboard!</p>
+            </div>
+          ) : (
+            entries.map((entry, index) => (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
+                  entry.userId === currentUserId
+                    ? 'bg-primary/5 border-primary/20 shadow-sm'
+                    : 'hover:bg-muted/50'
+                }`}
+              >
+                {/* Rank */}
+                <div className="flex items-center gap-2 min-w-[60px]">
+                  {getRankIcon(entry.rank)}
+                  <Badge variant={getRankBadgeVariant(entry.rank)}>
+                    #{entry.rank}
+                  </Badge>
                 </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={entry.user.avatarUrl || ""} />
-                    <AvatarFallback>{entry.user.displayName.substring(0, 2).toUpperCase()}</AvatarFallback>
+
+                {/* User Info */}
+                <div className="flex items-center gap-3 flex-1">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={entry.user.avatarUrl} />
+                    <AvatarFallback>
+                      {entry.user.displayName?.charAt(0) || entry.user.username.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium leading-none">{entry.user.displayName}</p>
-                    {entry.user.id === user?.id && (
-                      <Badge variant="outline" className="mt-1">You</Badge>
-                    )}
+                    <p className={`font-medium ${
+                      entry.userId === currentUserId ? 'text-primary' : ''
+                    }`}>
+                      {entry.user.displayName || entry.user.username}
+                      {entry.userId === currentUserId && (
+                        <span className="text-xs ml-2 text-primary">(You)</span>
+                      )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      @{entry.user.username}
+                    </p>
                   </div>
                 </div>
-              </TableCell>
-              <TableCell className="text-right font-bold">
-                {entry.score.toLocaleString()}
-              </TableCell>
-            </TableRow>
-          ))}
-          
-          {(!data?.entries || data.entries.length === 0) && (
-            <TableRow>
-              <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                No entries yet. Be the first to join this leaderboard!
-              </TableCell>
-            </TableRow>
+
+                {/* Score */}
+                <div className="text-right">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="font-bold text-lg">{entry.score.toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{getScoreLabel(type)}</p>
+                </div>
+              </motion.div>
+            ))
           )}
-        </TableBody>
-      </Table>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

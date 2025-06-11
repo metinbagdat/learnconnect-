@@ -586,7 +586,7 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(modules)
         .where(eq(modules.courseId, courseId))
-        .orderBy(asc(modules.orderIndex));
+        .orderBy(asc(modules.id));
       
       return result;
     } catch (error) {
@@ -606,7 +606,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(lessons)
       .where(eq(lessons.moduleId, moduleId))
-      .orderBy(lessons.orderIndex);
+      .orderBy(asc(lessons.id));
   }
   
   async createLesson(lesson: InsertLesson): Promise<Lesson> {

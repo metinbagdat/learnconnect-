@@ -34,6 +34,17 @@ import {
   type InsertAchievement,
   type UserAchievement,
   type InsertUserAchievement,
+  // Interactive lesson trails types
+  type LessonTrail,
+  type InsertLessonTrail,
+  type TrailNode,
+  type InsertTrailNode,
+  type UserTrailProgress,
+  type InsertUserTrailProgress,
+  type PersonalizedRecommendation,
+  type InsertPersonalizedRecommendation,
+  type LearningAnalytics,
+  type InsertLearningAnalytics,
   // Leaderboard types
   type Leaderboard,
   type InsertLeaderboard,
@@ -84,7 +95,13 @@ import {
   achievements,
   userAchievements,
   leaderboards,
-  leaderboardEntries
+  leaderboardEntries,
+  // Interactive lesson trails tables
+  lessonTrails,
+  trailNodes,
+  userTrailProgress,
+  personalizedRecommendations,
+  learningAnalytics
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -1704,6 +1721,99 @@ export class DatabaseStorage implements IStorage {
     }
     
     return newlyUnlocked;
+  }
+
+  // Interactive Lesson Trails Methods
+  async getUserLearningTrails(userId: number) {
+    const trails = await db.select({
+      id: lessonTrails.id,
+      courseId: lessonTrails.courseId,
+      title: lessonTrails.title,
+      description: lessonTrails.description,
+      difficulty: lessonTrails.difficulty,
+      estimatedTime: lessonTrails.estimatedTime,
+      trailData: lessonTrails.trailData,
+      createdAt: lessonTrails.createdAt
+    })
+    .from(lessonTrails)
+    .leftJoin(userTrailProgress, eq(userTrailProgress.trailId, lessonTrails.id))
+    .where(eq(userTrailProgress.userId, userId));
+
+    // Add progress data to each trail
+    const trailsWithProgress = await Promise.all(trails.map(async (trail) => {
+      const [progress] = await db.select()
+        .from(userTrailProgress)
+        .where(and(
+          eq(userTrailProgress.userId, userId),
+          eq(userTrailProgress.trailId, trail.id)
+        ));
+
+      return {
+        ...trail,
+        progress: progress ? {
+          completedNodes: progress.completedNodes || [],
+          currentNode: progress.currentNode,
+          totalProgress: progress.progress || 0,
+          timeSpent: progress.timeSpent || 0
+        } : null
+      };
+    }));
+
+    return trailsWithProgress;
+  }
+
+  async acceptPersonalizedRecommendation(recommendationId: number, userId: number) {
+    await db.update(personalizedRecommendations)
+      .set({ acceptedAt: new Date() })
+      .where(and(
+        eq(personalizedRecommendations.id, recommendationId),
+        eq(personalizedRecommendations.userId, userId)
+      ));
+  }
+
+  async getUserLearningStats(userId: number) {
+    // Get user level data
+    const [userLevel] = await db.select()
+      .from(userLevels)
+      .where(eq(userLevels.userId, userId));
+
+    // Get completed trails count
+    const completedTrails = await db.select({ count: sql`count(*)` })
+      .from(userTrailProgress)
+      .where(and(
+        eq(userTrailProgress.userId, userId),
+        eq(userTrailProgress.progress, 100)
+      ));
+
+    // Get total study time
+    const totalStudyTime = await db.select({ 
+      total: sql`coalesce(sum(${userTrailProgress.timeSpent}), 0)` 
+    })
+    .from(userTrailProgress)
+    .where(eq(userTrailProgress.userId, userId));
+
+    // Get recent learning analytics for performance calculation
+    const recentAnalytics = await db.select()
+      .from(learningAnalytics)
+      .where(eq(learningAnalytics.userId, userId))
+      .orderBy(desc(learningAnalytics.createdAt))
+      .limit(20);
+
+    const averagePerformance = recentAnalytics.length > 0 
+      ? recentAnalytics.reduce((sum, a) => sum + (Number(a.performanceScore) || 0.7), 0) / recentAnalytics.length
+      : 0.7;
+
+    return {
+      level: userLevel?.level || 1,
+      totalXp: userLevel?.totalXp || 0,
+      streak: userLevel?.streak || 0,
+      completedTrails: parseInt(completedTrails[0].count as string) || 0,
+      totalStudyTime: parseInt(totalStudyTime[0].total as string) || 0,
+      averagePerformance,
+      learningStyle: 'visual', // Could be determined by analyzing user behavior
+      bestSubject: 'Mathematics', // Could be calculated from performance data
+      focusArea: 'Problem Solving' // Could be derived from recent activities
+    };
   }
 }
 

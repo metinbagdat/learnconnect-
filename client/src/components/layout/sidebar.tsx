@@ -109,6 +109,19 @@ export function Sidebar() {
           </SidebarLink>
           
           <SidebarLink 
+            href="/learning-trails" 
+            icon={<Map className="h-5 w-5" />}
+            isActive={location === '/learning-trails'}
+          >
+            <span className="flex items-center">
+              Learning Trails
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                AI
+              </span>
+            </span>
+          </SidebarLink>
+
+          <SidebarLink 
             href="/gamification" 
             icon={<Trophy className="h-5 w-5" />}
             isActive={location === '/gamification'}

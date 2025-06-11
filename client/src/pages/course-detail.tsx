@@ -3,18 +3,20 @@ import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { ModuleTree } from "@/components/modules/module-tree";
 import { Course, Module, Lesson } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
-import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User } from "lucide-react";
+import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -201,12 +203,35 @@ export default function CourseDetail() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left side - Module List */}
+              {/* AI-Enhanced Module Tree with Personalized Content */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <TreePine className="h-6 w-6 text-green-600" />
+                    <h2 className="text-2xl font-bold">Course Learning Path</h2>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      <Brain className="h-3 w-3 mr-1" />
+                      AI-Personalized
+                    </Badge>
+                  </div>
+                </div>
+                
+                {user && courseId && (
+                  <ModuleTree 
+                    courseId={parseInt(courseId!)} 
+                    userId={user.id}
+                  />
+                )}
+              </div>
+              
+              {/* Traditional fallback for when AI modules aren't available */}
+              <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left side - Traditional Module List */}
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-lg shadow-sm">
                     <div className="p-4 border-b border-neutral-100">
-                      <h2 className="text-lg font-semibold">Course Modules</h2>
+                      <h2 className="text-lg font-semibold">Traditional Module View</h2>
+                      <p className="text-sm text-gray-600 mt-1">Standard course structure without AI personalization</p>
                     </div>
                     <div className="p-2">
                       <Accordion 

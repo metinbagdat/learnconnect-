@@ -1750,6 +1750,29 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // AI-Enhanced Modules API - Personalized content for each lesson and sub-component
+  app.get("/api/courses/:courseId/ai-modules/:userId", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const userId = parseInt(req.params.userId);
+      
+      const authenticatedUserId = req.isAuthenticated() ? req.user.id : 
+        req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null;
+      
+      if (!authenticatedUserId || authenticatedUserId !== userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const { generateAIEnhancedModules } = await import('./ai-module-service');
+      const enhancedModules = await generateAIEnhancedModules(courseId, userId);
+      
+      res.json(enhancedModules);
+    } catch (error) {
+      console.error("Error generating AI-enhanced modules:", error);
+      res.status(500).json({ error: "Failed to generate AI-enhanced modules" });
+    }
+  });
+
   // Interactive Lesson Trails API Endpoints
   
   // Get user's learning trails

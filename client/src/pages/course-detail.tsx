@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ModuleTree } from "@/components/modules/module-tree";
+import { SkillChallengeManager } from "@/components/challenges/skill-challenge-manager";
 import { Course, Module, Lesson } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -217,10 +218,27 @@ export default function CourseDetail() {
                 </div>
                 
                 {user && courseId && (
-                  <ModuleTree 
-                    courseId={parseInt(courseId!)} 
-                    userId={user.id}
-                  />
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-3">
+                      <ModuleTree 
+                        courseId={parseInt(courseId!)} 
+                        userId={user.id}
+                      />
+                    </div>
+                    <div className="lg:col-span-1">
+                      <SkillChallengeManager
+                        courseId={parseInt(courseId!)}
+                        category={course?.category}
+                        onChallengeComplete={(points, xp) => {
+                          toast({
+                            title: "Challenge completed!",
+                            description: `Earned ${points} points and ${xp} XP`,
+                          });
+                          queryClient.invalidateQueries({ queryKey: ['/api/user/level'] });
+                        }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
               

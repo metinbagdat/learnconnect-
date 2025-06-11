@@ -42,6 +42,12 @@ export const lessons = pgTable("lessons", {
   content: text("content"),
   order: integer("order").notNull(),
   duration: integer("duration_minutes"),
+  type: text("type").notNull().default("text"), // text, video, interactive, quiz, assignment
+  metadata: jsonb("metadata").default({}), // Store additional lesson metadata
+  prerequisites: integer("prerequisites").array().default([]), // Array of lesson IDs that must be completed first
+  difficulty: text("difficulty").default("medium"), // easy, medium, hard
+  objectives: text("objectives").array().default([]), // Learning objectives for this lesson
+  tags: text("tags").array().default([]), // Searchable tags
 });
 
 export const userCourses = pgTable("user_courses", {
@@ -261,6 +267,77 @@ export const userLevels = pgTable("user_levels", {
   totalPoints: integer("total_points").notNull().default(0),
 });
 
+// Interactive lesson trails
+export const lessonTrails = pgTable("lesson_trails", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  trailData: jsonb("trail_data").notNull(), // Contains node positions, connections, metadata
+  difficulty: text("difficulty").notNull().default("medium"),
+  estimatedTime: integer("estimated_time_minutes"),
+  isAiGenerated: boolean("is_ai_generated").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Trail nodes (individual lessons in the trail)
+export const trailNodes = pgTable("trail_nodes", {
+  id: serial("id").primaryKey(),
+  trailId: integer("trail_id").notNull().references(() => lessonTrails.id),
+  lessonId: integer("lesson_id").notNull().references(() => lessons.id),
+  nodePosition: jsonb("node_position").notNull(), // x, y coordinates for visualization
+  nodeType: text("node_type").notNull().default("lesson"), // lesson, checkpoint, bonus, assessment
+  unlockConditions: jsonb("unlock_conditions").default({}), // Prerequisites and conditions
+  hoverInfo: jsonb("hover_info").notNull(), // Educational information shown on hover
+  rewards: jsonb("rewards").default({}), // XP, points, badges for completing this node
+  isOptional: boolean("is_optional").default(false),
+});
+
+// User progress on lesson trails
+export const userTrailProgress = pgTable("user_trail_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  trailId: integer("trail_id").notNull().references(() => lessonTrails.id),
+  completedNodes: integer("completed_nodes").array().default([]), // Array of completed node IDs
+  currentNode: integer("current_node"),
+  progress: integer("progress").default(0), // 0-100 percentage
+  timeSpent: integer("time_spent_minutes").default(0),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  completedAt: timestamp("completed_at"),
+});
+
+// Personalized learning recommendations
+export const personalizedRecommendations = pgTable("personalized_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  recommendationType: text("recommendation_type").notNull(), // lesson, course, trail, skill_gap
+  resourceId: integer("resource_id").notNull(), // ID of recommended resource
+  resourceType: text("resource_type").notNull(), // lesson, course, trail
+  aiReasoning: text("ai_reasoning").notNull(), // AI explanation for recommendation
+  confidence: numeric("confidence", { precision: 3, scale: 2 }).notNull(), // 0.00-1.00
+  metadata: jsonb("metadata").default({}), // Additional data like difficulty adjustment
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  viewedAt: timestamp("viewed_at"),
+  acceptedAt: timestamp("accepted_at"),
+});
+
+// Learning analytics for AI personalization
+export const learningAnalytics = pgTable("learning_analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  sessionId: text("session_id").notNull(),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+  courseId: integer("course_id").references(() => courses.id),
+  activityType: text("activity_type").notNull(), // view, complete, struggle, skip, revisit
+  timeSpent: integer("time_spent_seconds"),
+  interactionData: jsonb("interaction_data").default({}), // Detailed interaction tracking
+  performanceScore: numeric("performance_score", { precision: 3, scale: 2 }), // 0.00-1.00
+  difficultyRating: integer("difficulty_rating"), // User's subjective difficulty rating 1-5
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -296,6 +373,35 @@ export const insertCourseAnalyticsSchema = createInsertSchema(courseAnalytics).o
 
 export const insertUserProgressSnapshotSchema = createInsertSchema(userProgressSnapshots).omit({ 
   id: true 
+});
+
+// Interactive lesson trails insert schemas
+export const insertLessonTrailSchema = createInsertSchema(lessonTrails).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertTrailNodeSchema = createInsertSchema(trailNodes).omit({ 
+  id: true 
+});
+
+export const insertUserTrailProgressSchema = createInsertSchema(userTrailProgress).omit({ 
+  id: true, 
+  startedAt: true, 
+  lastAccessedAt: true, 
+  completedAt: true 
+});
+
+export const insertPersonalizedRecommendationSchema = createInsertSchema(personalizedRecommendations).omit({ 
+  id: true, 
+  createdAt: true, 
+  viewedAt: true, 
+  acceptedAt: true 
+});
+
+export const insertLearningAnalyticsSchema = createInsertSchema(learningAnalytics).omit({ 
+  id: true, 
+  createdAt: true 
 });
 
 // Adaptive Learning Reward System insert schemas
@@ -394,3 +500,15 @@ export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
 export type UserLevel = typeof userLevels.$inferSelect;
 export type InsertUserLevel = z.infer<typeof insertUserLevelSchema>;
+
+// Interactive lesson trails types
+export type LessonTrail = typeof lessonTrails.$inferSelect;
+export type InsertLessonTrail = z.infer<typeof insertLessonTrailSchema>;
+export type TrailNode = typeof trailNodes.$inferSelect;
+export type InsertTrailNode = z.infer<typeof insertTrailNodeSchema>;
+export type UserTrailProgress = typeof userTrailProgress.$inferSelect;
+export type InsertUserTrailProgress = z.infer<typeof insertUserTrailProgressSchema>;
+export type PersonalizedRecommendation = typeof personalizedRecommendations.$inferSelect;
+export type InsertPersonalizedRecommendation = z.infer<typeof insertPersonalizedRecommendationSchema>;
+export type LearningAnalytics = typeof learningAnalytics.$inferSelect;
+export type InsertLearningAnalytics = z.infer<typeof insertLearningAnalyticsSchema>;

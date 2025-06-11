@@ -254,6 +254,45 @@ export const userChallenges = pgTable("user_challenges", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Skill challenges - bite-sized learning challenges
+export const skillChallenges = pgTable("skill_challenges", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // multiple_choice, short_answer, coding, drag_drop, true_false
+  difficulty: text("difficulty").notNull(), // easy, medium, hard
+  category: text("category").notNull(),
+  timeLimit: integer("time_limit").notNull().default(60), // in seconds
+  points: integer("points").notNull().default(10),
+  xpReward: integer("xp_reward").notNull().default(5),
+  question: text("question").notNull(),
+  options: text("options").array(), // For multiple choice questions
+  correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation").notNull(),
+  hint: text("hint"),
+  prerequisites: text("prerequisites").array().default([]),
+  tags: text("tags").array().default([]),
+  courseId: integer("course_id"), // Optional: link to specific course
+  moduleId: integer("module_id"), // Optional: link to specific module
+  lessonId: integer("lesson_id"), // Optional: link to specific lesson
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userSkillChallengeAttempts = pgTable("user_skill_challenge_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  challengeId: integer("challenge_id").notNull(),
+  answer: text("answer").notNull(),
+  timeSpent: integer("time_spent").notNull(), // in seconds
+  isCorrect: boolean("is_correct").notNull(),
+  pointsEarned: integer("points_earned").notNull().default(0),
+  xpEarned: integer("xp_earned").notNull().default(0),
+  timedOut: boolean("timed_out").notNull().default(false),
+  hintUsed: boolean("hint_used").notNull().default(false),
+  attemptedAt: timestamp("attempted_at").notNull().defaultNow(),
+});
+
 // User level and experience tracking
 export const userLevels = pgTable("user_levels", {
   id: serial("id").primaryKey(),
@@ -449,6 +488,16 @@ export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit
   completedAt: true
 });
 
+export const insertSkillChallengeSchema = createInsertSchema(skillChallenges).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserSkillChallengeAttemptSchema = createInsertSchema(userSkillChallengeAttempts).omit({ 
+  id: true, 
+  attemptedAt: true 
+});
+
 export const insertUserLevelSchema = createInsertSchema(userLevels).omit({ 
   id: true 
 });
@@ -498,6 +547,10 @@ export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
 export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
+export type SkillChallenge = typeof skillChallenges.$inferSelect;
+export type InsertSkillChallenge = z.infer<typeof insertSkillChallengeSchema>;
+export type UserSkillChallengeAttempt = typeof userSkillChallengeAttempts.$inferSelect;
+export type InsertUserSkillChallengeAttempt = z.infer<typeof insertUserSkillChallengeAttemptSchema>;
 export type UserLevel = typeof userLevels.$inferSelect;
 export type InsertUserLevel = z.infer<typeof insertUserLevelSchema>;
 

@@ -50,9 +50,17 @@ interface SkillChallengePopupProps {
   onClose: () => void;
   challenge: SkillChallenge | null;
   onComplete: (success: boolean, points: number, xp: number) => void;
+  onSubmit?: (attempt: {
+    challengeId: number;
+    answer: string;
+    timeSpent: number;
+    isCorrect: boolean;
+    timedOut?: boolean;
+    hintUsed?: boolean;
+  }) => void;
 }
 
-export function SkillChallengePopup({ isOpen, onClose, challenge, onComplete }: SkillChallengePopupProps) {
+export function SkillChallengePopup({ isOpen, onClose, challenge, onComplete, onSubmit }: SkillChallengePopupProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [currentAnswer, setCurrentAnswer] = useState<string>("");

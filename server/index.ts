@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedChallenges } from "./seed-challenges";
 import { seedAchievements } from "./seed-achievements";
+import { seedSkillChallenges } from "./seed-skill-challenges";
 
 const app = express();
 app.use(express.json());

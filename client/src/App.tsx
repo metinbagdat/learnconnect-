@@ -19,6 +19,7 @@ import ChallengesPage from "@/pages/challenges";
 import SuggestionsDemoPage from "@/pages/suggestions-demo";
 import GamificationDashboard from "@/pages/gamification-dashboard";
 import SocialPage from "@/pages/social-page";
+import LearningTrailsPage from "@/pages/learning-trails";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/gamification" component={GamificationDashboard} />
       <ProtectedRoute path="/social" component={SocialPage} />
+      <ProtectedRoute path="/learning-trails" component={LearningTrailsPage} />
       <ProtectedRoute path="/admin" component={AdminPanel} />
       <ProtectedRoute path="/suggestions" component={SuggestionsDemoPage} />
       <Route path="/auth" component={AuthPage} />

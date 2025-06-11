@@ -5,6 +5,14 @@ import { setupAuth } from "./auth";
 import { insertCourseSchema, insertUserCourseSchema, insertAssignmentSchema, insertModuleSchema, insertLessonSchema, insertLearningPathSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
+import { 
+  generateLessonTrail, 
+  saveLessonTrail, 
+  getUserTrailProgress, 
+  updateTrailProgress, 
+  generatePersonalizedRecommendations,
+  recordLearningAnalytics 
+} from "./lesson-trail-service";
 import * as fs from "fs";
 import * as path from "path";
 import OpenAI from "openai";
@@ -1739,6 +1747,154 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error with social authentication:", error);
       res.status(500).json({ error: "Social authentication failed" });
+    }
+  });
+
+  // Interactive Lesson Trails API Endpoints
+  
+  // Get user's learning trails
+  app.get("/api/learning-trails", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const trails = await storage.getUserLearningTrails(req.user.id);
+      res.json(trails);
+    } catch (error) {
+      console.error("Error fetching learning trails:", error);
+      res.status(500).json({ error: "Failed to fetch learning trails" });
+    }
+  });
+
+  // Generate new learning trail for a course
+  app.post("/api/learning-trails/generate", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { courseId } = req.body;
+      
+      if (!courseId) {
+        return res.status(400).json({ message: "Course ID is required" });
+      }
+
+      // Generate AI-powered lesson trail
+      const trailData = await generateLessonTrail(courseId, req.user.id);
+      
+      // Save the trail to database
+      const savedTrail = await saveLessonTrail(
+        courseId,
+        trailData,
+        `Interactive Trail for Course ${courseId}`,
+        "AI-generated personalized learning path with educational hover information"
+      );
+
+      res.status(201).json(savedTrail);
+    } catch (error) {
+      console.error("Error generating learning trail:", error);
+      res.status(500).json({ error: "Failed to generate learning trail" });
+    }
+  });
+
+  // Update trail progress
+  app.post("/api/learning-trails/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { trailId, nodeId, timeSpent } = req.body;
+      
+      await updateTrailProgress(req.user.id, trailId, nodeId, timeSpent);
+      
+      // Record learning analytics
+      await recordLearningAnalytics(req.user.id, `trail_${trailId}_${Date.now()}`, {
+        courseId: trailId,
+        activityType: 'complete_node',
+        timeSpent,
+        interactionData: { nodeId, trailId },
+        performanceScore: 0.8 // Could be calculated based on actual performance
+      });
+
+      res.json({ message: "Progress updated successfully" });
+    } catch (error) {
+      console.error("Error updating trail progress:", error);
+      res.status(500).json({ error: "Failed to update progress" });
+    }
+  });
+
+  // Get personalized recommendations
+  app.get("/api/personalized-recommendations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const recommendations = await generatePersonalizedRecommendations(req.user.id);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching personalized recommendations:", error);
+      res.status(500).json({ error: "Failed to fetch recommendations" });
+    }
+  });
+
+  // Accept a personalized recommendation
+  app.post("/api/personalized-recommendations/:id/accept", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const recommendationId = parseInt(req.params.id);
+      await storage.acceptPersonalizedRecommendation(recommendationId, req.user.id);
+      
+      res.json({ message: "Recommendation accepted" });
+    } catch (error) {
+      console.error("Error accepting recommendation:", error);
+      res.status(500).json({ error: "Failed to accept recommendation" });
+    }
+  });
+
+  // Get learning analytics and stats
+  app.get("/api/learning-stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const stats = await storage.getUserLearningStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching learning stats:", error);
+      res.status(500).json({ error: "Failed to fetch learning stats" });
+    }
+  });
+
+  // Record detailed learning analytics
+  app.post("/api/learning-analytics", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { sessionId, lessonId, courseId, activityType, timeSpent, interactionData, performanceScore, difficultyRating } = req.body;
+      
+      await recordLearningAnalytics(req.user.id, sessionId, {
+        lessonId,
+        courseId,
+        activityType,
+        timeSpent,
+        interactionData,
+        performanceScore,
+        difficultyRating
+      });
+
+      res.json({ message: "Analytics recorded successfully" });
+    } catch (error) {
+      console.error("Error recording learning analytics:", error);
+      res.status(500).json({ error: "Failed to record analytics" });
     }
   });
 

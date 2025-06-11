@@ -18,6 +18,14 @@ import * as path from "path";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { seedChallenges } from "./seed-challenges";
+import { seedSkillChallenges } from "./seed-skill-challenges";
+import { db } from "./db";
+import { eq, and, gte, notInArray, count, sum } from "drizzle-orm";
+import { 
+  skillChallenges, 
+  userSkillChallengeAttempts,
+  userLevels 
+} from "@shared/schema";
 
 // Initialize the OpenAI client
 const openai = new OpenAI({
@@ -1918,6 +1926,165 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error recording learning analytics:", error);
       res.status(500).json({ error: "Failed to record analytics" });
+    }
+  });
+
+  // Skill Challenge Routes
+  app.get('/api/skill-challenges', async (req, res) => {
+    try {
+      const { courseId, moduleId, lessonId, difficulty, category } = req.query;
+      
+      let whereConditions = [eq(skillChallenges.isActive, true)];
+      
+      if (courseId) {
+        whereConditions.push(eq(skillChallenges.courseId, parseInt(courseId as string)));
+      }
+      if (moduleId) {
+        whereConditions.push(eq(skillChallenges.moduleId, parseInt(moduleId as string)));
+      }
+      if (lessonId) {
+        whereConditions.push(eq(skillChallenges.lessonId, parseInt(lessonId as string)));
+      }
+      if (difficulty) {
+        whereConditions.push(eq(skillChallenges.difficulty, difficulty as string));
+      }
+      if (category) {
+        whereConditions.push(eq(skillChallenges.category, category as string));
+      }
+      
+      const challenges = await db.select().from(skillChallenges).where(and(...whereConditions));
+      res.json(challenges);
+    } catch (error) {
+      console.error('Error fetching skill challenges:', error);
+      res.status(500).json({ error: 'Failed to fetch skill challenges' });
+    }
+  });
+
+  app.get('/api/skill-challenges/random', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { difficulty, category } = req.query;
+      const userId = req.user.id;
+
+      // Get challenges the user hasn't attempted recently
+      const recentAttempts = await db.select({ challengeId: userSkillChallengeAttempts.challengeId })
+        .from(userSkillChallengeAttempts)
+        .where(and(
+          eq(userSkillChallengeAttempts.userId, userId),
+          gte(userSkillChallengeAttempts.attemptedAt, new Date(Date.now() - 24 * 60 * 60 * 1000)) // Last 24 hours
+        ));
+
+      const recentChallengeIds = recentAttempts.map(a => a.challengeId);
+
+      let whereConditions = [eq(skillChallenges.isActive, true)];
+      
+      if (recentChallengeIds.length > 0) {
+        whereConditions.push(notInArray(skillChallenges.id, recentChallengeIds));
+      }
+      if (difficulty) {
+        whereConditions.push(eq(skillChallenges.difficulty, difficulty as string));
+      }
+      if (category) {
+        whereConditions.push(eq(skillChallenges.category, category as string));
+      }
+
+      const availableChallenges = await db.select()
+        .from(skillChallenges)
+        .where(and(...whereConditions));
+      
+      if (availableChallenges.length === 0) {
+        return res.status(404).json({ error: 'No available challenges' });
+      }
+
+      // Select random challenge
+      const randomChallenge = availableChallenges[Math.floor(Math.random() * availableChallenges.length)];
+      res.json(randomChallenge);
+    } catch (error) {
+      console.error('Error fetching random skill challenge:', error);
+      res.status(500).json({ error: 'Failed to fetch random challenge' });
+    }
+  });
+
+  app.post('/api/skill-challenges/submit', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { challengeId, answer, timeSpent, isCorrect, timedOut, hintUsed } = req.body;
+      const userId = req.user.id;
+
+      // Get the challenge to determine rewards
+      const [challenge] = await db.select()
+        .from(skillChallenges)
+        .where(eq(skillChallenges.id, challengeId));
+
+      if (!challenge) {
+        return res.status(404).json({ error: 'Challenge not found' });
+      }
+
+      const pointsEarned = isCorrect ? challenge.points : 0;
+      const xpEarned = isCorrect ? challenge.xpReward : 0;
+
+      // Record the attempt
+      await db.insert(userSkillChallengeAttempts).values({
+        userId,
+        challengeId,
+        answer,
+        timeSpent,
+        isCorrect,
+        pointsEarned,
+        xpEarned,
+        timedOut: timedOut || false,
+        hintUsed: hintUsed || false
+      });
+
+      // Update user level if they earned points/XP
+      if (isCorrect && (pointsEarned > 0 || xpEarned > 0)) {
+        const [userLevel] = await db.select()
+          .from(userLevels)
+          .where(eq(userLevels.userId, userId));
+
+        if (userLevel) {
+          const newTotalXp = userLevel.totalXp + xpEarned;
+          const newTotalPoints = userLevel.totalPoints + pointsEarned;
+          const newCurrentXp = userLevel.currentXp + xpEarned;
+          
+          // Calculate level progression
+          let newLevel = userLevel.level;
+          let remainingXp = newCurrentXp;
+          let nextLevelXp = userLevel.nextLevelXp;
+          
+          while (remainingXp >= nextLevelXp) {
+            remainingXp -= nextLevelXp;
+            newLevel++;
+            nextLevelXp = newLevel * 100; // Simple level progression
+          }
+          
+          await db.update(userLevels)
+            .set({
+              level: newLevel,
+              currentXp: remainingXp,
+              totalXp: newTotalXp,
+              nextLevelXp: nextLevelXp,
+              totalPoints: newTotalPoints
+            })
+            .where(eq(userLevels.userId, userId));
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        pointsEarned, 
+        xpEarned,
+        isCorrect 
+      });
+    } catch (error) {
+      console.error('Error submitting skill challenge:', error);
+      res.status(500).json({ error: 'Failed to submit skill challenge' });
     }
   });
 

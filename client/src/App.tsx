@@ -21,6 +21,7 @@ import GamificationDashboard from "@/pages/gamification-dashboard";
 import SocialPage from "@/pages/social-page";
 import LearningTrailsPage from "@/pages/learning-trails";
 import ChallengePathsPage from "@/pages/challenge-paths";
+import ChallengeAnalyticsDashboard from "@/pages/challenge-analytics-dashboard";
 
 function Router() {
   return (
@@ -38,6 +39,7 @@ function Router() {
       <ProtectedRoute path="/learning-paths/:id" component={LearningPathPage} />
       <ProtectedRoute path="/challenges" component={ChallengesPage} />
       <ProtectedRoute path="/challenge-paths" component={ChallengePathsPage} />
+      <ProtectedRoute path="/challenge-analytics" component={ChallengeAnalyticsDashboard} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/gamification" component={GamificationDashboard} />
       <ProtectedRoute path="/social" component={SocialPage} />

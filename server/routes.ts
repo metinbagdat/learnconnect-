@@ -20,12 +20,15 @@ import Anthropic from "@anthropic-ai/sdk";
 import { seedChallenges } from "./seed-challenges";
 import { seedSkillChallenges } from "./seed-skill-challenges";
 import { db } from "./db";
-import { eq, and, gte, notInArray, count, sum } from "drizzle-orm";
+import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
   skillChallenges, 
   userSkillChallengeAttempts,
   userLevels,
-  userChallengeStreaks
+  userChallengeStreaks,
+  challengeLearningPaths,
+  challengePathSteps,
+  userChallengeProgress
 } from "@shared/schema";
 
 // Initialize the OpenAI client
@@ -2168,6 +2171,162 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error('Error submitting skill challenge:', error);
       res.status(500).json({ error: 'Failed to submit skill challenge' });
+    }
+  });
+
+  // Challenge Learning Paths API
+  app.get("/api/challenge-learning-paths", async (req, res) => {
+    try {
+      const { category, difficulty } = req.query;
+      
+      let whereConditions = [eq(challengeLearningPaths.isActive, true)];
+      
+      if (category) {
+        whereConditions.push(eq(challengeLearningPaths.category, category as string));
+      }
+      if (difficulty) {
+        whereConditions.push(eq(challengeLearningPaths.difficulty, difficulty as string));
+      }
+      
+      const paths = await db.select().from(challengeLearningPaths).where(and(...whereConditions));
+      res.json(paths);
+    } catch (error) {
+      console.error("Error fetching challenge learning paths:", error);
+      res.status(500).json({ error: "Failed to fetch challenge learning paths" });
+    }
+  });
+
+  app.get("/api/challenge-learning-paths/:id", async (req, res) => {
+    try {
+      const pathId = parseInt(req.params.id);
+      
+      // Get the path details
+      const [path] = await db.select()
+        .from(challengeLearningPaths)
+        .where(eq(challengeLearningPaths.id, pathId));
+      
+      if (!path) {
+        return res.status(404).json({ error: "Learning path not found" });
+      }
+      
+      // Get the path steps with challenge details
+      const steps = await db.select({
+        id: challengePathSteps.id,
+        stepOrder: challengePathSteps.stepOrder,
+        isRequired: challengePathSteps.isRequired,
+        unlockConditions: challengePathSteps.unlockConditions,
+        challenge: {
+          id: skillChallenges.id,
+          title: skillChallenges.title,
+          description: skillChallenges.description,
+          type: skillChallenges.type,
+          difficulty: skillChallenges.difficulty,
+          category: skillChallenges.category,
+          timeLimit: skillChallenges.timeLimit,
+          points: skillChallenges.points,
+          xpReward: skillChallenges.xpReward,
+          tags: skillChallenges.tags,
+        }
+      })
+      .from(challengePathSteps)
+      .innerJoin(skillChallenges, eq(challengePathSteps.challengeId, skillChallenges.id))
+      .where(eq(challengePathSteps.pathId, pathId))
+      .orderBy(challengePathSteps.stepOrder);
+      
+      res.json({ ...path, steps });
+    } catch (error) {
+      console.error("Error fetching challenge learning path:", error);
+      res.status(500).json({ error: "Failed to fetch challenge learning path" });
+    }
+  });
+
+  app.post("/api/challenge-learning-paths/:id/start", async (req, res) => {
+    try {
+      const pathId = parseInt(req.params.id);
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // Check if user already has progress for this path
+      const [existingProgress] = await db.select()
+        .from(userChallengeProgress)
+        .where(and(
+          eq(userChallengeProgress.userId, userId),
+          eq(userChallengeProgress.pathId, pathId)
+        ));
+      
+      if (existingProgress) {
+        return res.json({ progress: existingProgress });
+      }
+      
+      // Create new progress record
+      const [newProgress] = await db.insert(userChallengeProgress)
+        .values({
+          userId,
+          pathId,
+          currentStep: 0,
+          completedSteps: [],
+          totalScore: 0,
+          completionPercentage: 0,
+        })
+        .returning();
+      
+      res.json({ progress: newProgress });
+    } catch (error) {
+      console.error("Error starting challenge learning path:", error);
+      res.status(500).json({ error: "Failed to start challenge learning path" });
+    }
+  });
+
+  app.get("/api/challenge-learning-paths/:id/progress", async (req, res) => {
+    try {
+      const pathId = parseInt(req.params.id);
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      const [progress] = await db.select()
+        .from(userChallengeProgress)
+        .where(and(
+          eq(userChallengeProgress.userId, userId),
+          eq(userChallengeProgress.pathId, pathId)
+        ));
+      
+      if (!progress) {
+        return res.json({ progress: null });
+      }
+      
+      // Get total steps for percentage calculation
+      const totalSteps = await db.select({ count: sql<number>`count(*)` })
+        .from(challengePathSteps)
+        .where(eq(challengePathSteps.pathId, pathId));
+      
+      const completedCount = progress.completedSteps?.length || 0;
+      const totalCount = totalSteps[0]?.count || 0;
+      const completionPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      
+      // Update completion percentage if it's different
+      if (completionPercentage !== progress.completionPercentage) {
+        await db.update(userChallengeProgress)
+          .set({ completionPercentage })
+          .where(eq(userChallengeProgress.id, progress.id));
+      }
+      
+      res.json({ 
+        progress: { 
+          ...progress, 
+          completionPercentage,
+          totalSteps: totalCount,
+          completedSteps: completedCount
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching challenge learning path progress:", error);
+      res.status(500).json({ error: "Failed to fetch progress" });
     }
   });
 

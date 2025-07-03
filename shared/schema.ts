@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, varchar, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -588,3 +589,53 @@ export type PersonalizedRecommendation = typeof personalizedRecommendations.$inf
 export type InsertPersonalizedRecommendation = z.infer<typeof insertPersonalizedRecommendationSchema>;
 export type LearningAnalytics = typeof learningAnalytics.$inferSelect;
 export type InsertLearningAnalytics = z.infer<typeof insertLearningAnalyticsSchema>;
+
+// Challenge Learning Paths
+export const challengeLearningPaths = pgTable("challenge_learning_paths", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  estimatedHours: integer("estimated_hours").default(0),
+  prerequisites: text("prerequisites").array().default([]),
+  tags: text("tags").array().default([]),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const challengePathSteps = pgTable("challenge_path_steps", {
+  id: serial("id").primaryKey(),
+  pathId: integer("path_id").references(() => challengeLearningPaths.id, { onDelete: "cascade" }),
+  challengeId: integer("challenge_id").references(() => skillChallenges.id, { onDelete: "cascade" }),
+  stepOrder: integer("step_order").notNull(),
+  isRequired: boolean("is_required").default(true),
+  unlockConditions: text("unlock_conditions").array().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userChallengeProgress = pgTable("user_challenge_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
+  pathId: integer("path_id").references(() => challengeLearningPaths.id, { onDelete: "cascade" }),
+  currentStep: integer("current_step").default(0),
+  completedSteps: integer("completed_steps").array().default([]),
+  totalScore: integer("total_score").default(0),
+  completionPercentage: integer("completion_percentage").default(0),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+});
+
+// Insert schemas for challenge learning paths
+export const insertChallengeLearningPathSchema = createInsertSchema(challengeLearningPaths);
+export const insertChallengePathStepSchema = createInsertSchema(challengePathSteps);
+export const insertUserChallengeProgressSchema = createInsertSchema(userChallengeProgress);
+
+// Challenge Learning Path types
+export type ChallengeLearningPath = typeof challengeLearningPaths.$inferSelect;
+export type InsertChallengeLearningPath = z.infer<typeof insertChallengeLearningPathSchema>;
+export type ChallengePathStep = typeof challengePathSteps.$inferSelect;
+export type InsertChallengePathStep = z.infer<typeof insertChallengePathStepSchema>;
+export type UserChallengeProgress = typeof userChallengeProgress.$inferSelect;
+export type InsertUserChallengeProgress = z.infer<typeof insertUserChallengeProgressSchema>;

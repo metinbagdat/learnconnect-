@@ -259,22 +259,30 @@ export const skillChallenges = pgTable("skill_challenges", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  type: text("type").notNull(), // multiple_choice, short_answer, coding, drag_drop, true_false
+  type: text("type").notNull(), // multiple_choice, short_answer, coding, drag_drop, true_false, fill_blank, matching, ordering, image_quiz, video_quiz
   difficulty: text("difficulty").notNull(), // easy, medium, hard
   category: text("category").notNull(),
   timeLimit: integer("time_limit").notNull().default(60), // in seconds
   points: integer("points").notNull().default(10),
   xpReward: integer("xp_reward").notNull().default(5),
+  bonusMultiplier: numeric("bonus_multiplier").default("1.0"), // Bonus multiplier for perfect scores or speed
+  streakBonus: integer("streak_bonus").default(0), // Extra points for consecutive correct answers
   question: text("question").notNull(),
   options: text("options").array(), // For multiple choice questions
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation").notNull(),
   hint: text("hint"),
+  mediaUrl: text("media_url"), // For image/video based challenges
+  codeTemplate: text("code_template"), // For coding challenges
+  testCases: jsonb("test_cases"), // For coding challenges validation
+  matchingPairs: jsonb("matching_pairs"), // For matching challenges
+  orderSequence: text("order_sequence").array(), // For ordering challenges
   prerequisites: text("prerequisites").array().default([]),
   tags: text("tags").array().default([]),
   courseId: integer("course_id"), // Optional: link to specific course
   moduleId: integer("module_id"), // Optional: link to specific module
   lessonId: integer("lesson_id"), // Optional: link to specific lesson
+  unlockConditions: jsonb("unlock_conditions").default({}), // Conditions to unlock this challenge
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -288,9 +296,24 @@ export const userSkillChallengeAttempts = pgTable("user_skill_challenge_attempts
   isCorrect: boolean("is_correct").notNull(),
   pointsEarned: integer("points_earned").notNull().default(0),
   xpEarned: integer("xp_earned").notNull().default(0),
+  bonusPointsEarned: integer("bonus_points_earned").default(0),
+  streakCount: integer("streak_count").default(0),
+  perfectScore: boolean("perfect_score").default(false),
+  speedBonus: integer("speed_bonus").default(0),
   timedOut: boolean("timed_out").notNull().default(false),
   hintUsed: boolean("hint_used").notNull().default(false),
   attemptedAt: timestamp("attempted_at").notNull().defaultNow(),
+});
+
+// Challenge streaks and achievements
+export const userChallengeStreaks = pgTable("user_challenge_streaks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  category: text("category").notNull(),
+  currentStreak: integer("current_streak").default(0),
+  maxStreak: integer("max_streak").default(0),
+  lastCorrectAt: timestamp("last_correct_at"),
+  streakStartedAt: timestamp("streak_started_at"),
 });
 
 // User level and experience tracking

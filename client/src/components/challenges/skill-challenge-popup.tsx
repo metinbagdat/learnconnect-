@@ -30,12 +30,14 @@ export interface SkillChallenge {
   id: number;
   title: string;
   description: string;
-  type: 'multiple_choice' | 'short_answer' | 'coding' | 'drag_drop' | 'true_false';
+  type: 'multiple_choice' | 'short_answer' | 'coding' | 'drag_drop' | 'true_false' | 'fill_blank' | 'matching' | 'ordering';
   difficulty: 'easy' | 'medium' | 'hard';
   category: string;
   timeLimit: number; // in seconds
   points: number;
   xpReward: number;
+  bonusMultiplier?: number;
+  streakBonus?: number;
   question: string;
   options?: string[];
   correctAnswer: string;
@@ -43,6 +45,10 @@ export interface SkillChallenge {
   hint: string;
   prerequisites: string[];
   tags: string[];
+  codeTemplate?: string;
+  testCases?: any;
+  matchingPairs?: any;
+  orderSequence?: string[];
 }
 
 interface SkillChallengePopupProps {
@@ -121,9 +127,16 @@ export function SkillChallengePopup({ isOpen, onClose, challenge, onComplete, on
       const result = await response.json();
       
       if (correct) {
+        const rewardMessage = result.rewards ? [
+          result.rewards.base,
+          result.rewards.bonus,
+          result.rewards.streak,
+          result.rewards.perfect
+        ].filter(Boolean).join(' • ') : `You earned ${challenge.points} points and ${challenge.xpReward} XP!`;
+        
         toast({
-          title: "Excellent!",
-          description: `You earned ${challenge.points} points and ${challenge.xpReward} XP!`,
+          title: result.perfectScore ? "Perfect Score!" : result.streakCount > 1 ? `${result.streakCount}x Streak!` : "Excellent!",
+          description: rewardMessage,
         });
         
         // Update user level cache
@@ -165,6 +178,24 @@ export function SkillChallengePopup({ isOpen, onClose, challenge, onComplete, on
       case 'coding':
         // Basic code comparison (could be enhanced with actual code execution)
         return userAnswer.replace(/\s+/g, '') === correctAnswer.replace(/\s+/g, '');
+      case 'fill_blank':
+        // Check if all blanks are filled correctly
+        const userBlanks = userAnswer.split(';').map(b => b.trim().toLowerCase());
+        const correctBlanks = correctAnswer.split(';').map(b => b.trim().toLowerCase());
+        return userBlanks.length === correctBlanks.length && 
+               userBlanks.every((blank, idx) => blank === correctBlanks[idx]);
+      case 'matching':
+        // Check if all pairs are matched correctly
+        const userPairs = userAnswer.toLowerCase().split(',');
+        const correctPairs = correctAnswer.toLowerCase().split(',');
+        return userPairs.length === correctPairs.length && 
+               userPairs.every(pair => correctPairs.includes(pair.trim()));
+      case 'ordering':
+        // Check if items are in correct order
+        const userOrder = userAnswer.split(',').map(item => item.trim().toLowerCase());
+        const correctOrder = correctAnswer.split(',').map(item => item.trim().toLowerCase());
+        return userOrder.length === correctOrder.length && 
+               userOrder.every((item, idx) => item === correctOrder[idx]);
       default:
         return userAnswer === correctAnswer;
     }
@@ -230,12 +261,88 @@ export function SkillChallengePopup({ isOpen, onClose, challenge, onComplete, on
 
       case 'coding':
         return (
-          <Textarea
-            placeholder="Write your code here..."
-            value={currentAnswer}
-            onChange={(e) => setCurrentAnswer(e.target.value)}
-            className="w-full min-h-32 font-mono"
-          />
+          <div className="space-y-2">
+            {challenge.codeTemplate && (
+              <div className="p-3 bg-gray-100 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">Template:</p>
+                <pre className="text-sm font-mono">{challenge.codeTemplate}</pre>
+              </div>
+            )}
+            <Textarea
+              placeholder="Write your code here..."
+              value={currentAnswer}
+              onChange={(e) => setCurrentAnswer(e.target.value)}
+              className="w-full min-h-32 font-mono"
+            />
+          </div>
+        );
+
+      case 'fill_blank':
+        return (
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">Fill in the blanks with the correct words:</p>
+            <Input
+              placeholder="Enter your answers separated by semicolons..."
+              value={currentAnswer}
+              onChange={(e) => setCurrentAnswer(e.target.value)}
+              className="w-full"
+            />
+          </div>
+        );
+
+      case 'matching':
+        return (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">Match the items by typing pairs (e.g., "item1:match1,item2:match2"):</p>
+            {challenge.matchingPairs?.pairs && (
+              <div className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <h5 className="font-medium text-sm mb-2">Items:</h5>
+                  {challenge.matchingPairs.pairs.map((pair: any, idx: number) => (
+                    <div key={idx} className="text-sm p-2 bg-white rounded border mb-1">
+                      {pair.left}
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <h5 className="font-medium text-sm mb-2">Definitions:</h5>
+                  {challenge.matchingPairs.pairs.map((pair: any, idx: number) => (
+                    <div key={idx} className="text-sm p-2 bg-white rounded border mb-1">
+                      {pair.right}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <Textarea
+              placeholder="Type your matches here (e.g., Variable:A container for storing data values,Function:A reusable block of code)..."
+              value={currentAnswer}
+              onChange={(e) => setCurrentAnswer(e.target.value)}
+              className="w-full min-h-20"
+            />
+          </div>
+        );
+
+      case 'ordering':
+        return (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">Put the items in the correct order:</p>
+            {challenge.orderSequence && (
+              <div className="space-y-2">
+                {challenge.orderSequence.map((item, idx) => (
+                  <div key={idx} className="p-3 bg-gray-100 rounded-lg border">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            )}
+            <Textarea
+              placeholder="Enter the correct order separated by commas..."
+              value={currentAnswer}
+              onChange={(e) => setCurrentAnswer(e.target.value)}
+              className="w-full min-h-20"
+            />
+          </div>
         );
 
       default:

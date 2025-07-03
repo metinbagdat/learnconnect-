@@ -24,7 +24,8 @@ import { eq, and, gte, notInArray, count, sum } from "drizzle-orm";
 import { 
   skillChallenges, 
   userSkillChallengeAttempts,
-  userLevels 
+  userLevels,
+  userChallengeStreaks
 } from "@shared/schema";
 
 // Initialize the OpenAI client
@@ -2026,8 +2027,75 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         return res.status(404).json({ error: 'Challenge not found' });
       }
 
-      const pointsEarned = isCorrect ? challenge.points : 0;
-      const xpEarned = isCorrect ? challenge.xpReward : 0;
+      let pointsEarned = isCorrect ? challenge.points : 0;
+      let xpEarned = isCorrect ? challenge.xpReward : 0;
+      let bonusPointsEarned = 0;
+      let speedBonus = 0;
+      let streakCount = 0;
+      let perfectScore = false;
+
+      if (isCorrect) {
+        // Calculate speed bonus (if completed in less than 50% of time limit)
+        const completionPercentage = timeSpent / challenge.timeLimit;
+        if (completionPercentage < 0.5) {
+          speedBonus = Math.floor(challenge.points * 0.5);
+          bonusPointsEarned += speedBonus;
+        }
+
+        // Check if it's a perfect score (no hints used, fast completion)
+        if (!hintUsed && completionPercentage < 0.7) {
+          perfectScore = true;
+          const bonusMultiplier = Number(challenge.bonusMultiplier) || 1.0;
+          bonusPointsEarned += Math.floor(challenge.points * (bonusMultiplier - 1));
+        }
+
+        // Handle streak tracking
+        const [existingStreak] = await db.select()
+          .from(userChallengeStreaks)
+          .where(and(
+            eq(userChallengeStreaks.userId, userId),
+            eq(userChallengeStreaks.category, challenge.category)
+          ));
+
+        if (existingStreak) {
+          const newStreak = (existingStreak.currentStreak || 0) + 1;
+          streakCount = newStreak;
+          
+          // Add streak bonus
+          if (newStreak >= 3) {
+            bonusPointsEarned += (challenge.streakBonus || 0) * Math.floor(newStreak / 3);
+          }
+
+          await db.update(userChallengeStreaks)
+            .set({
+              currentStreak: newStreak,
+              maxStreak: Math.max(existingStreak.maxStreak || 0, newStreak),
+              lastCorrectAt: new Date()
+            })
+            .where(eq(userChallengeStreaks.id, existingStreak.id));
+        } else {
+          streakCount = 1;
+          await db.insert(userChallengeStreaks).values({
+            userId,
+            category: challenge.category,
+            currentStreak: 1,
+            maxStreak: 1,
+            lastCorrectAt: new Date(),
+            streakStartedAt: new Date()
+          });
+        }
+      } else {
+        // Reset streak on incorrect answer
+        await db.update(userChallengeStreaks)
+          .set({ currentStreak: 0 })
+          .where(and(
+            eq(userChallengeStreaks.userId, userId),
+            eq(userChallengeStreaks.category, challenge.category)
+          ));
+      }
+
+      // Total rewards
+      const totalPointsEarned = pointsEarned + bonusPointsEarned;
 
       // Record the attempt
       await db.insert(userSkillChallengeAttempts).values({
@@ -2036,8 +2104,12 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         answer,
         timeSpent,
         isCorrect,
-        pointsEarned,
+        pointsEarned: totalPointsEarned,
         xpEarned,
+        bonusPointsEarned,
+        streakCount,
+        perfectScore,
+        speedBonus,
         timedOut: timedOut || false,
         hintUsed: hintUsed || false
       });
@@ -2050,7 +2122,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
         if (userLevel) {
           const newTotalXp = userLevel.totalXp + xpEarned;
-          const newTotalPoints = userLevel.totalPoints + pointsEarned;
+          const newTotalPoints = userLevel.totalPoints + totalPointsEarned;
           const newCurrentXp = userLevel.currentXp + xpEarned;
           
           // Calculate level progression
@@ -2078,9 +2150,20 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
       res.json({ 
         success: true, 
-        pointsEarned, 
+        pointsEarned: totalPointsEarned,
+        basePoints: pointsEarned,
+        bonusPointsEarned,
+        speedBonus,
+        streakCount,
+        perfectScore,
         xpEarned,
-        isCorrect 
+        isCorrect,
+        rewards: {
+          base: `${pointsEarned} points + ${xpEarned} XP`,
+          bonus: bonusPointsEarned > 0 ? `+${bonusPointsEarned} bonus points` : null,
+          streak: streakCount > 1 ? `${streakCount}x streak!` : null,
+          perfect: perfectScore ? 'Perfect Score!' : null
+        }
       });
     } catch (error) {
       console.error('Error submitting skill challenge:', error);

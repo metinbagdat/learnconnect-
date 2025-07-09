@@ -121,6 +121,13 @@ export const learningPaths = pgTable("learning_paths", {
   estimatedDuration: integer("estimated_duration_hours"),
   progress: integer("progress").notNull().default(0),
   isAiGenerated: boolean("is_ai_generated").default(true),
+  examType: text("exam_type"), // lycee, college, university, sat, act, ap, ielts, toefl, gre, gmat, etc.
+  examSubjects: text("exam_subjects").array().default([]), // subjects covered in this exam path
+  difficultyLevel: text("difficulty_level").default("intermediate"), // beginner, intermediate, advanced
+  targetScore: integer("target_score"), // target exam score if applicable
+  examDate: date("exam_date"), // planned exam date
+  studySchedule: jsonb("study_schedule"), // weekly study plan and milestones
+  customRequirements: jsonb("custom_requirements"), // specific requirements or focus areas
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });

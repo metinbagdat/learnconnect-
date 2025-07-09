@@ -19,6 +19,7 @@ import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { seedChallenges } from "./seed-challenges";
 import { seedSkillChallenges } from "./seed-skill-challenges";
+import { generateExamLearningPath, saveExamLearningPath, generatePredefinedExamPaths } from "./entrance-exam-service";
 import { db } from "./db";
 import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
@@ -749,6 +750,169 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       res.json(updatedStep);
     } catch (error) {
       res.status(500).json({ message: "Failed to mark step as completed" });
+    }
+  });
+
+  // Entrance Exam Learning Paths API
+  app.post("/api/exam-learning-paths/generate", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { 
+        examType, 
+        targetExam, 
+        currentLevel, 
+        strengths, 
+        weaknesses, 
+        targetScore, 
+        examDate, 
+        weeklyStudyHours, 
+        preferredLearningStyle, 
+        specialRequirements 
+      } = req.body;
+
+      if (!examType || !targetExam) {
+        return res.status(400).json({ message: "Exam type and target exam are required" });
+      }
+
+      const userProfile = {
+        currentLevel: currentLevel || "intermediate",
+        strengths: Array.isArray(strengths) ? strengths : [],
+        weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
+        targetScore,
+        examDate,
+        weeklyStudyHours: weeklyStudyHours || 10,
+        preferredLearningStyle: preferredLearningStyle || "mixed",
+        specialRequirements
+      };
+
+      // Generate the AI-powered exam learning path
+      const examPath = await generateExamLearningPath(
+        examType,
+        targetExam,
+        userProfile,
+        req.user.id
+      );
+
+      // Save the path to database
+      const savedPath = await saveExamLearningPath(examPath, req.user.id);
+
+      res.status(201).json({
+        path: examPath,
+        pathId: savedPath.pathId,
+        stepIds: savedPath.stepIds,
+        message: "Exam learning path generated successfully"
+      });
+    } catch (error) {
+      console.error("Error generating exam learning path:", error);
+      res.status(500).json({ message: "Failed to generate exam learning path" });
+    }
+  });
+
+  app.get("/api/exam-learning-paths", async (req, res) => {
+    let userId: number;
+    
+    // Try session-based authentication first
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } 
+    // If session auth fails, try header-based authentication
+    else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const examPaths = await storage.getLearningPaths(userId);
+      // Filter for exam-specific paths
+      const examSpecificPaths = examPaths.filter(path => path.examType);
+      res.json(examSpecificPaths);
+    } catch (error) {
+      console.error("Error fetching exam learning paths:", error);
+      res.status(500).json({ message: "Failed to fetch exam learning paths" });
+    }
+  });
+
+  app.get("/api/exam-learning-paths/types", async (req, res) => {
+    try {
+      const examTypes = [
+        {
+          id: "lycee",
+          name: "Lycée (French High School)",
+          description: "French Baccalauréat preparation for Scientific, Literary, and Economic tracks",
+          exams: [
+            "Baccalauréat Scientifique (Bac S)",
+            "Baccalauréat Littéraire (Bac L)", 
+            "Baccalauréat Économique et Social (Bac ES)",
+            "Baccalauréat Technologique (Bac Tech)"
+          ],
+          subjects: ["Mathematics", "Physics", "Chemistry", "Biology", "Philosophy", "French Literature", "History", "Geography", "Foreign Languages"]
+        },
+        {
+          id: "college",
+          name: "College Preparation",
+          description: "Standardized test preparation for US college admissions",
+          exams: [
+            "SAT (Scholastic Assessment Test)",
+            "ACT (American College Testing)",
+            "AP Courses (Advanced Placement)",
+            "PSAT/NMSQT (Preliminary SAT)"
+          ],
+          subjects: ["Mathematics", "Evidence-Based Reading", "Writing", "Science Reasoning", "Essay Writing", "Test Strategy"]
+        },
+        {
+          id: "university",
+          name: "University Entrance",
+          description: "Graduate and professional school entrance exam preparation",
+          exams: [
+            "GRE (Graduate Record Examination)",
+            "GMAT (Graduate Management Admission Test)",
+            "LSAT (Law School Admission Test)",
+            "MCAT (Medical College Admission Test)",
+            "MAT (Miller Analogies Test)"
+          ],
+          subjects: ["Quantitative Reasoning", "Verbal Reasoning", "Analytical Writing", "Critical Thinking", "Subject-Specific Knowledge"]
+        },
+        {
+          id: "turkish_university",
+          name: "Turkish University Entrance",
+          description: "YKS (Yükseköğretim Kurumları Sınavı) preparation for Turkish universities",
+          exams: [
+            "YKS TYT (Temel Yeterlilik Testi)",
+            "YKS AYT Matematik-Fen (Advanced Math-Science)",
+            "YKS AYT Sözel (Advanced Verbal)",
+            "YKS AYT Eşit Ağırlık (Equal Weight)",
+            "YKS DİL (Foreign Language Test)"
+          ],
+          subjects: ["Turkish Language", "Mathematics", "Science", "Social Sciences", "Advanced Mathematics", "Physics", "Chemistry", "Biology", "Literature", "History", "Geography", "Foreign Languages"]
+        }
+      ];
+
+      res.json(examTypes);
+    } catch (error) {
+      console.error("Error fetching exam types:", error);
+      res.status(500).json({ message: "Failed to fetch exam types" });
+    }
+  });
+
+  // Initialize predefined exam paths (admin only)
+  app.post("/api/admin/generate-predefined-exam-paths", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin users can access this endpoint" });
+    }
+
+    try {
+      await generatePredefinedExamPaths();
+      res.json({ message: "Predefined exam learning paths generated successfully" });
+    } catch (error) {
+      console.error("Error generating predefined exam paths:", error);
+      res.status(500).json({ message: "Failed to generate predefined exam paths" });
     }
   });
 

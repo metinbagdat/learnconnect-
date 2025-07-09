@@ -146,6 +146,19 @@ export function Sidebar() {
               </span>
             </span>
           </SidebarLink>
+
+          <SidebarLink 
+            href="/entrance-exam-prep" 
+            icon={<Shield className="h-5 w-5" />}
+            isActive={location === '/entrance-exam-prep'}
+          >
+            <span className="flex items-center">
+              Entrance Exams
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                AI
+              </span>
+            </span>
+          </SidebarLink>
           
           <SidebarLink 
             href="/learning-paths" 

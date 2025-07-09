@@ -22,6 +22,7 @@ import SocialPage from "@/pages/social-page";
 import LearningTrailsPage from "@/pages/learning-trails";
 import ChallengePathsPage from "@/pages/challenge-paths";
 import ChallengeAnalyticsDashboard from "@/pages/challenge-analytics-dashboard";
+import EntranceExamPrep from "@/pages/entrance-exam-prep";
 
 function Router() {
   return (
@@ -40,6 +41,7 @@ function Router() {
       <ProtectedRoute path="/challenges" component={ChallengesPage} />
       <ProtectedRoute path="/challenge-paths" component={ChallengePathsPage} />
       <ProtectedRoute path="/challenge-analytics" component={ChallengeAnalyticsDashboard} />
+      <ProtectedRoute path="/entrance-exam-prep" component={EntranceExamPrep} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/gamification" component={GamificationDashboard} />
       <ProtectedRoute path="/social" component={SocialPage} />

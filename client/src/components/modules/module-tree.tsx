@@ -101,7 +101,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
           </Badge>
         </div>
 
-        {modules?.map((module) => (
+        {modules && modules.length > 0 ? modules.map((module) => (
           <Card key={module.id} className="border-l-4 border-l-blue-500">
             <Collapsible
               open={expandedModules.has(module.id)}
@@ -134,28 +134,34 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
               <CollapsibleContent>
                 <CardContent className="pt-0">
                   {/* AI Module Context */}
-                  <div className="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-l-blue-400">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Brain className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-800">AI Learning Assistant</span>
-                    </div>
-                    <p className="text-sm text-blue-700 mb-2">{module.aiContext.moduleOverview}</p>
-                    <p className="text-sm text-blue-600 italic">{module.aiContext.learningPath}</p>
-                    
-                    {module.aiContext.prerequisiteCheck && (
-                      <div className="mt-3 p-2 bg-yellow-50 rounded border-l-2 border-yellow-400">
-                        <div className="flex items-center gap-1">
-                          <Target className="h-3 w-3 text-yellow-600" />
-                          <span className="text-xs font-medium text-yellow-800">Prerequisites Check</span>
-                        </div>
-                        <p className="text-xs text-yellow-700">{module.aiContext.prerequisiteCheck}</p>
+                  {module.aiContext && (
+                    <div className="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-l-blue-400">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Brain className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-800">AI Learning Assistant</span>
                       </div>
-                    )}
-                  </div>
+                      <p className="text-sm text-blue-700 mb-2">
+                        {module.aiContext.moduleOverview || "This module provides comprehensive learning content tailored to your progress."}
+                      </p>
+                      <p className="text-sm text-blue-600 italic">
+                        {module.aiContext.learningPath || "Follow the structured lessons to master the concepts progressively."}
+                      </p>
+                      
+                      {module.aiContext.prerequisiteCheck && (
+                        <div className="mt-3 p-2 bg-yellow-50 rounded border-l-2 border-yellow-400">
+                          <div className="flex items-center gap-1">
+                            <Target className="h-3 w-3 text-yellow-600" />
+                            <span className="text-xs font-medium text-yellow-800">Prerequisites Check</span>
+                          </div>
+                          <p className="text-xs text-yellow-700">{module.aiContext.prerequisiteCheck}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Lessons */}
                   <div className="space-y-3">
-                    {module.lessons.map((lesson, index) => (
+                    {module.lessons && module.lessons.length > 0 ? module.lessons.map((lesson, index) => (
                       <div
                         key={lesson.id}
                         className={cn(
@@ -194,21 +200,40 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                         </div>
 
                         {/* AI Context Preview */}
-                        <div className="mt-3 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                          <div className="flex items-center gap-1 mb-1">
-                            <Zap className="h-3 w-3 text-purple-500" />
-                            <span className="font-medium">AI Personalization</span>
+                        {lesson.aiContext && (
+                          <div className="mt-3 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Zap className="h-3 w-3 text-purple-500" />
+                              <span className="font-medium">AI Personalization</span>
+                            </div>
+                            <p className="truncate">{lesson.aiContext.personalizedIntro || "Personalized content available"}</p>
                           </div>
-                          <p className="truncate">{lesson.aiContext.personalizedIntro}</p>
-                        </div>
+                        )}
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <BookOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p className="text-sm">No lessons available for this module yet.</p>
+                        <p className="text-xs mt-1">Content will be generated automatically.</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </CollapsibleContent>
             </Collapsible>
           </Card>
-        ))}
+        )) : (
+          <div className="text-center py-12">
+            <Brain className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No AI Modules Available</h3>
+            <p className="text-gray-600 mb-4">
+              This course doesn't have AI-enhanced modules yet. Content will be generated automatically as you progress.
+            </p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Refresh Content
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* AI-Enhanced Lesson Detail Panel */}
@@ -233,14 +258,20 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
 
             <CardContent className="space-y-4">
               {/* AI Personalized Introduction */}
-              <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Brain className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800">Personalized for You</span>
+              {selectedLesson.aiContext && (
+                <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Personalized for You</span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    {selectedLesson.aiContext.personalizedIntro || "This lesson has been customized for your learning level."}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-2 italic">
+                    {selectedLesson.aiContext.difficultyReason || "Content difficulty adjusted to match your progress."}
+                  </p>
                 </div>
-                <p className="text-sm text-gray-700">{selectedLesson.aiContext.personalizedIntro}</p>
-                <p className="text-xs text-gray-600 mt-2 italic">{selectedLesson.aiContext.difficultyReason}</p>
-              </div>
+              )}
 
               {/* Learning Objectives */}
               <div>
@@ -249,12 +280,14 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                   Learning Objectives
                 </h4>
                 <ul className="space-y-1">
-                  {selectedLesson.aiContext.learningObjectives.map((objective, index) => (
+                  {selectedLesson.aiContext?.learningObjectives?.map((objective, index) => (
                     <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
                       <Star className="h-3 w-3 text-yellow-500 mt-0.5 flex-shrink-0" />
                       {objective}
                     </li>
-                  ))}
+                  )) || (
+                    <li className="text-sm text-gray-500">Learning objectives will be generated automatically.</li>
+                  )}
                 </ul>
               </div>
 
@@ -262,7 +295,9 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
               <div>
                 <h4 className="font-medium mb-2">AI-Adapted Content</h4>
                 <div className="p-3 bg-gray-50 rounded text-sm text-gray-700">
-                  {selectedLesson.aiContext.adaptedContent.substring(0, 200)}...
+                  {selectedLesson.aiContext?.adaptedContent 
+                    ? `${selectedLesson.aiContext.adaptedContent.substring(0, 200)}...`
+                    : "Content will be adapted to your learning style and level."}
                 </div>
               </div>
 
@@ -270,9 +305,11 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
               <div>
                 <h4 className="font-medium mb-2">Recommended Practice</h4>
                 <ul className="space-y-1">
-                  {selectedLesson.aiContext.practiceExercises.slice(0, 3).map((exercise, index) => (
+                  {selectedLesson.aiContext?.practiceExercises?.slice(0, 3).map((exercise, index) => (
                     <li key={index} className="text-sm text-gray-600">• {exercise}</li>
-                  ))}
+                  )) || (
+                    <li className="text-sm text-gray-500">• Practice exercises will be generated based on your progress</li>
+                  )}
                 </ul>
               </div>
 
@@ -286,9 +323,11 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
               {/* Next Steps */}
               <div className="text-xs text-gray-500">
                 <p className="font-medium mb-1">Next recommended steps:</p>
-                {selectedLesson.aiContext.nextSteps.slice(0, 2).map((step, index) => (
+                {selectedLesson.aiContext?.nextSteps?.slice(0, 2).map((step, index) => (
                   <p key={index}>• {step}</p>
-                ))}
+                )) || (
+                  <p>• Complete this lesson to unlock next steps</p>
+                )}
               </div>
             </CardContent>
           </Card>

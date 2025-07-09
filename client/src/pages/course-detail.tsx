@@ -146,8 +146,8 @@ export default function CourseDetail() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Course not found</h1>
-          <p className="mt-2 text-muted-foreground">The course you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold">{t('courseNotFound')}</h1>
+          <p className="mt-2 text-muted-foreground">{t('courseNotFoundDescription')}</p>
           <Button className="mt-4" onClick={() => window.history.back()}>Go Back</Button>
         </div>
       </div>

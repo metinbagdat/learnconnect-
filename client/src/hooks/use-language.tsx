@@ -9,6 +9,18 @@ const translations = {
     // Common
     appName: 'EduLearn Platform',
     loading: 'Loading...',
+    save: 'Save',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete',
+    confirm: 'Confirm',
+    back: 'Back',
+    next: 'Next',
+    previous: 'Previous',
+    search: 'Search',
+    filter: 'Filter',
+    sort: 'Sort',
+    refresh: 'Refresh',
     
     // Navigation
     dashboard: 'Dashboard',
@@ -66,6 +78,32 @@ const translations = {
     courseDescription: 'Course Description',
     courseCategory: 'Category',
     topicInput: 'Topic',
+    generateCourseButton: 'Generate Course',
+    courseGenerated: 'Course Generated Successfully',
+    saveCourse: 'Save Course',
+    
+    // Course Detail
+    courseOverview: 'Course Overview',
+    moduleOverview: 'Module Overview',
+    lessonContent: 'Lesson Content',
+    prerequisites: 'Prerequisites',
+    learningOutcomes: 'Learning Outcomes',
+    difficultyLevel: 'Difficulty Level',
+    estimatedDuration: 'Estimated Duration',
+    completionRate: 'Completion Rate',
+    
+    // Lesson Page
+    lessonNotFound: 'Lesson Not Found',
+    lessonNotFoundDescription: 'The lesson you are looking for does not exist or has not been created yet.',
+    backToCourse: 'Back to Course',
+    personalizedIntro: 'AI Personalized Introduction',
+    practiceExercises: 'Practice Exercises',
+    nextSteps: 'Next Steps',
+    completeLesson: 'Complete Lesson',
+    nextLesson: 'Next Lesson',
+    previousLesson: 'Previous Lesson',
+    minutes: 'minutes',
+    completed: 'completed',
     levelInput: 'Level',
     targetAudienceInput: 'Target Audience',
     specificFocusInput: 'Specific Focus',
@@ -144,11 +182,27 @@ const translations = {
     specialRequirements: 'Special Requirements',
     generateLearningPath: 'Generate Learning Path',
     continueLearning: 'Continue Learning',
+    
+    // Course Detail
+    courseNotFound: 'Course not found',
+    courseNotFoundDescription: 'The course you\'re looking for doesn\'t exist.',
   },
   tr: {
     // Common
     appName: 'EduLearn Platformu',
     loading: 'Yükleniyor...',
+    save: 'Kaydet',
+    cancel: 'İptal',
+    edit: 'Düzenle',
+    delete: 'Sil',
+    confirm: 'Onayla',
+    back: 'Geri',
+    next: 'İleri',
+    previous: 'Önceki',
+    search: 'Ara',
+    filter: 'Filtrele',
+    sort: 'Sırala',
+    refresh: 'Yenile',
     
     // Navigation
     dashboard: 'Gösterge Paneli',
@@ -206,6 +260,32 @@ const translations = {
     courseDescription: 'Kurs Açıklaması',
     courseCategory: 'Kategori',
     topicInput: 'Konu',
+    generateCourseButton: 'Kurs Oluştur',
+    courseGenerated: 'Kurs Başarıyla Oluşturuldu',
+    saveCourse: 'Kursu Kaydet',
+    
+    // Course Detail
+    courseOverview: 'Kurs Genel Bakış',
+    moduleOverview: 'Modül Genel Bakış',
+    lessonContent: 'Ders İçeriği',
+    prerequisites: 'Ön Koşullar',
+    learningOutcomes: 'Öğrenme Çıktıları',
+    difficultyLevel: 'Zorluk Seviyesi',
+    estimatedDuration: 'Tahmini Süre',
+    completionRate: 'Tamamlanma Oranı',
+    
+    // Lesson Page
+    lessonNotFound: 'Ders Bulunamadı',
+    lessonNotFoundDescription: 'Aradığınız ders mevcut değil veya henüz oluşturulmadı.',
+    backToCourse: 'Kursa Dön',
+    personalizedIntro: 'AI Kişiselleştirilmiş Giriş',
+    practiceExercises: 'Alıştırmalar',
+    nextSteps: 'Sonraki Adımlar',
+    completeLesson: 'Dersi Tamamla',
+    nextLesson: 'Sonraki Ders',
+    previousLesson: 'Önceki Ders',
+    minutes: 'dakika',
+    completed: 'tamamlandı',
     levelInput: 'Seviye',
     targetAudienceInput: 'Hedef Kitle',
     specificFocusInput: 'Özel Odak',
@@ -280,6 +360,10 @@ const translations = {
     specialRequirements: 'Özel Gereksinimler',
     generateLearningPath: 'Öğrenme Yolu Oluştur',
     continueLearning: 'Öğrenmeye Devam Et',
+    
+    // Course Detail
+    courseNotFound: 'Kurs bulunamadı',
+    courseNotFoundDescription: 'Aradığınız kurs mevcut değil.',
   }
 };
 

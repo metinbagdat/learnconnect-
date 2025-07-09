@@ -95,18 +95,15 @@ export default function LessonPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="text-6xl mb-4">📚</div>
           <h1 className="text-2xl font-bold mb-4">
-            {language === 'tr' ? 'Ders Bulunamadı' : 'Lesson Not Found'}
+            {t('lessonNotFound')}
           </h1>
           <p className="text-gray-600 mb-6">
-            {language === 'tr' 
-              ? 'Aradığınız ders mevcut değil veya henüz oluşturulmadı.'
-              : 'The lesson you are looking for does not exist or has not been created yet.'
-            }
+            {t('lessonNotFoundDescription')}
           </p>
           <Link href="/courses">
             <Button>
               <ChevronLeft className="h-4 w-4 mr-2" />
-              {language === 'tr' ? 'Kurslara Dön' : 'Back to Courses'}
+              {t('courses')}
             </Button>
           </Link>
         </div>
@@ -123,7 +120,7 @@ export default function LessonPage() {
             <Link href={`/courses/${lesson.courseId}`}>
               <Button variant="ghost" size="sm">
                 <ChevronLeft className="h-4 w-4 mr-2" />
-                {language === 'tr' ? 'Kursa Dön' : 'Back to Course'}
+                {t('backToCourse')}
               </Button>
             </Link>
           </div>
@@ -143,7 +140,7 @@ export default function LessonPage() {
           <div className="flex items-center space-x-6 text-sm text-gray-500">
             <div className="flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              {lesson.estimatedTime} {language === 'tr' ? 'dakika' : 'minutes'}
+              {lesson.estimatedTime} {t('minutes')}
             </div>
             <div className="flex items-center">
               <BookOpen className="h-4 w-4 mr-1" />
@@ -151,7 +148,7 @@ export default function LessonPage() {
             </div>
             <div className="flex items-center">
               <Target className="h-4 w-4 mr-1" />
-              {lesson.progress}% {language === 'tr' ? 'tamamlandı' : 'completed'}
+              {lesson.progress}% {t('completed')}
             </div>
           </div>
 
@@ -165,7 +162,7 @@ export default function LessonPage() {
           <CardHeader>
             <CardTitle className="flex items-center text-blue-800">
               <Brain className="h-5 w-5 mr-2" />
-              {language === 'tr' ? 'AI Kişiselleştirilmiş Giriş' : 'AI Personalized Introduction'}
+              {t('personalizedIntro')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -176,7 +173,7 @@ export default function LessonPage() {
         {/* Learning Objectives */}
         <Card>
           <CardHeader>
-            <CardTitle>{language === 'tr' ? 'Öğrenme Hedefleri' : 'Learning Objectives'}</CardTitle>
+            <CardTitle>{t('learningObjectives')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -193,7 +190,7 @@ export default function LessonPage() {
         {/* Main Content */}
         <Card>
           <CardHeader>
-            <CardTitle>{language === 'tr' ? 'Ders İçeriği' : 'Lesson Content'}</CardTitle>
+            <CardTitle>{t('lessonContent')}</CardTitle>
             <CardDescription>{lesson.aiContext.difficultyReason}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -205,7 +202,7 @@ export default function LessonPage() {
             
             <div>
               <h4 className="font-semibold mb-3">
-                {language === 'tr' ? 'AI Uyarlanmış İçerik' : 'AI-Adapted Content'}
+                {t('aiAdaptedContent')}
               </h4>
               <p className="text-gray-700">{lesson.aiContext.adaptedContent}</p>
             </div>
@@ -215,7 +212,7 @@ export default function LessonPage() {
         {/* Practice Exercises */}
         <Card>
           <CardHeader>
-            <CardTitle>{language === 'tr' ? 'Önerilen Alıştırmalar' : 'Recommended Practice'}</CardTitle>
+            <CardTitle>{t('practiceExercises')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
@@ -234,7 +231,7 @@ export default function LessonPage() {
         {/* Next Steps */}
         <Card>
           <CardHeader>
-            <CardTitle>{language === 'tr' ? 'Sonraki Adımlar' : 'Next Steps'}</CardTitle>
+            <CardTitle>{t('nextSteps')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -252,16 +249,16 @@ export default function LessonPage() {
         <div className="flex justify-between items-center pt-6">
           <Button variant="outline">
             <ChevronLeft className="h-4 w-4 mr-2" />
-            {language === 'tr' ? 'Önceki Ders' : 'Previous Lesson'}
+            {t('previousLesson')}
           </Button>
           
           <Button>
-            {language === 'tr' ? 'Dersi Tamamla' : 'Complete Lesson'}
+            {t('completeLesson')}
             <CheckCircle className="h-4 w-4 ml-2" />
           </Button>
           
           <Button variant="outline">
-            {language === 'tr' ? 'Sonraki Ders' : 'Next Lesson'}
+            {t('nextLesson')}
             <Play className="h-4 w-4 ml-2" />
           </Button>
         </div>

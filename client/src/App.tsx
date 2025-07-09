@@ -6,6 +6,7 @@ import Dashboard from "@/pages/dashboard";
 import DashboardStandalone from "@/pages/dashboard-standalone";
 import Courses from "@/pages/courses";
 import CourseDetail from "@/pages/course-detail";
+import LessonPage from "@/pages/lesson-page";
 import Assignments from "@/pages/assignments";
 import Calendar from "@/pages/calendar";
 import Resources from "@/pages/resources";
@@ -31,6 +32,7 @@ function Router() {
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />
       <ProtectedRoute path="/courses" component={Courses} />
       <ProtectedRoute path="/courses/:courseId" component={CourseDetail} />
+      <ProtectedRoute path="/lesson/:lessonId" component={LessonPage} />
       <ProtectedRoute path="/assignments" component={Assignments} />
       <ProtectedRoute path="/calendar" component={Calendar} />
       <ProtectedRoute path="/resources" component={Resources} />

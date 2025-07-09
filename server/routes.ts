@@ -604,6 +604,47 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Get individual lesson details
+  app.get("/api/lessons/:lessonId", async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const language = req.query.lang as string || 'en';
+      
+      if (isNaN(lessonId)) {
+        return res.status(400).json({ message: "Invalid lesson ID" });
+      }
+
+      // Import the AI module service to get lesson data
+      const { generateAIEnhancedModules } = await import("./ai-module-service");
+      
+      // For now, we'll find the lesson by searching through all courses
+      // This is a temporary solution until we have proper lesson storage
+      const courses = await storage.getCourses();
+      
+      for (const course of courses) {
+        const aiModules = await generateAIEnhancedModules(course.id, 4, language); // Using user ID 4 as default
+        
+        for (const module of aiModules) {
+          const lesson = module.lessons.find(l => l.id === lessonId);
+          if (lesson) {
+            // Return lesson with additional context
+            return res.json({
+              ...lesson,
+              moduleTitle: module.title,
+              courseTitle: course.title,
+              courseId: course.id
+            });
+          }
+        }
+      }
+      
+      res.status(404).json({ message: "Lesson not found" });
+    } catch (error) {
+      console.error("Error fetching lesson:", error);
+      res.status(500).json({ message: "Failed to fetch lesson" });
+    }
+  });
+
   // Get AI-enhanced modules for a course
   app.get("/api/courses/:courseId/ai-modules/:userId", async (req, res) => {
     try {

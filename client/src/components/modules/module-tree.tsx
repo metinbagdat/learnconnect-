@@ -175,7 +175,10 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                           "p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300 transition-all cursor-pointer",
                           selectedLesson?.id === lesson.id && "border-blue-500 bg-blue-50"
                         )}
-                        onClick={() => setSelectedLesson(lesson)}
+                        onClick={() => {
+                          setSelectedLesson(lesson);
+                          window.location.href = `/lesson/${lesson.id}`;
+                        }}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">

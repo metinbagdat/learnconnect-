@@ -617,7 +617,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       // Import the AI module service
       const { generateAIEnhancedModules } = await import("./ai-module-service");
       
-      const aiModules = await generateAIEnhancedModules(courseId, userId);
+      const language = req.query.lang as string || 'en';
+      const aiModules = await generateAIEnhancedModules(courseId, userId, language);
       res.json(aiModules);
     } catch (error) {
       console.error("Error generating AI-enhanced modules:", error);

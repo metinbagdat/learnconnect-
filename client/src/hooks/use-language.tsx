@@ -144,28 +144,6 @@ const translations = {
     specialRequirements: 'Special Requirements',
     generateLearningPath: 'Generate Learning Path',
     continueLearning: 'Continue Learning',
-    
-    // Course page specific
-    course: {
-      learningPath: 'Learning Path',
-      aiPersonalized: 'AI-Personalized',
-      moduleTree: 'Module Tree',
-      aiEnhanced: 'AI Enhanced',
-      progress: 'Progress',
-      completed: 'Completed',
-      duration: 'Duration',
-      modules: 'Modules',
-      lessons: 'Lessons',
-      description: 'Description',
-      instructor: 'Instructor',
-      difficulty: 'Difficulty',
-      category: 'Category',
-      rating: 'Rating',
-      enroll: 'Enroll',
-      continue: 'Continue',
-      start: 'Start',
-      view: 'View'
-    },
   },
   tr: {
     // Common
@@ -302,28 +280,6 @@ const translations = {
     specialRequirements: 'Özel Gereksinimler',
     generateLearningPath: 'Öğrenme Yolu Oluştur',
     continueLearning: 'Öğrenmeye Devam Et',
-    
-    // Course page specific
-    course: {
-      learningPath: 'Öğrenme Yolu',
-      aiPersonalized: 'AI Kişiselleştirilmiş',
-      moduleTree: 'Modül Ağacı',
-      aiEnhanced: 'AI Geliştirilmiş',
-      progress: 'İlerleme',
-      completed: 'Tamamlandı',
-      duration: 'Süre',
-      modules: 'Modüller',
-      lessons: 'Dersler',
-      description: 'Açıklama',
-      instructor: 'Eğitmen',
-      difficulty: 'Zorluk',
-      category: 'Kategori',
-      rating: 'Değerlendirme',
-      enroll: 'Kayıt Ol',
-      continue: 'Devam Et',
-      start: 'Başla',
-      view: 'Görüntüle'
-    },
   }
 };
 

@@ -50,10 +50,15 @@ interface AIEnhancedModule {
 export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const [selectedLesson, setSelectedLesson] = useState<AIEnhancedLesson | null>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { data: modules, isLoading } = useQuery<AIEnhancedModule[]>({
-    queryKey: ['/api/courses', courseId, 'ai-modules', userId],
+    queryKey: ['/api/courses', courseId, 'ai-modules', userId, language],
+    queryFn: async () => {
+      const response = await fetch(`/api/courses/${courseId}/ai-modules/${userId}?lang=${language}`);
+      if (!response.ok) throw new Error('Failed to fetch AI modules');
+      return response.json();
+    },
     enabled: !!courseId && !!userId,
   });
 

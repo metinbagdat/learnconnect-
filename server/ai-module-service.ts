@@ -42,7 +42,7 @@ export interface AIEnhancedModule {
 /**
  * Generates AI-enhanced modules with personalized content for each lesson
  */
-export async function generateAIEnhancedModules(courseId: number, userId: number): Promise<AIEnhancedModule[]> {
+export async function generateAIEnhancedModules(courseId: number, userId: number, language: string = 'en'): Promise<AIEnhancedModule[]> {
   try {
     // Get user profile and learning preferences
     const user = await storage.getUser(userId);
@@ -62,7 +62,7 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
     // If no modules exist, generate fallback modules immediately
     if (modules.length === 0) {
       console.log('No modules found, generating fallback modules');
-      return generateFallbackModules(courseId, userId);
+      return generateFallbackModules(courseId, userId, language);
     }
 
     const enhancedModules: AIEnhancedModule[] = [];
@@ -118,7 +118,7 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
     console.error('Error generating AI-enhanced modules:', error);
     
     // Return fallback modules without AI enhancement
-    return generateFallbackModules(courseId, userId);
+    return generateFallbackModules(courseId, userId, language);
   }
 }
 
@@ -233,15 +233,15 @@ function determineLessonDifficulty(lesson: any, userLevel: any): 'beginner' | 'i
   return 'advanced';
 }
 
-async function generateFallbackModules(courseId: number, userId: number): Promise<AIEnhancedModule[]> {
+async function generateFallbackModules(courseId: number, userId: number, language: string = 'en'): Promise<AIEnhancedModule[]> {
   try {
     const modules = await storage.getModules(courseId);
     const course = await storage.getCourse(courseId);
     
     // If no modules exist at all, create sample modules for the course
     if (modules.length === 0 && course) {
-      console.log(`Creating sample modules for course: ${course.title}`);
-      return generateSampleModules(course, userId);
+      console.log(`Creating sample modules for course: ${course.title} in language: ${language}`);
+      return generateSampleModules(course, userId, language);
     }
     
     // Skip user lessons query temporarily due to schema issues
@@ -319,46 +319,78 @@ async function generateFallbackModules(courseId: number, userId: number): Promis
 }
 
 // Generate sample modules when none exist in the database
-async function generateSampleModules(course: any, userId: number): Promise<AIEnhancedModule[]> {
+async function generateSampleModules(course: any, userId: number, language: string = 'en'): Promise<AIEnhancedModule[]> {
   const sampleModules: AIEnhancedModule[] = [];
   
   // Create sample modules based on course title/category
-  const moduleTemplates = getModuleTemplatesForCourse(course);
+  const moduleTemplates = getModuleTemplatesForCourse(course, language);
   
   for (let i = 0; i < moduleTemplates.length; i++) {
     const template = moduleTemplates[i];
     
-    const sampleLessons: AIEnhancedLesson[] = template.lessons.map((lessonTitle, lessonIndex) => ({
-      id: (i + 1) * 1000 + lessonIndex + 1, // Generate unique IDs
-      title: lessonTitle,
-      description: `Learn about ${lessonTitle} in this comprehensive lesson.`,
-      content: `This lesson covers ${lessonTitle} with detailed explanations and examples.`,
-      difficulty: 'intermediate' as const,
-      estimatedTime: 45,
-      progress: Math.floor(Math.random() * 30), // Random progress 0-30%
-      aiContext: {
-        personalizedIntro: `Welcome to ${lessonTitle}! This lesson is tailored to help you master these concepts effectively.`,
-        learningObjectives: [
-          `Understand the fundamentals of ${lessonTitle}`,
-          `Apply ${lessonTitle} concepts in practical scenarios`,
-          `Build confidence in problem-solving with ${lessonTitle}`
-        ],
-        adaptedContent: `This lesson provides comprehensive coverage of ${lessonTitle} with real-world examples and step-by-step guidance.`,
-        practiceExercises: [
-          `Complete ${lessonTitle} practice problems`,
-          `Work through guided examples`,
-          `Take the concept quiz`
-        ],
-        nextSteps: [
-          `Review key concepts from ${lessonTitle}`,
-          `Practice additional problems`,
-          `Prepare for the next lesson`
-        ],
-        difficultyReason: `Content adjusted to intermediate level for comprehensive understanding of ${lessonTitle}.`
-      },
-      tags: ['physics', 'ayt', 'exam-prep']
-    }));
+    const sampleLessons: AIEnhancedLesson[] = template.lessons.map((lessonTitle, lessonIndex) => {
+      const isTurkish = language === 'tr';
+      return {
+        id: (i + 1) * 1000 + lessonIndex + 1, // Generate unique IDs
+        title: lessonTitle,
+        description: isTurkish 
+          ? `${lessonTitle} konusunu bu kapsamlı derste öğrenin.`
+          : `Learn about ${lessonTitle} in this comprehensive lesson.`,
+        content: isTurkish 
+          ? `Bu ders ${lessonTitle} konusunu detaylı açıklamalar ve örneklerle kapsar.`
+          : `This lesson covers ${lessonTitle} with detailed explanations and examples.`,
+        difficulty: 'intermediate' as const,
+        estimatedTime: 45,
+        progress: Math.floor(Math.random() * 30), // Random progress 0-30%
+        aiContext: {
+          personalizedIntro: isTurkish 
+            ? `${lessonTitle} dersine hoş geldiniz! Bu ders bu kavramları etkili bir şekilde kavramanıza yardımcı olmak için özelleştirilmiştir.`
+            : `Welcome to ${lessonTitle}! This lesson is tailored to help you master these concepts effectively.`,
+          learningObjectives: isTurkish 
+            ? [
+                `${lessonTitle} temellerini anlayın`,
+                `${lessonTitle} kavramlarını pratik senaryolarda uygulayın`,
+                `${lessonTitle} ile problem çözmede güven kazanın`
+              ]
+            : [
+                `Understand the fundamentals of ${lessonTitle}`,
+                `Apply ${lessonTitle} concepts in practical scenarios`,
+                `Build confidence in problem-solving with ${lessonTitle}`
+              ],
+          adaptedContent: isTurkish 
+            ? `Bu ders ${lessonTitle} konusunu gerçek dünya örnekleri ve adım adım rehberlik ile kapsamlı olarak ele alır.`
+            : `This lesson provides comprehensive coverage of ${lessonTitle} with real-world examples and step-by-step guidance.`,
+          practiceExercises: isTurkish 
+            ? [
+                `${lessonTitle} pratik problemlerini çözün`,
+                `Rehberli örnekler üzerinde çalışın`,
+                `Kavram testini yapın`
+              ]
+            : [
+                `Complete ${lessonTitle} practice problems`,
+                `Work through guided examples`,
+                `Take the concept quiz`
+              ],
+          nextSteps: isTurkish 
+            ? [
+                `${lessonTitle} anahtar kavramlarını gözden geçirin`,
+                `Ek problemler üzerinde çalışın`,
+                `Sonraki derse hazırlanın`
+              ]
+            : [
+                `Review key concepts from ${lessonTitle}`,
+                `Practice additional problems`,
+                `Prepare for the next lesson`
+              ],
+          difficultyReason: isTurkish 
+            ? `${lessonTitle} konusunun kapsamlı anlaşılması için içerik orta seviyeye ayarlanmıştır.`
+            : `Content adjusted to intermediate level for comprehensive understanding of ${lessonTitle}.`
+        },
+        tags: isTurkish ? ['fizik', 'ayt', 'sınav-hazırlık'] : ['physics', 'ayt', 'exam-prep']
+      };
+    });
     
+    const isTurkish = language === 'tr';
     sampleModules.push({
       id: i + 1,
       title: template.title,
@@ -366,14 +398,26 @@ async function generateSampleModules(course: any, userId: number): Promise<AIEnh
       progress: Math.floor(Math.random() * 25), // Random progress 0-25%
       lessons: sampleLessons,
       aiContext: {
-        moduleOverview: `This module focuses on ${template.title}, providing comprehensive understanding through structured lessons and practical applications.`,
-        learningPath: `Each lesson in this module builds systematically, starting with basic concepts and progressing to advanced applications in ${template.title}.`,
-        personalizedTips: [
-          `Focus on understanding core principles of ${template.title}`,
-          `Practice regularly with the provided exercises`,
-          `Connect concepts to real-world applications`
-        ],
-        prerequisiteCheck: `Basic mathematical concepts and previous physics knowledge recommended for ${template.title}.`
+        moduleOverview: isTurkish 
+          ? `Bu modül ${template.title} üzerine odaklanarak yapılandırılmış dersler ve pratik uygulamalar yoluyla kapsamlı anlayış sağlar.`
+          : `This module focuses on ${template.title}, providing comprehensive understanding through structured lessons and practical applications.`,
+        learningPath: isTurkish 
+          ? `Bu modüldeki her ders sistematik olarak ilerler, temel kavramlardan başlayarak ${template.title} konusunda ileri uygulamalara doğru gelişir.`
+          : `Each lesson in this module builds systematically, starting with basic concepts and progressing to advanced applications in ${template.title}.`,
+        personalizedTips: isTurkish 
+          ? [
+              `${template.title} temel ilkelerini anlamaya odaklanın`,
+              `Sağlanan alıştırmalarla düzenli pratik yapın`,
+              `Kavramları gerçek dünya uygulamalarıyla ilişkilendirin`
+            ]
+          : [
+              `Focus on understanding core principles of ${template.title}`,
+              `Practice regularly with the provided exercises`,
+              `Connect concepts to real-world applications`
+            ],
+        prerequisiteCheck: isTurkish 
+          ? `${template.title} için temel matematik kavramları ve önceki fizik bilgisi önerilir.`
+          : `Basic mathematical concepts and previous physics knowledge recommended for ${template.title}.`
       }
     });
   }
@@ -381,87 +425,172 @@ async function generateSampleModules(course: any, userId: number): Promise<AIEnh
   return sampleModules;
 }
 
-function getModuleTemplatesForCourse(course: any) {
+function getModuleTemplatesForCourse(course: any, language: string = 'en') {
   // Generate appropriate modules based on course title and category
-  if (course.title.toLowerCase().includes('physics')) {
-    return [
-      {
-        title: 'Mechanics and Motion',
-        description: 'Fundamental concepts of motion, forces, and energy',
-        lessons: [
-          'Kinematics and Motion Graphs',
-          'Newton\'s Laws of Motion',
-          'Work, Energy, and Power',
-          'Momentum and Collisions'
-        ]
-      },
-      {
-        title: 'Thermodynamics',
-        description: 'Heat, temperature, and thermal processes',
-        lessons: [
-          'Temperature and Heat Transfer',
-          'Laws of Thermodynamics',
-          'Ideal Gas Behavior',
-          'Heat Engines and Efficiency'
-        ]
-      },
-      {
-        title: 'Waves and Optics',
-        description: 'Wave properties, sound, and light phenomena',
-        lessons: [
-          'Wave Properties and Types',
-          'Sound Waves and Acoustics',
-          'Light and Geometric Optics',
-          'Wave Interference and Diffraction'
-        ]
-      }
-    ];
+  if (course.title.toLowerCase().includes('physics') || course.title.toLowerCase().includes('fizik')) {
+    if (language === 'tr') {
+      return [
+        {
+          title: 'Mekanik ve Hareket',
+          description: 'Hareket, kuvvet ve enerji temel kavramları',
+          lessons: [
+            'Kinematik ve Hareket Grafikleri',
+            'Newton\'un Hareket Yasaları',
+            'İş, Enerji ve Güç',
+            'Momentum ve Çarpışmalar'
+          ]
+        },
+        {
+          title: 'Termodinamik',
+          description: 'Isı, sıcaklık ve termal süreçler',
+          lessons: [
+            'Sıcaklık ve Isı Transferi',
+            'Termodinamiğin Yasaları',
+            'İdeal Gaz Davranışı',
+            'Isı Makineleri ve Verimlilik'
+          ]
+        },
+        {
+          title: 'Dalgalar ve Optik',
+          description: 'Dalga özellikleri, ses ve ışık olayları',
+          lessons: [
+            'Dalga Özellikleri ve Türleri',
+            'Ses Dalgaları ve Akustik',
+            'Işık ve Geometrik Optik',
+            'Dalga Girişimi ve Kırınım'
+          ]
+        }
+      ];
+    } else {
+      return [
+        {
+          title: 'Mechanics and Motion',
+          description: 'Fundamental concepts of motion, forces, and energy',
+          lessons: [
+            'Kinematics and Motion Graphs',
+            'Newton\'s Laws of Motion',
+            'Work, Energy, and Power',
+            'Momentum and Collisions'
+          ]
+        },
+        {
+          title: 'Thermodynamics',
+          description: 'Heat, temperature, and thermal processes',
+          lessons: [
+            'Temperature and Heat Transfer',
+            'Laws of Thermodynamics',
+            'Ideal Gas Behavior',
+            'Heat Engines and Efficiency'
+          ]
+        },
+        {
+          title: 'Waves and Optics',
+          description: 'Wave properties, sound, and light phenomena',
+          lessons: [
+            'Wave Properties and Types',
+            'Sound Waves and Acoustics',
+            'Light and Geometric Optics',
+            'Wave Interference and Diffraction'
+          ]
+        }
+      ];
+    }
   } else if (course.title.toLowerCase().includes('mathematics') || course.title.toLowerCase().includes('matematik')) {
-    return [
-      {
-        title: 'Functions and Graphs',
-        description: 'Understanding mathematical functions and their representations',
-        lessons: [
-          'Linear and Quadratic Functions',
-          'Exponential and Logarithmic Functions',
-          'Trigonometric Functions',
-          'Function Transformations'
-        ]
-      },
-      {
-        title: 'Calculus Fundamentals',
-        description: 'Introduction to differential and integral calculus',
-        lessons: [
-          'Limits and Continuity',
-          'Derivatives and Applications',
-          'Integration Techniques',
-          'Applications of Calculus'
-        ]
-      }
-    ];
+    if (language === 'tr') {
+      return [
+        {
+          title: 'Fonksiyonlar ve Grafikler',
+          description: 'Matematiksel fonksiyonların anlaşılması ve gösterimleri',
+          lessons: [
+            'Doğrusal ve Kuadratik Fonksiyonlar',
+            'Üstel ve Logaritmik Fonksiyonlar',
+            'Trigonometrik Fonksiyonlar',
+            'Fonksiyon Dönüşümleri'
+          ]
+        },
+        {
+          title: 'Kalkülüs Temelleri',
+          description: 'Diferansiyel ve integral kalkülüse giriş',
+          lessons: [
+            'Limitler ve Süreklilik',
+            'Türevler ve Uygulamaları',
+            'İntegral Teknikleri',
+            'Kalkülüs Uygulamaları'
+          ]
+        }
+      ];
+    } else {
+      return [
+        {
+          title: 'Functions and Graphs',
+          description: 'Understanding mathematical functions and their representations',
+          lessons: [
+            'Linear and Quadratic Functions',
+            'Exponential and Logarithmic Functions',
+            'Trigonometric Functions',
+            'Function Transformations'
+          ]
+        },
+        {
+          title: 'Calculus Fundamentals',
+          description: 'Introduction to differential and integral calculus',
+          lessons: [
+            'Limits and Continuity',
+            'Derivatives and Applications',
+            'Integration Techniques',
+            'Applications of Calculus'
+          ]
+        }
+      ];
+    }
   } else {
     // Generic modules for other courses
-    return [
-      {
-        title: 'Foundation Concepts',
-        description: 'Essential background knowledge and fundamentals',
-        lessons: [
-          'Introduction to Key Concepts',
-          'Basic Principles and Theory',
-          'Fundamental Applications',
-          'Building Your Knowledge Base'
-        ]
-      },
-      {
-        title: 'Practical Applications',
-        description: 'Applying concepts to real-world scenarios',
-        lessons: [
-          'Real-World Problem Solving',
-          'Case Studies and Examples',
-          'Hands-On Practice',
-          'Advanced Applications'
-        ]
-      }
-    ];
+    if (language === 'tr') {
+      return [
+        {
+          title: 'Temel Kavramlar',
+          description: 'Temel bilgi ve esaslar',
+          lessons: [
+            'Anahtar Kavramlara Giriş',
+            'Temel İlkeler ve Teori',
+            'Temel Uygulamalar',
+            'Bilgi Tabanı Oluşturma'
+          ]
+        },
+        {
+          title: 'Pratik Uygulamalar',
+          description: 'Kavramların gerçek dünya senaryolarında uygulanması',
+          lessons: [
+            'Gerçek Dünya Problem Çözme',
+            'Vaka Çalışmaları ve Örnekler',
+            'Uygulamalı Pratik',
+            'İleri Uygulamalar'
+          ]
+        }
+      ];
+    } else {
+      return [
+        {
+          title: 'Foundation Concepts',
+          description: 'Essential background knowledge and fundamentals',
+          lessons: [
+            'Introduction to Key Concepts',
+            'Basic Principles and Theory',
+            'Fundamental Applications',
+            'Building Your Knowledge Base'
+          ]
+        },
+        {
+          title: 'Practical Applications',
+          description: 'Applying concepts to real-world scenarios',
+          lessons: [
+            'Real-World Problem Solving',
+            'Case Studies and Examples',
+            'Hands-On Practice',
+            'Advanced Applications'
+          ]
+        }
+      ];
+    }
   }
 }

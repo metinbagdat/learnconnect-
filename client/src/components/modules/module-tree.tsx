@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, BookOpen, Brain, Clock, Star, Target, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 
 interface ModuleTreeProps {
   courseId: number;
@@ -49,6 +50,7 @@ interface AIEnhancedModule {
 export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const [selectedLesson, setSelectedLesson] = useState<AIEnhancedLesson | null>(null);
+  const { t } = useLanguage();
 
   const { data: modules, isLoading } = useQuery<AIEnhancedModule[]>({
     queryKey: ['/api/courses', courseId, 'ai-modules', userId],
@@ -95,9 +97,9 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
       <div className="lg:col-span-2 space-y-4">
         <div className="flex items-center gap-2 mb-6">
           <Brain className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold">AI-Powered Learning Modules</h2>
+          <h2 className="text-2xl font-bold">{t('aiPoweredModules')}</h2>
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-            Personalized Content
+            {t('personalizedContent')}
           </Badge>
         </div>
 

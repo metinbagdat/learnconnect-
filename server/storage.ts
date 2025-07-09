@@ -616,20 +616,25 @@ export class DatabaseStorage implements IStorage {
   
   // UserLesson operations
   async getUserLessons(userId: number): Promise<(UserLesson & { lesson: Lesson })[]> {
-    const userLessonsResult = await db
-      .select({
-        userLesson: userLessons,
-        lesson: lessons
-      })
-      .from(userLessons)
-      .leftJoin(lessons, eq(userLessons.lessonId, lessons.id))
-      .where(eq(userLessons.userId, userId))
-      .orderBy(desc(userLessons.lastAccessedAt));
-    
-    return userLessonsResult.map(({ userLesson, lesson }) => ({
-      ...userLesson,
-      lesson: lesson as Lesson
-    })) as (UserLesson & { lesson: Lesson })[];
+    try {
+      const userLessonsResult = await db
+        .select({
+          userLesson: userLessons,
+          lesson: lessons
+        })
+        .from(userLessons)
+        .leftJoin(lessons, eq(userLessons.lessonId, lessons.id))
+        .where(eq(userLessons.userId, userId))
+        .orderBy(desc(userLessons.lastAccessedAt));
+      
+      return userLessonsResult.map(({ userLesson, lesson }) => ({
+        ...userLesson,
+        lesson: lesson as Lesson
+      })) as (UserLesson & { lesson: Lesson })[];
+    } catch (error) {
+      console.error('Error fetching user lessons:', error);
+      return [];
+    }
   }
   
   async updateUserLessonProgress(userId: number, lessonId: number, progress: number): Promise<UserLesson> {

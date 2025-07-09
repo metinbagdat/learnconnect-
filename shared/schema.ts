@@ -42,12 +42,8 @@ export const lessons = pgTable("lessons", {
   title: text("title").notNull(),
   content: text("content"),
   order: integer("order").notNull(),
-  duration: integer("duration_minutes"),
-  type: text("type").notNull().default("text"), // text, video, interactive, quiz, assignment
-  metadata: jsonb("metadata").default({}), // Store additional lesson metadata
-  prerequisites: integer("prerequisites").array().default([]), // Array of lesson IDs that must be completed first
-  difficulty: text("difficulty").default("medium"), // easy, medium, hard
-  objectives: text("objectives").array().default([]), // Learning objectives for this lesson
+  estimatedTime: integer("estimated_time").default(30), // duration in minutes
+  description: text("description"),
   tags: text("tags").array().default([]), // Searchable tags
 });
 

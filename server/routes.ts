@@ -603,6 +603,27 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       res.status(500).json({ message: "Failed to fetch module lessons" });
     }
   });
+
+  // Get AI-enhanced modules for a course
+  app.get("/api/courses/:courseId/ai-modules/:userId", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(courseId) || isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid course ID or user ID" });
+      }
+
+      // Import the AI module service
+      const { generateAIEnhancedModules } = await import("./ai-module-service");
+      
+      const aiModules = await generateAIEnhancedModules(courseId, userId);
+      res.json(aiModules);
+    } catch (error) {
+      console.error("Error generating AI-enhanced modules:", error);
+      res.status(500).json({ message: "Failed to generate AI-enhanced modules" });
+    }
+  });
   
   // Create admin account (special endpoint for initial setup)
   app.post("/api/create-admin", async (req, res) => {

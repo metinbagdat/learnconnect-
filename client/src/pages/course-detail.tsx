@@ -17,9 +17,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
-import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine } from "lucide-react";
+import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine, Globe } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export default function CourseDetail() {
   const { courseId } = useParams();
@@ -209,12 +210,13 @@ export default function CourseDetail() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <TreePine className="h-6 w-6 text-green-600" />
-                    <h2 className="text-2xl font-bold">Course Learning Path</h2>
+                    <h2 className="text-2xl font-bold">{t('course.learningPath') || 'Course Learning Path'}</h2>
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                       <Brain className="h-3 w-3 mr-1" />
-                      AI-Personalized
+                      {t('course.aiPersonalized') || 'AI-Personalized'}
                     </Badge>
                   </div>
+                  <LanguageSwitcher />
                 </div>
                 
                 {user && courseId && (

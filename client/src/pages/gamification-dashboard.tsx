@@ -52,6 +52,8 @@ export default function GamificationDashboard() {
   const { showXpGain, checkAndUnlockAchievements, celebrateLevelUp } = useGamificationTracker();
   const [achievementFilter, setAchievementFilter] = useState<string>("all");
   const [selectedLeaderboard, setSelectedLeaderboard] = useState<string>("overall");
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
   
   // Fetch user level
   const { data: userLevel, isLoading: levelLoading } = useQuery({
@@ -257,35 +259,59 @@ export default function GamificationDashboard() {
         </TabsList>
         
         <TabsContent value="leaderboards" className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {leaderboards && leaderboards.length > 0 ? (
-              leaderboards.map((leaderboard: any) => (
-                <Card key={leaderboard.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle>{leaderboard.name}</CardTitle>
-                      <Badge variant="outline">
-                        {leaderboard.timeframe}
-                      </Badge>
-                    </div>
-                    <CardDescription>{leaderboard.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <LeaderboardTable 
-                      entries={leaderboard.entries || []}
-                      title={leaderboard.name}
-                      type={leaderboard.type || 'xp'}
-                      currentUserId={user?.id}
-                    />
-                  </CardContent>
-                </Card>
-              ))
+          <div className="grid gap-6">
+            {leaderboards ? (
+              <>
+                {/* Featured Leaderboards - Main ones in larger format */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <LeaderboardTable
+                    entries={leaderboards.xp?.entries || []}
+                    type="xp"
+                    title={leaderboards.xp?.name || "XP Champions"}
+                    description={leaderboards.xp?.description}
+                    currentUserId={user?.id}
+                    timeframe="all_time"
+                    isLoading={leaderboardsLoading}
+                  />
+                  <LeaderboardTable
+                    entries={leaderboards.weekly?.entries || []}
+                    type="weekly"
+                    title={leaderboards.weekly?.name || "Weekly Champions"}
+                    description={leaderboards.weekly?.description}
+                    currentUserId={user?.id}
+                    timeframe="weekly"
+                    isLoading={leaderboardsLoading}
+                  />
+                </div>
+                
+                {/* Additional Leaderboards - Secondary ones */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <LeaderboardTable
+                    entries={leaderboards.points?.entries || []}
+                    type="points"
+                    title={leaderboards.points?.name || "Point Masters"}
+                    description={leaderboards.points?.description}
+                    currentUserId={user?.id}
+                    timeframe="all_time"
+                    isLoading={leaderboardsLoading}
+                  />
+                  <LeaderboardTable
+                    entries={leaderboards.streaks?.entries || []}
+                    type="streaks"
+                    title={leaderboards.streaks?.name || "Streak Legends"}
+                    description={leaderboards.streaks?.description}
+                    currentUserId={user?.id}
+                    timeframe="all_time"
+                    isLoading={leaderboardsLoading}
+                  />
+                </div>
+              </>
             ) : (
-              <div className="col-span-full text-center py-12">
+              <div className="text-center py-12">
                 <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-medium mb-2">No Leaderboards Available</h3>
+                <h3 className="text-xl font-medium mb-2">Loading Leaderboards...</h3>
                 <p className="text-muted-foreground">
-                  Leaderboards will appear as you participate in activities
+                  Fetching the latest rankings and competition data
                 </p>
               </div>
             )}
@@ -392,11 +418,18 @@ export default function GamificationDashboard() {
                     achievement={achievement}
                     userAchievement={userAchievement}
                     isUnlocked={!!userAchievement}
-                    onClaim={() => {
-                      toast({
-                        title: "Achievement Details",
-                        description: `${achievement.title}: ${achievement.description}`,
-                      });
+                    onClick={() => {
+                      if (userAchievement) {
+                        // Show details for unlocked achievements
+                        toast({
+                          title: "Achievement Details",
+                          description: `${achievement.title}: ${achievement.description}`,
+                        });
+                      } else {
+                        // Show unlock demo for locked achievements
+                        setSelectedAchievement(achievement);
+                        setShowUnlockModal(true);
+                      }
                     }}
                   />
                 );
@@ -413,6 +446,16 @@ export default function GamificationDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Achievement Unlock Modal Demo */}
+      <AchievementUnlockModal
+        achievement={selectedAchievement}
+        isOpen={showUnlockModal}
+        onClose={() => {
+          setShowUnlockModal(false);
+          setSelectedAchievement(null);
+        }}
+      />
       
       {/* Recent Activity */}
       <div className="mt-12">

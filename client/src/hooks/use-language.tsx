@@ -84,6 +84,7 @@ const translations = {
     noAvailableCourses: 'No courses available at the moment.',
     checkBackLater: 'Check back later for new courses.',
     tryDifferentSearch: 'Try a different search query.',
+    module: 'Module',
     
     // Course Generator
     generateCourse: 'Generate Course',
@@ -278,6 +279,7 @@ const translations = {
     noAvailableCourses: 'Şu anda mevcut kurs yok.',
     checkBackLater: 'Yeni kurslar için daha sonra tekrar kontrol edin.',
     tryDifferentSearch: 'Farklı bir arama terimi deneyin.',
+    module: 'Modül',
     
     // Course Generator
     generateCourse: 'Kurs Oluştur',

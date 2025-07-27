@@ -5,6 +5,7 @@ import { Clock } from "lucide-react";
 import { ProgressCircle } from "./progress-circle";
 import { Course, UserCourse } from "@shared/schema";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CourseCardProps {
   course: Course;
@@ -24,6 +25,7 @@ export function CourseCard({
   onContinue
 }: CourseCardProps) {
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   const {
     title,
     description,
@@ -107,9 +109,9 @@ export function CourseCard({
           <div className="flex items-center text-sm text-neutral-500">
             <Clock className="h-4 w-4 mr-1" />
             {userCourse ? (
-              <span>Module {currentModule} / {moduleCount}</span>
+              <span>{t('module')} {currentModule} / {moduleCount}</span>
             ) : (
-              <span>{durationHours || 30} hours</span>
+              <span>{durationHours || 30} {t('hours')}</span>
             )}
           </div>
           
@@ -125,7 +127,7 @@ export function CourseCard({
               }}
               size="sm"
             >
-              Continue
+              {t('continueButton')}
             </Button>
           )}
           
@@ -141,7 +143,7 @@ export function CourseCard({
               }}
               size="sm"
             >
-              Enroll
+              {t('enrollNow')}
             </Button>
           )}
         </div>

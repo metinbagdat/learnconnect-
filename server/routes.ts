@@ -1171,6 +1171,149 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Advanced analytics endpoints
+  app.get("/api/analytics/engagement-metrics", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user.id;
+      const { startDate, endDate } = req.query;
+      
+      // Get user engagement data
+      const activities = await storage.getUserActivityByTimeframe(
+        userId,
+        startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        endDate ? new Date(endDate as string) : new Date()
+      );
+
+      // Calculate engagement metrics
+      const dailyActivity = activities.reduce((acc: any, activity) => {
+        const date = new Date(activity.createdAt).toDateString();
+        if (!acc[date]) acc[date] = 0;
+        acc[date]++;
+        return acc;
+      }, {});
+
+      const totalActivities = activities.length;
+      const uniqueDays = Object.keys(dailyActivity).length;
+      const avgActivitiesPerDay = uniqueDays > 0 ? totalActivities / uniqueDays : 0;
+
+      res.json({
+        totalActivities,
+        uniqueDaysActive: uniqueDays,
+        avgActivitiesPerDay: Math.round(avgActivitiesPerDay * 100) / 100,
+        dailyBreakdown: Object.entries(dailyActivity).map(([date, count]) => ({
+          date,
+          activities: count
+        })),
+        activityTypes: activities.reduce((acc: any, activity) => {
+          acc[activity.action] = (acc[activity.action] || 0) + 1;
+          return acc;
+        }, {})
+      });
+    } catch (error) {
+      console.error("Error getting engagement metrics:", error);
+      res.status(500).json({ message: "Failed to get engagement metrics" });
+    }
+  });
+
+  app.get("/api/analytics/learning-insights", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user.id;
+      
+      // Get user's courses and progress
+      const userCourses = await storage.getUserCourses(userId);
+      const userLevel = await storage.getUserLevel(userId);
+      const userAchievements = await storage.getUserAchievements(userId);
+      
+      // Calculate insights
+      const totalCourses = userCourses.length;
+      const completedCourses = userCourses.filter(uc => uc.completed).length;
+      const inProgressCourses = totalCourses - completedCourses;
+      const completionRate = totalCourses > 0 ? (completedCourses / totalCourses) * 100 : 0;
+      
+      // Get learning streak and consistency
+      const recentActivities = await storage.getUserActivities(userId, 30);
+      const learningDays = new Set(
+        recentActivities
+          .filter(a => ['complete_lesson', 'start_course', 'submit_assignment'].includes(a.action))
+          .map(a => new Date(a.createdAt).toDateString())
+      );
+      
+      res.json({
+        totalCourses,
+        completedCourses,
+        inProgressCourses,
+        completionRate: Math.round(completionRate * 100) / 100,
+        currentLevel: userLevel?.level || 1,
+        totalXP: userLevel?.currentXp || 0,
+        totalPoints: userLevel?.totalPoints || 0,
+        currentStreak: userLevel?.currentStreak || 0,
+        achievementsUnlocked: userAchievements.length,
+        activeLearningDays: learningDays.size,
+        strengthAreas: ["Programming", "Data Analysis"], // Simplified for now
+        recommendedFocus: ["Complete JavaScript course", "Practice more challenges"]
+      });
+    } catch (error) {
+      console.error("Error getting learning insights:", error);
+      res.status(500).json({ message: "Failed to get learning insights" });
+    }
+  });
+
+  app.get("/api/analytics/performance-trends", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user.id;
+      const { days = 30 } = req.query;
+      
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - Number(days) * 24 * 60 * 60 * 1000);
+      
+      const progressSnapshots = await storage.getUserProgressOverTime(userId, startDate, endDate);
+      
+      // Generate trend data
+      const trends = progressSnapshots.map(snapshot => ({
+        date: snapshot.snapshotDate,
+        coursesCompleted: snapshot.coursesCompleted,
+        lessonsCompleted: snapshot.lessonsCompleted,
+        assignmentsCompleted: snapshot.assignmentsCompleted,
+        totalPoints: snapshot.totalPoints,
+        averageGrade: snapshot.averageGrade
+      }));
+
+      // Calculate simple velocity
+      const velocity = trends.length > 1 ? {
+        coursesPerWeek: Math.round(((trends[trends.length - 1].coursesCompleted - trends[0].coursesCompleted) / trends.length) * 7 * 100) / 100,
+        lessonsPerWeek: Math.round(((trends[trends.length - 1].lessonsCompleted - trends[0].lessonsCompleted) / trends.length) * 7 * 100) / 100,
+        pointsPerWeek: Math.round(((trends[trends.length - 1].totalPoints - trends[0].totalPoints) / trends.length) * 7 * 100) / 100
+      } : { coursesPerWeek: 0, lessonsPerWeek: 0, pointsPerWeek: 0 };
+
+      res.json({
+        trends,
+        velocity,
+        summary: {
+          totalGrowth: trends.length > 1 ? {
+            courses: trends[trends.length - 1].coursesCompleted - trends[0].coursesCompleted,
+            lessons: trends[trends.length - 1].lessonsCompleted - trends[0].lessonsCompleted,
+            points: trends[trends.length - 1].totalPoints - trends[0].totalPoints
+          } : { courses: 0, lessons: 0, points: 0 }
+        }
+      });
+    } catch (error) {
+      console.error("Error getting performance trends:", error);
+      res.status(500).json({ message: "Failed to get performance trends" });
+    }
+  });
+
   // Adaptive Learning Reward System - Challenge API
   app.get("/api/challenges", async (req, res) => {
     try {

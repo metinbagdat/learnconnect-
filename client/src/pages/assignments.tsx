@@ -137,7 +137,9 @@ export default function Assignments() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-neutral-900">Assignments</h1>
-                  <p className="mt-1 text-sm text-neutral-600">Track and manage your course assignments</p>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Hey {user?.displayName?.split(' ')[0]}! Stay on top of your assignments - check due dates and submit your work on time.
+                  </p>
                 </div>
                 
                 {/* Search */}

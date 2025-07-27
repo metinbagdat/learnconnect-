@@ -98,7 +98,9 @@ export default function Courses() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-neutral-900">{t('myCourses')}</h1>
-                  <p className="mt-1 text-sm text-neutral-600">{t('manageLearningJourney')}</p>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Hey {user?.displayName?.split(' ')[0]}! Here are your courses - continue learning, explore new topics, or track your progress.
+                  </p>
                 </div>
                 
                 {/* Search */}
@@ -150,7 +152,12 @@ export default function Courses() {
                       {/* In Progress Courses */}
                       {inProgressCourses.length > 0 && (
                         <>
-                          <h2 className="text-xl font-semibold text-neutral-900 mb-4">{t('inProgress')}</h2>
+                          <div className="mb-6">
+                            <h2 className="text-xl font-semibold text-neutral-900">{t('inProgress')}</h2>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Pick up where you left off - click any course to continue learning!
+                            </p>
+                          </div>
                           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
                             {inProgressCourses.map((userCourse) => (
                               <CourseCard
@@ -168,7 +175,12 @@ export default function Courses() {
                       {/* Completed Courses */}
                       {completedCourses.length > 0 && (
                         <>
-                          <h2 className="text-xl font-semibold text-neutral-900 mb-4">{t('completed')}</h2>
+                          <div className="mb-6">
+                            <h2 className="text-xl font-semibold text-neutral-900">{t('completed')}</h2>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Well done! Review completed courses or share your achievements.
+                            </p>
+                          </div>
                           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {completedCourses.map((userCourse) => (
                               <CourseCard

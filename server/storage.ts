@@ -101,7 +101,13 @@ import {
   trailNodes,
   userTrailProgress,
   personalizedRecommendations,
-  learningAnalytics
+  learningAnalytics,
+  learningMilestones,
+  emojiReactions,
+  type LearningMilestone,
+  type InsertLearningMilestone,
+  type EmojiReaction,
+  type InsertEmojiReaction
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

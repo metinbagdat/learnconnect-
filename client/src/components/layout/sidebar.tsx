@@ -16,7 +16,8 @@ import {
   Shield,
   Map,
   Lightbulb,
-  Trophy
+  Trophy,
+  Brain
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/hooks/use-language";

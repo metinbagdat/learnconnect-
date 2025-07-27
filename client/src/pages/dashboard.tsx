@@ -126,7 +126,12 @@ export default function Dashboard() {
             {/* Stats */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
               <div className="flex justify-between items-center mb-4">
+                <div className="mb-6">
                 <h2 className="text-lg font-semibold text-neutral-900">Your Progress</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Hey {user?.displayName?.split(' ')[0] || 'Student'}! Check your learning progress below - click any card to explore more or continue where you left off.
+                </p>
+              </div>
                 <Button 
                   variant="outline" 
                   className="flex items-center bg-primary/10 text-primary hover:text-primary-600 hover:bg-primary/20"
@@ -140,33 +145,53 @@ export default function Dashboard() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard 
-                  icon={Book} 
-                  title="Courses in Progress" 
-                  value={coursesInProgress} 
-                  color="primary" 
-                />
+                <div onClick={() => navigate('/courses')} className="cursor-pointer">
+                  <StatCard 
+                    icon={Book} 
+                    title="Courses in Progress" 
+                    value={coursesInProgress} 
+                    color="primary" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-2 px-4">
+                    Continue learning! Click to see all your courses or find new ones.
+                  </p>
+                </div>
                 
-                <StatCard 
-                  icon={CheckCircle} 
-                  title="Completed Courses" 
-                  value={completedCourses} 
-                  color="success" 
-                />
+                <div onClick={() => navigate('/courses')} className="cursor-pointer">
+                  <StatCard 
+                    icon={CheckCircle} 
+                    title="Completed Courses" 
+                    value={completedCourses} 
+                    color="success" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-2 px-4">
+                    Great job! Review completed courses or explore advanced topics.
+                  </p>
+                </div>
                 
-                <StatCard 
-                  icon={FileText} 
-                  title="Pending Assignments" 
-                  value={pendingAssignments} 
-                  color="warning" 
-                />
+                <div onClick={() => navigate('/assignments')} className="cursor-pointer">
+                  <StatCard 
+                    icon={FileText} 
+                    title="Pending Assignments" 
+                    value={pendingAssignments} 
+                    color="warning" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-2 px-4">
+                    {pendingAssignments > 0 ? 'Time to submit! Click to complete your assignments.' : 'All caught up! Check for new assignments.'}
+                  </p>
+                </div>
                 
-                <StatCard 
-                  icon={Award} 
-                  title="Achievements" 
-                  value={achievementsCount} 
-                  color="secondary" 
-                />
+                <div onClick={() => navigate('/gamification')} className="cursor-pointer">
+                  <StatCard 
+                    icon={Award} 
+                    title="Achievements" 
+                    value={achievementsCount} 
+                    color="secondary" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-2 px-4">
+                    {achievementsCount > 0 ? 'Amazing progress! View all achievements and unlock more.' : 'Start earning achievements by completing challenges!'}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -364,7 +389,12 @@ export default function Dashboard() {
             
             {/* Continue Learning Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
-              <h2 className="text-xl font-semibold text-neutral-900">Continue Learning</h2>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-neutral-900">Continue Learning</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Pick up where you left off - your courses are waiting for you below, or explore new ones!
+                </p>
+              </div>
               
               {coursesLoading ? (
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -383,10 +413,15 @@ export default function Dashboard() {
                 <div className="mt-4 text-center py-10 bg-white rounded-lg shadow">
                   <Book className="h-12 w-12 mx-auto text-neutral-300" />
                   <h3 className="mt-4 text-lg font-medium">No courses in progress</h3>
-                  <p className="mt-1 text-neutral-500">Explore and enroll in courses to start learning</p>
-                  <Button className="mt-4" onClick={() => navigate('/courses')}>
-                    Explore Courses
-                  </Button>
+                  <p className="mt-1 text-neutral-500">Ready to start learning? Browse our course catalog and enroll in something that interests you!</p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+                    <Button onClick={() => navigate('/courses')}>
+                      Explore Courses
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate('/suggestions')}>
+                      Get AI Recommendations
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -405,7 +440,12 @@ export default function Dashboard() {
             
             {/* AI-powered Recommendations Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
-              <h2 className="text-xl font-semibold text-neutral-900">Recommended For You</h2>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-neutral-900">Recommended For You</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  AI-powered course suggestions based on your interests and learning progress - perfect next steps for your journey!
+                </p>
+              </div>
               <div className="mt-4">
                 <CourseRecommendations />
               </div>

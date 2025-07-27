@@ -40,7 +40,15 @@ export function AssignmentList({
     <Card className="shadow-md">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">Upcoming Assignments</CardTitle>
+          <div>
+            <CardTitle className="text-xl">Upcoming Assignments</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              {assignments.length > 0 
+                ? `${assignments.length} assignment${assignments.length > 1 ? 's' : ''} waiting - click to complete!`
+                : 'All caught up! New assignments will appear here.'
+              }
+            </p>
+          </div>
           {onViewAll && (
             <Button variant="link" onClick={onViewAll} className="text-sm text-primary">
               View all
@@ -52,7 +60,13 @@ export function AssignmentList({
         <ul className="divide-y divide-neutral-200">
           {assignments.length === 0 ? (
             <li className="p-4 text-center text-neutral-500">
-              No assignments due
+              <div className="py-4">
+                <FileText className="h-8 w-8 mx-auto text-neutral-300 mb-2" />
+                <p className="text-sm font-medium">No assignments due</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Keep learning! New assignments will be posted by your instructors.
+                </p>
+              </div>
             </li>
           ) : (
             assignments.map((assignment) => {

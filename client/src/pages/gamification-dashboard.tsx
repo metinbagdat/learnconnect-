@@ -164,7 +164,7 @@ export default function GamificationDashboard() {
         <div>
           <h1 className="text-3xl font-bold mb-2">Gamification Dashboard</h1>
           <p className="text-lg text-muted-foreground mb-2">
-            Track your progress, achievements, and rankings
+            Hey {user?.displayName?.split(' ')[0]}! Unlock achievements, climb leaderboards, and level up your learning journey!
           </p>
         </div>
       </div>

@@ -186,7 +186,9 @@ export default function Profile() {
           <div className="py-6">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
               <h1 className="text-2xl font-bold text-neutral-900">Profile Settings</h1>
-              <p className="mt-1 text-sm text-neutral-600">Manage your account preferences and settings</p>
+              <p className="mt-1 text-sm text-neutral-600">
+                Hey {user?.displayName?.split(' ')[0]}! Customize your profile, update your information, and manage your account settings.
+              </p>
               
               <div className="mt-8">
                 <Tabs defaultValue="profile">

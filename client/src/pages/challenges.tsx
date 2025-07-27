@@ -7,7 +7,7 @@ export default function ChallengesPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Challenges & Rewards</h1>
         <p className="text-muted-foreground">
-          Complete challenges to earn points, XP, and badges. Track your progress and level up!
+          Ready for a challenge? Complete tasks to earn points, XP, and badges. Each challenge helps you level up and unlock new achievements!
         </p>
       </div>
       

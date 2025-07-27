@@ -50,7 +50,9 @@ export default function SocialPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold">Learning Community</h1>
-            <p className="text-muted-foreground">Connect, share, and celebrate your learning journey</p>
+            <p className="text-muted-foreground">
+              Connect with fellow learners, share your achievements, and celebrate your learning journey together!
+            </p>
           </div>
         </div>
         

@@ -153,7 +153,12 @@ export default function Resources() {
       
       <main className="flex-1 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Resources</h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Resources</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Access course materials, documents, and media files. Everything you need for your studies in one place!
+            </p>
+          </div>
           
           {(user?.role === "instructor" || user?.role === "admin") && (
             <Button className="gap-2">

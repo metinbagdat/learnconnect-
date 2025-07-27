@@ -41,7 +41,12 @@ export default function Calendar() {
       
       <main className="flex-1 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Stay organized! View assignment due dates, plan your study schedule, and never miss a deadline.
+            </p>
+          </div>
         </div>
         
         <Tabs defaultValue="monthly" className="space-y-6">

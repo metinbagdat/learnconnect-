@@ -148,6 +148,19 @@ export function Sidebar() {
           </SidebarLink>
 
           <SidebarLink 
+            href="/advanced-adaptive" 
+            icon={<Brain className="h-5 w-5" />}
+            isActive={location === '/advanced-adaptive'}
+          >
+            <span className="flex items-center">
+              Advanced AI Learning
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                🧠 AI
+              </span>
+            </span>
+          </SidebarLink>
+
+          <SidebarLink 
             href="/entrance-exam-prep" 
             icon={<Shield className="h-5 w-5" />}
             isActive={location === '/entrance-exam-prep'}

@@ -131,7 +131,7 @@ export default function AdaptiveLearningDemo() {
                     <p className="text-sm text-gray-600">{path.description}</p>
                     <div className="flex items-center gap-2 text-xs">
                       <Badge className={getDifficultyColor(path.difficulty)}>
-                        {t(path.difficulty)}
+                        {path.difficulty}
                       </Badge>
                       <span className="text-gray-500">{path.estimatedDuration}h</span>
                       <span className="text-gray-500">{path.totalSteps} {t('steps')}</span>

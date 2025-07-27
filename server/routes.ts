@@ -21,6 +21,12 @@ import { seedChallenges } from "./seed-challenges";
 import { seedSkillChallenges } from "./seed-skill-challenges";
 import { generateExamLearningPath, saveExamLearningPath, generatePredefinedExamPaths } from "./entrance-exam-service";
 import { generateAdaptiveLearningPath, updateStepProgress, generateNewRecommendations } from "./adaptive-learning-service";
+import { 
+  detectLearningStyle,
+  generateDifficultyAdjustment,
+  generatePredictiveAnalytics,
+  generateAdaptiveInsights
+} from "./advanced-adaptive-service";
 import { db } from "./db";
 import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
@@ -2782,6 +2788,95 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error fetching challenge learning path progress:", error);
       res.status(500).json({ error: "Failed to fetch progress" });
+    }
+  });
+
+  // Import advanced adaptive services - move to top level
+  // Dynamic import handled in separate function
+
+  // Advanced Adaptive Learning API routes
+  app.post("/api/adaptive/learning-style/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const { interactionData, language = 'en' } = req.body;
+      
+      // Ensure user can only access their own data or admin/instructor can access any
+      if (userId !== req.user.id && !["admin", "instructor"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const learningStyle = await detectLearningStyle(userId, interactionData, language);
+      res.json(learningStyle);
+    } catch (error) {
+      console.error("Error detecting learning style:", error);
+      res.status(500).json({ message: "Failed to detect learning style" });
+    }
+  });
+
+  app.post("/api/adaptive/difficulty-adjustment/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const { performanceData, language = 'en' } = req.body;
+      
+      if (userId !== req.user.id && !["admin", "instructor"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const adjustment = await generateDifficultyAdjustment(userId, performanceData, language);
+      res.json(adjustment);
+    } catch (error) {
+      console.error("Error generating difficulty adjustment:", error);
+      res.status(500).json({ message: "Failed to generate difficulty adjustment" });
+    }
+  });
+
+  app.post("/api/adaptive/predictive-analytics/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const { learningHistory, language = 'en' } = req.body;
+      
+      if (userId !== req.user.id && !["admin", "instructor"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const analytics = await generatePredictiveAnalytics(userId, learningHistory, language);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error generating predictive analytics:", error);
+      res.status(500).json({ message: "Failed to generate predictive analytics" });
+    }
+  });
+
+  app.post("/api/adaptive/insights/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      const { comprehensiveData, language = 'en' } = req.body;
+      
+      if (userId !== req.user.id && !["admin", "instructor"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const insights = await generateAdaptiveInsights(userId, comprehensiveData, language);
+      res.json(insights);
+    } catch (error) {
+      console.error("Error generating adaptive insights:", error);
+      res.status(500).json({ message: "Failed to generate adaptive insights" });
     }
   });
 

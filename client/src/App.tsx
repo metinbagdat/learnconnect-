@@ -25,6 +25,7 @@ import ChallengePathsPage from "@/pages/challenge-paths";
 import ChallengeAnalyticsDashboard from "@/pages/challenge-analytics-dashboard";
 import EntranceExamPrep from "@/pages/entrance-exam-prep";
 import AdaptiveLearningDemo from "@/pages/adaptive-learning-demo";
+import AdvancedAdaptiveLearning from "@/pages/advanced-adaptive-learning";
 
 function Router() {
   return (
@@ -52,6 +53,7 @@ function Router() {
       <ProtectedRoute path="/admin" component={AdminPanel} />
       <ProtectedRoute path="/suggestions" component={SuggestionsDemoPage} />
       <ProtectedRoute path="/adaptive-learning" component={AdaptiveLearningDemo} />
+      <ProtectedRoute path="/advanced-adaptive" component={AdvancedAdaptiveLearning} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

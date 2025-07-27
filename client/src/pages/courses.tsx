@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { CourseCard } from "@/components/ui/course-card";
@@ -15,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Courses() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,14 +58,14 @@ export default function Courses() {
     try {
       await apiRequest("POST", "/api/user/courses", { courseId });
       toast({
-        title: "Enrollment Successful",
-        description: "You have been enrolled in the course",
+        title: t('enrollmentSuccessful'),
+        description: t('enrollmentSuccessDescription'),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
     } catch (error) {
       toast({
-        title: "Enrollment Failed",
-        description: "Failed to enroll in the course",
+        title: t('enrollmentFailed'),
+        description: t('enrollmentFailedDescription'),
         variant: "destructive",
       });
     }
@@ -95,8 +97,8 @@ export default function Courses() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-neutral-900">My Courses</h1>
-                  <p className="mt-1 text-sm text-neutral-600">Manage your learning journey</p>
+                  <h1 className="text-2xl font-bold text-neutral-900">{t('myCourses')}</h1>
+                  <p className="mt-1 text-sm text-neutral-600">{t('manageLearningJourney')}</p>
                 </div>
                 
                 {/* Search */}
@@ -104,7 +106,7 @@ export default function Courses() {
                   <div className="flex items-center relative">
                     <Input 
                       className="md:w-64 pl-10" 
-                      placeholder="Search courses..." 
+                      placeholder={t('searchPlaceholder')} 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -119,8 +121,8 @@ export default function Courses() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
               <Tabs defaultValue="enrolled">
                 <TabsList>
-                  <TabsTrigger value="enrolled">My Courses</TabsTrigger>
-                  <TabsTrigger value="available">Available Courses</TabsTrigger>
+                  <TabsTrigger value="enrolled">{t('myCourses')}</TabsTrigger>
+                  <TabsTrigger value="available">{t('availableCourses')}</TabsTrigger>
                 </TabsList>
                 
                 {/* Enrolled Courses Tab */}
@@ -140,15 +142,15 @@ export default function Courses() {
                     </div>
                   ) : filteredUserCourses.length === 0 ? (
                     <div className="text-center py-10 bg-white rounded-lg shadow">
-                      <h3 className="text-lg font-medium">No courses found</h3>
-                      <p className="mt-1 text-neutral-500">Try a different search or explore available courses</p>
+                      <h3 className="text-lg font-medium">{t('noCoursesFound')}</h3>
+                      <p className="mt-1 text-neutral-500">{searchQuery ? t('noCourseMatches') : t('noCoursesFoundDescription')}</p>
                     </div>
                   ) : (
                     <>
                       {/* In Progress Courses */}
                       {inProgressCourses.length > 0 && (
                         <>
-                          <h2 className="text-xl font-semibold text-neutral-900 mb-4">In Progress</h2>
+                          <h2 className="text-xl font-semibold text-neutral-900 mb-4">{t('inProgress')}</h2>
                           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
                             {inProgressCourses.map((userCourse) => (
                               <CourseCard
@@ -166,7 +168,7 @@ export default function Courses() {
                       {/* Completed Courses */}
                       {completedCourses.length > 0 && (
                         <>
-                          <h2 className="text-xl font-semibold text-neutral-900 mb-4">Completed</h2>
+                          <h2 className="text-xl font-semibold text-neutral-900 mb-4">{t('completed')}</h2>
                           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {completedCourses.map((userCourse) => (
                               <CourseCard
@@ -200,8 +202,8 @@ export default function Courses() {
                     </div>
                   ) : filteredAvailableCourses.length === 0 ? (
                     <div className="text-center py-10 bg-white rounded-lg shadow">
-                      <h3 className="text-lg font-medium">No available courses found</h3>
-                      <p className="mt-1 text-neutral-500">Try a different search query</p>
+                      <h3 className="text-lg font-medium">{searchQuery ? t('noCourseMatches') : t('noAvailableCourses')}</h3>
+                      <p className="mt-1 text-neutral-500">{searchQuery ? t('tryDifferentSearch') : t('checkBackLater')}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

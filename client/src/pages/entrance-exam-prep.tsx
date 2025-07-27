@@ -168,8 +168,8 @@ export default function EntranceExamPrep() {
           Entrance Exam Preparation
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          AI-powered personalized learning paths for lycée, college, and university entrance exams. 
-          Achieve your academic goals with structured preparation and comprehensive study plans.
+          Get ready for success! AI-powered personalized learning paths for lycée, college, and university entrance exams. 
+          Create your custom study plan and achieve your academic goals with expert guidance.
         </p>
         <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">

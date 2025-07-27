@@ -971,6 +971,105 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // AI-powered emoji reaction generation
+  app.post("/api/ai/generate-milestone-emoji", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { milestone, userId, language = 'en' } = req.body;
+      
+      if (!milestone || !userId) {
+        return res.status(400).json({ message: "Milestone and userId are required" });
+      }
+
+      const { aiEmojiService } = await import('./ai-emoji-service');
+      const emojiReaction = await aiEmojiService.generateMilestoneEmoji(
+        milestone,
+        userId,
+        language
+      );
+
+      res.json(emojiReaction);
+    } catch (error) {
+      console.error('Failed to generate emoji reaction:', error);
+      res.status(500).json({ message: 'Failed to generate emoji reaction' });
+    }
+  });
+
+  // Learning milestones API
+  app.get("/api/milestones", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const milestones = await storage.getUserMilestones(req.user.id);
+      res.json(milestones);
+    } catch (error) {
+      console.error('Failed to fetch milestones:', error);
+      res.status(500).json({ message: 'Failed to fetch milestones' });
+    }
+  });
+
+  // Create learning milestone
+  app.post("/api/milestones", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const milestoneData = {
+        ...req.body,
+        userId: req.user.id,
+        id: `milestone_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      };
+
+      const milestone = await storage.createMilestone(milestoneData);
+      res.status(201).json(milestone);
+    } catch (error) {
+      console.error('Failed to create milestone:', error);
+      res.status(500).json({ message: 'Failed to create milestone' });
+    }
+  });
+
+  // Save emoji reaction
+  app.post("/api/milestones/reactions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const reactionData = {
+        ...req.body,
+        userId: req.user.id,
+        id: `reaction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      };
+
+      const reaction = await storage.createEmojiReaction(reactionData);
+      res.status(201).json(reaction);
+    } catch (error) {
+      console.error('Failed to save emoji reaction:', error);
+      res.status(500).json({ message: 'Failed to save emoji reaction' });
+    }
+  });
+
+  // Get reactions for a milestone
+  app.get("/api/milestones/:milestoneId/reactions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const reactions = await storage.getMilestoneReactions(req.params.milestoneId);
+      res.json(reactions);
+    } catch (error) {
+      console.error('Failed to fetch reactions:', error);
+      res.status(500).json({ message: 'Failed to fetch reactions' });
+    }
+  });
+
   // Initialize predefined exam paths (admin only)
   app.post("/api/admin/generate-predefined-exam-paths", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {

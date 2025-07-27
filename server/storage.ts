@@ -1820,6 +1820,56 @@ export class DatabaseStorage implements IStorage {
       focusArea: 'Problem Solving' // Could be derived from recent activities
     };
   }
+
+  // Learning Milestones methods
+  async getUserMilestones(userId: number): Promise<LearningMilestone[]> {
+    return await db
+      .select()
+      .from(learningMilestones)
+      .where(eq(learningMilestones.userId, userId))
+      .orderBy(desc(learningMilestones.timestamp));
+  }
+
+  async createMilestone(data: InsertLearningMilestone): Promise<LearningMilestone> {
+    const [milestone] = await db
+      .insert(learningMilestones)
+      .values(data)
+      .returning();
+    return milestone;
+  }
+
+  async getMilestone(id: string): Promise<LearningMilestone | undefined> {
+    const [milestone] = await db
+      .select()
+      .from(learningMilestones)
+      .where(eq(learningMilestones.id, id));
+    return milestone;
+  }
+
+  // Emoji Reactions methods
+  async createEmojiReaction(data: InsertEmojiReaction): Promise<EmojiReaction> {
+    const [reaction] = await db
+      .insert(emojiReactions)
+      .values(data)
+      .returning();
+    return reaction;
+  }
+
+  async getMilestoneReactions(milestoneId: string): Promise<EmojiReaction[]> {
+    return await db
+      .select()
+      .from(emojiReactions)
+      .where(eq(emojiReactions.milestoneId, milestoneId))
+      .orderBy(desc(emojiReactions.timestamp));
+  }
+
+  async getUserReactions(userId: number): Promise<EmojiReaction[]> {
+    return await db
+      .select()
+      .from(emojiReactions)
+      .where(eq(emojiReactions.userId, userId))
+      .orderBy(desc(emojiReactions.timestamp));
+  }
 }
 
 export const storage = new DatabaseStorage();

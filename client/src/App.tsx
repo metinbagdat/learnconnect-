@@ -26,6 +26,7 @@ import ChallengeAnalyticsDashboard from "@/pages/challenge-analytics-dashboard";
 import EntranceExamPrep from "@/pages/entrance-exam-prep";
 import AdaptiveLearningDemo from "@/pages/adaptive-learning-demo";
 import AdvancedAdaptiveLearning from "@/pages/advanced-adaptive-learning";
+import EmojiMilestonesDemo from "@/pages/emoji-milestones-demo";
 
 function Router() {
   return (
@@ -54,6 +55,7 @@ function Router() {
       <ProtectedRoute path="/suggestions" component={SuggestionsDemoPage} />
       <ProtectedRoute path="/adaptive-learning" component={AdaptiveLearningDemo} />
       <ProtectedRoute path="/advanced-adaptive" component={AdvancedAdaptiveLearning} />
+      <ProtectedRoute path="/emoji-milestones" component={EmojiMilestonesDemo} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

@@ -642,3 +642,40 @@ export type ChallengePathStep = typeof challengePathSteps.$inferSelect;
 export type InsertChallengePathStep = z.infer<typeof insertChallengePathStepSchema>;
 export type UserChallengeProgress = typeof userChallengeProgress.$inferSelect;
 export type InsertUserChallengeProgress = z.infer<typeof insertUserChallengeProgressSchema>;
+
+// Learning Milestones and Emoji Reactions tables
+export const learningMilestones = pgTable("learning_milestones", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'course_completion', 'lesson_completion', etc.
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+  achievementId: integer("achievement_id").references(() => achievements.id),
+  progress: integer("progress"),
+  metadata: jsonb("metadata"), // Additional context data
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const emojiReactions = pgTable("emoji_reactions", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  milestoneId: varchar("milestone_id", { length: 50 }).references(() => learningMilestones.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  emoji: varchar("emoji", { length: 10 }).notNull(),
+  aiContext: text("ai_context"), // AI-generated context for the emoji
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+
+
+// Insert schemas
+export const insertLearningMilestoneSchema = createInsertSchema(learningMilestones);
+export const insertEmojiReactionSchema = createInsertSchema(emojiReactions);
+
+// Types for Learning Milestones and Emoji Reactions
+export type LearningMilestone = typeof learningMilestones.$inferSelect;
+export type InsertLearningMilestone = z.infer<typeof insertLearningMilestoneSchema>;
+export type EmojiReaction = typeof emojiReactions.$inferSelect;
+export type InsertEmojiReaction = z.infer<typeof insertEmojiReactionSchema>;

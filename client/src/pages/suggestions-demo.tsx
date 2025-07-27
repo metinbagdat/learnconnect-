@@ -30,8 +30,7 @@ export default function SuggestionsDemoPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Smart Suggestions</h1>
         <p className="text-muted-foreground">
-          Our platform provides intelligent suggestions for goals, fields, and course topics
-          to help you make informed choices throughout your learning journey.
+          Get inspired with AI-powered suggestions! Discover trending goals, popular fields, and hot topics to guide your learning journey and make informed choices.
         </p>
       </div>
       

@@ -167,7 +167,7 @@ export default function LearningTrailsPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Interactive Learning Trails</h1>
             <p className="text-muted-foreground">
-              AI-powered personalized learning paths with achievement-based progress tracking
+              Follow AI-powered personalized learning paths! Navigate through interactive trails, track your progress, and unlock achievements as you master new skills.
             </p>
           </div>
           <Button 

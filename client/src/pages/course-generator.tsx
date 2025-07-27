@@ -38,7 +38,7 @@ export default function CourseGenerator() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <h1 className="text-2xl font-bold text-neutral-900">AI Course Generator</h1>
               <p className="mt-1 text-sm text-neutral-600">
-                Create comprehensive courses powered by AI
+                Create amazing courses in minutes! Use AI to generate comprehensive course content, modules, and lessons tailored to your topics.
               </p>
             </div>
             

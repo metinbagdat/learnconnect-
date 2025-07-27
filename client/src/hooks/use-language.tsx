@@ -85,6 +85,13 @@ const translations = {
     checkBackLater: 'Check back later for new courses.',
     tryDifferentSearch: 'Try a different search query.',
     module: 'Module',
+    complete: 'Complete',
+    aiPersonalization: 'AI Personalization',
+    personalizedForYou: 'Personalized for You',
+    learningObjectives: 'Learning Objectives',
+    aiAdaptedContent: 'AI-Adapted Content',
+    selectLessonForContent: 'Select a lesson to see AI-personalized content',
+    personalizedContentAvailable: 'Personalized content available',
     
     // Course Generator
     generateCourse: 'Generate Course',
@@ -171,7 +178,6 @@ const translations = {
     startLearning: 'Start Learning',
     refreshContent: 'Refresh Content',
     noAiModulesAvailable: 'No AI Modules Available',
-    aiPersonalization: 'AI Personalization',
     
     // Entrance Exams
     entranceExamPrep: 'Entrance Exam Preparation',
@@ -280,6 +286,13 @@ const translations = {
     checkBackLater: 'Yeni kurslar için daha sonra tekrar kontrol edin.',
     tryDifferentSearch: 'Farklı bir arama terimi deneyin.',
     module: 'Modül',
+    complete: 'Tamamlandı',
+    aiPersonalization: 'AI Kişiselleştirme',
+    personalizedForYou: 'Sizin İçin Kişiselleştirildi',
+    learningObjectives: 'Öğrenme Hedefleri',
+    aiAdaptedContent: 'AI Uyarlanmış İçerik',
+    selectLessonForContent: 'AI-kişiselleştirilmiş içeriği görmek için bir ders seçin',
+    personalizedContentAvailable: 'Kişiselleştirilmiş içerik mevcut',
     
     // Course Generator
     generateCourse: 'Kurs Oluştur',
@@ -358,15 +371,13 @@ const translations = {
     aiPoweredModules: 'Yapay Zeka Destekli Öğrenme Modülleri',
     personalizedContent: 'Kişiselleştirilmiş İçerik',
     aiLearningAssistant: 'Yapay Zeka Öğrenme Asistanı',
-    personalizedForYou: 'Sizin İçin Kişiselleştirildi',
-    learningObjectives: 'Öğrenme Hedefleri',
-    aiAdaptedContent: 'Yapay Zeka Uyarlanmış İçerik',
+
     recommendedPractice: 'Önerilen Pratik',
     nextRecommendedSteps: 'Önerilen sonraki adımlar',
     startLearning: 'Öğrenmeye Başla',
     refreshContent: 'İçeriği Yenile',
     noAiModulesAvailable: 'Yapay Zeka Modülü Mevcut Değil',
-    aiPersonalization: 'Yapay Zeka Kişiselleştirmesi',
+
     
     // Entrance Exams
     entranceExamPrep: 'Üniversite Sınavı Hazırlığı',

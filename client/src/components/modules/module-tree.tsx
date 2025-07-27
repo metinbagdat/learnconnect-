@@ -130,7 +130,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <div className="text-sm font-medium">{module.progress}% Complete</div>
+                        <div className="text-sm font-medium">{module.progress}% {t('complete')}</div>
                         <Progress value={module.progress} className="w-20 h-2" />
                       </div>
                     </div>
@@ -214,9 +214,9 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                           <div className="mt-3 p-2 bg-gray-50 rounded text-xs text-gray-600">
                             <div className="flex items-center gap-1 mb-1">
                               <Zap className="h-3 w-3 text-purple-500" />
-                              <span className="font-medium">AI Personalization</span>
+                              <span className="font-medium">{t('aiPersonalization')}</span>
                             </div>
-                            <p className="truncate">{lesson.aiContext.personalizedIntro || "Personalized content available"}</p>
+                            <p className="truncate">{lesson.aiContext.personalizedIntro || t('personalizedContentAvailable')}</p>
                           </div>
                         )}
                       </div>
@@ -272,7 +272,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                 <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
                   <div className="flex items-center gap-2 mb-2">
                     <Brain className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Personalized for You</span>
+                    <span className="text-sm font-medium text-blue-800">{t('personalizedForYou')}</span>
                   </div>
                   <p className="text-sm text-gray-700">
                     {selectedLesson.aiContext.personalizedIntro || "This lesson has been customized for your learning level."}
@@ -287,7 +287,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
               <div>
                 <h4 className="font-medium mb-2 flex items-center gap-2">
                   <Target className="h-4 w-4 text-green-600" />
-                  Learning Objectives
+{t('learningObjectives')}
                 </h4>
                 <ul className="space-y-1">
                   {selectedLesson.aiContext?.learningObjectives?.map((objective, index) => (
@@ -303,7 +303,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
 
               {/* Adapted Content Preview */}
               <div>
-                <h4 className="font-medium mb-2">AI-Adapted Content</h4>
+                <h4 className="font-medium mb-2">{t('aiAdaptedContent')}</h4>
                 <div className="p-3 bg-gray-50 rounded text-sm text-gray-700">
                   {selectedLesson.aiContext?.adaptedContent 
                     ? `${selectedLesson.aiContext.adaptedContent.substring(0, 200)}...`
@@ -345,7 +345,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
           <Card className="sticky top-4">
             <CardContent className="text-center py-12">
               <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Select a lesson to see AI-personalized content</p>
+              <p className="text-gray-500">{t('selectLessonForContent')}</p>
             </CardContent>
           </Card>
         )}

@@ -20,6 +20,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { seedChallenges } from "./seed-challenges";
 import { seedSkillChallenges } from "./seed-skill-challenges";
 import { generateExamLearningPath, saveExamLearningPath, generatePredefinedExamPaths } from "./entrance-exam-service";
+import { generateAdaptiveLearningPath, updateStepProgress, generateNewRecommendations } from "./adaptive-learning-service";
 import { db } from "./db";
 import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
@@ -2781,6 +2782,69 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error fetching challenge learning path progress:", error);
       res.status(500).json({ error: "Failed to fetch progress" });
+    }
+  });
+
+  // Adaptive Learning Path API routes
+  app.get("/api/learning-paths/:pathId/adaptive", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const pathId = parseInt(req.params.pathId);
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : req.user.id;
+      
+      // Ensure user can only access their own adaptive path or admin/instructor can access any
+      if (userId !== req.user.id && !["admin", "instructor"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const adaptivePath = await generateAdaptiveLearningPath(pathId, userId);
+      res.json(adaptivePath);
+    } catch (error) {
+      console.error("Error generating adaptive learning path:", error);
+      res.status(500).json({ message: "Failed to generate adaptive learning path" });
+    }
+  });
+
+  app.post("/api/learning-paths/:pathId/steps/:stepId/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const pathId = parseInt(req.params.pathId);
+      const stepId = parseInt(req.params.stepId);
+      const { progress } = req.body;
+      
+      const result = await updateStepProgress(pathId, stepId, progress);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating step progress:", error);
+      res.status(500).json({ message: "Failed to update step progress" });
+    }
+  });
+
+  app.post("/api/learning-paths/:pathId/generate-recommendations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const pathId = parseInt(req.params.pathId);
+      const { userId } = req.body;
+      
+      // Ensure user can only generate recommendations for themselves
+      if (userId !== req.user.id && !["admin", "instructor"].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const recommendations = await generateNewRecommendations(pathId, userId);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating new recommendations:", error);
+      res.status(500).json({ message: "Failed to generate recommendations" });
     }
   });
 

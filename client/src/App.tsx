@@ -24,6 +24,7 @@ import LearningTrailsPage from "@/pages/learning-trails";
 import ChallengePathsPage from "@/pages/challenge-paths";
 import ChallengeAnalyticsDashboard from "@/pages/challenge-analytics-dashboard";
 import EntranceExamPrep from "@/pages/entrance-exam-prep";
+import AdaptiveLearningDemo from "@/pages/adaptive-learning-demo";
 
 function Router() {
   return (
@@ -50,6 +51,7 @@ function Router() {
       <ProtectedRoute path="/learning-trails" component={LearningTrailsPage} />
       <ProtectedRoute path="/admin" component={AdminPanel} />
       <ProtectedRoute path="/suggestions" component={SuggestionsDemoPage} />
+      <ProtectedRoute path="/adaptive-learning" component={AdaptiveLearningDemo} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

@@ -33,7 +33,12 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "edulearn-platform-dev-secret",
+    secret: process.env.SESSION_SECRET || (() => {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('SESSION_SECRET environment variable is required in production');
+      }
+      return "edulearn-platform-dev-secret";
+    })(),
     resave: false,
     saveUninitialized: false,
     store: new MemoryStore({
@@ -42,7 +47,7 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,
-      secure: false, // For development. Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // Secure cookies in production
       sameSite: 'none',
       path: '/'
     },

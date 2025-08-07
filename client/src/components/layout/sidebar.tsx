@@ -115,7 +115,7 @@ export function Sidebar() {
             isActive={location === '/learning-trails'}
           >
             <span className="flex items-center">
-              Learning Trails
+              {t('learningTrails')}
               <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                 AI
               </span>
@@ -128,7 +128,7 @@ export function Sidebar() {
             isActive={location === '/gamification'}
           >
             <span className="flex items-center">
-              Achievements
+              {t('achievements')}
               <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
                 🏆
               </span>
@@ -141,7 +141,7 @@ export function Sidebar() {
             isActive={location === '/suggestions'}
           >
             <span className="flex items-center">
-              Smart Suggestions
+              {t('smartSuggestions')}
               <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-green-500 to-teal-500 text-white">
                 New
               </span>
@@ -154,7 +154,7 @@ export function Sidebar() {
             isActive={location === '/advanced-adaptive'}
           >
             <span className="flex items-center">
-              Advanced AI Learning
+              {t('advancedAILearning')}
               <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                 🧠 AI
               </span>
@@ -167,7 +167,7 @@ export function Sidebar() {
             isActive={location === '/entrance-exam-prep'}
           >
             <span className="flex items-center">
-              Entrance Exams
+              {t('entranceExams')}
               <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 AI
               </span>
@@ -180,7 +180,7 @@ export function Sidebar() {
             isActive={location.startsWith('/learning-paths')}
           >
             <span className="flex items-center">
-              Learning Paths
+              {t('learningPaths')}
               <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-purple-500 to-blue-500 text-white">
                 AI
               </span>
@@ -231,7 +231,7 @@ export function Sidebar() {
             className="flex items-center justify-between w-full px-2 text-xs font-medium tracking-wider uppercase text-neutral-500"
             onClick={() => setIntegrationsOpen(!integrationsOpen)}
           >
-            <span>Integrations</span>
+            <span>{t('integrations')}</span>
             <ChevronDown className={`h-4 w-4 transform ${integrationsOpen ? 'rotate-180' : ''}`} />
           </button>
           
@@ -249,14 +249,14 @@ export function Sidebar() {
                     </g>
                   </g>
                 </svg>
-                Google Drive
+                {t('googleDrive')}
               </a>
               <a href="#" className="flex items-center px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 rounded-md">
                 <svg className="w-5 h-5 mr-3 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                   <rect width="24" height="24" fill="none"/>
                   <path fill="#4285F4" d="M12 1.5a10.5 10.5 0 105.22 19.65 2.5 2.5 0 011.67-4.58.75.75 0 00.38-1.31A6.48 6.48 0 0117 5.5c0-2.83-1.72-4-4-4z"/>
                 </svg>
-                Google Meet
+                {t('googleMeet')}
               </a>
               <a href="#" className="flex items-center px-2 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 rounded-md">
                 <svg className="w-5 h-5 mr-3 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -265,7 +265,7 @@ export function Sidebar() {
                   <path fill="#FBBC05" d="M5 12h6v6H5v-6z"/>
                   <path fill="#34A853" d="M13 4h6v6h-6V4z"/>
                 </svg>
-                Google Calendar
+                {t('googleCalendar')}
               </a>
             </div>
           )}

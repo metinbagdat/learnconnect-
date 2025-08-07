@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -22,6 +23,7 @@ import { Course, UserCourse, Assignment } from "@shared/schema";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { triggerSkillChallenge } = useSkillChallenge();
   const { showXpGain, celebrateLevelUp, checkAndUnlockAchievements } = useGamificationTracker();
   const [, navigate] = useLocation();
@@ -104,8 +106,8 @@ export default function Dashboard() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-neutral-900">Welcome back, {user?.displayName?.split(' ')[0] || 'Student'}</h1>
-                  <p className="mt-1 text-sm text-neutral-600">Continue learning where you left off</p>
+                  <h1 className="text-2xl font-bold text-neutral-900">{t('welcomeBack')}, {user?.displayName?.split(' ')[0] || 'Student'}</h1>
+                  <p className="mt-1 text-sm text-neutral-600">{t('continueWhereverYouLeftOff')}</p>
                 </div>
                 
                 {/* Search */}
@@ -113,7 +115,7 @@ export default function Dashboard() {
                   <div className="flex items-center relative">
                     <Input 
                       className="md:w-64 pl-10" 
-                      placeholder="Search courses, resources..." 
+                      placeholder={t('searchCoursesResources')} 
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Search className="h-5 w-5 text-neutral-400" />
@@ -127,7 +129,7 @@ export default function Dashboard() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
               <div className="flex justify-between items-center mb-4">
                 <div className="mb-6">
-                <h2 className="text-lg font-semibold text-neutral-900">Your Progress</h2>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('yourProgress')}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   Hey {user?.displayName?.split(' ')[0] || 'Student'}! Check your learning progress below - click any card to explore more or continue where you left off.
                 </p>
@@ -141,55 +143,55 @@ export default function Dashboard() {
                   }}
                 >
                   <Zap className="mr-1 h-4 w-4" />
-                  Daily Challenge
+                  {t('dailyChallenge')}
                 </Button>
               </div>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <div onClick={() => navigate('/courses')} className="cursor-pointer">
                   <StatCard 
                     icon={Book} 
-                    title="Courses in Progress" 
+                    title={t('coursesInProgress')} 
                     value={coursesInProgress} 
                     color="primary" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
-                    Continue learning! Click to see all your courses or find new ones.
+                    {t('continueText')}
                   </p>
                 </div>
                 
                 <div onClick={() => navigate('/courses')} className="cursor-pointer">
                   <StatCard 
                     icon={CheckCircle} 
-                    title="Completed Courses" 
+                    title={t('completedCourses')} 
                     value={completedCourses} 
                     color="success" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
-                    Great job! Review completed courses or explore advanced topics.
+                    {t('greatJob')}
                   </p>
                 </div>
                 
                 <div onClick={() => navigate('/assignments')} className="cursor-pointer">
                   <StatCard 
                     icon={FileText} 
-                    title="Pending Assignments" 
+                    title={t('pendingAssignments')} 
                     value={pendingAssignments} 
                     color="warning" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
-                    {pendingAssignments > 0 ? 'Time to submit! Click to complete your assignments.' : 'All caught up! Check for new assignments.'}
+                    {pendingAssignments > 0 ? t('timeToSubmit') : t('allCaughtUp')}
                   </p>
                 </div>
                 
                 <div onClick={() => navigate('/gamification')} className="cursor-pointer">
                   <StatCard 
                     icon={Award} 
-                    title="Achievements" 
+                    title={t('achievements')} 
                     value={achievementsCount} 
                     color="secondary" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
-                    {achievementsCount > 0 ? 'Amazing progress! View all achievements and unlock more.' : 'Start earning achievements by completing challenges!'}
+                    {achievementsCount > 0 ? t('amazingProgress') : t('startEarningAchievements')}
                   </p>
                 </div>
               </div>
@@ -204,8 +206,8 @@ export default function Dashboard() {
                       <Trophy className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">Your Achievements</h3>
-                      <p className="text-sm text-muted-foreground">Level up your learning journey</p>
+                      <h3 className="text-lg font-semibold">{t('yourAchievements')}</h3>
+                      <p className="text-sm text-muted-foreground">{t('levelUpYourLearning')}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -216,7 +218,7 @@ export default function Dashboard() {
                       className="bg-white/50 hover:bg-white/80"
                     >
                       <Users className="mr-2 h-4 w-4" />
-                      Share
+                      {t('share')}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -224,7 +226,7 @@ export default function Dashboard() {
                       onClick={() => navigate('/gamification')}
                       className="bg-white/50 hover:bg-white/80"
                     >
-                      View All
+                      {t('viewAll')}
                     </Button>
                   </div>
                 </div>
@@ -235,7 +237,7 @@ export default function Dashboard() {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Target className="h-4 w-4 text-primary" />
-                        Your Level
+                        {t('yourLevel')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -248,7 +250,7 @@ export default function Dashboard() {
                           <InteractiveProgressBar
                             current={(userLevel as any)?.currentXp || 0}
                             max={100}
-                            label={`Progress to Level ${((userLevel as any)?.level || 1) + 1}`}
+                            label={`${t('progressToLevel')} ${((userLevel as any)?.level || 1) + 1}`}
                             onLevelUp={() => {
                               celebrateLevelUp(((userLevel as any)?.level || 1) + 1);
                               checkAndUnlockAchievements(user?.id || 0);
@@ -257,7 +259,7 @@ export default function Dashboard() {
                         </div>
                       ) : (
                         <div className="text-center py-4 text-muted-foreground">
-                          <p>Complete challenges to unlock your level!</p>
+                          <p>{t('completeChallengesToUnlock')}</p>
                         </div>
                       )}
                     </CardContent>
@@ -268,7 +270,7 @@ export default function Dashboard() {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Flame className="h-4 w-4 text-orange-500" />
-                        Active Challenges
+                        {t('activeChallenges')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -298,14 +300,14 @@ export default function Dashboard() {
                         </div>
                       ) : (
                         <div className="text-center py-4 text-muted-foreground">
-                          <p className="text-sm">No active challenges</p>
+                          <p className="text-sm">{t('noActiveChallenges')}</p>
                           <Button 
                             size="sm" 
                             variant="outline" 
                             className="mt-2"
                             onClick={() => navigate('/challenges')}
                           >
-                            Start Challenge
+                            {t('startChallenge')}
                           </Button>
                         </div>
                       )}
@@ -317,7 +319,7 @@ export default function Dashboard() {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Award className="h-4 w-4 text-yellow-500" />
-                        Recent Achievements
+                        {t('recentAchievements')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -346,8 +348,8 @@ export default function Dashboard() {
                         </div>
                       ) : (
                         <div className="text-center py-4 text-muted-foreground">
-                          <p className="text-sm">No achievements yet</p>
-                          <p className="text-xs mt-1">Complete courses and challenges to earn achievements!</p>
+                          <p className="text-sm">{t('noAchievementsYet')}</p>
+                          <p className="text-xs mt-1">{t('completeCoursesAndChallenges')}</p>
                         </div>
                       )}
                     </CardContent>
@@ -363,7 +365,7 @@ export default function Dashboard() {
                     className="bg-white/50 hover:bg-white/80"
                   >
                     <Target className="h-4 w-4 mr-2" />
-                    View Challenges
+                    {t('viewChallenges')}
                   </Button>
                   <Button 
                     size="sm" 
@@ -372,7 +374,7 @@ export default function Dashboard() {
                     className="bg-white/50 hover:bg-white/80"
                   >
                     <Trophy className="h-4 w-4 mr-2" />
-                    Leaderboards
+                    {t('leaderboards')}
                   </Button>
                   <Button 
                     size="sm" 
@@ -381,7 +383,7 @@ export default function Dashboard() {
                     className="bg-white/50 hover:bg-white/80"
                   >
                     <Zap className="h-4 w-4 mr-2" />
-                    Quick Challenge
+                    {t('quickChallenge')}
                   </Button>
                 </div>
               </div>
@@ -390,9 +392,9 @@ export default function Dashboard() {
             {/* Continue Learning Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-neutral-900">Continue Learning</h2>
+                <h2 className="text-xl font-semibold text-neutral-900">{t('continueLeaning')}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Pick up where you left off - your courses are waiting for you below, or explore new ones!
+                  {t('pickUpWhereYouLeftOff')}
                 </p>
               </div>
               
@@ -412,14 +414,14 @@ export default function Dashboard() {
               ) : inProgressCourses.length === 0 ? (
                 <div className="mt-4 text-center py-10 bg-white rounded-lg shadow">
                   <Book className="h-12 w-12 mx-auto text-neutral-300" />
-                  <h3 className="mt-4 text-lg font-medium">No courses in progress</h3>
-                  <p className="mt-1 text-neutral-500">Ready to start learning? Browse our course catalog and enroll in something that interests you!</p>
+                  <h3 className="mt-4 text-lg font-medium">{t('noCourseInProgress')}</h3>
+                  <p className="mt-1 text-neutral-500">{t('readyToStartLearning')}</p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
                     <Button onClick={() => navigate('/courses')}>
-                      Explore Courses
+                      {t('exploreCourses')}
                     </Button>
                     <Button variant="outline" onClick={() => navigate('/suggestions')}>
-                      Get AI Recommendations
+                      {t('getAIRecommendations')}
                     </Button>
                   </div>
                 </div>
@@ -441,9 +443,9 @@ export default function Dashboard() {
             {/* AI-powered Recommendations Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-neutral-900">Recommended For You</h2>
+                <h2 className="text-xl font-semibold text-neutral-900">{t('recommendedForYou')}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  AI-powered course suggestions based on your interests and learning progress - perfect next steps for your journey!
+                  {t('aiPoweredSuggestions')}
                 </p>
               </div>
               <div className="mt-4">

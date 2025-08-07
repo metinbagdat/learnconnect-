@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 
 // Define the available languages
 export type Language = 'en' | 'tr';
@@ -620,12 +620,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [language]);
 
-  // Translation function
-  const t = (key: keyof typeof translations.en): string => {
+  // Optimized translation function with useCallback for instant updates
+  const t = useCallback((key: keyof typeof translations.en): string => {
     return (translations[language] as Record<string, string>)[key] || translations.en[key] || key;
-  };
+  }, [language]);
 
-  const value = { language, setLanguage, t };
+  // Memoized context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({ language, setLanguage, t }), [language, t]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

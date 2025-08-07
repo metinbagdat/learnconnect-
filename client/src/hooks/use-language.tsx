@@ -170,9 +170,6 @@ const translations = {
     aiPoweredModules: 'AI-Powered Learning Modules',
     personalizedContent: 'Personalized Content',
     aiLearningAssistant: 'AI Learning Assistant',
-    personalizedForYou: 'Personalized for You',
-    learningObjectives: 'Learning Objectives',
-    aiAdaptedContent: 'AI-Adapted Content',
     recommendedPractice: 'Recommended Practice',
     nextRecommendedSteps: 'Next recommended steps',
     startLearning: 'Start Learning',
@@ -219,7 +216,6 @@ const translations = {
     learningAnalytics: 'Learning Analytics',
     timeSpent: 'Time Spent',
     averageScore: 'Average Score',
-    completionRate: 'Completion Rate',
     learningVelocity: 'Learning Velocity',
     strongAreas: 'Strong Areas',
     improvementAreas: 'Areas for Improvement',
@@ -270,7 +266,6 @@ const translations = {
     improvementRecommendations: 'Improvement recommendations',
     authenticationRequired: 'Authentication Required',
     pleaseLoginToViewAdaptivePaths: 'Please login to view adaptive learning paths',
-    login: 'Login',
     
     // Advanced Adaptive Learning
     visualLearning: 'Visual Learning',
@@ -283,7 +278,6 @@ const translations = {
     increaseDifficulty: 'Increase Difficulty',
     decreaseDifficulty: 'Decrease Difficulty',
     maintainDifficulty: 'Maintain Current Difficulty',
-    nextSteps: 'Next Steps',
     applyAdjustment: 'Apply Adjustment',
     predictiveAnalytics: 'Predictive Analytics',
     estimatedTimeToCompletion: 'Estimated Time to Completion',
@@ -303,10 +297,8 @@ const translations = {
     weakness: 'Weakness',
     opportunity: 'Opportunity',
     risk: 'Risk',
-    recommendations: 'Recommendations',
     noInsightsAvailable: 'No insights available yet',
-    insightsWillAppearAsYouProgress: 'Insights will appear as you progress through your learning journey',
-    learningStyleDetection: 'Learning Style Detection',
+    insightsWillAppearAsYouProgress: 'Insights will appear as you progress through your learning journey'
   },
   tr: {
     // Common
@@ -556,7 +548,6 @@ const translations = {
     improvementRecommendations: 'Gelişim önerileri',
     authenticationRequired: 'Kimlik Doğrulama Gerekli',
     pleaseLoginToViewAdaptivePaths: 'Uyarlanabilir öğrenme yollarını görüntülemek için lütfen giriş yapın',
-    login: 'Giriş Yap',
     
     // Advanced Adaptive Learning
     visualLearning: 'Görsel Öğrenme',
@@ -569,7 +560,6 @@ const translations = {
     increaseDifficulty: 'Zorluğu Artır',
     decreaseDifficulty: 'Zorluğu Azalt',
     maintainDifficulty: 'Mevcut Zorluğu Koru',
-    nextSteps: 'Sonraki Adımlar',
     applyAdjustment: 'Ayarlamayı Uygula',
     predictiveAnalytics: 'Tahminsel Analitikler',
     estimatedTimeToCompletion: 'Tahmini Tamamlanma Süresi',
@@ -591,8 +581,7 @@ const translations = {
     risk: 'Risk',
     recommendations: 'Öneriler',
     noInsightsAvailable: 'Henüz içgörü mevcut değil',
-    insightsWillAppearAsYouProgress: 'Öğrenme yolculuğunuzda ilerledikçe içgörüler görünecek',
-    learningStyleDetection: 'Öğrenme Stili Tespiti',
+    insightsWillAppearAsYouProgress: 'Öğrenme yolculuğunuzda ilerledikçe içgörüler görünecek'
 
   }
 };

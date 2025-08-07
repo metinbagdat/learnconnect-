@@ -16,10 +16,13 @@ export function LanguageSwitcher() {
     { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
   ];
 
+  const currentLanguage = languages.find(lang => lang.code === language);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
+        <Button variant="ghost" size="sm" className="h-8 px-2 flex items-center gap-1">
+          <span className="text-sm">{currentLanguage?.flag}</span>
           <Globe className="h-4 w-4" />
           <span className="sr-only">Switch language</span>
         </Button>

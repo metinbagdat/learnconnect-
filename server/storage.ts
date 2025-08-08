@@ -107,7 +107,32 @@ import {
   type LearningMilestone,
   type InsertLearningMilestone,
   type EmojiReaction,
-  type InsertEmojiReaction
+  type InsertEmojiReaction,
+  // Mentor and Program types
+  type Mentor,
+  type InsertMentor,
+  type UserMentor,
+  type InsertUserMentor,
+  type StudyProgram,
+  type InsertStudyProgram,
+  type ProgramSchedule,
+  type InsertProgramSchedule,
+  type UserProgramProgress,
+  type InsertUserProgramProgress,
+  type StudySession,
+  type InsertStudySession,
+  mentors,
+  userMentors,
+  studyPrograms,
+  programSchedules,
+  userProgramProgress,
+  studySessions,
+  insertMentorSchema,
+  insertUserMentorSchema,
+  insertStudyProgramSchema,
+  insertProgramScheduleSchema,
+  insertUserProgramProgressSchema,
+  insertStudySessionSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -127,6 +152,14 @@ type InsertUserAssignment = z.infer<typeof insertUserAssignmentSchema>;
 type InsertBadge = z.infer<typeof insertBadgeSchema>;
 type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
 type InsertCourseRecommendation = z.infer<typeof insertCourseRecommendationSchema>;
+
+// New insert types for mentor and program systems
+type InsertMentorType = z.infer<typeof insertMentorSchema>;
+type InsertUserMentorType = z.infer<typeof insertUserMentorSchema>;
+type InsertStudyProgramType = z.infer<typeof insertStudyProgramSchema>;
+type InsertProgramScheduleType = z.infer<typeof insertProgramScheduleSchema>;
+type InsertUserProgramProgressType = z.infer<typeof insertUserProgramProgressSchema>;
+type InsertStudySessionType = z.infer<typeof insertStudySessionSchema>;
 
 const PostgresSessionStore = connectPg(session);
 
@@ -266,6 +299,36 @@ export interface IStorage {
   toggleUserFollow(followerId: number, followingId: number, action: string): Promise<{ following: boolean; followerCount: number }>;
   getTrendingTopics(): Promise<any[]>;
   checkAndUnlockAchievements(userId: number): Promise<Achievement[]>;
+
+  // Mentor system operations
+  getMentors(filters?: { isAiMentor?: boolean; isActive?: boolean; specialization?: string }): Promise<(Mentor & { user: User })[]>;
+  getMentor(id: number): Promise<(Mentor & { user: User }) | undefined>;
+  createMentor(mentor: InsertMentor): Promise<Mentor>;
+  updateMentor(id: number, data: Partial<Mentor>): Promise<Mentor | undefined>;
+  assignMentorToUser(studentId: number, mentorId: number, options?: { preferredCommunication?: string; communicationLanguage?: string; notes?: string }): Promise<UserMentor>;
+  getUserMentor(studentId: number): Promise<(UserMentor & { mentor: Mentor & { user: User } }) | undefined>;
+  updateUserMentor(id: number, data: Partial<UserMentor>): Promise<UserMentor | undefined>;
+  autoAssignMentor(studentId: number): Promise<UserMentor>;
+  
+  // Study program operations
+  getStudyPrograms(filters?: { targetGroup?: string; isActive?: boolean }): Promise<(StudyProgram & { creator: User })[]>;
+  getStudyProgram(id: number): Promise<(StudyProgram & { creator: User; schedules: ProgramSchedule[] }) | undefined>;
+  createStudyProgram(program: InsertStudyProgram): Promise<StudyProgram>;
+  updateStudyProgram(id: number, data: Partial<StudyProgram>): Promise<StudyProgram | undefined>;
+  getUserStudyPrograms(userId: number): Promise<(UserProgramProgress & { program: StudyProgram })[]>;
+  enrollUserInProgram(userId: number, programId: number): Promise<UserProgramProgress>;
+  updateUserProgramProgress(userId: number, programId: number, data: Partial<UserProgramProgress>): Promise<UserProgramProgress | undefined>;
+  
+  // Program schedule operations
+  getProgramSchedules(programId: number, week?: number): Promise<ProgramSchedule[]>;
+  createProgramSchedule(schedule: InsertProgramSchedule): Promise<ProgramSchedule>;
+  updateProgramSchedule(id: number, data: Partial<ProgramSchedule>): Promise<ProgramSchedule | undefined>;
+  
+  // Study session operations
+  getStudySessions(userId: number, filters?: { programId?: number; startDate?: Date; endDate?: Date }): Promise<StudySession[]>;
+  createStudySession(session: InsertStudySession): Promise<StudySession>;
+  updateStudySession(id: number, data: Partial<StudySession>): Promise<StudySession | undefined>;
+  getUserWeeklyStats(userId: number, programId?: number): Promise<{ plannedHours: number; actualHours: number; adherenceScore: number }>;
 
   // Session store
   sessionStore: SessionStore;
@@ -1361,7 +1424,8 @@ export class DatabaseStorage implements IStorage {
       .values({
         userId,
         achievementId,
-        unlockedAt: new Date()
+        pointsEarned: 0,
+        xpEarned: 0
       })
       .returning();
     
@@ -1419,18 +1483,20 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserAchievements(userId: number): Promise<(UserAchievement & { achievement: Achievement })[]> {
-    return db
+    const result = await db
       .select({
-        id: userAchievements.id,
-        userId: userAchievements.userId,
-        achievementId: userAchievements.achievementId,
-        unlockedAt: userAchievements.unlockedAt,
+        userAchievement: userAchievements,
         achievement: achievements
       })
       .from(userAchievements)
       .innerJoin(achievements, eq(userAchievements.achievementId, achievements.id))
       .where(eq(userAchievements.userId, userId))
-      .orderBy(desc(userAchievements.unlockedAt));
+      .orderBy(desc(userAchievements.earnedAt));
+    
+    return result.map(({ userAchievement, achievement }) => ({
+      ...userAchievement,
+      achievement: achievement as Achievement
+    })) as (UserAchievement & { achievement: Achievement })[];
   }
   
   async awardAchievementToUser(userId: number, achievementId: number): Promise<UserAchievement> {
@@ -1439,7 +1505,8 @@ export class DatabaseStorage implements IStorage {
       .values({
         userId,
         achievementId,
-        unlockedAt: new Date()
+        pointsEarned: 0,
+        xpEarned: 0
       })
       .returning();
     
@@ -1875,6 +1942,400 @@ export class DatabaseStorage implements IStorage {
       .from(emojiReactions)
       .where(eq(emojiReactions.userId, userId))
       .orderBy(desc(emojiReactions.timestamp));
+  }
+
+  // Mentor System Operations
+  async getMentors(filters?: { isAiMentor?: boolean; isActive?: boolean; specialization?: string }): Promise<(Mentor & { user: User })[]> {
+    let query = db
+      .select({
+        mentor: mentors,
+        user: users
+      })
+      .from(mentors)
+      .leftJoin(users, eq(mentors.userId, users.id));
+
+    if (filters?.isAiMentor !== undefined) {
+      query = query.where(eq(mentors.isAiMentor, filters.isAiMentor));
+    }
+    if (filters?.isActive !== undefined) {
+      query = query.where(eq(mentors.isActive, filters.isActive));
+    }
+
+    const result = await query.orderBy(desc(mentors.createdAt));
+    return result.map(({ mentor, user }) => ({
+      ...mentor,
+      user: user as User
+    })) as (Mentor & { user: User })[];
+  }
+
+  async getMentor(id: number): Promise<(Mentor & { user: User }) | undefined> {
+    const [result] = await db
+      .select({
+        mentor: mentors,
+        user: users
+      })
+      .from(mentors)
+      .leftJoin(users, eq(mentors.userId, users.id))
+      .where(eq(mentors.id, id));
+
+    if (!result) return undefined;
+    
+    return {
+      ...result.mentor,
+      user: result.user as User
+    } as (Mentor & { user: User });
+  }
+
+  async createMentor(mentor: InsertMentorType): Promise<Mentor> {
+    const [newMentor] = await db.insert(mentors).values(mentor).returning();
+    return newMentor;
+  }
+
+  async updateMentor(id: number, data: Partial<Mentor>): Promise<Mentor | undefined> {
+    const [updatedMentor] = await db
+      .update(mentors)
+      .set(data)
+      .where(eq(mentors.id, id))
+      .returning();
+    return updatedMentor;
+  }
+
+  async assignMentorToUser(studentId: number, mentorId: number, options?: { preferredCommunication?: string; communicationLanguage?: string; notes?: string }): Promise<UserMentor> {
+    // First, deactivate any existing mentor assignments for this student
+    await db
+      .update(userMentors)
+      .set({ isActive: false })
+      .where(eq(userMentors.studentId, studentId));
+
+    const [newAssignment] = await db
+      .insert(userMentors)
+      .values({
+        studentId,
+        mentorId,
+        preferredCommunication: options?.preferredCommunication || 'chat',
+        communicationLanguage: options?.communicationLanguage || 'en',
+        notes: options?.notes
+      })
+      .returning();
+    
+    return newAssignment;
+  }
+
+  async getUserMentor(studentId: number): Promise<(UserMentor & { mentor: Mentor & { user: User } }) | undefined> {
+    const [result] = await db
+      .select({
+        userMentor: userMentors,
+        mentor: mentors,
+        user: users
+      })
+      .from(userMentors)
+      .leftJoin(mentors, eq(userMentors.mentorId, mentors.id))
+      .leftJoin(users, eq(mentors.userId, users.id))
+      .where(and(eq(userMentors.studentId, studentId), eq(userMentors.isActive, true)))
+      .limit(1);
+
+    if (!result) return undefined;
+
+    return {
+      ...result.userMentor,
+      mentor: {
+        ...result.mentor,
+        user: result.user as User
+      }
+    } as (UserMentor & { mentor: Mentor & { user: User } });
+  }
+
+  async updateUserMentor(id: number, data: Partial<UserMentor>): Promise<UserMentor | undefined> {
+    const [updatedUserMentor] = await db
+      .update(userMentors)
+      .set(data)
+      .where(eq(userMentors.id, id))
+      .returning();
+    return updatedUserMentor;
+  }
+
+  async autoAssignMentor(studentId: number): Promise<UserMentor> {
+    // First try to find an available human mentor
+    const availableMentors = await db
+      .select({ mentor: mentors })
+      .from(mentors)
+      .where(and(
+        eq(mentors.isActive, true),
+        eq(mentors.isAiMentor, false)
+      ))
+      .orderBy(mentors.rating, mentors.createdAt);
+
+    let mentorToAssign: Mentor | null = null;
+
+    // Check capacity of human mentors
+    for (const { mentor } of availableMentors) {
+      const currentStudentCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userMentors)
+        .where(and(
+          eq(userMentors.mentorId, mentor.id),
+          eq(userMentors.isActive, true)
+        ));
+
+      if (currentStudentCount[0]?.count < mentor.maxStudents) {
+        mentorToAssign = mentor;
+        break;
+      }
+    }
+
+    // If no human mentor available, create or find AI mentor
+    if (!mentorToAssign) {
+      let aiMentor = await db
+        .select()
+        .from(mentors)
+        .where(and(eq(mentors.isAiMentor, true), eq(mentors.isActive, true)))
+        .limit(1);
+
+      if (aiMentor.length === 0) {
+        // Create AI mentor system user if doesn't exist
+        let aiUser = await this.getUserByUsername("ai_mentor");
+        if (!aiUser) {
+          aiUser = await this.createUser({
+            username: "ai_mentor",
+            password: "$2b$10$randomhashedpassword",
+            displayName: "AI Learning Assistant",
+            role: "instructor"
+          });
+        }
+
+        // Create AI mentor
+        mentorToAssign = await this.createMentor({
+          userId: aiUser.id,
+          isAiMentor: true,
+          specialization: ["general", "mathematics", "science", "language"],
+          languages: ["en", "tr"],
+          maxStudents: 10000,
+          bio: "AI-powered learning mentor providing 24/7 personalized guidance and support.",
+          rating: 5.0
+        });
+      } else {
+        mentorToAssign = aiMentor[0];
+      }
+    }
+
+    return await this.assignMentorToUser(studentId, mentorToAssign.id, {
+      preferredCommunication: 'chat',
+      communicationLanguage: 'en',
+      notes: mentorToAssign.isAiMentor ? 'Auto-assigned AI mentor' : 'Auto-assigned human mentor'
+    });
+  }
+
+  // Study Program Operations
+  async getStudyPrograms(filters?: { targetGroup?: string; isActive?: boolean }): Promise<(StudyProgram & { creator: User })[]> {
+    let query = db
+      .select({
+        program: studyPrograms,
+        creator: users
+      })
+      .from(studyPrograms)
+      .leftJoin(users, eq(studyPrograms.createdBy, users.id));
+
+    if (filters?.targetGroup) {
+      query = query.where(eq(studyPrograms.targetGroup, filters.targetGroup));
+    }
+    if (filters?.isActive !== undefined) {
+      query = query.where(eq(studyPrograms.isActive, filters.isActive));
+    }
+
+    const result = await query.orderBy(desc(studyPrograms.createdAt));
+    return result.map(({ program, creator }) => ({
+      ...program,
+      creator: creator as User
+    })) as (StudyProgram & { creator: User })[];
+  }
+
+  async getStudyProgram(id: number): Promise<(StudyProgram & { creator: User; schedules: ProgramSchedule[] }) | undefined> {
+    const [programResult] = await db
+      .select({
+        program: studyPrograms,
+        creator: users
+      })
+      .from(studyPrograms)
+      .leftJoin(users, eq(studyPrograms.createdBy, users.id))
+      .where(eq(studyPrograms.id, id));
+
+    if (!programResult) return undefined;
+
+    const schedules = await db
+      .select()
+      .from(programSchedules)
+      .where(eq(programSchedules.programId, id))
+      .orderBy(programSchedules.week, programSchedules.day, programSchedules.startTime);
+
+    return {
+      ...programResult.program,
+      creator: programResult.creator as User,
+      schedules
+    } as (StudyProgram & { creator: User; schedules: ProgramSchedule[] });
+  }
+
+  async createStudyProgram(program: InsertStudyProgramType): Promise<StudyProgram> {
+    const [newProgram] = await db.insert(studyPrograms).values(program).returning();
+    return newProgram;
+  }
+
+  async updateStudyProgram(id: number, data: Partial<StudyProgram>): Promise<StudyProgram | undefined> {
+    const [updatedProgram] = await db
+      .update(studyPrograms)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(studyPrograms.id, id))
+      .returning();
+    return updatedProgram;
+  }
+
+  async getUserStudyPrograms(userId: number): Promise<(UserProgramProgress & { program: StudyProgram })[]> {
+    const result = await db
+      .select({
+        progress: userProgramProgress,
+        program: studyPrograms
+      })
+      .from(userProgramProgress)
+      .leftJoin(studyPrograms, eq(userProgramProgress.programId, studyPrograms.id))
+      .where(eq(userProgramProgress.userId, userId))
+      .orderBy(desc(userProgramProgress.startedAt));
+
+    return result.map(({ progress, program }) => ({
+      ...progress,
+      program: program as StudyProgram
+    })) as (UserProgramProgress & { program: StudyProgram })[];
+  }
+
+  async enrollUserInProgram(userId: number, programId: number): Promise<UserProgramProgress> {
+    const program = await this.getStudyProgram(programId);
+    if (!program) throw new Error('Program not found');
+
+    const totalHours = program.totalDurationWeeks * program.weeklyHours;
+
+    const [newProgress] = await db
+      .insert(userProgramProgress)
+      .values({
+        userId,
+        programId,
+        totalHours,
+        weeklyGoalHours: program.weeklyHours
+      })
+      .returning();
+
+    return newProgress;
+  }
+
+  async updateUserProgramProgress(userId: number, programId: number, data: Partial<UserProgramProgress>): Promise<UserProgramProgress | undefined> {
+    const [updatedProgress] = await db
+      .update(userProgramProgress)
+      .set({ ...data, lastAccessedAt: new Date() })
+      .where(and(
+        eq(userProgramProgress.userId, userId),
+        eq(userProgramProgress.programId, programId)
+      ))
+      .returning();
+    return updatedProgress;
+  }
+
+  // Program Schedule Operations
+  async getProgramSchedules(programId: number, week?: number): Promise<ProgramSchedule[]> {
+    let query = db
+      .select()
+      .from(programSchedules)
+      .where(eq(programSchedules.programId, programId));
+
+    if (week) {
+      query = query.where(eq(programSchedules.week, week));
+    }
+
+    return await query.orderBy(programSchedules.week, programSchedules.day, programSchedules.startTime);
+  }
+
+  async createProgramSchedule(schedule: InsertProgramScheduleType): Promise<ProgramSchedule> {
+    const [newSchedule] = await db.insert(programSchedules).values(schedule).returning();
+    return newSchedule;
+  }
+
+  async updateProgramSchedule(id: number, data: Partial<ProgramSchedule>): Promise<ProgramSchedule | undefined> {
+    const [updatedSchedule] = await db
+      .update(programSchedules)
+      .set(data)
+      .where(eq(programSchedules.id, id))
+      .returning();
+    return updatedSchedule;
+  }
+
+  // Study Session Operations
+  async getStudySessions(userId: number, filters?: { programId?: number; startDate?: Date; endDate?: Date }): Promise<StudySession[]> {
+    let query = db
+      .select()
+      .from(studySessions)
+      .where(eq(studySessions.userId, userId));
+
+    if (filters?.programId) {
+      query = query.where(eq(studySessions.programId, filters.programId));
+    }
+
+    return await query.orderBy(desc(studySessions.sessionDate));
+  }
+
+  async createStudySession(session: InsertStudySessionType): Promise<StudySession> {
+    const [newSession] = await db.insert(studySessions).values(session).returning();
+    return newSession;
+  }
+
+  async updateStudySession(id: number, data: Partial<StudySession>): Promise<StudySession | undefined> {
+    const [updatedSession] = await db
+      .update(studySessions)
+      .set(data)
+      .where(eq(studySessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async getUserWeeklyStats(userId: number, programId?: number): Promise<{ plannedHours: number; actualHours: number; adherenceScore: number }> {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    let query = db
+      .select({
+        totalDuration: sql<number>`SUM(duration_minutes) / 60.0`,
+        sessionCount: sql<number>`COUNT(*)`
+      })
+      .from(studySessions)
+      .where(and(
+        eq(studySessions.userId, userId),
+        sql`session_date >= ${oneWeekAgo}`
+      ));
+
+    if (programId) {
+      query = query.where(eq(studySessions.programId, programId));
+    }
+
+    const [result] = await query;
+    const actualHours = result?.totalDuration || 0;
+
+    // Get planned hours from user program progress
+    let plannedHours = 10; // default
+    if (programId) {
+      const progress = await db
+        .select({ weeklyGoalHours: userProgramProgress.weeklyGoalHours })
+        .from(userProgramProgress)
+        .where(and(
+          eq(userProgramProgress.userId, userId),
+          eq(userProgramProgress.programId, programId)
+        ))
+        .limit(1);
+      
+      plannedHours = progress[0]?.weeklyGoalHours || 10;
+    }
+
+    const adherenceScore = plannedHours > 0 ? Math.min(100, (actualHours / plannedHours) * 100) : 0;
+
+    return {
+      plannedHours,
+      actualHours,
+      adherenceScore: Math.round(adherenceScore * 100) / 100
+    };
   }
 }
 

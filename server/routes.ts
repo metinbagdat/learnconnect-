@@ -2,7 +2,20 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertCourseSchema, insertUserCourseSchema, insertAssignmentSchema, insertModuleSchema, insertLessonSchema, insertLearningPathSchema } from "@shared/schema";
+import { 
+  insertCourseSchema, 
+  insertUserCourseSchema, 
+  insertAssignmentSchema, 
+  insertModuleSchema, 
+  insertLessonSchema, 
+  insertLearningPathSchema,
+  insertMentorSchema,
+  insertUserMentorSchema,
+  insertStudyProgramSchema,
+  insertProgramScheduleSchema,
+  insertUserProgramProgressSchema,
+  insertStudySessionSchema
+} from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
 import { 
@@ -3039,6 +3052,343 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error generating new recommendations:", error);
       res.status(500).json({ message: "Failed to generate recommendations" });
+    }
+  });
+
+  // Mentor Management API Endpoints
+  
+  // Get all mentors with optional filtering
+  app.get("/api/mentors", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { isAiMentor, isActive, specialization } = req.query;
+      const filters: any = {};
+      
+      if (isAiMentor !== undefined) filters.isAiMentor = isAiMentor === 'true';
+      if (isActive !== undefined) filters.isActive = isActive === 'true';
+      if (specialization) filters.specialization = specialization as string;
+      
+      const mentors = await storage.getMentors(filters);
+      res.json(mentors);
+    } catch (error) {
+      console.error("Error fetching mentors:", error);
+      res.status(500).json({ message: "Failed to fetch mentors" });
+    }
+  });
+  
+  // Get user's assigned mentor
+  app.get("/api/user/mentor", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userMentor = await storage.getUserMentor(req.user.id);
+      if (!userMentor) {
+        // Auto-assign a mentor if none exists
+        const autoAssigned = await storage.autoAssignMentor(req.user.id);
+        const newUserMentor = await storage.getUserMentor(req.user.id);
+        return res.json(newUserMentor);
+      }
+      res.json(userMentor);
+    } catch (error) {
+      console.error("Error fetching user mentor:", error);
+      res.status(500).json({ message: "Failed to fetch mentor" });
+    }
+  });
+  
+  // Assign mentor to user
+  app.post("/api/user/mentor/assign", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { mentorId, preferredCommunication, communicationLanguage, notes } = req.body;
+      
+      if (!mentorId) {
+        return res.status(400).json({ message: "Mentor ID is required" });
+      }
+      
+      const assignment = await storage.assignMentorToUser(req.user.id, mentorId, {
+        preferredCommunication,
+        communicationLanguage,
+        notes
+      });
+      
+      const userMentor = await storage.getUserMentor(req.user.id);
+      res.json(userMentor);
+    } catch (error) {
+      console.error("Error assigning mentor:", error);
+      res.status(500).json({ message: "Failed to assign mentor" });
+    }
+  });
+  
+  // Create new mentor (admin/instructor only)
+  app.post("/api/mentors", async (req, res) => {
+    if (!req.isAuthenticated() || !["admin", "instructor"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    try {
+      const mentorData = insertMentorSchema.parse(req.body);
+      const newMentor = await storage.createMentor(mentorData);
+      res.status(201).json(newMentor);
+    } catch (error) {
+      console.error("Error creating mentor:", error);
+      res.status(500).json({ message: "Failed to create mentor" });
+    }
+  });
+  
+  // Study Program Management API Endpoints
+  
+  // Get all study programs
+  app.get("/api/study-programs", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { targetGroup, isActive } = req.query;
+      const filters: any = {};
+      
+      if (targetGroup) filters.targetGroup = targetGroup as string;
+      if (isActive !== undefined) filters.isActive = isActive === 'true';
+      
+      const programs = await storage.getStudyPrograms(filters);
+      res.json(programs);
+    } catch (error) {
+      console.error("Error fetching study programs:", error);
+      res.status(500).json({ message: "Failed to fetch study programs" });
+    }
+  });
+  
+  // Get user's enrolled programs
+  app.get("/api/user/study-programs", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const programs = await storage.getUserStudyPrograms(req.user.id);
+      res.json(programs);
+    } catch (error) {
+      console.error("Error fetching user study programs:", error);
+      res.status(500).json({ message: "Failed to fetch user study programs" });
+    }
+  });
+  
+  // Get specific study program with schedule
+  app.get("/api/study-programs/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const programId = parseInt(req.params.id);
+      const program = await storage.getStudyProgram(programId);
+      
+      if (!program) {
+        return res.status(404).json({ message: "Study program not found" });
+      }
+      
+      res.json(program);
+    } catch (error) {
+      console.error("Error fetching study program:", error);
+      res.status(500).json({ message: "Failed to fetch study program" });
+    }
+  });
+  
+  // Enroll user in study program
+  app.post("/api/study-programs/:id/enroll", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const programId = parseInt(req.params.id);
+      const enrollment = await storage.enrollUserInProgram(req.user.id, programId);
+      res.status(201).json(enrollment);
+    } catch (error) {
+      console.error("Error enrolling in study program:", error);
+      res.status(500).json({ message: "Failed to enroll in study program" });
+    }
+  });
+  
+  // Update user's program progress
+  app.put("/api/user/study-programs/:id/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const programId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedProgress = await storage.updateUserProgramProgress(
+        req.user.id, 
+        programId, 
+        updateData
+      );
+      
+      if (!updatedProgress) {
+        return res.status(404).json({ message: "Program enrollment not found" });
+      }
+      
+      res.json(updatedProgress);
+    } catch (error) {
+      console.error("Error updating program progress:", error);
+      res.status(500).json({ message: "Failed to update program progress" });
+    }
+  });
+  
+  // Create new study program (admin/instructor only)
+  app.post("/api/study-programs", async (req, res) => {
+    if (!req.isAuthenticated() || !["admin", "instructor"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    try {
+      const programData = insertStudyProgramSchema.parse({
+        ...req.body,
+        createdBy: req.user.id
+      });
+      
+      const newProgram = await storage.createStudyProgram(programData);
+      res.status(201).json(newProgram);
+    } catch (error) {
+      console.error("Error creating study program:", error);
+      res.status(500).json({ message: "Failed to create study program" });
+    }
+  });
+  
+  // Study Session Management API Endpoints
+  
+  // Get user's study sessions
+  app.get("/api/user/study-sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { programId, startDate, endDate } = req.query;
+      const filters: any = {};
+      
+      if (programId) filters.programId = parseInt(programId as string);
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      
+      const sessions = await storage.getStudySessions(req.user.id, filters);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching study sessions:", error);
+      res.status(500).json({ message: "Failed to fetch study sessions" });
+    }
+  });
+  
+  // Create study session
+  app.post("/api/user/study-sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const sessionData = insertStudySessionSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      const newSession = await storage.createStudySession(sessionData);
+      res.status(201).json(newSession);
+    } catch (error) {
+      console.error("Error creating study session:", error);
+      res.status(500).json({ message: "Failed to create study session" });
+    }
+  });
+  
+  // Update study session
+  app.put("/api/user/study-sessions/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const sessionId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedSession = await storage.updateStudySession(sessionId, updateData);
+      
+      if (!updatedSession) {
+        return res.status(404).json({ message: "Study session not found" });
+      }
+      
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error updating study session:", error);
+      res.status(500).json({ message: "Failed to update study session" });
+    }
+  });
+  
+  // Get user's weekly study statistics
+  app.get("/api/user/study-stats/weekly", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { programId } = req.query;
+      const programIdNum = programId ? parseInt(programId as string) : undefined;
+      
+      const stats = await storage.getUserWeeklyStats(req.user.id, programIdNum);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching weekly stats:", error);
+      res.status(500).json({ message: "Failed to fetch weekly stats" });
+    }
+  });
+  
+  // Program Schedule Management API Endpoints
+  
+  // Get program schedules
+  app.get("/api/study-programs/:id/schedules", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const programId = parseInt(req.params.id);
+      const { week } = req.query;
+      const weekNum = week ? parseInt(week as string) : undefined;
+      
+      const schedules = await storage.getProgramSchedules(programId, weekNum);
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching program schedules:", error);
+      res.status(500).json({ message: "Failed to fetch program schedules" });
+    }
+  });
+  
+  // Create program schedule (admin/instructor only)
+  app.post("/api/study-programs/:id/schedules", async (req, res) => {
+    if (!req.isAuthenticated() || !["admin", "instructor"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    try {
+      const programId = parseInt(req.params.id);
+      const scheduleData = insertProgramScheduleSchema.parse({
+        ...req.body,
+        programId
+      });
+      
+      const newSchedule = await storage.createProgramSchedule(scheduleData);
+      res.status(201).json(newSchedule);
+    } catch (error) {
+      console.error("Error creating program schedule:", error);
+      res.status(500).json({ message: "Failed to create program schedule" });
     }
   });
 

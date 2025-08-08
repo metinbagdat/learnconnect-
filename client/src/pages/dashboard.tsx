@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
-import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users } from "lucide-react";
+import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users, UserCheck, Clock, TrendingUp, Calendar } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 
 export default function Dashboard() {
@@ -45,6 +45,30 @@ export default function Dashboard() {
   // Fetch user level for gamification
   const { data: userLevel = {} } = useQuery<any>({
     queryKey: ["/api/user/level"],
+    enabled: !!user,
+  });
+
+  // Fetch user's assigned mentor
+  const { data: userMentor } = useQuery<any>({
+    queryKey: ["/api/user/mentor"],
+    enabled: !!user,
+  });
+
+  // Fetch user's study programs
+  const { data: studyPrograms = [] } = useQuery<any[]>({
+    queryKey: ["/api/user/study-programs"],
+    enabled: !!user,
+  });
+
+  // Fetch weekly study statistics
+  const { data: weeklyStats = {} } = useQuery<any>({
+    queryKey: ["/api/user/study-stats/weekly"],
+    enabled: !!user,
+  });
+
+  // Fetch recent study sessions
+  const { data: recentSessions = [] } = useQuery<any[]>({
+    queryKey: ["/api/user/study-sessions"],
     enabled: !!user,
   });
 
@@ -389,6 +413,169 @@ export default function Dashboard() {
               </div>
             </div>
             
+            {/* Mentor and Program Management Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Mentor Information Card */}
+                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-blue-900">
+                      {t('yourMentor') || 'Your Mentor'}
+                    </CardTitle>
+                    <UserCheck className="h-4 w-4 text-blue-600" />
+                  </CardHeader>
+                  <CardContent>
+                    {userMentor ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {userMentor.mentor?.user?.displayName?.charAt(0) || 
+                             (userMentor.mentor?.isAiMentor ? 'AI' : 'M')}
+                          </div>
+                          <div>
+                            <p className="font-medium text-blue-900">
+                              {userMentor.mentor?.user?.displayName || 'AI Learning Assistant'}
+                            </p>
+                            <p className="text-xs text-blue-600">
+                              {userMentor.mentor?.isAiMentor ? 
+                                (t('aiMentor') || 'AI Mentor') : 
+                                (t('humanMentor') || 'Human Mentor')
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        {userMentor.mentor?.specialization && (
+                          <div>
+                            <p className="text-xs text-blue-600 font-medium mb-1">
+                              {t('specialization') || 'Specialization'}:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {userMentor.mentor.specialization.map((spec: string, index: number) => (
+                                <Badge key={index} variant="outline" className="text-xs bg-blue-100 text-blue-700">
+                                  {spec}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-center text-xs text-blue-600">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {t('assignedOn') || 'Assigned on'}: {new Date(userMentor.assignedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <UserCheck className="h-8 w-8 mx-auto text-blue-400 mb-2" />
+                        <p className="text-blue-700 font-medium">
+                          {t('assigningMentor') || 'Assigning your mentor...'}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {t('mentorWillBeAssigned') || 'A mentor will be assigned to help you succeed.'}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Weekly Study Statistics Card */}
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-green-900">
+                      {t('weeklyProgress') || 'Weekly Progress'}
+                    </CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-green-700">
+                          {t('studyHours') || 'Study Hours'}
+                        </span>
+                        <span className="font-semibold text-green-900">
+                          {Math.round(weeklyStats.actualHours || 0)}h / {weeklyStats.plannedHours || 10}h
+                        </span>
+                      </div>
+                      
+                      <div className="w-full bg-green-100 rounded-full h-2">
+                        <div 
+                          className="bg-green-600 h-2 rounded-full transition-all duration-500" 
+                          style={{
+                            width: `${Math.min(100, ((weeklyStats.actualHours || 0) / (weeklyStats.plannedHours || 10)) * 100)}%`
+                          }}
+                        ></div>
+                      </div>
+                      
+                      <div className="flex justify-between text-xs">
+                        <span className="text-green-600">
+                          {t('adherenceScore') || 'Adherence'}: {Math.round(weeklyStats.adherenceScore || 100)}%
+                        </span>
+                        <span className="text-green-600">
+                          {weeklyStats.actualHours >= weeklyStats.plannedHours ? 
+                            (t('targetAchieved') || 'Target Achieved! 🎉') :
+                            (t('keepGoing') || 'Keep going! 💪')
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Study Programs Section */}
+              {studyPrograms.length > 0 && (
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calendar className="h-5 w-5 mr-2" />
+                      {t('studyPrograms') || 'Study Programs'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {studyPrograms.slice(0, 2).map((program: any) => (
+                        <div key={program.id} className="p-4 bg-neutral-50 rounded-lg border">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-medium text-neutral-900">
+                              {program.program?.title || 'Study Program'}
+                            </h3>
+                            <Badge variant="outline">
+                              {t('week') || 'Week'} {program.currentWeek || 1}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-neutral-600 mb-3">
+                            {program.program?.description}
+                          </p>
+                          <div className="space-y-2">
+                            <div className="w-full bg-neutral-200 rounded-full h-2">
+                              <div 
+                                className="bg-primary h-2 rounded-full" 
+                                style={{ width: `${program.progress || 0}%` }}
+                              ></div>
+                            </div>
+                            <div className="flex justify-between text-xs text-neutral-600">
+                              <span>{program.progress || 0}% {t('complete') || 'complete'}</span>
+                              <span>
+                                {program.completedHours || 0}h / {program.totalHours || 0}h
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {studyPrograms.length > 2 && (
+                      <div className="mt-4 text-center">
+                        <Button variant="outline" size="sm" onClick={() => navigate('/programs')}>
+                          {t('viewAllPrograms') || 'View All Programs'}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
             {/* Continue Learning Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
               <div className="mb-6">

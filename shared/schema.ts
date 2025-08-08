@@ -529,9 +529,155 @@ export const insertUserLevelSchema = createInsertSchema(userLevels).omit({
   id: true 
 });
 
+// Mentor System Tables
+export const mentors = pgTable("mentors", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id), // Teacher or AI system user
+  isAiMentor: boolean("is_ai_mentor").default(false),
+  specialization: text("specialization").array().default([]), // Subject areas of expertise
+  languages: text("languages").array().default(["en"]), // Languages supported
+  availabilitySchedule: jsonb("availability_schedule"), // Weekly availability for teachers
+  maxStudents: integer("max_students").default(50), // Maximum students this mentor can handle
+  rating: numeric("rating", { precision: 3, scale: 2 }).default("5.0"), // Mentor rating
+  bio: text("bio"), // Mentor biography
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userMentors = pgTable("user_mentors", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  mentorId: integer("mentor_id").notNull().references(() => mentors.id),
+  assignedAt: timestamp("assigned_at").notNull().defaultNow(),
+  isActive: boolean("is_active").default(true),
+  preferredCommunication: text("preferred_communication").default("chat"), // chat, video, email
+  communicationLanguage: text("communication_language").default("en"),
+  notes: text("notes"), // Special notes about the mentorship
+});
+
+// Study Program Management Tables
+export const studyPrograms = pgTable("study_programs", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  targetGroup: text("target_group").notNull(), // "all", "beginners", "intermediate", "advanced"
+  courseIds: integer("course_ids").array().notNull(), // Array of course IDs in this program
+  totalDurationWeeks: integer("total_duration_weeks").notNull(),
+  weeklyHours: integer("weekly_hours").notNull().default(10), // Recommended weekly study hours
+  isAiGenerated: boolean("is_ai_generated").default(false),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Mentor system insert schemas
+export const insertMentorSchema = createInsertSchema(mentors).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserMentorSchema = createInsertSchema(userMentors).omit({ 
+  id: true, 
+  assignedAt: true 
+});
+
+// Study program insert schemas will be defined after table definitions
+
+export const programSchedules = pgTable("program_schedules", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id").notNull().references(() => studyPrograms.id),
+  week: integer("week").notNull(), // Week number (1, 2, 3...)
+  day: integer("day").notNull(), // Day of week (1=Monday, 7=Sunday)
+  startTime: text("start_time").notNull(), // "09:00" format
+  endTime: text("end_time").notNull(), // "10:30" format
+  courseId: integer("course_id").references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+  activityType: text("activity_type").notNull().default("lesson"), // lesson, assignment, review, break
+  title: text("title").notNull(),
+  description: text("description"),
+  resources: jsonb("resources").default([]), // Additional resources for this time slot
+});
+
+export const userProgramProgress = pgTable("user_program_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  programId: integer("program_id").notNull().references(() => studyPrograms.id),
+  currentWeek: integer("current_week").default(1),
+  completedHours: integer("completed_hours").default(0),
+  totalHours: integer("total_hours").notNull(),
+  progress: integer("progress").default(0), // 0-100 percentage
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  completedAt: timestamp("completed_at"),
+  status: text("status").default("active"), // active, paused, completed, dropped
+  weeklyGoalHours: integer("weekly_goal_hours").default(10),
+  actualWeeklyHours: integer("actual_weekly_hours").default(0),
+  adherenceScore: numeric("adherence_score", { precision: 3, scale: 2 }).default("100.0"), // How well user follows schedule
+});
+
+export const studySessions = pgTable("study_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  programId: integer("program_id").references(() => studyPrograms.id),
+  scheduleId: integer("schedule_id").references(() => programSchedules.id),
+  courseId: integer("course_id").references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+  sessionDate: date("session_date").notNull(),
+  plannedStartTime: text("planned_start_time"), // "09:00"
+  actualStartTime: timestamp("actual_start_time"),
+  plannedEndTime: text("planned_end_time"), // "10:30"
+  actualEndTime: timestamp("actual_end_time"),
+  durationMinutes: integer("duration_minutes").default(0),
+  wasPlanned: boolean("was_planned").default(true), // Was this session part of the schedule?
+  completionRate: integer("completion_rate").default(0), // 0-100 how much of planned content was completed
+  focusScore: integer("focus_score"), // Self-reported focus level 1-5
+  difficultyScore: integer("difficulty_score"), // Self-reported difficulty 1-5
+  notes: text("notes"), // User notes about the session
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Study program insert schemas (after table definitions)
+export const insertStudyProgramSchema = createInsertSchema(studyPrograms).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertProgramScheduleSchema = createInsertSchema(programSchedules).omit({ 
+  id: true 
+});
+
+export const insertUserProgramProgressSchema = createInsertSchema(userProgramProgress).omit({ 
+  id: true, 
+  startedAt: true, 
+  lastAccessedAt: true, 
+  completedAt: true 
+});
+
+export const insertStudySessionSchema = createInsertSchema(studySessions).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type Mentor = typeof mentors.$inferSelect;
+export type UserMentor = typeof userMentors.$inferSelect;
+export type StudyProgram = typeof studyPrograms.$inferSelect;
+export type ProgramSchedule = typeof programSchedules.$inferSelect;
+export type UserProgramProgress = typeof userProgramProgress.$inferSelect;
+export type StudySession = typeof studySessions.$inferSelect;
+
+// Insert Types for new tables
+export type InsertMentor = z.infer<typeof insertMentorSchema>;
+export type InsertUserMentor = z.infer<typeof insertUserMentorSchema>;
+export type InsertStudyProgram = z.infer<typeof insertStudyProgramSchema>;
+export type InsertProgramSchedule = z.infer<typeof insertProgramScheduleSchema>;
+export type InsertUserProgramProgress = z.infer<typeof insertUserProgramProgressSchema>;
+export type InsertStudySession = z.infer<typeof insertStudySessionSchema>;
+
 export type Course = typeof courses.$inferSelect;
 export type Module = typeof modules.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;

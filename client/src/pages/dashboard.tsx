@@ -12,14 +12,17 @@ import { CourseRecommendations } from "@/components/ui/course-recommendations";
 import { UserInterests } from "@/components/ui/user-interests";
 import { UserLevelCard } from "@/components/challenges/user-level-card";
 import { InteractiveProgressBar } from "@/components/gamification/interactive-progress-bar";
+import { PlayfulLearningAnimations, FloatingMascot, AchievementCelebration as AchievementCelebrationComponent, LearningMascot, AchievementCelebration as AchievementType } from "@/components/animations/playful-learning-animations";
+import { AnimatedProgressBubbles, ProgressBubbleData } from "@/components/progress/animated-progress-bubbles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
-import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users, UserCheck, Clock, TrendingUp, Calendar } from "lucide-react";
+import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users, UserCheck, Clock, TrendingUp, Calendar, Sparkles, Star, Crown, Rocket } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
+import { useState, useEffect } from "react";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -27,6 +30,20 @@ export default function Dashboard() {
   const { triggerSkillChallenge } = useSkillChallenge();
   const { showXpGain, celebrateLevelUp, checkAndUnlockAchievements } = useGamificationTracker();
   const [, navigate] = useLocation();
+  
+  // Playful animations state
+  const [mascot, setMascot] = useState<LearningMascot>({
+    id: 'dashboard-buddy',
+    name: 'Learning Buddy',
+    mood: 'happy',
+    position: { x: window.innerWidth - 200, y: window.innerHeight - 200 },
+    size: 'medium',
+    animation: 'float'
+  });
+  
+  const [showAchievement, setShowAchievement] = useState(false);
+  const [currentAchievement, setCurrentAchievement] = useState<AchievementType | null>(null);
+  const [progressBubbles, setProgressBubbles] = useState<ProgressBubbleData[]>([]);
   
   const { data: userCourses = [], isLoading: coursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
     queryKey: ["/api/user/courses"],
@@ -103,8 +120,156 @@ export default function Dashboard() {
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     })
     .slice(0, 3);
+
+  // Generate progress bubbles from user data
+  useEffect(() => {
+    if (user && userCourses.length > 0) {
+      const bubbles: ProgressBubbleData[] = [
+        {
+          id: 'courses_progress',
+          title: 'Courses Progress',
+          category: 'course',
+          progress: userCourses.length > 0 ? (completedCourses / userCourses.length) * 100 : 0,
+          maxValue: userCourses.length,
+          currentValue: completedCourses,
+          color: 'blue',
+          icon: 'BookOpen',
+          description: 'Overall course completion progress',
+          isActive: coursesInProgress > 0,
+          animationSpeed: 1.2,
+          metadata: { priority: 'high' }
+        },
+        {
+          id: 'assignments_progress',
+          title: 'Assignments',
+          category: 'skill',
+          progress: pendingAssignments > 0 ? 75 : 100,
+          maxValue: assignments.length || 1,
+          currentValue: Math.max(0, assignments.length - pendingAssignments),
+          color: 'purple',
+          icon: 'Target',
+          description: 'Assignment completion status',
+          isActive: pendingAssignments > 0,
+          animationSpeed: 1.5,
+          metadata: { priority: 'medium' }
+        },
+        {
+          id: 'achievements_earned',
+          title: 'Achievements',
+          category: 'achievement',
+          progress: achievementsCount > 0 ? 100 : 0,
+          maxValue: Math.max(achievementsCount, 1),
+          currentValue: achievementsCount,
+          color: 'gold',
+          icon: 'Trophy',
+          description: 'Badges and achievements earned',
+          isActive: false,
+          animationSpeed: 1.0,
+          metadata: { priority: 'low' }
+        }
+      ];
+      setProgressBubbles(bubbles);
+    }
+  }, [userCourses, assignments, userAchievements, completedCourses, coursesInProgress, pendingAssignments, achievementsCount]);
+
+  // Handle achievement celebrations
+  const triggerCelebration = (type: 'course' | 'assignment' | 'achievement') => {
+    const achievements = {
+      course: {
+        id: 'course_completed',
+        title: 'Course Completed! 🎓',
+        description: 'Congratulations on completing another course!',
+        type: 'completion' as const,
+        rarity: 'rare' as const,
+        icon: 'Trophy',
+        color: 'blue',
+        effects: ['confetti', 'sparkles']
+      },
+      assignment: {
+        id: 'assignment_done',
+        title: 'Assignment Submitted! ✅',
+        description: 'Great work on completing your assignment!',
+        type: 'milestone' as const,
+        rarity: 'common' as const,
+        icon: 'Star',
+        color: 'green',
+        effects: ['sparkles']
+      },
+      achievement: {
+        id: 'new_achievement',
+        title: 'New Achievement Unlocked! 🏆',
+        description: 'You have earned a new badge for your efforts!',
+        type: 'mastery' as const,
+        rarity: 'epic' as const,
+        icon: 'Crown',
+        color: 'gold',
+        effects: ['confetti', 'fireworks', 'glow']
+      }
+    } as const;
+    
+    setCurrentAchievement(achievements[type]);
+    setShowAchievement(true);
+    setMascot(prev => ({ ...prev, mood: 'celebrating', animation: 'dance' }));
+  };
+
+  const handleCelebrationComplete = () => {
+    setShowAchievement(false);
+    setCurrentAchievement(null);
+    setMascot(prev => ({ ...prev, mood: 'happy', animation: 'float' }));
+  };
+
+  const handleMascotInteract = () => {
+    const messages = [
+      `Welcome back, ${user?.displayName?.split(' ')[0] || 'Student'}! 🌟`,
+      "Keep up the great learning! 💪",
+      "Ready for today's challenge? 🚀",
+      "You're making amazing progress! 👍",
+      "Don't forget to check your courses! 📚"
+    ];
+    
+    setMascot(prev => ({
+      ...prev,
+      message: messages[Math.floor(Math.random() * messages.length)],
+      mood: 'encouraging',
+      animation: 'wave'
+    }));
+    
+    setTimeout(() => {
+      setMascot(prev => ({ ...prev, message: undefined, mood: 'happy', animation: 'float' }));
+    }, 4000);
+  };
+
+  // Update mascot position on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setMascot(prev => ({
+        ...prev,
+        position: { x: window.innerWidth - 200, y: window.innerHeight - 200 }
+      }));
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Show celebration when milestones are reached
+  useEffect(() => {
+    if (completedCourses > 0 && Math.random() > 0.7) {
+      setTimeout(() => triggerCelebration('course'), 2000);
+    }
+  }, [completedCourses]);
   
   return (
+    <PlayfulLearningAnimations
+      config={{
+        enableParticles: true,
+        enableMascot: true,
+        enableSoundEffects: false,
+        animationSpeed: 1,
+        particleCount: 15,
+        celebrationDuration: 3000
+      }}
+    >
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
@@ -158,17 +323,30 @@ export default function Dashboard() {
                   Hey {user?.displayName?.split(' ')[0] || 'Student'}! Check your learning progress below - click any card to explore more or continue where you left off.
                 </p>
               </div>
-                <Button 
-                  variant="outline" 
-                  className="flex items-center bg-primary/10 text-primary hover:text-primary-600 hover:bg-primary/20"
-                  onClick={() => {
-                    console.log("Daily Challenge button clicked");
-                    triggerSkillChallenge("daily");
-                  }}
-                >
-                  <Zap className="mr-1 h-4 w-4" />
-                  {t('dailyChallenge')}
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center bg-primary/10 text-primary hover:text-primary-600 hover:bg-primary/20"
+                    onClick={() => {
+                      console.log("Daily Challenge button clicked");
+                      triggerSkillChallenge("daily");
+                      setMascot(prev => ({ ...prev, mood: 'excited', animation: 'bounce', message: 'Challenge time! 🎯' }));
+                    }}
+                  >
+                    <Zap className="mr-1 h-4 w-4" />
+                    {t('dailyChallenge')}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center bg-purple-50 text-purple-600 hover:bg-purple-100"
+                    onClick={() => navigate('/playful-animations')}
+                  >
+                    <Sparkles className="mr-1 h-4 w-4" />
+                    Animations Demo
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <div onClick={() => navigate('/courses')} className="cursor-pointer">
@@ -642,7 +820,7 @@ export default function Dashboard() {
             
             {/* Three-column layout */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* AI Assistant */}
+              {/* User Interests */}
               <div className="md:col-span-1">
                 <UserInterests />
               </div>
@@ -661,6 +839,35 @@ export default function Dashboard() {
                 />
               </div>
             </div>
+            
+            {/* Playful Progress Bubbles */}
+            {progressBubbles.length > 0 && (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-neutral-900 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    Learning Progress Visualization
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Interactive view of your learning journey with animated progress bubbles
+                  </p>
+                </div>
+                <AnimatedProgressBubbles
+                  bubbles={progressBubbles}
+                  onBubbleClick={(bubble) => {
+                    if (bubble.category === 'course') {
+                      navigate('/courses');
+                    } else if (bubble.category === 'skill') {
+                      navigate('/assignments');
+                    } else {
+                      triggerCelebration('achievement');
+                    }
+                  }}
+                  animated={true}
+                  showControls={false}
+                />
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -669,6 +876,22 @@ export default function Dashboard() {
       <div className="md:hidden">
         <MobileNav />
       </div>
+      
+      {/* Floating Mascot */}
+      <FloatingMascot 
+        mascot={mascot} 
+        onInteract={handleMascotInteract}
+      />
+      
+      {/* Achievement Celebrations */}
+      {currentAchievement && (
+        <AchievementCelebrationComponent
+          achievement={currentAchievement}
+          isVisible={showAchievement}
+          onComplete={handleCelebrationComplete}
+        />
+      )}
     </div>
+    </PlayfulLearningAnimations>
   );
 }

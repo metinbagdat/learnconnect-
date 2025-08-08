@@ -28,6 +28,7 @@ import AdaptiveLearningDemo from "@/pages/adaptive-learning-demo";
 import AdvancedAdaptiveLearning from "@/pages/advanced-adaptive-learning";
 import EmojiMilestonesDemo from "@/pages/emoji-milestones-demo";
 import AnimatedProgressDemo from "@/pages/animated-progress-demo";
+import PlayfulAnimationsDemo from "@/pages/playful-animations-demo";
 
 function Router() {
   return (
@@ -58,6 +59,7 @@ function Router() {
       <ProtectedRoute path="/advanced-adaptive" component={AdvancedAdaptiveLearning} />
       <ProtectedRoute path="/emoji-milestones" component={EmojiMilestonesDemo} />
       <ProtectedRoute path="/animated-progress" component={AnimatedProgressDemo} />
+      <ProtectedRoute path="/playful-animations" component={PlayfulAnimationsDemo} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

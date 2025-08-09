@@ -33,6 +33,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { seedChallenges } from "./seed-challenges";
 import { seedSkillChallenges } from "./seed-skill-challenges";
 import { generateExamLearningPath, saveExamLearningPath, generatePredefinedExamPaths } from "./entrance-exam-service";
+import { getSuggestions } from "./suggestion-service";
 import { generateAdaptiveLearningPath, updateStepProgress, generateNewRecommendations } from "./adaptive-learning-service";
 import { 
   detectLearningStyle,
@@ -1891,87 +1892,284 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     try {
       const type = req.query.type as string;
       const query = req.query.query as string || '';
+      const language = req.query.language as string || 'en'; // Default to English
       
-      // Load suggestions based on the requested type
-      let suggestions: string[] = [];
-      
-      switch (type) {
-        case 'goals':
-          suggestions = [
-            "Become a Full Stack Developer",
-            "Master Data Science",
-            "Learn Mobile App Development",
-            "Prepare for College Entrance Exams",
-            "Improve Coding Skills",
-            "Learn UI/UX Design",
-            "Master Mathematics",
-            "Prepare for YKS Exam",
-            "Learn Machine Learning",
-            "Develop Game Design Skills"
-          ];
-          break;
-          
-        case 'fields':
-          suggestions = [
-            "Computer Science",
-            "Mathematics",
-            "Data Science",
-            "Web Development",
-            "Mobile Development",
-            "UI/UX Design",
-            "Game Development",
-            "Artificial Intelligence",
-            "Software Engineering",
-            "College Preparation",
-            "YKS Exam Preparation",
-            "Science and Research"
-          ];
-          break;
-          
-        case 'courseTopics':
-          suggestions = [
-            "JavaScript Fundamentals",
-            "Advanced Mathematics",
-            "React Development",
-            "Database Design",
-            "Python Programming",
-            "Mobile App Development",
-            "Data Structures and Algorithms",
-            "Machine Learning Basics",
-            "User Interface Design",
-            "TYT Mathematics",
-            "AYT Physics",
-            "YDT English Preparation",
-            "Node.js Backend Development"
-          ];
-          break;
-          
-        case 'timeframes':
-          suggestions = [
-            "3 months",
-            "6 months",
-            "1 year",
-            "18 months",
-            "2 years"
-          ];
-          break;
-          
-        default:
-          return res.status(400).json({ message: "Invalid suggestion type" });
+      if (!type) {
+        return res.status(400).json({ message: "Type parameter is required" });
       }
       
-      // Filter suggestions by query if provided
-      if (query) {
-        const lowerQuery = query.toLowerCase();
-        suggestions = suggestions.filter(item => 
-          item.toLowerCase().includes(lowerQuery)
-        );
+      // Use the suggestion service with language support
+      const suggestions = getSuggestions(type, language, query);
+      
+      if (suggestions.length === 0 && !query) {
+        return res.status(400).json({ message: "Invalid suggestion type" });
       }
       
       res.json(suggestions);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
       res.status(500).json({ message: "Failed to fetch suggestions" });
+    }
+  });
+
+  // Learning Paths API endpoints
+  app.get("/api/learning-paths", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const learningPaths = await storage.getUserLearningPaths(req.user.id);
+      res.json(learningPaths);
+    } catch (error) {
+      console.error("Error getting learning paths:", error);
+      res.status(500).json({ message: "Failed to get learning paths" });
+    }
+  });
+
+  app.post("/api/learning-paths", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const pathData = {
+        ...req.body,
+        createdBy: req.user.id,
+        userId: req.user.id
+      };
+      
+      const learningPath = await storage.createLearningPath(pathData);
+      res.status(201).json(learningPath);
+    } catch (error) {
+      console.error("Error creating learning path:", error);
+      res.status(500).json({ message: "Failed to create learning path" });
+    }
+  });
+
+  app.get("/api/learning-paths/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const pathId = parseInt(req.params.id);
+      const learningPath = await storage.getLearningPath(pathId);
+      
+      if (!learningPath) {
+        return res.status(404).json({ message: "Learning path not found" });
+      }
+
+      // Check if user owns this path or if it's public
+      if (learningPath.userId !== req.user.id && !learningPath.isPublic) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json(learningPath);
+    } catch (error) {
+      console.error("Error getting learning path:", error);
+      res.status(500).json({ message: "Failed to get learning path" });
+    }
+  });
+
+  app.put("/api/learning-paths/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const pathId = parseInt(req.params.id);
+      const learningPath = await storage.getLearningPath(pathId);
+      
+      if (!learningPath || learningPath.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedPath = await storage.updateLearningPath(pathId, req.body);
+      res.json(updatedPath);
+    } catch (error) {
+      console.error("Error updating learning path:", error);
+      res.status(500).json({ message: "Failed to update learning path" });
+    }
+  });
+
+  app.delete("/api/learning-paths/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const pathId = parseInt(req.params.id);
+      const learningPath = await storage.getLearningPath(pathId);
+      
+      if (!learningPath || learningPath.userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteLearningPath(pathId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting learning path:", error);
+      res.status(500).json({ message: "Failed to delete learning path" });
+    }
+  });
+
+  // Student Control Panel endpoints
+  app.get("/api/student/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const userId = req.user.id;
+      const stats = {
+        totalHours: 0,
+        coursesCompleted: 0,
+        currentStreak: 0,
+        averageGrade: 0,
+        weeklyProgress: [2, 4, 1, 6, 3, 5, 7] // Mock data for now
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting student stats:", error);
+      res.status(500).json({ message: "Failed to get student stats" });
+    }
+  });
+
+  app.get("/api/assignments/upcoming", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      // Return mock data for now
+      const assignments = [];
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error getting upcoming assignments:", error);
+      res.status(500).json({ message: "Failed to get upcoming assignments" });
+    }
+  });
+
+  // Mentor Control Panel endpoints
+  app.get("/api/mentor/students", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check if user is mentor/instructor
+    if (!["instructor", "mentor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      // Return mock student data for now
+      const students = [
+        {
+          id: 1,
+          displayName: "Alex Johnson",
+          username: "alex.j",
+          coursesEnrolled: 3,
+          coursesCompleted: 2,
+          averageGrade: 85,
+          lastActivity: new Date().toISOString(),
+          currentStreak: 5,
+          totalStudyHours: 45
+        },
+        {
+          id: 2,
+          displayName: "Maria Garcia",
+          username: "maria.g",
+          coursesEnrolled: 2,
+          coursesCompleted: 1,
+          averageGrade: 92,
+          lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          currentStreak: 12,
+          totalStudyHours: 38
+        }
+      ];
+      res.json(students);
+    } catch (error) {
+      console.error("Error getting mentor students:", error);
+      res.status(500).json({ message: "Failed to get mentor students" });
+    }
+  });
+
+  app.get("/api/mentor/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!["instructor", "mentor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const stats = {
+        totalStudents: 2,
+        activeStudents: 2,
+        averageGrade: 88,
+        totalHoursThisWeek: 83,
+        completionRate: 75
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting mentor stats:", error);
+      res.status(500).json({ message: "Failed to get mentor stats" });
+    }
+  });
+
+  app.get("/api/mentor/recent-activities", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!["instructor", "mentor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      // Return mock activity data for now
+      const activities = [
+        {
+          id: 1,
+          studentName: "Alex Johnson",
+          description: "Completed lesson: Introduction to React",
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          studentName: "Maria Garcia",
+          description: "Submitted assignment: JavaScript Fundamentals",
+          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+      res.json(activities);
+    } catch (error) {
+      console.error("Error getting recent activities:", error);
+      res.status(500).json({ message: "Failed to get recent activities" });
+    }
+  });
+
+  app.post("/api/mentor/students/:studentId/message", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!["instructor", "mentor", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const { message } = req.body;
+      
+      // In a real implementation, this would send a message to the student
+      // For now, just return success
+      res.json({ success: true, message: "Message sent successfully" });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
     }
   });
 

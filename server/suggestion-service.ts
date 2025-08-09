@@ -1,7 +1,7 @@
 // Suggestion service to provide recommendations for different aspects of the platform
 // This helps create a more guided experience for users
 
-// Goals suggestions
+// Goals suggestions - English
 export const goalSuggestions = [
   "Become a Full Stack Developer",
   "Master Data Science",
@@ -15,7 +15,21 @@ export const goalSuggestions = [
   "Develop Game Design Skills"
 ];
 
-// Fields/career suggestions
+// Goals suggestions - Turkish
+export const goalSuggestionsTr = [
+  "Tam Yığın Geliştirici Ol",
+  "Veri Bilimini Öğren",
+  "Mobil Uygulama Geliştirmeyi Öğren",
+  "Üniversite Sınavlarına Hazırlan",
+  "Kodlama Becerilerini Geliştir",
+  "UI/UX Tasarım Öğren",
+  "Matematiği Öğren",
+  "YKS Sınavına Hazırlan",
+  "Makine Öğrenmesini Öğren",
+  "Oyun Tasarımı Becerilerini Geliştir"
+];
+
+// Fields/career suggestions - English
 export const fieldSuggestions = [
   "Computer Science",
   "Mathematics",
@@ -31,7 +45,23 @@ export const fieldSuggestions = [
   "Science and Research"
 ];
 
-// Course topic suggestions
+// Fields/career suggestions - Turkish
+export const fieldSuggestionsTr = [
+  "Bilgisayar Bilimleri",
+  "Matematik",
+  "Veri Bilimi",
+  "Web Geliştirme",
+  "Mobil Geliştirme",
+  "UI/UX Tasarım",
+  "Oyun Geliştirme",
+  "Yapay Zeka",
+  "Yazılım Mühendisliği",
+  "Üniversite Hazırlığı",
+  "YKS Sınav Hazırlığı",
+  "Bilim ve Araştırma"
+];
+
+// Course topic suggestions - English
 export const topicSuggestions = [
   "JavaScript Fundamentals",
   "Advanced Mathematics",
@@ -48,7 +78,24 @@ export const topicSuggestions = [
   "Node.js Backend Development"
 ];
 
-// Timeframe suggestions for learning paths
+// Course topic suggestions - Turkish
+export const topicSuggestionsTr = [
+  "JavaScript Temelleri",
+  "İleri Matematik",
+  "React Geliştirme",
+  "Veritabanı Tasarımı",
+  "Python Programlama",
+  "Mobil Uygulama Geliştirme",
+  "Veri Yapıları ve Algoritmalar",
+  "Makine Öğrenmesi Temelleri",
+  "Kullanıcı Arayüzü Tasarımı",
+  "TYT Matematik",
+  "AYT Fizik",
+  "YDT İngilizce Hazırlığı",
+  "Node.js Backend Geliştirme"
+];
+
+// Timeframe suggestions for learning paths - English
 export const timeframeSuggestions = [
   "3 months",
   "6 months",
@@ -57,7 +104,16 @@ export const timeframeSuggestions = [
   "2 years"
 ];
 
-// Difficulty level suggestions
+// Timeframe suggestions for learning paths - Turkish
+export const timeframeSuggestionsTr = [
+  "3 ay",
+  "6 ay",
+  "1 yıl",
+  "18 ay",
+  "2 yıl"
+];
+
+// Difficulty level suggestions - English
 export const difficultyLevelSuggestions = [
   "Beginner",
   "Intermediate",
@@ -65,25 +121,33 @@ export const difficultyLevelSuggestions = [
   "Expert"
 ];
 
-// Get suggestions based on type and optional query filter
-export function getSuggestions(type: string, query?: string): string[] {
+// Difficulty level suggestions - Turkish
+export const difficultyLevelSuggestionsTr = [
+  "Başlangıç",
+  "Orta",
+  "İleri",
+  "Uzman"
+];
+
+// Get suggestions based on type, language and optional query filter
+export function getSuggestions(type: string, language: string = 'en', query?: string): string[] {
   let suggestions: string[] = [];
   
   switch (type) {
     case 'goals':
-      suggestions = goalSuggestions;
+      suggestions = language === 'tr' ? goalSuggestionsTr : goalSuggestions;
       break;
     case 'fields':
-      suggestions = fieldSuggestions;
+      suggestions = language === 'tr' ? fieldSuggestionsTr : fieldSuggestions;
       break;
     case 'courseTopics':
-      suggestions = topicSuggestions;
+      suggestions = language === 'tr' ? topicSuggestionsTr : topicSuggestions;
       break;
     case 'timeframes':
-      suggestions = timeframeSuggestions;
+      suggestions = language === 'tr' ? timeframeSuggestionsTr : timeframeSuggestions;
       break;
     case 'difficultyLevels':
-      suggestions = difficultyLevelSuggestions;
+      suggestions = language === 'tr' ? difficultyLevelSuggestionsTr : difficultyLevelSuggestions;
       break;
     default:
       return [];

@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/contexts/language-context";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
 import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine, Globe } from "lucide-react";
 import { Loader2 } from "lucide-react";

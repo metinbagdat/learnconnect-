@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Award, Star, Lock, CheckCircle, Trophy, Target, Users, BookOpen, Flame } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 

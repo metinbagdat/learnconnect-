@@ -1,5 +1,6 @@
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
+import { LanguageProvider } from "@/contexts/language-context";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import Dashboard from "@/pages/dashboard";
@@ -29,6 +30,8 @@ import AdvancedAdaptiveLearning from "@/pages/advanced-adaptive-learning";
 import EmojiMilestonesDemo from "@/pages/emoji-milestones-demo";
 import AnimatedProgressDemo from "@/pages/animated-progress-demo";
 import PlayfulAnimationsDemo from "@/pages/playful-animations-demo";
+import StudentControlPanel from "@/pages/student-control-panel";
+import MentorControlPanel from "@/pages/mentor-control-panel";
 
 function Router() {
   return (
@@ -60,13 +63,14 @@ function Router() {
       <ProtectedRoute path="/emoji-milestones" component={EmojiMilestonesDemo} />
       <ProtectedRoute path="/animated-progress" component={AnimatedProgressDemo} />
       <ProtectedRoute path="/playful-animations" component={PlayfulAnimationsDemo} />
+      <ProtectedRoute path="/student-control-panel" component={StudentControlPanel} />
+      <ProtectedRoute path="/mentor-control-panel" component={MentorControlPanel} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-import { LanguageProvider } from "./hooks/use-language";
 import { AuthProvider } from "./hooks/use-auth";
 import { SkillChallengeProvider } from "./hooks/use-skill-challenge";
 import { GamificationProvider } from "./hooks/use-gamification-tracker";

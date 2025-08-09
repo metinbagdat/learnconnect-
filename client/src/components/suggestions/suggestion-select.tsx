@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/language-context";
 
 interface SuggestionSelectProps {
   type: "goals" | "fields" | "courseTopics" | "timeframes";
@@ -28,9 +29,11 @@ export function SuggestionSelect({
   onChange,
   required = false,
 }: SuggestionSelectProps) {
-  // Fetch suggestions from the API
+  const { language, t } = useLanguage();
+  
+  // Fetch suggestions from the API with language support
   const { data: suggestions = [], isLoading } = useQuery<string[]>({
-    queryKey: [`/api/suggestions?type=${type}`],
+    queryKey: [`/api/suggestions?type=${type}&language=${language}`],
     enabled: true,
   });
 
@@ -38,7 +41,7 @@ export function SuggestionSelect({
     return (
       <div className="flex items-center space-x-2 py-2">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground">Loading suggestions...</span>
+        <span className="text-sm text-muted-foreground">{t('loadingSuggestions', 'Loading suggestions...')}</span>
       </div>
     );
   }
@@ -73,10 +76,11 @@ export function SuggestionAutocomplete({
 }: SuggestionSelectProps) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const { language, t } = useLanguage();
   
-  // Fetch suggestions from the API
+  // Fetch suggestions from the API with language support
   const { data: suggestions = [], isLoading } = useQuery<string[]>({
-    queryKey: [`/api/suggestions?type=${type}&query=${query}`],
+    queryKey: [`/api/suggestions?type=${type}&query=${query}&language=${language}`],
     enabled: true,
   });
 

@@ -32,10 +32,10 @@ interface SidebarLinkProps {
 
 const SidebarLink = ({ href, icon, children, isActive }: SidebarLinkProps) => (
   <Link href={href}>
-    <div className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg ${
+    <div className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
       isActive 
-        ? "bg-primary-50 text-primary" 
-        : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
+        ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-r-2 border-primary shadow-sm" 
+        : "text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm hover:translate-x-1"
     }`}>
       {icon}
       <span className="ml-3">{children}</span>
@@ -54,7 +54,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex flex-col w-64 bg-white border-r border-neutral-100 h-full">
+    <div className="flex flex-col w-64 h-full modern-overlay border-r border-white/20 shadow-xl">
       {/* Logo */}
       <div className="flex items-center justify-center h-16 px-4 border-b border-neutral-100">
         <div className="flex items-center">

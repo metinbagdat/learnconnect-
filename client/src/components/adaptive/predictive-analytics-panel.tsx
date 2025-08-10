@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TrendingUp, Clock, AlertTriangle, CheckCircle, Target } from 'lucide-react';
-import { useLanguage } from '@/hooks/use-language';
+import { useLanguage } from '@/contexts/language-context';
 
 interface PredictiveAnalytics {
   successProbability: number;

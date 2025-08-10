@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useLanguage } from '@/hooks/use-language';
+import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/hooks/use-auth';
 import { AdaptivePathVisualization } from '@/components/learning/adaptive-path-visualization';
 import { Brain, BookOpen, Target, TrendingUp, Star } from 'lucide-react';

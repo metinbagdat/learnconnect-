@@ -25,7 +25,7 @@ export function CourseCard({
   onContinue
 }: CourseCardProps) {
   const [, navigate] = useLocation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     title,
     description,
@@ -35,6 +35,65 @@ export function CourseCard({
     durationHours,
     rating
   } = course;
+
+  // Language-aware course content translation
+  const getTranslatedContent = () => {
+    if (language === 'tr') {
+      // Translate based on common course patterns
+      if (title.includes('TYT Mathematics')) {
+        return {
+          title: 'TYT Matematik',
+          description: 'TYT matematik konularını kapsayan kapsamlı kurs...'
+        };
+      }
+      if (title.includes('TYT Basic Sciences')) {
+        return {
+          title: 'TYT Temel Bilimler', 
+          description: 'TYT fen bölümlerini kapsayan tam hazırlık...'
+        };
+      }
+      if (title.includes('AYT Turkish Literature')) {
+        return {
+          title: 'AYT Türk Edebiyatı',
+          description: 'Türk edebiyatı üzerine önemli konuları kapsayan derinlemesine kurs...'
+        };
+      }
+      if (title.includes('AYT Physics')) {
+        return {
+          title: 'AYT Fizik',
+          description: 'Mekanik, elektrik ve diğer fizik konularını kapsayan kapsamlı fizik kursu...'
+        };
+      }
+      if (title.includes('AYT History')) {
+        return {
+          title: 'AYT Tarih',
+          description: 'Osmanlı İmparatorluğu ve diğer tarih konularını kapsayan kapsamlı tarih kursu...'
+        };
+      }
+      if (title.includes('AYT Chemistry')) {
+        return {
+          title: 'AYT Kimya',
+          description: 'AYT organik ve inorganik kimya konularını kapsayan uzman liderliğinde kurs...'
+        };
+      }
+      if (title.includes('AYT Advanced Mathematics')) {
+        return {
+          title: 'AYT İleri Matematik',
+          description: 'İleri matematik konularını kapsayan derinlemesine kurs...'
+        };
+      }
+      if (title.includes('AYT Biology')) {
+        return {
+          title: 'AYT Biyoloji',
+          description: 'Hücre, genetik, insan vücudu ve diğer biyoloji konularını kapsayan kapsamlı biyoloji kursu...'
+        };
+      }
+    }
+    
+    return { title, description };
+  };
+
+  const translatedContent = getTranslatedContent();
   
   const progress = userCourse?.progress || 0;
   const currentModule = userCourse?.currentModule || 1;
@@ -102,8 +161,8 @@ export function CourseCard({
       </div>
       
       <div className="p-4">
-        <h3 className="text-lg font-medium text-neutral-900 line-clamp-1">{title}</h3>
-        <p className="mt-1 text-sm text-neutral-600 line-clamp-2">{description}</p>
+        <h3 className="text-lg font-medium text-neutral-900 line-clamp-1">{translatedContent.title}</h3>
+        <p className="mt-1 text-sm text-neutral-600 line-clamp-2">{translatedContent.description}</p>
         
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center text-sm text-neutral-500">

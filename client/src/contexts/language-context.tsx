@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
+export type Language = 'en' | 'tr';
 
 interface LanguageContextType {
-  language: 'en' | 'tr';
-  setLanguage: (lang: 'en' | 'tr') => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
   t: (key: string, fallback?: string) => string;
 }
 
@@ -151,7 +153,8 @@ const translations = {
     expertled: "Expert-led",
     chemistry: "chemistry",
     organic: "organic",
-    inorganic: "inorganic"
+    inorganic: "inorganic",
+    hours: "hours"
   },
   tr: {
     // Smart Suggestions Page
@@ -294,12 +297,27 @@ const translations = {
     expertled: "Uzman liderliğinde",
     chemistry: "kimya",
     organic: "organik",
-    inorganic: "inorganik"
+    inorganic: "inorganik",
+    hours: "saat"
   }
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<'en' | 'tr'>('en');
+  const [language, setLanguage] = useState<'en' | 'tr'>(() => {
+    // Initialize from localStorage or default to 'en'
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('edulearn-language');
+      return (saved as 'en' | 'tr') || 'en';
+    }
+    return 'en';
+  });
+
+  // Save to localStorage whenever language changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('edulearn-language', language);
+    }
+  }, [language]);
 
   const t = (key: string, fallback?: string) => {
     return translations[language][key as keyof typeof translations['en']] || fallback || key;

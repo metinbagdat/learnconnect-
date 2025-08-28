@@ -14,7 +14,15 @@ import {
   insertStudyProgramSchema,
   insertProgramScheduleSchema,
   insertUserProgramProgressSchema,
-  insertStudySessionSchema
+  insertStudySessionSchema,
+  insertStudyGoal,
+  insertStudySchedule,
+  insertLearningRecommendation,
+  insertStudyProgress,
+  studyGoals,
+  studySchedules,
+  learningRecommendations,
+  studyProgress
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
@@ -3587,6 +3595,289 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error creating program schedule:", error);
       res.status(500).json({ message: "Failed to create program schedule" });
+    }
+  });
+
+  // ===============================
+  // STUDY PLANNING API ROUTES
+  // ===============================
+
+  // Get user's study goals
+  app.get("/api/study-goals", async (req, res) => {
+    let userId: number;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const goals = await db.select().from(studyGoals).where(eq(studyGoals.userId, userId));
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching study goals:", error);
+      res.status(500).json({ message: "Failed to fetch study goals" });
+    }
+  });
+
+  // Create a new study goal
+  app.post("/api/study-goals", async (req, res) => {
+    let userId: number;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const goalData = insertStudyGoal.parse({
+        ...req.body,
+        userId
+      });
+
+      const [newGoal] = await db.insert(studyGoals).values(goalData).returning();
+      res.status(201).json(newGoal);
+    } catch (error) {
+      console.error("Error creating study goal:", error);
+      res.status(500).json({ message: "Failed to create study goal" });
+    }
+  });
+
+  // Generate AI study plan for a goal
+  app.post("/api/study-goals/:goalId/generate-plan", async (req, res) => {
+    let userId: number;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const goalId = parseInt(req.params.goalId);
+      
+      // Get the goal
+      const [goal] = await db.select().from(studyGoals).where(
+        and(eq(studyGoals.id, goalId), eq(studyGoals.userId, userId))
+      );
+
+      if (!goal) {
+        return res.status(404).json({ message: "Study goal not found" });
+      }
+
+      // Generate AI-powered study plan using Anthropic
+      const anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+
+      const prompt = `Create a detailed weekly study schedule for a ${goal.goalType} goal.
+      
+      Goal Details:
+      - Target: ${goal.targetExam || 'General Learning'}
+      - Subjects: ${goal.subjects.join(', ')}
+      - Weekly Hours: ${goal.studyHoursPerWeek}
+      - Priority: ${goal.priority}
+      - Target Date: ${goal.targetDate}
+      
+      Generate a JSON response with weekly schedule including:
+      1. Daily study sessions with time slots
+      2. Subject rotation and focus areas
+      3. Review sessions and practice tests
+      4. Rest days and breaks
+      
+      Response format:
+      {
+        "weeklySchedule": [
+          {
+            "day": 0-6 (Sunday-Saturday),
+            "sessions": [
+              {
+                "startTime": "09:00",
+                "endTime": "11:00", 
+                "subject": "Mathematics",
+                "activity": "Theory and Practice"
+              }
+            ]
+          }
+        ],
+        "recommendations": [
+          "Study tip 1",
+          "Study tip 2"
+        ]
+      }`;
+
+      const response = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }]
+      });
+
+      const aiResponse = JSON.parse(response.content[0].text);
+      
+      // Save the generated schedule to database
+      const schedulePromises = aiResponse.weeklySchedule.flatMap((day: any) =>
+        day.sessions.map((session: any) => {
+          const scheduleData = {
+            userId,
+            goalId,
+            dayOfWeek: day.day,
+            startTime: session.startTime,
+            endTime: session.endTime,
+            subject: session.subject,
+            isCompleted: false,
+            scheduledDate: goal.targetDate // Use goal target date as reference
+          };
+          
+          return db.insert(studySchedules).values(scheduleData).returning();
+        })
+      );
+
+      await Promise.all(schedulePromises);
+
+      // Create AI recommendations
+      const recommendations = aiResponse.recommendations.map((rec: string) => ({
+        userId,
+        type: 'schedule_optimization',
+        title: 'AI Study Recommendation',
+        description: rec,
+        actionRequired: false,
+        priority: 'medium'
+      }));
+
+      if (recommendations.length > 0) {
+        await db.insert(learningRecommendations).values(recommendations);
+      }
+
+      res.json({
+        message: "AI study plan generated successfully",
+        schedule: aiResponse.weeklySchedule,
+        recommendations: aiResponse.recommendations
+      });
+
+    } catch (error) {
+      console.error("Error generating AI study plan:", error);
+      res.status(500).json({ message: "Failed to generate study plan" });
+    }
+  });
+
+  // Get user's study schedule
+  app.get("/api/study-schedule", async (req, res) => {
+    let userId: number;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const schedule = await db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
+      res.json(schedule);
+    } catch (error) {
+      console.error("Error fetching study schedule:", error);
+      res.status(500).json({ message: "Failed to fetch study schedule" });
+    }
+  });
+
+  // Get learning recommendations
+  app.get("/api/learning-recommendations", async (req, res) => {
+    let userId: number;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const recommendations = await db.select().from(learningRecommendations)
+        .where(eq(learningRecommendations.userId, userId));
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+
+  // Update study session completion
+  app.patch("/api/study-schedule/:scheduleId/complete", async (req, res) => {
+    let userId: number;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const scheduleId = parseInt(req.params.scheduleId);
+      
+      const [updatedSession] = await db.update(studySchedules)
+        .set({ isCompleted: true })
+        .where(and(eq(studySchedules.id, scheduleId), eq(studySchedules.userId, userId)))
+        .returning();
+
+      if (!updatedSession) {
+        return res.status(404).json({ message: "Study session not found" });
+      }
+
+      // Update goal progress
+      const [goal] = await db.select().from(studyGoals).where(eq(studyGoals.id, updatedSession.goalId));
+      if (goal) {
+        const completedSessions = await db.select({ count: count() })
+          .from(studySchedules)
+          .where(and(
+            eq(studySchedules.goalId, updatedSession.goalId),
+            eq(studySchedules.isCompleted, true)
+          ));
+
+        const totalSessions = await db.select({ count: count() })
+          .from(studySchedules)
+          .where(eq(studySchedules.goalId, updatedSession.goalId));
+
+        const progressPercentage = Math.round((completedSessions[0].count / totalSessions[0].count) * 100);
+
+        await db.update(studyGoals)
+          .set({ currentProgress: progressPercentage })
+          .where(eq(studyGoals.id, updatedSession.goalId));
+      }
+
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error updating study session:", error);
+      res.status(500).json({ message: "Failed to update study session" });
     }
   });
 

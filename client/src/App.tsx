@@ -32,6 +32,7 @@ import AnimatedProgressDemo from "@/pages/animated-progress-demo";
 import PlayfulAnimationsDemo from "@/pages/playful-animations-demo";
 import StudentControlPanel from "@/pages/student-control-panel";
 import MentorControlPanel from "@/pages/mentor-control-panel";
+import StudyPlannerPage from "@/pages/study-planner";
 
 function Router() {
   return (
@@ -52,6 +53,7 @@ function Router() {
       <ProtectedRoute path="/challenge-paths" component={ChallengePathsPage} />
       <ProtectedRoute path="/challenge-analytics" component={ChallengeAnalyticsDashboard} />
       <ProtectedRoute path="/entrance-exam-prep" component={EntranceExamPrep} />
+      <ProtectedRoute path="/study-planner" component={StudyPlannerPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/gamification" component={GamificationDashboard} />
       <ProtectedRoute path="/social" component={SocialPage} />

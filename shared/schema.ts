@@ -822,6 +822,70 @@ export const insertEmojiReactionSchema = createInsertSchema(emojiReactions);
 
 // Types for Learning Milestones and Emoji Reactions
 export type LearningMilestone = typeof learningMilestones.$inferSelect;
+
+// Study Planning Tables
+export const studyGoals = pgTable("study_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  goalType: text("goal_type").notNull(),
+  targetExam: text("target_exam"),
+  targetDate: date("target_date").notNull(),
+  studyHoursPerWeek: integer("study_hours_per_week").notNull(),
+  priority: text("priority").notNull(),
+  status: text("status").notNull().default("active"),
+  subjects: text("subjects").array().default([]),
+  currentProgress: integer("current_progress").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const studySchedules = pgTable("study_schedules", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  goalId: integer("goal_id").notNull(),
+  dayOfWeek: integer("day_of_week").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  subject: text("subject").notNull(),
+  lessonId: integer("lesson_id"),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  scheduledDate: date("scheduled_date").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const learningRecommendations = pgTable("learning_recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  actionRequired: boolean("action_required").notNull().default(false),
+  priority: text("priority").notNull(),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const studyProgress = pgTable("study_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  goalId: integer("goal_id").notNull(),
+  date: date("date").notNull(),
+  hoursStudied: integer("hours_studied").notNull().default(0),
+  lessonsCompleted: integer("lessons_completed").notNull().default(0),
+  performanceScore: integer("performance_score"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertStudyGoal = createInsertSchema(studyGoals);
+export const insertStudySchedule = createInsertSchema(studySchedules);
+export const insertLearningRecommendation = createInsertSchema(learningRecommendations);
+export const insertStudyProgress = createInsertSchema(studyProgress);
+
+export type StudyGoal = typeof studyGoals.$inferSelect;
+export type StudySchedule = typeof studySchedules.$inferSelect;
+export type LearningRecommendation = typeof learningRecommendations.$inferSelect;
+export type StudyProgress = typeof studyProgress.$inferSelect;
 export type InsertLearningMilestone = z.infer<typeof insertLearningMilestoneSchema>;
 export type EmojiReaction = typeof emojiReactions.$inferSelect;
 export type InsertEmojiReaction = z.infer<typeof insertEmojiReactionSchema>;

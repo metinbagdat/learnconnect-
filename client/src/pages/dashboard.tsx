@@ -295,7 +295,7 @@ export default function Dashboard() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-neutral-900">{t('welcomeBack')}, {user?.displayName?.split(' ')[0] || 'Student'}</h1>
+                  <h1 className="text-2xl font-bold text-neutral-900">{t('welcomeBack')}, {user?.displayName?.split(' ')[0] || t('student')}</h1>
                   <p className="mt-1 text-sm text-neutral-600">{t('continueWhereverYouLeftOff')}</p>
                 </div>
                 
@@ -320,7 +320,7 @@ export default function Dashboard() {
                 <div className="mb-6">
                 <h2 className="text-lg font-semibold text-neutral-900">{t('yourProgress')}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Hey {user?.displayName?.split(' ')[0] || 'Student'}! Check your learning progress below - click any card to explore more or continue where you left off.
+                  {t('checkYourLearningProgress')}
                 </p>
               </div>
                 <div className="flex gap-3">
@@ -344,7 +344,7 @@ export default function Dashboard() {
                     onClick={() => navigate('/playful-animations')}
                   >
                     <Sparkles className="mr-1 h-4 w-4" />
-                    Animations Demo
+                    {t('animationsDemo')}
                   </Button>
                 </div>
               </div>

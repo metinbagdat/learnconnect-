@@ -1,4 +1,4 @@
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ interface LessonData {
 export default function LessonPage() {
   const { lessonId } = useParams();
   const { t, language } = useLanguage();
+  const [, setLocation] = useLocation();
 
   const { data: lesson, isLoading, error } = useQuery<LessonData>({
     queryKey: ['/api/lessons', lessonId, language],
@@ -49,6 +50,31 @@ export default function LessonPage() {
     },
     enabled: !!lessonId,
   });
+
+  const handleNextLesson = () => {
+    if (lesson) {
+      // Navigate to the next lesson (increment lesson ID by 1)
+      const nextLessonId = parseInt(lessonId!) + 1;
+      setLocation(`/lessons/${nextLessonId}`);
+    }
+  };
+
+  const handlePreviousLesson = () => {
+    if (lesson) {
+      // Navigate to the previous lesson (decrement lesson ID by 1)
+      const prevLessonId = parseInt(lessonId!) - 1;
+      if (prevLessonId > 0) {
+        setLocation(`/lessons/${prevLessonId}`);
+      }
+    }
+  };
+
+  const handleCompleteLesson = () => {
+    if (lesson) {
+      // Navigate back to the course page
+      setLocation(`/courses/${lesson.courseId}`);
+    }
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -247,17 +273,17 @@ export default function LessonPage() {
 
         {/* Action Buttons */}
         <div className="flex justify-between items-center pt-6">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handlePreviousLesson}>
             <ChevronLeft className="h-4 w-4 mr-2" />
             {t('previousLesson')}
           </Button>
           
-          <Button>
+          <Button onClick={handleCompleteLesson}>
             {t('completeLesson')}
             <CheckCircle className="h-4 w-4 ml-2" />
           </Button>
           
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleNextLesson}>
             {t('nextLesson')}
             <Play className="h-4 w-4 ml-2" />
           </Button>

@@ -186,7 +186,12 @@ const translations = {
     personalizedIntro: "Personalized Introduction",
     learningObjectives: "Learning Objectives", 
     lessonContent: "Lesson Content",
-    aiAdaptedContent: "AI-Adapted Content"
+    aiAdaptedContent: "AI-Adapted Content",
+    practiceExercises: "Practice Exercises",
+    nextSteps: "Next Steps",
+    previousLesson: "Previous Lesson",
+    completeLesson: "Complete Lesson",
+    nextLesson: "Next Lesson"
   },
   tr: {
     // Smart Suggestions Page
@@ -362,7 +367,12 @@ const translations = {
     personalizedIntro: "Kişiselleştirilmiş Giriş",
     learningObjectives: "Öğrenme Hedefleri", 
     lessonContent: "Ders İçeriği",
-    aiAdaptedContent: "AI Uyarlanmış İçerik"
+    aiAdaptedContent: "AI Uyarlanmış İçerik",
+    practiceExercises: "Uygulama Alıştırmaları",
+    nextSteps: "Sonraki Adımlar",
+    previousLesson: "Önceki Ders",
+    completeLesson: "Dersi Tamamla",
+    nextLesson: "Sonraki Ders"
   }
 };
 

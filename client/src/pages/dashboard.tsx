@@ -43,7 +43,7 @@ export default function Dashboard() {
   
   const [showAchievement, setShowAchievement] = useState(false);
   const [currentAchievement, setCurrentAchievement] = useState<AchievementType | null>(null);
-  const [progressBubbles, setProgressBubbles] = useState<ProgressBubbleData[]>([]);
+  // Removed progressBubbles state - now using computed progressBubblesData directly
   
   const { data: userCourses = [], isLoading: coursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
     queryKey: ["/api/user/courses"],
@@ -179,10 +179,7 @@ export default function Dashboard() {
     ];
   }, [user, userCourses.length, stats, assignments.length]);
 
-  // Update progress bubbles when data changes
-  useEffect(() => {
-    setProgressBubbles(progressBubblesData);
-  }, [progressBubblesData]);
+  // Remove this useEffect - directly use progressBubblesData instead of state
 
   // Handle achievement celebrations
   const triggerCelebration = (type: 'course' | 'assignment' | 'achievement') => {
@@ -195,7 +192,7 @@ export default function Dashboard() {
         rarity: 'rare' as const,
         icon: 'Trophy',
         color: 'blue',
-        effects: ['confetti', 'sparkles']
+        effects: ['confetti', 'sparkles'] as ('confetti' | 'sparkles' | 'fireworks' | 'glow' | 'shake')[]
       },
       assignment: {
         id: 'assignment_done',
@@ -205,7 +202,7 @@ export default function Dashboard() {
         rarity: 'common' as const,
         icon: 'Star',
         color: 'green',
-        effects: ['sparkles']
+        effects: ['sparkles'] as ('confetti' | 'sparkles' | 'fireworks' | 'glow' | 'shake')[]
       },
       achievement: {
         id: 'new_achievement',
@@ -215,7 +212,7 @@ export default function Dashboard() {
         rarity: 'epic' as const,
         icon: 'Crown',
         color: 'gold',
-        effects: ['confetti', 'fireworks', 'glow']
+        effects: ['confetti', 'fireworks', 'glow'] as ('confetti' | 'sparkles' | 'fireworks' | 'glow' | 'shake')[]
       }
     } as const;
     
@@ -264,12 +261,7 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Show celebration when milestones are reached
-  useEffect(() => {
-    if (stats.completedCourses > 0 && Math.random() > 0.7) {
-      setTimeout(() => triggerCelebration('course'), 2000);
-    }
-  }, [stats.completedCourses]);
+  // Remove the problematic celebration useEffect to prevent infinite loops
   
   return (
     <PlayfulLearningAnimations
@@ -853,7 +845,7 @@ export default function Dashboard() {
             </div>
             
             {/* Playful Progress Bubbles */}
-            {progressBubbles.length > 0 && (
+            {progressBubblesData.length > 0 && (
               <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10">
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold text-neutral-900 flex items-center gap-2">
@@ -865,7 +857,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <AnimatedProgressBubbles
-                  bubbles={progressBubbles}
+                  bubbles={progressBubblesData}
                   onBubbleClick={(bubble) => {
                     if (bubble.category === 'course') {
                       navigate('/courses');

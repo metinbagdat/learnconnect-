@@ -32,14 +32,14 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
   
   // Playful animations state
-  const [mascot, setMascot] = useState<LearningMascot>({
+  const [mascot, setMascot] = useState<LearningMascot>(() => ({
     id: 'dashboard-buddy',
     name: 'Learning Buddy',
     mood: 'happy',
-    position: { x: window.innerWidth - 200, y: window.innerHeight - 200 },
+    position: { x: typeof window !== 'undefined' ? window.innerWidth - 200 : 200, y: typeof window !== 'undefined' ? window.innerHeight - 200 : 200 },
     size: 'medium',
     animation: 'float'
-  });
+  }));
   
   const [showAchievement, setShowAchievement] = useState(false);
   const [currentAchievement, setCurrentAchievement] = useState<AchievementType | null>(null);
@@ -296,7 +296,7 @@ export default function Dashboard() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-neutral-900">{t('welcomeBack')}, {user?.displayName?.split(' ')[0] || t('student')}</h1>
-                  <p className="mt-1 text-sm text-neutral-600">{t('continueWhereverYouLeftOff')}</p>
+                  <p className="mt-1 text-sm text-neutral-600">{t('continueWhereYouLeftOff')}</p>
                 </div>
                 
                 {/* Search */}

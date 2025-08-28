@@ -23,6 +23,7 @@ import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
 import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users, UserCheck, Clock, TrendingUp, Calendar, Sparkles, Star, Crown, Rocket } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 import { useState, useEffect, useMemo } from "react";
+import PageWrapper from "@/components/layout/page-wrapper";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -264,7 +265,11 @@ export default function Dashboard() {
   // Remove the problematic celebration useEffect to prevent infinite loops
   
   return (
-    <PlayfulLearningAnimations
+    <PageWrapper 
+      currentPage={language === 'tr' ? 'Ana Sayfa' : 'Dashboard'}
+      pageTitle={language === 'tr' ? 'Öğrenme Merkezim' : 'My Learning Center'}
+    >
+      <PlayfulLearningAnimations
       config={{
         enableParticles: true,
         enableMascot: true,
@@ -895,7 +900,6 @@ export default function Dashboard() {
           onComplete={handleCelebrationComplete}
         />
       )}
-    </div>
     </PlayfulLearningAnimations>
   );
 }

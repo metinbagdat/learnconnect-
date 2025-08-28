@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import PageWrapper from "@/components/layout/page-wrapper";
 
 interface StudyGoal {
   id?: number;
@@ -165,7 +166,12 @@ export default function StudyPlannerPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <PageWrapper 
+      currentPage={language === 'tr' ? 'Öğrenme Planlayıcısı' : 'Study Planner'}
+      pageTitle={language === 'tr' ? 'Kişisel Öğrenme Planlayıcısı' : 'Personal Learning Planner'}
+      showBackButton={true}
+      backUrl="/"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -638,6 +644,6 @@ export default function StudyPlannerPage() {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

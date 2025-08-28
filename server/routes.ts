@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { registerStripeRoutes } from "./stripe-routes";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -74,6 +75,9 @@ const anthropic = new Anthropic({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+  
+  // Setup Stripe payment routes
+  registerStripeRoutes(app);
 
   // Courses API
   app.get("/api/courses", async (req, res) => {

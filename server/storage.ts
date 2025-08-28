@@ -2292,6 +2292,20 @@ export class DatabaseStorage implements IStorage {
     return updatedSession;
   }
 
+  // Stripe payment methods
+  async updateUserStripeInfo(userId: number, stripeInfo: { customerId?: string; subscriptionId?: string }): Promise<User | undefined> {
+    const updateData: any = {};
+    if (stripeInfo.customerId) updateData.stripeCustomerId = stripeInfo.customerId;
+    if (stripeInfo.subscriptionId) updateData.stripeSubscriptionId = stripeInfo.subscriptionId;
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
   async getUserWeeklyStats(userId: number, programId?: number): Promise<{ plannedHours: number; actualHours: number; adherenceScore: number }> {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

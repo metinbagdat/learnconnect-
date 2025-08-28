@@ -33,6 +33,7 @@ import PlayfulAnimationsDemo from "@/pages/playful-animations-demo";
 import StudentControlPanel from "@/pages/student-control-panel";
 import MentorControlPanel from "@/pages/mentor-control-panel";
 import StudyPlannerPage from "@/pages/study-planner";
+import Checkout from "@/pages/checkout";
 
 function Router() {
   return (
@@ -67,6 +68,7 @@ function Router() {
       <ProtectedRoute path="/playful-animations" component={PlayfulAnimationsDemo} />
       <ProtectedRoute path="/student-control-panel" component={StudentControlPanel} />
       <ProtectedRoute path="/mentor-control-panel" component={MentorControlPanel} />
+      <ProtectedRoute path="/checkout/:courseId" component={Checkout} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

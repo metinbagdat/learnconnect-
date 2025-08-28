@@ -14,6 +14,7 @@ interface CourseCardProps {
   showContinue?: boolean;
   onEnroll?: () => void;
   onContinue?: () => void;
+  onCheckout?: () => void;
 }
 
 export function CourseCard({
@@ -22,7 +23,8 @@ export function CourseCard({
   showEnroll = false,
   showContinue = false,
   onEnroll,
-  onContinue
+  onContinue,
+  onCheckout
 }: CourseCardProps) {
   const [, navigate] = useLocation();
   const { t, language } = useLanguage();
@@ -159,8 +161,9 @@ export function CourseCard({
         <h3 className="text-xl font-bold text-gray-900 line-clamp-1 mb-2 group-hover:text-primary transition-colors duration-300">{translatedContent.title}</h3>
         <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">{translatedContent.description}</p>
         
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-1 text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-full">
+        {/* Course metadata */}
+        <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center gap-1 bg-gray-50 px-3 py-2 rounded-full">
             <Clock className="h-4 w-4" />
             {userCourse ? (
               <span className="font-medium">{t('module')} {currentModule} / {moduleCount}</span>
@@ -168,6 +171,21 @@ export function CourseCard({
               <span className="font-medium">{durationHours || 30} {t('hours')}</span>
             )}
           </div>
+          
+          {/* Show price for non-enrolled courses */}
+          {!userCourse && (
+            <div className="font-semibold text-lg">
+              {course.isPremium && course.price && parseFloat(course.price) > 0 ? (
+                <span className="text-primary">${course.price}</span>
+              ) : (
+                <span className="text-green-600">FREE</span>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Action buttons */}
+        <div className="mt-4 flex gap-2">
           
           {showContinue && (
             <Button 
@@ -180,27 +198,59 @@ export function CourseCard({
                 }
               }}
               size="sm"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full px-6 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full px-6 shadow-lg hover:shadow-xl transition-all duration-300 flex-1"
             >
               {t('continueButton')}
             </Button>
           )}
           
           {showEnroll && (
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click
-                if (onEnroll) {
-                  onEnroll();
-                } else {
-                  navigate(`/courses/${course.id}`);
-                }
-              }}
-              size="sm"
-              className="bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white font-semibold rounded-full px-6 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              {t('enrollNow')}
-            </Button>
+            <>
+              {course.isPremium && course.price && parseFloat(course.price) > 0 ? (
+                <>
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onCheckout) {
+                        onCheckout();
+                      } else {
+                        navigate(`/checkout/${course.id}`);
+                      }
+                    }}
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-full px-4 shadow-lg hover:shadow-xl transition-all duration-300 flex-1"
+                  >
+                    Buy ${course.price}
+                  </Button>
+                  <Button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/courses/${course.id}`);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full px-4 flex-1"
+                  >
+                    Preview
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click
+                    if (onEnroll) {
+                      onEnroll();
+                    } else {
+                      navigate(`/courses/${course.id}`);
+                    }
+                  }}
+                  size="sm"
+                  className="bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white font-semibold rounded-full px-6 shadow-lg hover:shadow-xl transition-all duration-300 flex-1"
+                >
+                  {t('enrollNow')}
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

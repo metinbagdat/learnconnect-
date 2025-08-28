@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("student"),
   avatarUrl: text("avatar_url"),
   interests: text("interests").array(), // Store user interests for better course recommendations
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
 });
 
 export const courses = pgTable("courses", {
@@ -25,6 +27,9 @@ export const courses = pgTable("courses", {
   rating: integer("rating"),
   level: text("level"), // Beginner, Intermediate, Advanced
   isAiGenerated: boolean("is_ai_generated").default(false),
+  price: numeric("price", { precision: 10, scale: 2 }).default("0.00"), // Course price in USD
+  isPremium: boolean("is_premium").default(false), // Whether course requires payment
+  stripePriceId: text("stripe_price_id"), // Stripe price ID for recurring billing
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -408,7 +413,7 @@ export const learningAnalytics = pgTable("learning_analytics", {
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
   interests: z.array(z.string()).optional(),
-}).omit({ id: true });
+}).omit({ id: true, stripeCustomerId: true, stripeSubscriptionId: true });
 
 export const insertCourseSchema = createInsertSchema(courses, {
   level: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),

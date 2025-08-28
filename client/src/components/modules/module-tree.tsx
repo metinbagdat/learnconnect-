@@ -177,7 +177,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
                         )}
                         onClick={() => {
                           setSelectedLesson(lesson);
-                          window.location.href = `/lesson/${lesson.id}`;
+                          window.location.href = `/lessons/${lesson.id}`;
                         }}
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -325,7 +325,7 @@ export function ModuleTree({ courseId, userId }: ModuleTreeProps) {
 
               {/* Action Button */}
               <Button className="w-full" onClick={() => {
-                window.location.href = `/lesson/${selectedLesson.id}`;
+                window.location.href = `/lessons/${selectedLesson.id}`;
               }}>
                 Start Learning
               </Button>

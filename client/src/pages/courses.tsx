@@ -225,6 +225,7 @@ export default function Courses() {
                           course={course}
                           showEnroll={true}
                           onEnroll={() => enrollInCourse(course.id)}
+                          onCheckout={() => navigate(`/checkout/${course.id}`)}
                         />
                       ))}
                     </div>

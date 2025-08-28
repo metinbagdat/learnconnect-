@@ -182,7 +182,11 @@ const translations = {
     organic: "organic",
     inorganic: "inorganic",
     hours: "hours",
-    student: "Student"
+    student: "Student",
+    personalizedIntro: "Personalized Introduction",
+    learningObjectives: "Learning Objectives", 
+    lessonContent: "Lesson Content",
+    aiAdaptedContent: "AI-Adapted Content"
   },
   tr: {
     // Smart Suggestions Page
@@ -353,7 +357,12 @@ const translations = {
     chemistry: "kimya",
     organic: "organik",
     inorganic: "inorganik",
-    hours: "saat"
+    hours: "saat",
+    student: "Öğrenci",
+    personalizedIntro: "Kişiselleştirilmiş Giriş",
+    learningObjectives: "Öğrenme Hedefleri", 
+    lessonContent: "Ders İçeriği",
+    aiAdaptedContent: "AI Uyarlanmış İçerik"
   }
 };
 

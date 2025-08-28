@@ -73,12 +73,14 @@ const getBubbleColor = (category: string, progress: number) => {
   return colorMap[category as keyof typeof colorMap] || 'from-gray-400 to-gray-600';
 };
 
-const ProgressBubble: React.FC<{
+interface ProgressBubbleProps {
   bubble: ProgressBubbleData;
   index: number;
   animated: boolean;
   onClick?: () => void;
-}> = ({ bubble, index, animated, onClick }) => {
+}
+
+const ProgressBubble = React.forwardRef<HTMLDivElement, ProgressBubbleProps>(({ bubble, index, animated, onClick }, ref) => {
   const [currentProgress, setCurrentProgress] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const IconComponent = getIconComponent(bubble.icon);
@@ -99,6 +101,7 @@ const ProgressBubble: React.FC<{
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={animated ? { scale: 0, opacity: 0 } : false}
       animate={{ scale: 1, opacity: 1 }}
@@ -270,7 +273,9 @@ const ProgressBubble: React.FC<{
       )}
     </motion.div>
   );
-};
+});
+
+ProgressBubble.displayName = 'ProgressBubble';
 
 export const AnimatedProgressBubbles: React.FC<AnimatedProgressBubblesProps> = ({
   bubbles,

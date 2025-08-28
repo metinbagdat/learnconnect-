@@ -96,10 +96,7 @@ export default function StudyPlannerPage() {
   // Create study goal mutation
   const createGoalMutation = useMutation({
     mutationFn: async (goal: Partial<StudyGoal>) => {
-      return apiRequest('/api/study-goals', {
-        method: 'POST',
-        body: JSON.stringify(goal)
-      });
+      return apiRequest('POST', '/api/study-goals', goal);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/study-goals'] });
@@ -121,9 +118,7 @@ export default function StudyPlannerPage() {
   // Generate AI study plan
   const generatePlanMutation = useMutation({
     mutationFn: async (goalId: number) => {
-      return apiRequest(`/api/study-goals/${goalId}/generate-plan`, {
-        method: 'POST'
-      });
+      return apiRequest('POST', `/api/study-goals/${goalId}/generate-plan`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/study-schedule'] });

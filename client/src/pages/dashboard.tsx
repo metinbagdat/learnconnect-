@@ -22,7 +22,7 @@ import { useLocation } from "wouter";
 import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
 import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users, UserCheck, Clock, TrendingUp, Calendar, Sparkles, Star, Crown, Rocket } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -101,76 +101,88 @@ export default function Dashboard() {
     enabled: !!user,
   });
   
-  // Compute stats
-  const coursesInProgress = userCourses.filter(uc => !uc.completed).length;
-  const completedCourses = userCourses.filter(uc => uc.completed).length;
-  const pendingAssignments = assignments.length;
-  const achievementsCount = userAchievements.length;
+  // Compute stats with memoization to prevent infinite loops
+  const stats = useMemo(() => ({
+    coursesInProgress: userCourses.filter(uc => !uc.completed).length,
+    completedCourses: userCourses.filter(uc => uc.completed).length,
+    pendingAssignments: assignments.length,
+    achievementsCount: userAchievements.length,
+  }), [userCourses, assignments, userAchievements]);
   
-  // Get in-progress courses
-  const inProgressCourses = userCourses
-    .filter(uc => !uc.completed)
-    .sort((a, b) => b.progress - a.progress);
+  // Get in-progress courses with memoization
+  const inProgressCourses = useMemo(() => 
+    userCourses
+      .filter(uc => !uc.completed)
+      .sort((a, b) => b.progress - a.progress),
+    [userCourses]
+  );
   
-  // Get upcoming assignments (limit to 3)
-  const upcomingAssignments = assignments
-    .sort((a, b) => {
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    })
-    .slice(0, 3);
+  // Get upcoming assignments (limit to 3) with memoization
+  const upcomingAssignments = useMemo(() => 
+    assignments
+      .sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      })
+      .slice(0, 3),
+    [assignments]
+  );
 
-  // Generate progress bubbles from user data
+  // Generate progress bubbles from user data - moved to useMemo to prevent infinite loops
+  const progressBubblesData = useMemo(() => {
+    if (!user || userCourses.length === 0) return [];
+    
+    return [
+      {
+        id: 'courses_progress',
+        title: 'Courses Progress',
+        category: 'course' as const,
+        progress: userCourses.length > 0 ? (stats.completedCourses / userCourses.length) * 100 : 0,
+        maxValue: userCourses.length,
+        currentValue: stats.completedCourses,
+        color: 'blue' as const,
+        icon: 'BookOpen' as const,
+        description: 'Overall course completion progress',
+        isActive: stats.coursesInProgress > 0,
+        animationSpeed: 1.2,
+        metadata: { priority: 'high' as const }
+      },
+      {
+        id: 'assignments_progress',
+        title: 'Assignments',
+        category: 'skill' as const,
+        progress: stats.pendingAssignments > 0 ? 75 : 100,
+        maxValue: assignments.length || 1,
+        currentValue: Math.max(0, assignments.length - stats.pendingAssignments),
+        color: 'purple' as const,
+        icon: 'Target' as const,
+        description: 'Assignment completion status',
+        isActive: stats.pendingAssignments > 0,
+        animationSpeed: 1.5,
+        metadata: { priority: 'medium' as const }
+      },
+      {
+        id: 'achievements_earned',
+        title: 'Achievements',
+        category: 'achievement' as const,
+        progress: stats.achievementsCount > 0 ? 100 : 0,
+        maxValue: Math.max(stats.achievementsCount, 1),
+        currentValue: stats.achievementsCount,
+        color: 'gold' as const,
+        icon: 'Trophy' as const,
+        description: 'Badges and achievements earned',
+        isActive: false,
+        animationSpeed: 1.0,
+        metadata: { priority: 'low' as const }
+      }
+    ];
+  }, [user, userCourses.length, stats, assignments.length]);
+
+  // Update progress bubbles when data changes
   useEffect(() => {
-    if (user && userCourses.length > 0) {
-      const bubbles: ProgressBubbleData[] = [
-        {
-          id: 'courses_progress',
-          title: 'Courses Progress',
-          category: 'course',
-          progress: userCourses.length > 0 ? (completedCourses / userCourses.length) * 100 : 0,
-          maxValue: userCourses.length,
-          currentValue: completedCourses,
-          color: 'blue',
-          icon: 'BookOpen',
-          description: 'Overall course completion progress',
-          isActive: coursesInProgress > 0,
-          animationSpeed: 1.2,
-          metadata: { priority: 'high' }
-        },
-        {
-          id: 'assignments_progress',
-          title: 'Assignments',
-          category: 'skill',
-          progress: pendingAssignments > 0 ? 75 : 100,
-          maxValue: assignments.length || 1,
-          currentValue: Math.max(0, assignments.length - pendingAssignments),
-          color: 'purple',
-          icon: 'Target',
-          description: 'Assignment completion status',
-          isActive: pendingAssignments > 0,
-          animationSpeed: 1.5,
-          metadata: { priority: 'medium' }
-        },
-        {
-          id: 'achievements_earned',
-          title: 'Achievements',
-          category: 'achievement',
-          progress: achievementsCount > 0 ? 100 : 0,
-          maxValue: Math.max(achievementsCount, 1),
-          currentValue: achievementsCount,
-          color: 'gold',
-          icon: 'Trophy',
-          description: 'Badges and achievements earned',
-          isActive: false,
-          animationSpeed: 1.0,
-          metadata: { priority: 'low' }
-        }
-      ];
-      setProgressBubbles(bubbles);
-    }
-  }, [userCourses, assignments, userAchievements, completedCourses, coursesInProgress, pendingAssignments, achievementsCount]);
+    setProgressBubbles(progressBubblesData);
+  }, [progressBubblesData]);
 
   // Handle achievement celebrations
   const triggerCelebration = (type: 'course' | 'assignment' | 'achievement') => {
@@ -254,10 +266,10 @@ export default function Dashboard() {
 
   // Show celebration when milestones are reached
   useEffect(() => {
-    if (completedCourses > 0 && Math.random() > 0.7) {
+    if (stats.completedCourses > 0 && Math.random() > 0.7) {
       setTimeout(() => triggerCelebration('course'), 2000);
     }
-  }, [completedCourses]);
+  }, [stats.completedCourses]);
   
   return (
     <PlayfulLearningAnimations
@@ -353,7 +365,7 @@ export default function Dashboard() {
                   <StatCard 
                     icon={Book} 
                     title={t('coursesInProgress')} 
-                    value={coursesInProgress} 
+                    value={stats.coursesInProgress} 
                     color="primary" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
@@ -365,7 +377,7 @@ export default function Dashboard() {
                   <StatCard 
                     icon={CheckCircle} 
                     title={t('completedCourses')} 
-                    value={completedCourses} 
+                    value={stats.completedCourses} 
                     color="success" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
@@ -377,11 +389,11 @@ export default function Dashboard() {
                   <StatCard 
                     icon={FileText} 
                     title={t('pendingAssignments')} 
-                    value={pendingAssignments} 
+                    value={stats.pendingAssignments} 
                     color="warning" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
-                    {pendingAssignments > 0 ? t('timeToSubmit') : t('allCaughtUp')}
+                    {stats.pendingAssignments > 0 ? t('timeToSubmit') : t('allCaughtUp')}
                   </p>
                 </div>
                 
@@ -389,11 +401,11 @@ export default function Dashboard() {
                   <StatCard 
                     icon={Award} 
                     title={t('achievements')} 
-                    value={achievementsCount} 
+                    value={stats.achievementsCount} 
                     color="secondary" 
                   />
                   <p className="text-xs text-muted-foreground mt-2 px-4">
-                    {achievementsCount > 0 ? t('amazingProgress') : t('startEarningAchievements')}
+                    {stats.achievementsCount > 0 ? t('amazingProgress') : t('startEarningAchievements')}
                   </p>
                 </div>
               </div>

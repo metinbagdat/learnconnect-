@@ -40,7 +40,7 @@ function Router() {
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />
       <ProtectedRoute path="/courses" component={Courses} />
       <ProtectedRoute path="/courses/:courseId" component={CourseDetail} />
-      <ProtectedRoute path="/lesson/:lessonId" component={LessonPage} />
+      <ProtectedRoute path="/lessons/:lessonId" component={LessonPage} />
       <ProtectedRoute path="/assignments" component={Assignments} />
       <ProtectedRoute path="/calendar" component={Calendar} />
       <ProtectedRoute path="/resources" component={Resources} />

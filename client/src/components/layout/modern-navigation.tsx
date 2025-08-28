@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/language-context";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ModernNavigationProps {
@@ -38,7 +38,7 @@ export default function ModernNavigation({
 }: ModernNavigationProps) {
   const [, setLocation] = useLocation();
   const { language } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigationItems = [
@@ -106,7 +106,7 @@ export default function ModernNavigation({
   };
 
   const handleLogout = async () => {
-    await logout();
+    logoutMutation.mutate();
     setLocation('/auth');
   };
 

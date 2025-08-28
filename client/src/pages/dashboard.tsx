@@ -27,7 +27,7 @@ import PageWrapper from "@/components/layout/page-wrapper";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { triggerSkillChallenge } = useSkillChallenge();
   const { showXpGain, celebrateLevelUp, checkAndUnlockAchievements } = useGamificationTracker();
   const [, navigate] = useLocation();
@@ -885,6 +885,7 @@ export default function Dashboard() {
       <div className="md:hidden">
         <MobileNav />
       </div>
+    </div>
       
       {/* Floating Mascot */}
       <FloatingMascot 
@@ -901,5 +902,6 @@ export default function Dashboard() {
         />
       )}
     </PlayfulLearningAnimations>
+    </PageWrapper>
   );
 }

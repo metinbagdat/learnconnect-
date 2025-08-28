@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Target, Brain, BookOpen, ChevronLeft, CheckCircle, Play } from "lucide-react";
+import { Clock, Target, Brain, BookOpen, ChevronLeft, CheckCircle, Play, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LessonData {
   id: number;
@@ -35,6 +37,8 @@ export default function LessonPage() {
   const { lessonId } = useParams();
   const { t, language } = useLanguage();
   const [, setLocation] = useLocation();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigationDirection, setNavigationDirection] = useState<'next' | 'previous' | null>(null);
 
   const { data: lesson, isLoading, error } = useQuery<LessonData>({
     queryKey: ['/api/lessons', lessonId, language],
@@ -51,30 +55,48 @@ export default function LessonPage() {
     enabled: !!lessonId,
   });
 
-  const handleNextLesson = () => {
-    if (lesson) {
-      // Navigate to the next lesson (increment lesson ID by 1)
-      const nextLessonId = parseInt(lessonId!) + 1;
-      setLocation(`/lessons/${nextLessonId}`);
+  const handleNextLesson = async () => {
+    if (lesson && !isNavigating) {
+      setIsNavigating(true);
+      setNavigationDirection('next');
+      
+      // Add a slight delay for animation effect
+      setTimeout(() => {
+        const nextLessonId = parseInt(lessonId!) + 1;
+        setLocation(`/lessons/${nextLessonId}`);
+      }, 300);
     }
   };
 
-  const handlePreviousLesson = () => {
-    if (lesson) {
-      // Navigate to the previous lesson (decrement lesson ID by 1)
+  const handlePreviousLesson = async () => {
+    if (lesson && !isNavigating) {
       const prevLessonId = parseInt(lessonId!) - 1;
       if (prevLessonId > 0) {
-        setLocation(`/lessons/${prevLessonId}`);
+        setIsNavigating(true);
+        setNavigationDirection('previous');
+        
+        // Add a slight delay for animation effect
+        setTimeout(() => {
+          setLocation(`/lessons/${prevLessonId}`);
+        }, 300);
       }
     }
   };
 
   const handleCompleteLesson = () => {
     if (lesson) {
-      // Navigate back to the course page
-      setLocation(`/courses/${lesson.courseId}`);
+      setIsNavigating(true);
+      setTimeout(() => {
+        setLocation(`/courses/${lesson.courseId}`);
+      }, 200);
     }
   };
+
+  // Reset navigation state when lesson changes
+  useEffect(() => {
+    setIsNavigating(false);
+    setNavigationDirection(null);
+  }, [lessonId]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -183,122 +205,198 @@ export default function LessonPage() {
           </div>
         </div>
 
-        {/* AI Personalized Introduction */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="flex items-center text-blue-800">
-              <Brain className="h-5 w-5 mr-2" />
-              {t('personalizedIntro')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-blue-700">{lesson.aiContext.personalizedIntro}</p>
-          </CardContent>
-        </Card>
+        {/* Main Content with Animated Entry */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={lessonId}
+            initial={{ 
+              opacity: 0, 
+              x: navigationDirection === 'next' ? 50 : navigationDirection === 'previous' ? -50 : 0,
+              y: navigationDirection ? 0 : 20
+            }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ 
+              opacity: 0, 
+              x: navigationDirection === 'next' ? -50 : navigationDirection === 'previous' ? 50 : 0
+            }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="space-y-6"
+          >
+            {/* AI Personalized Introduction */}
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center text-blue-800">
+                  <Brain className="h-5 w-5 mr-2" />
+                  {t('personalizedIntro')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-blue-700">{lesson.aiContext.personalizedIntro}</p>
+              </CardContent>
+            </Card>
 
-        {/* Learning Objectives */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('learningObjectives')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {lesson.aiContext.learningObjectives.map((objective, index) => (
-                <li key={index} className="flex items-start">
-                  <Target className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
-                  <span>{objective}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+            {/* Learning Objectives */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('learningObjectives')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {lesson.aiContext.learningObjectives.map((objective, index) => (
+                    <motion.li 
+                      key={index} 
+                      className="flex items-start"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 + 0.3 }}
+                    >
+                      <Target className="h-4 w-4 mr-2 mt-0.5 text-green-600" />
+                      <span>{objective}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-        {/* Main Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('lessonContent')}</CardTitle>
-            <CardDescription>{lesson.aiContext.difficultyReason}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="prose max-w-none">
-              <p>{lesson.content}</p>
-            </div>
-            
-            <Separator />
-            
-            <div>
-              <h4 className="font-semibold mb-3">
-                {t('aiAdaptedContent')}
-              </h4>
-              <p className="text-gray-700">{lesson.aiContext.adaptedContent}</p>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Main Content */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('lessonContent')}</CardTitle>
+                <CardDescription>{lesson.aiContext.difficultyReason}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="prose max-w-none">
+                  <p>{lesson.content}</p>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h4 className="font-semibold mb-3">
+                    {t('aiAdaptedContent')}
+                  </h4>
+                  <p className="text-gray-700">{lesson.aiContext.adaptedContent}</p>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Practice Exercises */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('practiceExercises')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {lesson.aiContext.practiceExercises.map((exercise, index) => (
-                <li key={index} className="flex items-start">
-                  <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="text-sm font-medium">{index + 1}</span>
-                  </div>
-                  <span>{exercise}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+            {/* Practice Exercises */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('practiceExercises')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {lesson.aiContext.practiceExercises.map((exercise, index) => (
+                    <motion.li 
+                      key={index} 
+                      className="flex items-start"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 + 0.5 }}
+                    >
+                      <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center mr-3 mt-0.5">
+                        <span className="text-sm font-medium">{index + 1}</span>
+                      </div>
+                      <span>{exercise}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-        {/* Next Steps */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('nextSteps')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {lesson.aiContext.nextSteps.map((step, index) => (
-                <li key={index} className="flex items-start">
-                  <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-600" />
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+            {/* Next Steps */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('nextSteps')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {lesson.aiContext.nextSteps.map((step, index) => (
+                    <motion.li 
+                      key={index} 
+                      className="flex items-start"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 + 0.7 }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2 mt-0.5 text-blue-600" />
+                      <span>{step}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-6">
-          <Button variant="outline" onClick={handlePreviousLesson}>
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            {t('previousLesson')}
-          </Button>
-          
-          <Button onClick={handleCompleteLesson}>
-            {t('completeLesson')}
-            <CheckCircle className="h-4 w-4 ml-2" />
-          </Button>
-          
-          <Button variant="outline" onClick={handleNextLesson}>
-            {t('nextLesson')}
-            <Play className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
+            {/* Action Buttons with Animation */}
+            <motion.div 
+              className="flex justify-between items-center pt-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+            >
+              <Button 
+                variant="outline" 
+                onClick={handlePreviousLesson}
+                disabled={isNavigating}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                {isNavigating && navigationDirection === 'previous' ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                )}
+                {t('previousLesson')}
+              </Button>
+              
+              <Button 
+                onClick={handleCompleteLesson}
+                disabled={isNavigating}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                {t('completeLesson')}
+                <CheckCircle className="h-4 w-4 ml-2" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={handleNextLesson}
+                disabled={isNavigating}
+                className="transition-all duration-200 hover:scale-105"
+              >
+                {t('nextLesson')}
+                {isNavigating && navigationDirection === 'next' ? (
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4 ml-2" />
+                )}
+              </Button>
+            </motion.div>
 
-        {/* Tags */}
-        {lesson.tags && lesson.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-4">
-            {lesson.tags.map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+            {/* Tags */}
+            {lesson.tags && lesson.tags.length > 0 && (
+              <motion.div 
+                className="flex flex-wrap gap-2 pt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.1 }}
+              >
+                {lesson.tags.map((tag, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.2 + index * 0.1 }}
+                  >
+                    <Badge variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from "react";
 
 export type Language = 'en' | 'tr';
 
@@ -375,12 +375,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [language]);
 
-  const t = (key: string, fallback?: string) => {
+  // Memoize the translation function to prevent recreating it on every render
+  const t = useCallback((key: string, fallback?: string) => {
     return translations[language][key as keyof typeof translations['en']] || fallback || key;
-  };
+  }, [language]);
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    language,
+    setLanguage,
+    t
+  }), [language, t]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

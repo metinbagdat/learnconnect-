@@ -15,14 +15,14 @@ try {
     });
   }
 } catch (error) {
-  console.log('Stripe package not installed, payment features will be disabled');
+  console.log('Stripe package not installed, using demo payment mode');
 }
 
+// Demo payment mode when Stripe is not available
+const DEMO_MODE = !stripe;
+
 export function registerStripeRoutes(app: Express) {
-  if (!stripe) {
-    console.log('Stripe not configured, skipping payment routes');
-    return;
-  }
+  console.log(DEMO_MODE ? 'Running in payment demo mode' : 'Stripe payment processing enabled');
 
   // Create payment intent for one-time course purchases
   app.post("/api/create-payment-intent", async (req, res) => {
@@ -31,6 +31,16 @@ export function registerStripeRoutes(app: Express) {
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      if (DEMO_MODE) {
+        // Demo mode - simulate payment intent
+        res.json({ 
+          clientSecret: `demo_pi_${Date.now()}_secret_${Math.random()}`,
+          paymentIntentId: `demo_pi_${Date.now()}`,
+          demoMode: true
+        });
+        return;
       }
 
       const paymentIntent = await stripe.paymentIntents.create({

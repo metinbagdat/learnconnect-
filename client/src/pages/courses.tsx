@@ -121,10 +121,10 @@ export default function Courses() {
             </div>
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
-              <Tabs defaultValue="enrolled">
+              <Tabs defaultValue="available">
                 <TabsList>
-                  <TabsTrigger value="enrolled">{t('myCourses')}</TabsTrigger>
-                  <TabsTrigger value="available">{t('availableCourses')}</TabsTrigger>
+                  <TabsTrigger value="enrolled">{t('myCourses')} ({filteredUserCourses.length})</TabsTrigger>
+                  <TabsTrigger value="available">{t('availableCourses')} ({filteredAvailableCourses.length})</TabsTrigger>
                 </TabsList>
                 
                 {/* Enrolled Courses Tab */}

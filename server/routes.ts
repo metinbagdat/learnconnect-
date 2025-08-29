@@ -240,32 +240,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Simple API for AI Assistant
-  app.post("/api/ai/chat", (req, res) => {
+  // AI Study Companion Chat API
+  app.post("/api/ai/chat", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     
-    const { message } = req.body;
-    
-    if (!message) {
-      return res.status(400).json({ message: "Message is required" });
+    try {
+      const { message, courseId, lessonId } = req.body;
+      
+      if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        return res.status(400).json({ message: "Valid message is required" });
+      }
+
+      // Import the AI chat service
+      const { processStudyCompanionChat } = await import('./ai-chat-service');
+      
+      // Process the chat message with context
+      const response = await processStudyCompanionChat(
+        req.user.id,
+        message.trim(),
+        courseId ? Number(courseId) : undefined,
+        lessonId ? Number(lessonId) : undefined
+      );
+      
+      res.json({ message: response });
+    } catch (error) {
+      console.error('Error in AI chat endpoint:', error);
+      res.status(500).json({ 
+        message: "I'm having trouble processing your request right now. Please try again in a moment." 
+      });
     }
-    
-    // For MVP, return static responses based on keywords
-    let response = "";
-    
-    if (message.toLowerCase().includes("angular momentum")) {
-      response = "Angular momentum is like a spinning object's resistance to changing its rotation. Think of an ice skater spinning with arms outstretched, who spins faster when pulling their arms in. This demonstrates conservation of angular momentum.\n\nWould you like me to provide a practice problem on this topic?";
-    } else if (message.toLowerCase().includes("python") || message.toLowerCase().includes("data science")) {
-      response = "Python is a versatile language commonly used in data science. Libraries like Pandas, NumPy, and Scikit-learn provide powerful tools for data manipulation and analysis.\n\nCan I help you with a specific Python concept or data science technique?";
-    } else if (message.toLowerCase().includes("marketing") || message.toLowerCase().includes("digital")) {
-      response = "Digital marketing encompasses SEO, social media marketing, content strategy, and more. These channels help businesses reach and engage their target audience online.\n\nIs there a particular aspect of digital marketing you'd like to learn more about?";
-    } else {
-      response = "I'm your AI Learning Assistant. I can help with your coursework, explain concepts, or suggest additional resources. What would you like to know more about?";
+  });
+
+  // Get chat history for the current user
+  app.get("/api/ai/chat/history", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
-    
-    res.json({ message: response });
+
+    try {
+      const { getChatHistory } = await import('./ai-chat-service');
+      const history = getChatHistory(req.user.id);
+      res.json({ messages: history });
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      res.status(500).json({ message: "Failed to fetch chat history" });
+    }
+  });
+
+  // Clear chat history for the current user
+  app.delete("/api/ai/chat/history", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { clearChatHistory } = await import('./ai-chat-service');
+      const cleared = clearChatHistory(req.user.id);
+      res.json({ success: cleared });
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+      res.status(500).json({ message: "Failed to clear chat history" });
+    }
+  });
+
+  // Get personalized study tips
+  app.get("/api/ai/study-tips", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { generateStudyTips } = await import('./ai-chat-service');
+      const tips = await generateStudyTips(req.user.id);
+      res.json({ tips });
+    } catch (error) {
+      console.error('Error generating study tips:', error);
+      res.status(500).json({ message: "Failed to generate study tips" });
+    }
+  });
+
+  // Get motivational message
+  app.get("/api/ai/motivation", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const { generateMotivationalMessage } = await import('./ai-chat-service');
+      const message = await generateMotivationalMessage(req.user.id);
+      res.json({ message });
+    } catch (error) {
+      console.error('Error generating motivational message:', error);
+      res.status(500).json({ message: "Keep learning and growing! Your dedication will pay off." });
+    }
   });
   
   // Generate lesson content on demand

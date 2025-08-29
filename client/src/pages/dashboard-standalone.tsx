@@ -7,7 +7,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { CourseCard } from "@/components/ui/course-card";
-import { AIAssistant } from "@/components/ui/ai-assistant";
+import { EnhancedAIAssistant } from "@/components/ui/enhanced-ai-assistant";
 import { AssignmentList } from "@/components/ui/assignment-list";
 import { Course, UserCourse, Assignment, User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -262,7 +262,7 @@ export default function DashboardStandalone() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* AI Assistant */}
               <div className="md:col-span-2">
-                <AIAssistant />
+                <EnhancedAIAssistant />
               </div>
               
               {/* Assignments */}

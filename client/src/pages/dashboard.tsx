@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { CourseCard } from "@/components/ui/course-card";
-import { AIAssistant } from "@/components/ui/ai-assistant";
+import { EnhancedAIAssistant } from "@/components/ui/enhanced-ai-assistant";
 import { AssignmentList } from "@/components/ui/assignment-list";
 import { CourseRecommendations } from "@/components/ui/course-recommendations";
 import { UserInterests } from "@/components/ui/user-interests";
@@ -836,7 +836,7 @@ export default function Dashboard() {
               
               {/* AI Assistant */}
               <div className="md:col-span-1">
-                <AIAssistant />
+                <EnhancedAIAssistant />
               </div>
               
               {/* Assignments */}

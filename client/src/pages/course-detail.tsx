@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { ModuleTree } from "@/components/modules/module-tree";
+import { EnhancedAIAssistant } from "@/components/ui/enhanced-ai-assistant";
 import { SkillChallengeManager } from "@/components/challenges/skill-challenge-manager";
 import { Course, Module, Lesson } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -227,7 +228,7 @@ export default function CourseDetail() {
                         userId={user.id}
                       />
                     </div>
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-1 space-y-6">
                       <SkillChallengeManager
                         courseId={parseInt(courseId!)}
                         category={course?.category}
@@ -238,6 +239,12 @@ export default function CourseDetail() {
                           });
                           queryClient.invalidateQueries({ queryKey: ['/api/user/level'] });
                         }}
+                      />
+                      
+                      {/* AI Study Companion for this course */}
+                      <EnhancedAIAssistant 
+                        courseId={parseInt(courseId!)}
+                        className="h-96"
                       />
                     </div>
                   </div>

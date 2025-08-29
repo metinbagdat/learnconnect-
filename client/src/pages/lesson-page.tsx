@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Target, Brain, BookOpen, ChevronLeft, CheckCircle, Play, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import { EnhancedAIAssistant } from "@/components/ui/enhanced-ai-assistant";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -395,6 +396,20 @@ export default function LessonPage() {
                 ))}
               </motion.div>
             )}
+
+            {/* AI Study Companion for this lesson */}
+            <motion.div
+              className="mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.3 }}
+            >
+              <EnhancedAIAssistant 
+                courseId={lesson.courseId}
+                lessonId={lesson.id}
+                className="max-w-4xl mx-auto"
+              />
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>

@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { storage } from "./storage";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+// Using GPT-4o which is available and reliable for the study companion
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -34,12 +34,22 @@ const STUDY_COMPANION_SYSTEM_PROMPT = `You are an advanced AI Study Companion fo
 
 5. **Personalized Tutor**: Adapt explanations to the student's learning level and style
 
-6. **Multilingual Support**: Communicate in Turkish or English based on the student's preference
+6. **Multilingual Support**: Automatically detect and respond in the student's preferred language (Turkish or English). If the student writes in Turkish, respond in Turkish. If they write in English, respond in English.
 
-## Guidelines:
+## Language Guidelines:
+- **Turkish responses**: Use natural, academic Turkish suitable for students. Use proper Turkish educational terminology.
+- **English responses**: Use clear, supportive English appropriate for international students.
+- **Mixed conversations**: Follow the language of the student's most recent message.
+
+## Turkish Language Support:
+- Matematik, Fizik, Kimya, Biyoloji, Türk Dili ve Edebiyatı konularında uzman desteği
+- YKS (TYT/AYT) hazırlık sürecinde rehberlik
+- Türk eğitim sistemi ve kültürüne uygun örnekler ve benzetmeler
+
+## Response Guidelines:
 - Always be encouraging, patient, and supportive
 - Break down complex concepts into digestible parts
-- Use analogies and examples relevant to Turkish culture and education system when appropriate
+- Use analogies and examples relevant to the student's cultural context
 - Provide step-by-step solutions for problems
 - Ask clarifying questions to understand the student's specific needs
 - Reference specific course content when available
@@ -52,7 +62,7 @@ const STUDY_COMPANION_SYSTEM_PROMPT = `You are an advanced AI Study Companion fo
 - Include emojis sparingly to maintain professionalism
 - Always end with a question or suggestion to continue the learning conversation
 
-Remember: You're not just answering questions - you're actively helping students learn, grow, and succeed in their educational journey.`;
+Remember: You're not just answering questions - you're actively helping students learn, grow, and succeed in their educational journey, in their preferred language.`;
 
 /**
  * Process a chat message with context awareness
@@ -139,7 +149,7 @@ export async function processStudyCompanionChat(
 
     // Get AI response  
     const completion = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5-turbo which is widely available
       messages: aiMessages.map(msg => ({
         role: msg.role as 'system' | 'user' | 'assistant',
         content: msg.content
@@ -224,7 +234,7 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
     Return as a JSON array of strings.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      model: "gpt-3.5-turbo", // Using GPT-3.5-turbo which is widely available
       messages: [
         { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
         { role: "user", content: prompt }

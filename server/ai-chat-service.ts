@@ -147,16 +147,34 @@ export async function processStudyCompanionChat(
       ...recentMessages.filter(msg => msg.role !== 'system')
     ];
 
-    // Get AI response  
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5-turbo which is widely available
-      messages: aiMessages.map(msg => ({
-        role: msg.role as 'system' | 'user' | 'assistant',
-        content: msg.content
-      })),
-      temperature: 0.7,
-      max_tokens: 800,
-    });
+    // Try multiple models in order of preference
+    const models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-0125"];
+    let completion;
+    let lastError;
+    
+    for (const model of models) {
+      try {
+        completion = await openai.chat.completions.create({
+          model: model,
+          messages: aiMessages.map(msg => ({
+            role: msg.role as 'system' | 'user' | 'assistant',
+            content: msg.content
+          })),
+          temperature: 0.7,
+          max_tokens: 800,
+        });
+        break; // Success, exit the loop
+      } catch (error) {
+        lastError = error;
+        console.log(`Model ${model} failed, trying next...`);
+        continue;
+      }
+    }
+    
+    if (!completion) {
+      console.error('All AI models failed:', lastError);
+      throw lastError;
+    }
 
     const aiResponse = completion.choices[0]?.message?.content;
     if (!aiResponse) {
@@ -178,14 +196,27 @@ export async function processStudyCompanionChat(
   } catch (error) {
     console.error('Error in AI chat processing:', error);
     
-    // Fallback response
-    const fallbackResponses = [
-      "I'm having trouble processing your question right now. Could you please try rephrasing it?",
-      "I'm experiencing some technical difficulties. In the meantime, try reviewing your course materials or checking the lesson content.",
-      "Sorry, I can't respond properly at the moment. Please try asking your question again in a few minutes.",
-    ];
+    // Language-aware fallback responses
+    const fallbackResponses = {
+      tr: [
+        "Şu anda sorunuzu işlemekte zorlanıyorum. Lütfen farklı bir şekilde ifade etmeyi deneyin.",
+        "Teknik zorluklarla karşılaşıyorum. Bu arada ders materyallerinizi gözden geçirin veya ders içeriğini kontrol edin.", 
+        "Özür dilerim, şu anda düzgün yanıt veremiyorum. Lütfen birkaç dakika sonra sorunuzu tekrar sorun."
+      ],
+      en: [
+        "I'm having trouble processing your question right now. Could you please try rephrasing it?",
+        "I'm experiencing some technical difficulties. In the meantime, try reviewing your course materials or checking the lesson content.",
+        "Sorry, I can't respond properly at the moment. Please try asking your question again in a few minutes.",
+      ]
+    };
     
-    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    // Detect language from the message
+    const isTurkish = /[çğıöşüÇĞIİÖŞÜ]/.test(message) || 
+                     /(merhaba|nasıl|nedir|neden|hangi|için|çok|ben|sen|biz|siz|onlar)/i.test(message);
+    const lang = isTurkish ? 'tr' : 'en';
+    const responses = fallbackResponses[lang];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
   }
 }
 
@@ -233,15 +264,38 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
     Focus on practical, actionable advice that will help them succeed in these specific subjects.
     Return as a JSON array of strings.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // Using GPT-3.5-turbo which is widely available
-      messages: [
-        { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-    });
+    // Try multiple models for study tips
+    const models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-0125"];
+    let completion;
+    
+    for (const model of models) {
+      try {
+        completion = await openai.chat.completions.create({
+          model: model,
+          messages: [
+            { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
+            { role: "user", content: prompt }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+        });
+        break; // Success, exit loop
+      } catch (error) {
+        console.log(`Study tips model ${model} failed, trying next...`);
+        continue;
+      }
+    }
+    
+    if (!completion) {
+      // Fallback tips when AI is not available
+      return [
+        "Review your notes regularly to reinforce memory",
+        "Practice active recall instead of just re-reading",
+        "Take short breaks during study sessions",
+        "Create a dedicated study environment",
+        "Set specific, achievable daily goals"
+      ];
+    }
 
     const response = completion.choices[0]?.message?.content;
     if (response) {

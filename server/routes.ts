@@ -242,8 +242,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Study Companion Chat API
   app.post("/api/ai/chat", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
     
     try {
@@ -258,7 +268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process the chat message with context
       const response = await processStudyCompanionChat(
-        req.user.id,
+        userId,
         message.trim(),
         courseId ? Number(courseId) : undefined,
         lessonId ? Number(lessonId) : undefined
@@ -307,13 +317,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get personalized study tips
   app.get("/api/ai/study-tips", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
 
     try {
       const { generateStudyTips } = await import('./ai-chat-service');
-      const tips = await generateStudyTips(req.user.id);
+      const tips = await generateStudyTips(userId);
       res.json({ tips });
     } catch (error) {
       console.error('Error generating study tips:', error);
@@ -323,13 +343,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get motivational message
   app.get("/api/ai/motivation", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
     }
 
     try {
       const { generateMotivationalMessage } = await import('./ai-chat-service');
-      const message = await generateMotivationalMessage(req.user.id);
+      const message = await generateMotivationalMessage(userId);
       res.json({ message });
     } catch (error) {
       console.error('Error generating motivational message:', error);

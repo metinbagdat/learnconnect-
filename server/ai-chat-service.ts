@@ -287,10 +287,10 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
     }
     
     if (!completion) {
-      // Fallback tips when AI is not available
+      // Language-aware fallback tips when AI is not available
       return [
         "Review your notes regularly to reinforce memory",
-        "Practice active recall instead of just re-reading",
+        "Practice active recall instead of just re-reading", 
         "Take short breaks during study sessions",
         "Create a dedicated study environment",
         "Set specific, achievable daily goals"

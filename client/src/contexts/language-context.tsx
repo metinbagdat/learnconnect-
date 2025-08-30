@@ -176,8 +176,14 @@ const translations = {
     chatCleared: "Chat Cleared",
     chatClearedDesc: "Your conversation history has been cleared.",
     chatClearError: "Failed to clear chat history.",
-    refreshTips: "Refresh",
+    refreshTips: "Refresh", 
     newMessage: "New Message",
+    loadingTips: "Loading tips...",
+    noTipsAvailable: "No tips available right now",
+    tryAgainLater: "Please try again later",
+    thinking: "Thinking...",
+    typeMessage: "Type a message...",
+    send: "Send",
     comprehensive: "Comprehensive",
     course: "Course",
     covering: "covering",
@@ -414,7 +420,13 @@ const translations = {
     chatClearedDesc: "Konuşma geçmişiniz temizlendi.",
     chatClearError: "Sohbet geçmişi temizlenemedi.",
     refreshTips: "Yenile",
-    newMessage: "Yeni Mesaj"
+    newMessage: "Yeni Mesaj",
+    loadingTips: "İpuçları yükleniyor...",
+    noTipsAvailable: "Şu anda ipucu mevcut değil",
+    tryAgainLater: "Lütfen daha sonra tekrar deneyin",
+    thinking: "Düşünüyor...",
+    typeMessage: "Mesaj yazın...",
+    send: "Gönder"
   }
 };
 

@@ -882,15 +882,93 @@ export const studyProgress = pgTable("study_progress", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Level Assessment System Tables
+export const levelAssessments = pgTable("level_assessments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  subject: text("subject").notNull(), // Mathematics, Programming, English, etc.
+  subCategory: text("sub_category"), // Algebra, JavaScript, Grammar, etc.
+  assessmentType: text("assessment_type").notNull().default("skill_level"), // skill_level, placement, diagnostic
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  totalQuestions: integer("total_questions").notNull().default(10),
+  correctAnswers: integer("correct_answers").notNull().default(0),
+  timeSpentMinutes: integer("time_spent_minutes").notNull().default(0),
+  finalLevel: text("final_level"), // beginner, intermediate, advanced
+  confidenceScore: integer("confidence_score").default(75), // 0-100 AI confidence in level determination
+  recommendedNextSteps: jsonb("recommended_next_steps").default([]), // AI recommendations
+  status: text("status").notNull().default("in_progress"), // in_progress, completed, abandoned
+  language: text("language").notNull().default("en"), // en, tr for language-specific assessments
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const assessmentQuestions = pgTable("assessment_questions", {
+  id: serial("id").primaryKey(),
+  assessmentId: integer("assessment_id").notNull().references(() => levelAssessments.id),
+  questionNumber: integer("question_number").notNull(),
+  questionText: text("question_text").notNull(),
+  questionType: text("question_type").notNull().default("multiple_choice"), // multiple_choice, true_false, open_ended
+  options: jsonb("options").default([]), // For multiple choice questions
+  correctAnswer: text("correct_answer").notNull(),
+  userAnswer: text("user_answer"),
+  isCorrect: boolean("is_correct"),
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  skillArea: text("skill_area"), // specific skill being tested
+  timeSpentSeconds: integer("time_spent_seconds").default(0),
+  aiGenerated: boolean("ai_generated").default(true),
+  explanation: text("explanation"), // AI-generated explanation of correct answer
+});
+
+export const userSkillLevels = pgTable("user_skill_levels", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  subject: text("subject").notNull(),
+  subCategory: text("sub_category"),
+  currentLevel: text("current_level").notNull(), // beginner, intermediate, advanced
+  proficiencyScore: integer("proficiency_score").notNull(), // 0-100
+  lastAssessmentId: integer("last_assessment_id").references(() => levelAssessments.id),
+  assessmentCount: integer("assessment_count").notNull().default(1),
+  improvementRate: numeric("improvement_rate", { precision: 5, scale: 2 }).default("0.00"), // Track learning velocity
+  strongAreas: text("strong_areas").array().default([]), // Areas where user excels
+  weakAreas: text("weak_areas").array().default([]), // Areas needing improvement
+  nextRecommendedLevel: text("next_recommended_level"), // What level to work toward
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertStudyGoal = createInsertSchema(studyGoals);
 export const insertStudySchedule = createInsertSchema(studySchedules);
 export const insertLearningRecommendation = createInsertSchema(learningRecommendations);
 export const insertStudyProgress = createInsertSchema(studyProgress);
 
+// Assessment system insert schemas
+export const insertLevelAssessment = createInsertSchema(levelAssessments).omit({ 
+  id: true, 
+  createdAt: true, 
+  completedAt: true 
+});
+export const insertAssessmentQuestion = createInsertSchema(assessmentQuestions).omit({ 
+  id: true 
+});
+export const insertUserSkillLevel = createInsertSchema(userSkillLevels).omit({ 
+  id: true, 
+  createdAt: true, 
+  lastUpdated: true 
+});
+
 export type StudyGoal = typeof studyGoals.$inferSelect;
 export type StudySchedule = typeof studySchedules.$inferSelect;
 export type LearningRecommendation = typeof learningRecommendations.$inferSelect;
 export type StudyProgress = typeof studyProgress.$inferSelect;
+
+// Assessment system types
+export type LevelAssessment = typeof levelAssessments.$inferSelect;
+export type AssessmentQuestion = typeof assessmentQuestions.$inferSelect;
+export type UserSkillLevel = typeof userSkillLevels.$inferSelect;
+export type InsertLevelAssessment = z.infer<typeof insertLevelAssessment>;
+export type InsertAssessmentQuestion = z.infer<typeof insertAssessmentQuestion>;
+export type InsertUserSkillLevel = z.infer<typeof insertUserSkillLevel>;
+
 export type InsertLearningMilestone = z.infer<typeof insertLearningMilestoneSchema>;
 export type EmojiReaction = typeof emojiReactions.$inferSelect;
 export type InsertEmojiReaction = z.infer<typeof insertEmojiReactionSchema>;

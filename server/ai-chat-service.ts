@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { storage } from "./storage";
 
-// Using GPT-4o which is available and reliable for the study companion
+// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -34,22 +34,12 @@ const STUDY_COMPANION_SYSTEM_PROMPT = `You are an advanced AI Study Companion fo
 
 5. **Personalized Tutor**: Adapt explanations to the student's learning level and style
 
-6. **Multilingual Support**: Automatically detect and respond in the student's preferred language (Turkish or English). If the student writes in Turkish, respond in Turkish. If they write in English, respond in English.
+6. **Multilingual Support**: Communicate in Turkish or English based on the student's preference
 
-## Language Guidelines:
-- **Turkish responses**: Use natural, academic Turkish suitable for students. Use proper Turkish educational terminology.
-- **English responses**: Use clear, supportive English appropriate for international students.
-- **Mixed conversations**: Follow the language of the student's most recent message.
-
-## Turkish Language Support:
-- Matematik, Fizik, Kimya, Biyoloji, Türk Dili ve Edebiyatı konularında uzman desteği
-- YKS (TYT/AYT) hazırlık sürecinde rehberlik
-- Türk eğitim sistemi ve kültürüne uygun örnekler ve benzetmeler
-
-## Response Guidelines:
+## Guidelines:
 - Always be encouraging, patient, and supportive
 - Break down complex concepts into digestible parts
-- Use analogies and examples relevant to the student's cultural context
+- Use analogies and examples relevant to Turkish culture and education system when appropriate
 - Provide step-by-step solutions for problems
 - Ask clarifying questions to understand the student's specific needs
 - Reference specific course content when available
@@ -62,7 +52,7 @@ const STUDY_COMPANION_SYSTEM_PROMPT = `You are an advanced AI Study Companion fo
 - Include emojis sparingly to maintain professionalism
 - Always end with a question or suggestion to continue the learning conversation
 
-Remember: You're not just answering questions - you're actively helping students learn, grow, and succeed in their educational journey, in their preferred language.`;
+Remember: You're not just answering questions - you're actively helping students learn, grow, and succeed in their educational journey.`;
 
 /**
  * Process a chat message with context awareness
@@ -147,34 +137,16 @@ export async function processStudyCompanionChat(
       ...recentMessages.filter(msg => msg.role !== 'system')
     ];
 
-    // Try multiple models in order of preference
-    const models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-0125"];
-    let completion;
-    let lastError;
-    
-    for (const model of models) {
-      try {
-        completion = await openai.chat.completions.create({
-          model: model,
-          messages: aiMessages.map(msg => ({
-            role: msg.role as 'system' | 'user' | 'assistant',
-            content: msg.content
-          })),
-          temperature: 0.7,
-          max_tokens: 800,
-        });
-        break; // Success, exit the loop
-      } catch (error) {
-        lastError = error;
-        console.log(`Model ${model} failed, trying next...`);
-        continue;
-      }
-    }
-    
-    if (!completion) {
-      console.error('All AI models failed:', lastError);
-      throw lastError;
-    }
+    // Get AI response  
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      messages: aiMessages.map(msg => ({
+        role: msg.role as 'system' | 'user' | 'assistant',
+        content: msg.content
+      })),
+      temperature: 0.7,
+      max_tokens: 800,
+    });
 
     const aiResponse = completion.choices[0]?.message?.content;
     if (!aiResponse) {
@@ -196,27 +168,14 @@ export async function processStudyCompanionChat(
   } catch (error) {
     console.error('Error in AI chat processing:', error);
     
-    // Language-aware fallback responses
-    const fallbackResponses = {
-      tr: [
-        "Şu anda sorunuzu işlemekte zorlanıyorum. Lütfen farklı bir şekilde ifade etmeyi deneyin.",
-        "Teknik zorluklarla karşılaşıyorum. Bu arada ders materyallerinizi gözden geçirin veya ders içeriğini kontrol edin.", 
-        "Özür dilerim, şu anda düzgün yanıt veremiyorum. Lütfen birkaç dakika sonra sorunuzu tekrar sorun."
-      ],
-      en: [
-        "I'm having trouble processing your question right now. Could you please try rephrasing it?",
-        "I'm experiencing some technical difficulties. In the meantime, try reviewing your course materials or checking the lesson content.",
-        "Sorry, I can't respond properly at the moment. Please try asking your question again in a few minutes.",
-      ]
-    };
+    // Fallback response
+    const fallbackResponses = [
+      "I'm having trouble processing your question right now. Could you please try rephrasing it?",
+      "I'm experiencing some technical difficulties. In the meantime, try reviewing your course materials or checking the lesson content.",
+      "Sorry, I can't respond properly at the moment. Please try asking your question again in a few minutes.",
+    ];
     
-    // Detect language from the message
-    const isTurkish = /[çğıöşüÇĞIİÖŞÜ]/.test(message) || 
-                     /(merhaba|nasıl|nedir|neden|hangi|için|çok|ben|sen|biz|siz|onlar)/i.test(message);
-    const lang = isTurkish ? 'tr' : 'en';
-    const responses = fallbackResponses[lang];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
+    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
   }
 }
 
@@ -264,38 +223,15 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
     Focus on practical, actionable advice that will help them succeed in these specific subjects.
     Return as a JSON array of strings.`;
 
-    // Try multiple models for study tips
-    const models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-0125"];
-    let completion;
-    
-    for (const model of models) {
-      try {
-        completion = await openai.chat.completions.create({
-          model: model,
-          messages: [
-            { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
-            { role: "user", content: prompt }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-        });
-        break; // Success, exit loop
-      } catch (error) {
-        console.log(`Study tips model ${model} failed, trying next...`);
-        continue;
-      }
-    }
-    
-    if (!completion) {
-      // Language-aware fallback tips when AI is not available
-      return [
-        "Review your notes regularly to reinforce memory",
-        "Practice active recall instead of just re-reading", 
-        "Take short breaks during study sessions",
-        "Create a dedicated study environment",
-        "Set specific, achievable daily goals"
-      ];
-    }
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      messages: [
+        { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.7,
+    });
 
     const response = completion.choices[0]?.message?.content;
     if (response) {

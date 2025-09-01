@@ -121,6 +121,13 @@ import {
   type InsertUserProgramProgress,
   type StudySession,
   type InsertStudySession,
+  // Assessment system types
+  type LevelAssessment,
+  type InsertLevelAssessment,
+  type AssessmentQuestion,
+  type InsertAssessmentQuestion,
+  type UserSkillLevel,
+  type InsertUserSkillLevel,
   mentors,
   userMentors,
   studyPrograms,
@@ -132,7 +139,17 @@ import {
   insertStudyProgramSchema,
   insertProgramScheduleSchema,
   insertUserProgramProgressSchema,
-  insertStudySessionSchema
+  insertStudySessionSchema,
+  studyGoals,
+  studySchedules,
+  learningRecommendations,
+  studyProgress,
+  levelAssessments,
+  assessmentQuestions,
+  userSkillLevels,
+  insertLevelAssessment,
+  insertAssessmentQuestion,
+  insertUserSkillLevel
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -329,6 +346,22 @@ export interface IStorage {
   createStudySession(session: InsertStudySession): Promise<StudySession>;
   updateStudySession(id: number, data: Partial<StudySession>): Promise<StudySession | undefined>;
   getUserWeeklyStats(userId: number, programId?: number): Promise<{ plannedHours: number; actualHours: number; adherenceScore: number }>;
+
+  // Level Assessment operations
+  createLevelAssessment(assessment: InsertLevelAssessment): Promise<number>;
+  getLevelAssessment(id: number): Promise<LevelAssessment | undefined>;
+  updateLevelAssessment(id: number, data: Partial<LevelAssessment>): Promise<LevelAssessment | undefined>;
+  getUserAssessments(userId: number): Promise<LevelAssessment[]>;
+  
+  // Assessment Question operations
+  createAssessmentQuestion(question: InsertAssessmentQuestion): Promise<AssessmentQuestion>;
+  getAssessmentQuestions(assessmentId: number): Promise<AssessmentQuestion[]>;
+  updateAssessmentQuestion(id: number, data: Partial<AssessmentQuestion>): Promise<AssessmentQuestion | undefined>;
+  
+  // User Skill Level operations
+  getUserSkillLevels(userId: number): Promise<UserSkillLevel[]>;
+  getUserSkillLevel(userId: number, subject: string, subCategory?: string): Promise<UserSkillLevel | undefined>;
+  updateUserSkillLevel(userId: number, skillData: InsertUserSkillLevel): Promise<UserSkillLevel>;
 
   // Session store
   sessionStore: SessionStore;
@@ -2350,6 +2383,106 @@ export class DatabaseStorage implements IStorage {
       actualHours,
       adherenceScore: Math.round(adherenceScore * 100) / 100
     };
+  }
+
+  // Level Assessment Operations
+  async createLevelAssessment(assessment: InsertLevelAssessment): Promise<number> {
+    const [newAssessment] = await db.insert(levelAssessments).values(assessment).returning();
+    return newAssessment.id;
+  }
+
+  async getLevelAssessment(id: number): Promise<LevelAssessment | undefined> {
+    const [assessment] = await db.select().from(levelAssessments).where(eq(levelAssessments.id, id));
+    return assessment;
+  }
+
+  async updateLevelAssessment(id: number, data: Partial<LevelAssessment>): Promise<LevelAssessment | undefined> {
+    const [updatedAssessment] = await db
+      .update(levelAssessments)
+      .set(data)
+      .where(eq(levelAssessments.id, id))
+      .returning();
+    return updatedAssessment;
+  }
+
+  async getUserAssessments(userId: number): Promise<LevelAssessment[]> {
+    return db
+      .select()
+      .from(levelAssessments)
+      .where(eq(levelAssessments.userId, userId))
+      .orderBy(desc(levelAssessments.createdAt));
+  }
+
+  // Assessment Question Operations
+  async createAssessmentQuestion(question: InsertAssessmentQuestion): Promise<AssessmentQuestion> {
+    const [newQuestion] = await db.insert(assessmentQuestions).values(question).returning();
+    return newQuestion;
+  }
+
+  async getAssessmentQuestions(assessmentId: number): Promise<AssessmentQuestion[]> {
+    return db
+      .select()
+      .from(assessmentQuestions)
+      .where(eq(assessmentQuestions.assessmentId, assessmentId))
+      .orderBy(assessmentQuestions.questionNumber);
+  }
+
+  async updateAssessmentQuestion(id: number, data: Partial<AssessmentQuestion>): Promise<AssessmentQuestion | undefined> {
+    const [updatedQuestion] = await db
+      .update(assessmentQuestions)
+      .set(data)
+      .where(eq(assessmentQuestions.id, id))
+      .returning();
+    return updatedQuestion;
+  }
+
+  // User Skill Level Operations
+  async getUserSkillLevels(userId: number): Promise<UserSkillLevel[]> {
+    return db
+      .select()
+      .from(userSkillLevels)
+      .where(eq(userSkillLevels.userId, userId))
+      .orderBy(desc(userSkillLevels.lastUpdated));
+  }
+
+  async getUserSkillLevel(userId: number, subject: string, subCategory?: string): Promise<UserSkillLevel | undefined> {
+    let query = db
+      .select()
+      .from(userSkillLevels)
+      .where(and(
+        eq(userSkillLevels.userId, userId),
+        eq(userSkillLevels.subject, subject)
+      ));
+
+    if (subCategory) {
+      query = query.where(eq(userSkillLevels.subCategory, subCategory));
+    }
+
+    const [skillLevel] = await query;
+    return skillLevel;
+  }
+
+  async updateUserSkillLevel(userId: number, skillData: InsertUserSkillLevel): Promise<UserSkillLevel> {
+    // Check if skill level already exists
+    const existing = await this.getUserSkillLevel(userId, skillData.subject, skillData.subCategory);
+    
+    if (existing) {
+      // Update existing skill level
+      const [updated] = await db
+        .update(userSkillLevels)
+        .set({
+          ...skillData,
+          lastUpdated: new Date(),
+          assessmentCount: existing.assessmentCount + 1
+        })
+        .where(eq(userSkillLevels.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new skill level
+      const [newSkillLevel] = await db.insert(userSkillLevels).values(skillData).returning();
+      return newSkillLevel;
+    }
   }
 }
 

@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PageWrapper from "@/components/layout/page-wrapper";
+import LevelAssessment from "@/components/assessment/level-assessment";
 
 interface StudyGoal {
   id?: number;
@@ -54,6 +55,8 @@ export default function StudyPlannerPage() {
   const { t, language } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'goals' | 'schedule' | 'progress'>('goals');
+  const [showAssessment, setShowAssessment] = useState(false);
+  const [assessmentSubject, setAssessmentSubject] = useState('');
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [newGoal, setNewGoal] = useState<Partial<StudyGoal>>({
     goalType: 'exam_prep',
@@ -638,6 +641,39 @@ export default function StudyPlannerPage() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Assessment Modal */}
+        {showAssessment && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6">
+                <LevelAssessment
+                  subject={assessmentSubject}
+                  onComplete={(result) => {
+                    setShowAssessment(false);
+                    toast({
+                      title: language === 'tr' ? 'Değerlendirme Tamamlandı!' : 'Assessment Completed!',
+                      description: language === 'tr' 
+                        ? `Seviyeniz: ${result.finalLevel === 'beginner' ? 'Başlangıç' : result.finalLevel === 'intermediate' ? 'Orta' : 'İleri'}`
+                        : `Your level: ${result.finalLevel}`,
+                    });
+                  }}
+                  onCancel={() => setShowAssessment(false)}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </PageWrapper>
   );

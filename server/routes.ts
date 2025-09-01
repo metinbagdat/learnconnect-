@@ -242,18 +242,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Study Companion Chat API
   app.post("/api/ai/chat", async (req, res) => {
-    let userId;
-    
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      // Try header authentication
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
     
     try {
@@ -268,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process the chat message with context
       const response = await processStudyCompanionChat(
-        userId,
+        req.user.id,
         message.trim(),
         courseId ? Number(courseId) : undefined,
         lessonId ? Number(lessonId) : undefined
@@ -317,23 +307,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get personalized study tips
   app.get("/api/ai/study-tips", async (req, res) => {
-    let userId;
-    
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      // Try header authentication
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
       const { generateStudyTips } = await import('./ai-chat-service');
-      const tips = await generateStudyTips(userId);
+      const tips = await generateStudyTips(req.user.id);
       res.json({ tips });
     } catch (error) {
       console.error('Error generating study tips:', error);
@@ -343,23 +323,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get motivational message
   app.get("/api/ai/motivation", async (req, res) => {
-    let userId;
-    
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      // Try header authentication
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
       const { generateMotivationalMessage } = await import('./ai-chat-service');
-      const message = await generateMotivationalMessage(userId);
+      const message = await generateMotivationalMessage(req.user.id);
       res.json({ message });
     } catch (error) {
       console.error('Error generating motivational message:', error);
@@ -3981,6 +3951,190 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error updating study session:", error);
       res.status(500).json({ message: "Failed to update study session" });
+    }
+  });
+
+  // Assessment routes
+  app.post("/api/assessments", async (req, res) => {
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const { subject, subCategory, language = 'en' } = req.body;
+      
+      if (!subject) {
+        return res.status(400).json({ message: "Subject is required" });
+      }
+
+      const { createLevelAssessment } = await import('./assessment-service');
+      const assessmentId = await createLevelAssessment(userId, subject, subCategory, language);
+      
+      res.status(201).json({ assessmentId });
+    } catch (error) {
+      console.error('Error creating assessment:', error);
+      res.status(500).json({ message: "Failed to create assessment" });
+    }
+  });
+
+  app.get("/api/assessments/:id", async (req, res) => {
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const assessmentId = parseInt(req.params.id);
+      const assessment = await storage.getLevelAssessment(assessmentId);
+      
+      if (!assessment || assessment.userId !== userId) {
+        return res.status(404).json({ message: "Assessment not found" });
+      }
+
+      const questions = await storage.getAssessmentQuestions(assessmentId);
+      
+      // Remove correct answers and explanations for in-progress assessments
+      const questionsForUser = questions.map(q => ({
+        id: q.id,
+        questionNumber: q.questionNumber,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        options: q.options,
+        difficulty: q.difficulty,
+        skillArea: q.skillArea,
+        // Don't include correctAnswer and explanation until completed
+        ...(assessment.status === 'completed' && {
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          userAnswer: q.userAnswer,
+          isCorrect: q.isCorrect
+        })
+      }));
+
+      res.json({
+        assessment,
+        questions: questionsForUser
+      });
+    } catch (error) {
+      console.error('Error fetching assessment:', error);
+      res.status(500).json({ message: "Failed to fetch assessment" });
+    }
+  });
+
+  app.post("/api/assessments/:id/complete", async (req, res) => {
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    try {
+      const assessmentId = parseInt(req.params.id);
+      const { answers, language = 'en' } = req.body;
+      
+      if (!answers || !Array.isArray(answers)) {
+        return res.status(400).json({ message: "Answers are required" });
+      }
+
+      const assessment = await storage.getLevelAssessment(assessmentId);
+      if (!assessment || assessment.userId !== userId) {
+        return res.status(404).json({ message: "Assessment not found" });
+      }
+
+      const { completeAssessment } = await import('./assessment-service');
+      const result = await completeAssessment(assessmentId, answers, language);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error completing assessment:', error);
+      res.status(500).json({ message: "Failed to complete assessment" });
+    }
+  });
+
+  app.get("/api/users/:userId/assessments", async (req, res) => {
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    // Users can only view their own assessments
+    const requestedUserId = parseInt(req.params.userId);
+    if (userId !== requestedUserId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      const assessments = await storage.getUserAssessments(userId);
+      res.json(assessments);
+    } catch (error) {
+      console.error('Error fetching user assessments:', error);
+      res.status(500).json({ message: "Failed to fetch assessments" });
+    }
+  });
+
+  app.get("/api/users/:userId/skill-levels", async (req, res) => {
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    // Users can only view their own skill levels
+    const requestedUserId = parseInt(req.params.userId);
+    if (userId !== requestedUserId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      const skillLevels = await storage.getUserSkillLevels(userId);
+      res.json(skillLevels);
+    } catch (error) {
+      console.error('Error fetching user skill levels:', error);
+      res.status(500).json({ message: "Failed to fetch skill levels" });
     }
   });
 

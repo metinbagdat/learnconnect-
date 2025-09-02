@@ -1,13 +1,13 @@
-import OpenAI from "openai";
+import Anthropic from '@anthropic-ai/sdk';
 import { storage } from "./storage";
 import type { InsertLevelAssessment, InsertAssessmentQuestion, InsertUserSkillLevel } from "@shared/schema";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 // Available AI models in priority order
-const AI_MODELS = ["gpt-5", "gpt-4", "gpt-3.5-turbo", "gpt-4-turbo-preview", "gpt-3.5-turbo-0125"];
+const AI_MODELS = ["claude-3-5-sonnet-20241022", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"];
 
 interface AssessmentQuestionData {
   questionText: string;
@@ -96,18 +96,17 @@ Requirements:
     try {
       console.log(`Generating assessment questions with model ${model}...`);
       
-      const completion = await openai.chat.completions.create({
+      const completion = await anthropic.messages.create({
         model: model,
+        max_tokens: 3000,
+        temperature: 0.7,
+        system: systemPrompt,
         messages: [
-          { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 3000,
       });
 
-      const responseContent = completion.choices[0]?.message?.content;
+      const responseContent = completion.content[0]?.type === 'text' ? completion.content[0].text : undefined;
       if (!responseContent) {
         throw new Error("Empty response from AI service");
       }
@@ -216,22 +215,19 @@ Respond in JSON format:
     // Try AI analysis first
     for (const model of AI_MODELS) {
       try {
-        const completion = await openai.chat.completions.create({
+        const completion = await anthropic.messages.create({
           model: model,
+          max_tokens: 1500,
+          temperature: 0.3,
+          system: isTurkish 
+            ? "Sen bir uzman eğitim danışmanısın. Değerlendirme sonuçlarını analiz edip öneriler verirsin."
+            : "You are an expert educational advisor. You analyze assessment results and provide recommendations.",
           messages: [
-            { 
-              role: "system", 
-              content: isTurkish 
-                ? "Sen bir uzman eğitim danışmanısın. Değerlendirme sonuçlarını analiz edip öneriler verirsin."
-                : "You are an expert educational advisor. You analyze assessment results and provide recommendations."
-            },
             { role: "user", content: analysisPrompt }
           ],
-          response_format: { type: "json_object" },
-          temperature: 0.3,
         });
 
-        const responseContent = completion.choices[0]?.message?.content;
+        const responseContent = completion.content[0]?.type === 'text' ? completion.content[0].text : undefined;
         if (responseContent) {
           const aiAnalysis = JSON.parse(responseContent);
           return {
@@ -401,38 +397,256 @@ function getNextLevel(currentLevel: string): string {
 }
 
 function getFallbackQuestions(subject: string, count: number, isTurkish: boolean): AssessmentQuestionData[] {
-  const baseQuestions = isTurkish ? [
-    {
-      questionText: `${subject} alanında temel kavramları anlıyor musunuz?`,
-      questionType: 'multiple_choice' as const,
-      options: ['Evet, çok iyi', 'Kısmen', 'Hayır, yeni başlıyorum', 'Emin değilim'],
-      correctAnswer: 'Evet, çok iyi',
-      difficulty: 'beginner' as const,
-      skillArea: 'Temel Kavramlar',
-      explanation: 'Temel kavramları anlamak öğrenmenin ilk adımıdır'
-    }
-  ] : [
-    {
-      questionText: `Do you understand the basic concepts in ${subject}?`,
-      questionType: 'multiple_choice' as const,
-      options: ['Yes, very well', 'Somewhat', 'No, I\'m just starting', 'Not sure'],
-      correctAnswer: 'Yes, very well',
-      difficulty: 'beginner' as const,
-      skillArea: 'Basic Concepts',
-      explanation: 'Understanding basic concepts is the first step in learning'
-    }
-  ];
+  const questionBanks = getSubjectQuestionBank(subject.toLowerCase(), isTurkish);
+  
+  if (questionBanks.length === 0) {
+    // Generic fallback if subject not found
+    return getGenericQuestions(subject, count, isTurkish);
+  }
 
-  // Repeat the pattern to reach the desired count
   const questions = [];
-  for (let i = 0; i < count; i++) {
-    questions.push({
-      ...baseQuestions[0],
-      questionText: baseQuestions[0].questionText + ` (${i + 1})`
-    });
+  const questionsPerLevel = Math.ceil(count / 3);
+  
+  // Get questions from each difficulty level
+  ['beginner', 'intermediate', 'advanced'].forEach((difficulty, levelIndex) => {
+    const levelQuestions = questionBanks.filter(q => q.difficulty === difficulty);
+    const questionsNeeded = Math.min(questionsPerLevel, levelQuestions.length);
+    
+    for (let i = 0; i < questionsNeeded && questions.length < count; i++) {
+      questions.push(levelQuestions[i % levelQuestions.length]);
+    }
+  });
+
+  // Fill remaining slots if needed
+  while (questions.length < count) {
+    const randomQuestion: AssessmentQuestionData = questionBanks[questions.length % questionBanks.length];
+    questions.push(randomQuestion);
   }
   
-  return questions;
+  return questions.slice(0, count);
+}
+
+function getSubjectQuestionBank(subject: string, isTurkish: boolean): AssessmentQuestionData[] {
+  const questionBanks: { [key: string]: AssessmentQuestionData[] } = {};
+
+  if (isTurkish) {
+    questionBanks['mathematics'] = [
+      {
+        questionText: '2x + 5 = 15 denkleminde x değeri nedir?',
+        questionType: 'multiple_choice',
+        options: ['x = 5', 'x = 10', 'x = 7', 'x = 2'],
+        correctAnswer: 'x = 5',
+        difficulty: 'beginner',
+        skillArea: 'Doğrusal Denklemler',
+        explanation: '2x + 5 = 15 → 2x = 10 → x = 5'
+      },
+      {
+        questionText: 'f(x) = 2x² - 3x + 1 fonksiyonunda f(2) değeri nedir?',
+        questionType: 'multiple_choice',
+        options: ['3', '5', '7', '9'],
+        correctAnswer: '3',
+        difficulty: 'intermediate',
+        skillArea: 'Fonksiyonlar',
+        explanation: 'f(2) = 2(2)² - 3(2) + 1 = 8 - 6 + 1 = 3'
+      },
+      {
+        questionText: '∫(2x + 3)dx integrali nedir?',
+        questionType: 'multiple_choice',
+        options: ['x² + 3x + C', '2x² + 3x + C', 'x² + 3x', '2x + 3'],
+        correctAnswer: 'x² + 3x + C',
+        difficulty: 'advanced',
+        skillArea: 'İntegral',
+        explanation: '∫(2x + 3)dx = x² + 3x + C (sabit eklenir)'
+      }
+    ];
+
+    questionBanks['programming'] = [
+      {
+        questionText: 'JavaScript\'te değişken tanımlamak için hangi anahtar kelime kullanılır?',
+        questionType: 'multiple_choice',
+        options: ['var', 'let', 'const', 'Hepsi'],
+        correctAnswer: 'Hepsi',
+        difficulty: 'beginner',
+        skillArea: 'Değişkenler',
+        explanation: 'JavaScript\'te var, let ve const ile değişken tanımlanır'
+      },
+      {
+        questionText: 'Array.map() metodunun amacı nedir?',
+        questionType: 'multiple_choice',
+        options: ['Dizi elemanlarını filtreler', 'Yeni dizi oluşturur', 'Diziyi sıralar', 'Dizi uzunluğu verir'],
+        correctAnswer: 'Yeni dizi oluşturur',
+        difficulty: 'intermediate',
+        skillArea: 'Array Metodları',
+        explanation: 'map() her element için fonksiyon çalıştırıp yeni dizi döndürür'
+      },
+      {
+        questionText: 'Async/await\'in temel amacı nedir?',
+        questionType: 'multiple_choice',
+        options: ['Senkron kod yazma', 'Asenkron kod yazma', 'Performans artırma', 'Hata yakalama'],
+        correctAnswer: 'Asenkron kod yazma',
+        difficulty: 'advanced',
+        skillArea: 'Asenkron Programlama',
+        explanation: 'Async/await asenkron işlemleri senkron gibi yazmayı sağlar'
+      }
+    ];
+
+    questionBanks['english'] = [
+      {
+        questionText: '"I ___ to school every day." cümlesindeki boşluğa ne gelmelidir?',
+        questionType: 'multiple_choice',
+        options: ['go', 'goes', 'going', 'went'],
+        correctAnswer: 'go',
+        difficulty: 'beginner',
+        skillArea: 'Basit Şimdiki Zaman',
+        explanation: '"I" zamiri ile "go" fiili kullanılır'
+      },
+      {
+        questionText: 'Hangisi doğru passive voice kullanımıdır?',
+        questionType: 'multiple_choice',
+        options: ['The book reads by me', 'The book is read by me', 'The book read by me', 'The book reading by me'],
+        correctAnswer: 'The book is read by me',
+        difficulty: 'intermediate',
+        skillArea: 'Passive Voice',
+        explanation: 'Passive voice: be + past participle formunda yapılır'
+      },
+      {
+        questionText: 'Subjunctive mood\'un kullanım amacı nedir?',
+        questionType: 'multiple_choice',
+        options: ['Kesin durumlar', 'Varsayımsal durumlar', 'Geçmiş olaylar', 'Gelecek planları'],
+        correctAnswer: 'Varsayımsal durumlar',
+        difficulty: 'advanced',
+        skillArea: 'Advanced Grammar',
+        explanation: 'Subjunctive mood varsayımsal, dilek ve öneri ifadelerinde kullanılır'
+      }
+    ];
+  } else {
+    questionBanks['mathematics'] = [
+      {
+        questionText: 'What is the value of x in the equation 2x + 5 = 15?',
+        questionType: 'multiple_choice',
+        options: ['x = 5', 'x = 10', 'x = 7', 'x = 2'],
+        correctAnswer: 'x = 5',
+        difficulty: 'beginner',
+        skillArea: 'Linear Equations',
+        explanation: '2x + 5 = 15 → 2x = 10 → x = 5'
+      },
+      {
+        questionText: 'What is f(2) for the function f(x) = 2x² - 3x + 1?',
+        questionType: 'multiple_choice',
+        options: ['3', '5', '7', '9'],
+        correctAnswer: '3',
+        difficulty: 'intermediate',
+        skillArea: 'Functions',
+        explanation: 'f(2) = 2(2)² - 3(2) + 1 = 8 - 6 + 1 = 3'
+      },
+      {
+        questionText: 'What is the integral of ∫(2x + 3)dx?',
+        questionType: 'multiple_choice',
+        options: ['x² + 3x + C', '2x² + 3x + C', 'x² + 3x', '2x + 3'],
+        correctAnswer: 'x² + 3x + C',
+        difficulty: 'advanced',
+        skillArea: 'Calculus',
+        explanation: '∫(2x + 3)dx = x² + 3x + C (constant of integration)'
+      }
+    ];
+
+    questionBanks['programming'] = [
+      {
+        questionText: 'Which keyword is used to declare variables in JavaScript?',
+        questionType: 'multiple_choice',
+        options: ['var', 'let', 'const', 'All of the above'],
+        correctAnswer: 'All of the above',
+        difficulty: 'beginner',
+        skillArea: 'Variables',
+        explanation: 'JavaScript uses var, let, and const to declare variables'
+      },
+      {
+        questionText: 'What does the Array.map() method do?',
+        questionType: 'multiple_choice',
+        options: ['Filters array elements', 'Creates a new array', 'Sorts the array', 'Returns array length'],
+        correctAnswer: 'Creates a new array',
+        difficulty: 'intermediate',
+        skillArea: 'Array Methods',
+        explanation: 'map() creates a new array by calling a function on each element'
+      },
+      {
+        questionText: 'What is the primary purpose of async/await?',
+        questionType: 'multiple_choice',
+        options: ['Write synchronous code', 'Handle asynchronous operations', 'Improve performance', 'Error handling'],
+        correctAnswer: 'Handle asynchronous operations',
+        difficulty: 'advanced',
+        skillArea: 'Asynchronous Programming',
+        explanation: 'Async/await makes asynchronous code look and behave like synchronous code'
+      }
+    ];
+
+    questionBanks['english'] = [
+      {
+        questionText: 'Fill in the blank: "I ___ to school every day."',
+        questionType: 'multiple_choice',
+        options: ['go', 'goes', 'going', 'went'],
+        correctAnswer: 'go',
+        difficulty: 'beginner',
+        skillArea: 'Present Simple',
+        explanation: 'First person singular "I" uses the base form "go"'
+      },
+      {
+        questionText: 'Which is the correct passive voice form?',
+        questionType: 'multiple_choice',
+        options: ['The book reads by me', 'The book is read by me', 'The book read by me', 'The book reading by me'],
+        correctAnswer: 'The book is read by me',
+        difficulty: 'intermediate',
+        skillArea: 'Passive Voice',
+        explanation: 'Passive voice follows the pattern: be + past participle'
+      },
+      {
+        questionText: 'What is the subjunctive mood used for?',
+        questionType: 'multiple_choice',
+        options: ['Definite situations', 'Hypothetical situations', 'Past events', 'Future plans'],
+        correctAnswer: 'Hypothetical situations',
+        difficulty: 'advanced',
+        skillArea: 'Advanced Grammar',
+        explanation: 'Subjunctive mood expresses wishes, hypotheticals, and suggestions'
+      }
+    ];
+  }
+
+  // Add algebra-specific questions
+  if (subject.includes('algebra')) {
+    return questionBanks['mathematics'] || [];
+  }
+  
+  // Add javascript-specific questions  
+  if (subject.includes('javascript')) {
+    return questionBanks['programming'] || [];
+  }
+
+  return questionBanks[subject] || [];
+}
+
+function getGenericQuestions(subject: string, count: number, isTurkish: boolean): AssessmentQuestionData[] {
+  const baseQuestion = isTurkish ? {
+    questionText: `${subject} alanında hangi seviyede olduğunuzu düşünüyorsunuz?`,
+    questionType: 'multiple_choice' as const,
+    options: ['Başlangıç seviyesi', 'Orta seviye', 'İleri seviye', 'Uzman seviye'],
+    correctAnswer: 'Orta seviye',
+    difficulty: 'beginner' as const,
+    skillArea: 'Genel Değerlendirme',
+    explanation: 'Bu kendi değerlendirmenize dayalı bir sorudur'
+  } : {
+    questionText: `What level do you consider yourself in ${subject}?`,
+    questionType: 'multiple_choice' as const,
+    options: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+    correctAnswer: 'Intermediate',
+    difficulty: 'beginner' as const,
+    skillArea: 'General Assessment',
+    explanation: 'This is based on your self-assessment'
+  };
+
+  return Array(count).fill(0).map((_, i) => ({
+    ...baseQuestion,
+    questionText: baseQuestion.questionText + ` (${i + 1})`
+  }));
 }
 
 function getFallbackAnalysis(level: string, score: number, isTurkish: boolean): AssessmentResult {

@@ -3955,6 +3955,44 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Assessment routes
+  // Preview assessment questions before starting
+  app.post("/api/assessments/preview", async (req, res) => {
+    try {
+      const { subject, subCategory, language = 'en' } = req.body;
+      
+      const { generateAssessmentQuestions } = await import('./assessment-service');
+      
+      // Generate 3 sample questions for preview
+      const previewQuestions = await generateAssessmentQuestions(
+        subject, 
+        subCategory, 
+        3, 
+        language, 
+        true // adaptive
+      );
+      
+      // Remove correct answers for preview
+      const sanitizedQuestions = previewQuestions.map(q => ({
+        questionText: q.questionText,
+        questionType: q.questionType,
+        options: q.options,
+        difficulty: q.difficulty,
+        skillArea: q.skillArea
+      }));
+      
+      res.json({ 
+        subject,
+        subCategory,
+        sampleQuestions: sanitizedQuestions,
+        totalQuestions: 10,
+        estimatedTime: '10-15 minutes'
+      });
+    } catch (error: any) {
+      console.error('Error generating preview:', error);
+      res.status(500).json({ message: 'Failed to generate preview' });
+    }
+  });
+
   app.post("/api/assessments", async (req, res) => {
     let userId;
     
@@ -4075,6 +4113,101 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error('Error completing assessment:', error);
       res.status(500).json({ message: "Failed to complete assessment" });
+    }
+  });
+
+  // Assessment analytics and history
+  app.get("/api/assessments/analytics/:userId", async (req, res) => {
+    let userId;
+    
+    if (req.isAuthenticated()) {
+      userId = req.user.id;
+    } else {
+      // Try header authentication
+      const headerUserId = req.headers['x-user-id'];
+      if (headerUserId) {
+        userId = Number(headerUserId);
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    }
+
+    // Users can only view their own analytics
+    const requestedUserId = parseInt(req.params.userId);
+    if (userId !== requestedUserId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      const assessments = await storage.getUserAssessments(userId);
+      const skillLevels = await storage.getUserSkillLevels(userId);
+      
+      // Calculate analytics
+      const subjectProgress = {};
+      const monthlyProgress = {};
+      let totalAssessments = 0;
+      let averageScore = 0;
+      
+      assessments.forEach(assessment => {
+        if (assessment.status === 'completed') {
+          totalAssessments++;
+          const score = (assessment.correctAnswers / assessment.totalQuestions) * 100;
+          averageScore += score;
+          
+          // Group by subject
+          if (!subjectProgress[assessment.subject]) {
+            subjectProgress[assessment.subject] = {
+              assessments: 0,
+              averageScore: 0,
+              currentLevel: 'beginner',
+              improvement: 0
+            };
+          }
+          
+          subjectProgress[assessment.subject].assessments++;
+          subjectProgress[assessment.subject].averageScore += score;
+          
+          // Group by month for progress tracking
+          const month = new Date(assessment.createdAt).toISOString().substring(0, 7);
+          if (!monthlyProgress[month]) {
+            monthlyProgress[month] = { count: 0, averageScore: 0 };
+          }
+          monthlyProgress[month].count++;
+          monthlyProgress[month].averageScore += score;
+        }
+      });
+      
+      // Calculate averages
+      averageScore = totalAssessments > 0 ? averageScore / totalAssessments : 0;
+      
+      Object.keys(subjectProgress).forEach(subject => {
+        const count = subjectProgress[subject].assessments;
+        subjectProgress[subject].averageScore = subjectProgress[subject].averageScore / count;
+        
+        // Get current level from skill levels
+        const skillLevel = skillLevels.find(sl => sl.subject === subject);
+        if (skillLevel) {
+          subjectProgress[subject].currentLevel = skillLevel.currentLevel;
+          subjectProgress[subject].proficiencyScore = skillLevel.proficiencyScore;
+        }
+      });
+      
+      Object.keys(monthlyProgress).forEach(month => {
+        const count = monthlyProgress[month].count;
+        monthlyProgress[month].averageScore = monthlyProgress[month].averageScore / count;
+      });
+      
+      res.json({
+        totalAssessments,
+        averageScore: Math.round(averageScore),
+        subjectProgress,
+        monthlyProgress,
+        skillLevels,
+        recentAssessments: assessments.slice(0, 5)
+      });
+    } catch (error) {
+      console.error('Error fetching assessment analytics:', error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
     }
   });
 

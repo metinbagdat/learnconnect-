@@ -349,7 +349,20 @@ export async function completeAssessment(
     };
   });
 
-  const analysisResult = await analyzeAssessmentResults(assessmentId, enrichedQuestions, language);
+  // Try AI analysis first, fall back to simple analysis if it fails
+  let analysisResult: AssessmentResult;
+  try {
+    analysisResult = await analyzeAssessmentResults(assessmentId, enrichedQuestions, language);
+  } catch (error: any) {
+    console.log('AI analysis failed, using fallback analysis:', error.message);
+    // Simple fallback analysis based on score
+    const percentage = (correctAnswers / assessment.totalQuestions) * 100;
+    let level = 'beginner';
+    if (percentage >= 80) level = 'advanced';
+    else if (percentage >= 60) level = 'intermediate';
+    
+    analysisResult = getFallbackAnalysis(level, percentage, language === 'tr');
+  }
 
   // Update assessment
   await storage.updateLevelAssessment(assessmentId, {
@@ -357,9 +370,9 @@ export async function completeAssessment(
     timeSpentMinutes: Math.round(totalTimeSpent / 60),
     finalLevel: analysisResult.finalLevel,
     confidenceScore: analysisResult.confidenceScore,
-    recommendedNextSteps: analysisResult.recommendedNextSteps,
+    recommendedNextSteps: analysisResult.recommendedNextSteps, // Array will be properly converted to JSONB
     status: 'completed',
-    completedAt: new Date().toISOString()
+    completedAt: new Date()
   });
 
   // Update or create user skill level

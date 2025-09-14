@@ -37,9 +37,9 @@ task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
 
-[[ports]]
-localPort = 45321
-externalPort = 80
-
 [agent]
 integrations = ["javascript_openai==1.0.0", "javascript_anthropic==1.0.0", "javascript_stripe==1.0.0"]
+
+[[ports]]
+localPort = 39017
+externalPort = 80

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerStripeRoutes } from "./stripe-routes";
+import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -59,7 +60,8 @@ import {
   userChallengeStreaks,
   challengeLearningPaths,
   challengePathSteps,
-  userChallengeProgress
+  userChallengeProgress,
+  userCourses
 } from "@shared/schema";
 
 // Initialize the OpenAI client
@@ -123,30 +125,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // User Courses API
   app.get("/api/user/courses", async (req, res) => {
-    // First check if the user is authenticated via session
-    if (req.isAuthenticated()) {
-      try {
-        const userCourses = await storage.getUserCourses(req.user.id);
-        return res.json(userCourses);
-      } catch (error) {
-        return res.status(500).json({ message: "Failed to fetch user courses" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
     
-    // If not authenticated via session, try header auth
-    const userId = req.headers['x-user-id'];
-    if (userId) {
-      console.log("Attempting header auth for user courses. User ID:", userId);
-      try {
-        const userCourses = await storage.getUserCourses(Number(userId));
-        return res.json(userCourses);
-      } catch (error) {
-        console.error("Error fetching user courses with header auth:", error);
-      }
+    try {
+      const userCourses = await storage.getUserCourses(req.user.id);
+      return res.json(userCourses);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to fetch user courses" });
     }
-    
-    // If no auth method succeeded
-    return res.status(401).json({ message: "Unauthorized" });
   });
   
   app.post("/api/user/courses", async (req, res) => {
@@ -183,44 +171,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid progress value" });
       }
       
+      // SECURITY: Verify user owns this course enrollment before allowing updates
+      const userCourse = await db
+        .select()
+        .from(userCourses)
+        .where(eq(userCourses.id, userCourseId))
+        .limit(1);
+      
+      if (userCourse.length === 0) {
+        return res.status(404).json({ message: "User course not found" });
+      }
+      
+      // IDOR Protection: Ensure the authenticated user owns this enrollment
+      if (userCourse[0].userId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied - you can only update your own course progress" });
+      }
+      
       const updatedUserCourse = await storage.updateUserCourseProgress(userCourseId, progress);
       
       if (!updatedUserCourse) {
-        return res.status(404).json({ message: "User course not found" });
+        return res.status(404).json({ message: "Failed to update user course" });
       }
       
       res.json(updatedUserCourse);
     } catch (error) {
+      console.error('Error updating course progress:', error);
       res.status(500).json({ message: "Failed to update progress" });
     }
   });
   
   // Assignments API
   app.get("/api/assignments", async (req, res) => {
-    // First try session authentication
-    if (req.isAuthenticated()) {
-      try {
-        const assignments = await storage.getUserAssignments(req.user.id);
-        return res.json(assignments);
-      } catch (error) {
-        return res.status(500).json({ message: "Failed to fetch assignments" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
     
-    // Try header authentication fallback
-    const userId = req.headers['x-user-id'];
-    if (userId) {
-      console.log("Attempting header auth for assignments. User ID:", userId);
-      try {
-        const assignments = await storage.getUserAssignments(Number(userId));
-        return res.json(assignments);
-      } catch (error) {
-        console.error("Error fetching assignments with header auth:", error);
-      }
+    try {
+      const assignments = await storage.getUserAssignments(req.user.id);
+      return res.json(assignments);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to fetch assignments" });
     }
-    
-    // If no auth method succeeded
-    return res.status(401).json({ message: "Unauthorized" });
   });
   
   app.post("/api/assignments", async (req, res) => {
@@ -582,22 +573,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   
   // AI-powered course recommendations 
   app.get("/api/ai/course-recommendations", async (req, res) => {
-    let userId: number;
-    
-    // Try session-based authentication first
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } 
-    // If session auth fails, try header-based authentication
-    else {
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        console.log("Attempting header auth for course recommendations. User ID:", headerUserId);
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const userId = req.user.id;
 
     try {
       // Check if we have cached recommendations
@@ -977,21 +957,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   app.get("/api/exam-learning-paths", async (req, res) => {
-    let userId: number;
-    
-    // Try session-based authentication first
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } 
-    // If session auth fails, try header-based authentication
-    else {
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const userId = req.user.id;
 
     try {
       const examPaths = await storage.getLearningPaths(userId);
@@ -1623,17 +1593,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // User Challenge API
   app.get("/api/user/challenges", async (req, res) => {
     if (!req.isAuthenticated()) {
-      // Try header auth
-      const userId = req.headers['x-user-id'];
-      if (userId) {
-        try {
-          const userChallenges = await storage.getUserChallenges(Number(userId));
-          return res.json(userChallenges);
-        } catch (error) {
-          console.error("Error fetching user challenges with header auth:", error);
-          return res.status(500).json({ message: "Failed to fetch user challenges" });
-        }
-      }
       return res.status(401).json({ message: "Unauthorized" });
     }
     
@@ -1648,17 +1607,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   
   app.get("/api/user/challenges/status", async (req, res) => {
     if (!req.isAuthenticated()) {
-      // Try header auth
-      const userId = req.headers['x-user-id'];
-      if (userId) {
-        try {
-          const challengeStatus = await storage.getUserActiveAndCompletedChallenges(Number(userId));
-          return res.json(challengeStatus);
-        } catch (error) {
-          console.error("Error fetching challenge status with header auth:", error);
-          return res.status(500).json({ message: "Failed to fetch challenge status" });
-        }
-      }
       return res.status(401).json({ message: "Unauthorized" });
     }
     
@@ -1672,20 +1620,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   app.post("/api/user/challenges/:challengeId/assign", async (req, res) => {
-    let userId: number;
-    
-    // Check for session auth
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      // Try header auth
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const userId = req.user.id;
     
     try {
       const challengeId = parseInt(req.params.challengeId);
@@ -1698,20 +1637,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   app.patch("/api/user/challenges/:challengeId/progress", async (req, res) => {
-    let userId: number;
-    
-    // Check for session auth
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      // Try header auth
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const userId = req.user.id;
     
     try {
       const challengeId = parseInt(req.params.challengeId);
@@ -1772,22 +1702,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // User Level API
   app.get("/api/user/level", async (req, res) => {
     if (!req.isAuthenticated()) {
-      // Try header auth
-      const userId = req.headers['x-user-id'];
-      if (userId) {
-        try {
-          const userLevel = await storage.getUserLevel(Number(userId));
-          if (!userLevel) {
-            // Initialize level if it doesn't exist
-            const newUserLevel = await storage.initializeUserLevel(Number(userId));
-            return res.json(newUserLevel);
-          }
-          return res.json(userLevel);
-        } catch (error) {
-          console.error("Error fetching user level with header auth:", error);
-          return res.status(500).json({ message: "Failed to fetch user level" });
-        }
-      }
       return res.status(401).json({ message: "Unauthorized" });
     }
     
@@ -1939,33 +1853,17 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   
   // Admin routes
   app.post("/api/admin/seed-challenges", async (req, res) => {
-    // First check session authentication
-    if (req.isAuthenticated() && req.user.role === "admin") {
-      try {
-        await seedChallenges();
-        res.json({ message: "Challenges seeded successfully" });
-      } catch (error) {
-        console.error("Failed to seed challenges:", error);
-        res.status(500).json({ message: "Failed to seed challenges" });
-      }
-      return;
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only administrators can seed challenges" });
     }
     
-    // Try header authentication as a fallback
-    const userId = req.headers['x-user-id'];
-    if (userId) {
-      try {
-        const user = await storage.getUser(Number(userId));
-        if (user && user.role === "admin") {
-          await seedChallenges();
-          return res.json({ message: "Challenges seeded successfully" });
-        }
-      } catch (error) {
-        console.error("Error with header auth for seeding challenges:", error);
-      }
+    try {
+      await seedChallenges();
+      res.json({ message: "Challenges seeded successfully" });
+    } catch (error) {
+      console.error("Failed to seed challenges:", error);
+      res.status(500).json({ message: "Failed to seed challenges" });
     }
-    
-    return res.status(403).json({ message: "Only administrators can seed challenges" });
   });
   
   // Suggestions API for goals, fields, lessons, etc.
@@ -2397,17 +2295,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // Get user's achievements
   app.get("/api/user/achievements", async (req, res) => {
     if (!req.isAuthenticated()) {
-      // Try header auth for consistent behavior
-      const userId = req.headers['x-user-id'];
-      if (userId) {
-        try {
-          const userAchievements = await storage.getUserAchievements(Number(userId));
-          return res.json(userAchievements);
-        } catch (error) {
-          console.error("Error fetching user achievements with header auth:", error);
-          return res.status(500).json({ message: "Failed to fetch user achievements" });
-        }
-      }
       return res.status(401).json({ message: "Unauthorized" });
     }
     
@@ -3677,18 +3564,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   // Get user's study goals
   app.get("/api/study-goals", async (req, res) => {
-    let userId: number;
-    
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const userId = req.user.id;
 
     try {
       const goals = await db.select().from(studyGoals).where(eq(studyGoals.userId, userId));
@@ -3701,18 +3581,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   // Create a new study goal
   app.post("/api/study-goals", async (req, res) => {
-    let userId: number;
-    
-    if (req.isAuthenticated()) {
-      userId = req.user.id;
-    } else {
-      const headerUserId = req.headers['x-user-id'];
-      if (headerUserId) {
-        userId = Number(headerUserId);
-      } else {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    const userId = req.user.id;
 
     try {
       const goalData = insertStudyGoal.parse({
@@ -3956,7 +3829,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   // Assessment routes
   // Preview assessment questions before starting
-  app.post("/api/assessments/preview", async (req, res) => {
+  app.post("/api/assessments/preview", checkSubscription, async (req, res) => {
     try {
       const { subject, subCategory, language = 'en' } = req.body;
       
@@ -3993,7 +3866,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/assessments", async (req, res) => {
+  app.post("/api/assessments", checkSubscription, checkAssessmentLimit, async (req, res) => {
     let userId;
     
     if (req.isAuthenticated()) {
@@ -4017,6 +3890,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
       const { createLevelAssessment } = await import('./assessment-service');
       const assessmentId = await createLevelAssessment(userId, subject, subCategory, language);
+      
+      // Track assessment usage
+      await trackUsage(userId, 'assessment');
       
       res.status(201).json({ assessmentId });
     } catch (error) {
@@ -4117,7 +3993,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Assessment analytics and history
-  app.get("/api/assessments/analytics/:userId", async (req, res) => {
+  app.get("/api/assessments/analytics/:userId", checkSubscription, requirePremium('detailed_analytics'), async (req, res) => {
     let userId;
     
     if (req.isAuthenticated()) {
@@ -4141,6 +4017,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     try {
       const assessments = await storage.getUserAssessments(userId);
       const skillLevels = await storage.getUserSkillLevels(userId);
+      
+      // Track analytics usage
+      await trackUsage(userId, 'analytics');
       
       // Calculate analytics
       const subjectProgress = {};

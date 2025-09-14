@@ -118,7 +118,7 @@ export function registerStripeRoutes(app: Express) {
 
       // Update user with subscription ID
       await storage.updateUserStripeInfo(user.id, { 
-        customerId, 
+        customerId: customerId || undefined, 
         subscriptionId: subscription.id 
       });
 
@@ -164,7 +164,7 @@ export function registerStripeRoutes(app: Express) {
         // Enroll user in course if courseId is in metadata
         if (paymentIntent.metadata.courseId && paymentIntent.metadata.userId) {
           try {
-            await storage.createUserCourse({
+            await storage.enrollUserInCourse({
               userId: parseInt(paymentIntent.metadata.userId),
               courseId: parseInt(paymentIntent.metadata.courseId),
               progress: 0,

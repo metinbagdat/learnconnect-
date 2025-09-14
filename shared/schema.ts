@@ -936,6 +936,50 @@ export const userSkillLevels = pgTable("user_skill_levels", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Subscription and Payment Management
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: text("id").primaryKey(), // "free", "premium"  
+  name: text("name").notNull(),
+  description: text("description"),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  stripePriceId: text("stripe_price_id"),
+  features: jsonb("features").notNull(), // Array of feature names/limits
+  assessmentLimit: integer("assessment_limit").default(-1), // -1 = unlimited, 0+ = daily limit
+  courseAccessLimit: integer("course_access_limit").default(-1), // -1 = unlimited
+  analyticsLevel: text("analytics_level").notNull().default("basic"), // basic, detailed, advanced
+  aiRecommendations: boolean("ai_recommendations").default(false),
+  priority: integer("priority").notNull().default(0), // Display order (higher = premium)
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  planId: text("plan_id").notNull(),
+  status: text("status").notNull().default("active"), // active, cancelled, expired, trial
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeCustomerId: text("stripe_customer_id"),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  trialEndsAt: timestamp("trial_ends_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Usage tracking for subscription limits
+export const userUsageTracking = pgTable("user_usage_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  date: date("date").notNull().defaultNow(),
+  assessmentsUsed: integer("assessments_used").notNull().default(0),
+  coursesAccessed: integer("courses_accessed").notNull().default(0),
+  analyticsViews: integer("analytics_views").notNull().default(0),
+  aiRecommendationsGenerated: integer("ai_recommendations_generated").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertStudyGoal = createInsertSchema(studyGoals);
 export const insertStudySchedule = createInsertSchema(studySchedules);
 export const insertLearningRecommendation = createInsertSchema(learningRecommendations);
@@ -956,6 +1000,20 @@ export const insertUserSkillLevel = createInsertSchema(userSkillLevels).omit({
   lastUpdated: true 
 });
 
+// Subscription system insert schemas
+export const insertSubscriptionPlan = createInsertSchema(subscriptionPlans).omit({ 
+  createdAt: true 
+});
+export const insertUserSubscription = createInsertSchema(userSubscriptions).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+export const insertUserUsageTracking = createInsertSchema(userUsageTracking).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
 export type StudyGoal = typeof studyGoals.$inferSelect;
 export type StudySchedule = typeof studySchedules.$inferSelect;
 export type LearningRecommendation = typeof learningRecommendations.$inferSelect;
@@ -968,6 +1026,14 @@ export type UserSkillLevel = typeof userSkillLevels.$inferSelect;
 export type InsertLevelAssessment = z.infer<typeof insertLevelAssessment>;
 export type InsertAssessmentQuestion = z.infer<typeof insertAssessmentQuestion>;
 export type InsertUserSkillLevel = z.infer<typeof insertUserSkillLevel>;
+
+// Subscription system types
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type UserUsageTracking = typeof userUsageTracking.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlan>;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscription>;
+export type InsertUserUsageTracking = z.infer<typeof insertUserUsageTracking>;
 
 export type InsertLearningMilestone = z.infer<typeof insertLearningMilestoneSchema>;
 export type EmojiReaction = typeof emojiReactions.$inferSelect;

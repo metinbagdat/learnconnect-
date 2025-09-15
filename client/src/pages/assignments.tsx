@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ApiError } from "@/components/error-states/api-error";
+import { EmptyState } from "@/components/error-states/empty-state";
+import { ListItemSkeleton } from "@/components/loading-states/enhanced-skeleton";
 import { FileText, FileCheck, Search, Calendar, CalendarClock } from "lucide-react";
 import { Assignment } from "@shared/schema";
 
 export default function Assignments() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   
   // Fetch assignments
-  const { data: assignments = [], isLoading } = useQuery<(Assignment & { course: { title: string } })[]>({
+  const { data: assignments = [], isLoading, error, refetch } = useQuery<(Assignment & { course: { title: string } })[]>({
     queryKey: ["/api/assignments"],
   });
   
@@ -159,31 +164,25 @@ export default function Assignments() {
               </div>
               
               <div className="mt-8">
-                {isLoading ? (
+                {error ? (
+                  <ApiError 
+                    error={error}
+                    onRetry={refetch}
+                    type="server"
+                    title={t('failedToLoadAssignments', 'Failed to load assignments')}
+                    description={t('assignmentsErrorDesc', 'Unable to load your assignments. Please try again.')}
+                  />
+                ) : isLoading ? (
                   <div className="space-y-4">
                     {[...Array(3)].map((_, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="animate-pulse flex items-center">
-                            <div className="rounded-full bg-neutral-200 h-10 w-10 mr-4"></div>
-                            <div className="flex-1 space-y-2">
-                              <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
-                              <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
-                            </div>
-                            <div className="h-8 bg-neutral-200 rounded w-20"></div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ListItemSkeleton key={index} />
                     ))}
                   </div>
                 ) : filteredAssignments.length === 0 ? (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <FileCheck className="h-12 w-12 mx-auto text-neutral-300" />
-                      <h3 className="mt-4 text-lg font-medium">No assignments found</h3>
-                      <p className="mt-1 text-neutral-500">You're all caught up or try a different search</p>
-                    </CardContent>
-                  </Card>
+                  <EmptyState 
+                    type={searchQuery ? "search" : "assignments"}
+                    onAction={() => searchQuery ? setSearchQuery("") : undefined}
+                  />
                 ) : (
                   <>
                     <AssignmentGroup 

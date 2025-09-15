@@ -9,6 +9,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { ApiError } from "@/components/error-states/api-error";
+import { EmptyState } from "@/components/error-states/empty-state";
+import { CourseCardSkeleton } from "@/components/loading-states/enhanced-skeleton";
 import { Search } from "lucide-react";
 import { Course, UserCourse } from "@shared/schema";
 import { useLocation } from "wouter";
@@ -22,12 +25,12 @@ export default function Courses() {
   const [searchQuery, setSearchQuery] = useState("");
   
   // Fetch user courses
-  const { data: userCourses = [], isLoading: userCoursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
+  const { data: userCourses = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<(UserCourse & { course: Course })[]>({
     queryKey: ["/api/user/courses"],
   });
   
   // Fetch all available courses
-  const { data: allCourses = [], isLoading: allCoursesLoading } = useQuery<Course[]>({
+  const { data: allCourses = [], isLoading: allCoursesLoading, error: allCoursesError, refetch: refetchAllCourses } = useQuery<Course[]>({
     queryKey: ["/api/courses"],
   });
   
@@ -129,24 +132,25 @@ export default function Courses() {
                 
                 {/* Enrolled Courses Tab */}
                 <TabsContent value="enrolled" className="mt-6">
-                  {userCoursesLoading ? (
+                  {userCoursesError ? (
+                    <ApiError 
+                      error={userCoursesError}
+                      onRetry={refetchUserCourses}
+                      type="network"
+                      title={t('failedToLoadCourses', 'Failed to load your courses')}
+                      description={t('coursesErrorDesc', 'Unable to load your enrolled courses. Please check your connection and try again.')}
+                    />
+                  ) : userCoursesLoading ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white rounded-lg shadow h-64 animate-pulse">
-                          <div className="h-40 bg-neutral-200 rounded-t-lg"></div>
-                          <div className="p-4 space-y-3">
-                            <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
-                            <div className="h-3 bg-neutral-200 rounded w-full"></div>
-                            <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
-                          </div>
-                        </div>
+                        <CourseCardSkeleton key={i} />
                       ))}
                     </div>
                   ) : filteredUserCourses.length === 0 ? (
-                    <div className="text-center py-10 bg-white rounded-lg shadow">
-                      <h3 className="text-lg font-medium">{t('noCoursesFound')}</h3>
-                      <p className="mt-1 text-neutral-500">{searchQuery ? t('noCourseMatches') : t('noCoursesFoundDescription')}</p>
-                    </div>
+                    <EmptyState 
+                      type={searchQuery ? "search" : "courses"}
+                      onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
+                    />
                   ) : (
                     <>
                       {/* In Progress Courses */}
@@ -199,24 +203,25 @@ export default function Courses() {
                 
                 {/* Available Courses Tab */}
                 <TabsContent value="available" className="mt-6">
-                  {allCoursesLoading ? (
+                  {allCoursesError ? (
+                    <ApiError 
+                      error={allCoursesError}
+                      onRetry={refetchAllCourses}
+                      type="server"
+                      title={t('failedToLoadCourses', 'Failed to load available courses')}
+                      description={t('coursesErrorDesc', 'Unable to load available courses. Please try again.')}
+                    />
+                  ) : allCoursesLoading ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-white rounded-lg shadow h-64 animate-pulse">
-                          <div className="h-40 bg-neutral-200 rounded-t-lg"></div>
-                          <div className="p-4 space-y-3">
-                            <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
-                            <div className="h-3 bg-neutral-200 rounded w-full"></div>
-                            <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
-                          </div>
-                        </div>
+                        <CourseCardSkeleton key={i} />
                       ))}
                     </div>
                   ) : filteredAvailableCourses.length === 0 ? (
-                    <div className="text-center py-10 bg-white rounded-lg shadow">
-                      <h3 className="text-lg font-medium">{searchQuery ? t('noCourseMatches') : t('noAvailableCourses')}</h3>
-                      <p className="mt-1 text-neutral-500">{searchQuery ? t('tryDifferentSearch') : t('checkBackLater')}</p>
-                    </div>
+                    <EmptyState 
+                      type={searchQuery ? "search" : "courses"}
+                      onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
+                    />
                   ) : (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {filteredAvailableCourses.map((course) => (

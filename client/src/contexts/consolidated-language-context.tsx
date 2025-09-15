@@ -369,7 +369,51 @@ const translations = {
     opportunity: 'Opportunity',
     risk: 'Risk',
     noInsightsAvailable: 'No insights available yet',
-    insightsWillAppearAsYouProgress: 'Insights will appear as you progress through your learning journey'
+    insightsWillAppearAsYouProgress: 'Insights will appear as you progress through your learning journey',
+    
+    // Error States
+    unexpectedError: 'Something Went Wrong',
+    errorBoundaryDescription: 'An unexpected error occurred. We apologize for the inconvenience.',
+    errorDetails: 'Error Details',
+    tryAgain: 'Try Again',
+    goHome: 'Go Home',
+    networkError: 'Network Error',
+    networkErrorDesc: 'Please check your internet connection and try again.',
+    serverError: 'Server Error',
+    serverErrorDesc: 'Our servers are experiencing issues. Please try again in a moment.',
+    permissionError: 'Access Denied',
+    permissionErrorDesc: 'You do not have permission to access this resource.',
+    notFoundError: 'Not Found',
+    notFoundErrorDesc: 'The requested resource could not be found.',
+    genericErrorDesc: 'An unexpected error occurred. Please try again.',
+    failedToLoadCourses: 'Failed to load courses',
+    coursesErrorDesc: 'Unable to load your courses. Please check your connection and try again.',
+    failedToLoadAssignments: 'Failed to load assignments',
+    assignmentsErrorDesc: 'Unable to load your assignments. Please try again.',
+    
+    // Loading States
+    loadingCourses: 'Loading courses...',
+    loadingAssignments: 'Loading assignments...',
+    pleaseWait: 'Please wait...',
+    retrying: 'Retrying...',
+    
+    // Empty States
+    noCoursesTitle: 'No Courses Found',
+    noCoursesDesc: 'Start your learning journey by exploring our course catalog.',
+    noAssignmentsTitle: 'No Assignments',
+    noAssignmentsDesc: 'You\'re all caught up! No pending assignments at the moment.',
+    noAchievementsTitle: 'No Achievements Yet',
+    noAchievementsDesc: 'Complete courses and challenges to unlock your first achievement!',
+    noChallengesTitle: 'No Active Challenges',
+    noChallengesDesc: 'Challenge yourself with skill-building exercises and competitions.',
+    noSearchResultsTitle: 'No results found',
+    noSearchResultsDesc: 'Try adjusting your search terms or browse our recommendations.',
+    noDataTitle: 'No Data Available',
+    noDataDesc: 'There\'s nothing to show here at the moment.',
+    viewCourses: 'View Courses',
+    startLearning: 'Start Learning',
+    browseChallenges: 'Browse Challenges',
+    clearSearch: 'Clear Search'
   },
   tr: {
     // Common

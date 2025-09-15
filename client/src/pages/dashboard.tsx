@@ -20,6 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
+import { ApiError } from "@/components/error-states/api-error";
+import { EmptyState } from "@/components/error-states/empty-state";
+import { DashboardCardSkeleton } from "@/components/loading-states/enhanced-skeleton";
+import { LoadingSpinner } from "@/components/loading-states/loading-spinner";
 import { Book, CheckCircle, FileText, Award, Search, Zap, Trophy, Target, Flame, Users, UserCheck, Clock, TrendingUp, Calendar, Sparkles, Star, Crown, Rocket } from "lucide-react";
 import { Course, UserCourse, Assignment } from "@shared/schema";
 import { useState, useEffect, useMemo } from "react";
@@ -46,14 +50,14 @@ export default function Dashboard() {
   const [currentAchievement, setCurrentAchievement] = useState<AchievementType | null>(null);
   // Removed progressBubbles state - now using computed progressBubblesData directly
   
-  const { data: userCourses = [], isLoading: coursesLoading } = useQuery<(UserCourse & { course: Course })[]>({
+  const { data: userCourses = [], isLoading: coursesLoading, error: coursesError, refetch: refetchCourses } = useQuery<(UserCourse & { course: Course })[]>({
     queryKey: ["/api/user/courses"],
     enabled: !!user, // Only run this query if user is logged in
     refetchOnMount: true,
     retry: 3,
   });
   
-  const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<(Assignment & { course: Course })[]>({
+  const { data: assignments = [], isLoading: assignmentsLoading, error: assignmentsError, refetch: refetchAssignments } = useQuery<(Assignment & { course: Course })[]>({
     queryKey: ["/api/assignments"],
     enabled: !!user, // Only run this query if user is logged in
     refetchOnMount: true,
@@ -772,32 +776,28 @@ export default function Dashboard() {
                 </p>
               </div>
               
-              {coursesLoading ? (
+              {coursesError ? (
+                <div className="mt-4">
+                  <ApiError 
+                    error={coursesError}
+                    onRetry={refetchCourses}
+                    type="network"
+                    title={t('failedToLoadCourses', 'Failed to load courses')}
+                    description={t('coursesErrorDesc', 'Unable to load your courses. Please check your connection and try again.')}
+                  />
+                </div>
+              ) : coursesLoading ? (
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-white rounded-lg shadow h-64 animate-pulse">
-                      <div className="h-40 bg-neutral-200 rounded-t-lg"></div>
-                      <div className="p-4 space-y-3">
-                        <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
-                        <div className="h-3 bg-neutral-200 rounded w-full"></div>
-                        <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
+                    <DashboardCardSkeleton key={i} />
                   ))}
                 </div>
               ) : inProgressCourses.length === 0 ? (
-                <div className="mt-4 text-center py-10 bg-white rounded-lg shadow">
-                  <Book className="h-12 w-12 mx-auto text-neutral-300" />
-                  <h3 className="mt-4 text-lg font-medium">{t('noCourseInProgress')}</h3>
-                  <p className="mt-1 text-neutral-500">{t('readyToStartLearning')}</p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
-                    <Button onClick={() => navigate('/courses')}>
-                      {t('exploreCourses')}
-                    </Button>
-                    <Button variant="outline" onClick={() => navigate('/suggestions')}>
-                      {t('getAIRecommendations')}
-                    </Button>
-                  </div>
+                <div className="mt-4">
+                  <EmptyState 
+                    type="courses"
+                    onAction={() => navigate('/courses')}
+                  />
                 </div>
               ) : (
                 <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -841,11 +841,32 @@ export default function Dashboard() {
               
               {/* Assignments */}
               <div className="md:col-span-1">
-                <AssignmentList 
-                  assignments={upcomingAssignments}
-                  onViewAll={() => navigate('/assignments')}
-                  onViewAssignment={(id) => navigate(`/assignments/${id}`)}
-                />
+                {assignmentsError ? (
+                  <ApiError 
+                    error={assignmentsError}
+                    onRetry={refetchAssignments}
+                    type="server"
+                    title={t('failedToLoadAssignments', 'Failed to load assignments')}
+                    description={t('assignmentsErrorDesc', 'Unable to load your assignments. Please try again.')}
+                  />
+                ) : assignmentsLoading ? (
+                  <LoadingSpinner 
+                    type="default" 
+                    message={t('loadingAssignments', 'Loading assignments...')} 
+                    size="md"
+                  />
+                ) : upcomingAssignments.length === 0 ? (
+                  <EmptyState 
+                    type="assignments"
+                    onAction={() => navigate('/courses')}
+                  />
+                ) : (
+                  <AssignmentList 
+                    assignments={upcomingAssignments}
+                    onViewAll={() => navigate('/assignments')}
+                    onViewAssignment={(id) => navigate(`/assignments/${id}`)}
+                  />
+                )}
               </div>
             </div>
             

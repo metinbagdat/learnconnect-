@@ -16,7 +16,8 @@ import {
   Trophy,
   Users,
   Settings,
-  LogOut
+  LogOut,
+  Crown
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/language-context";
@@ -97,6 +98,13 @@ export default function ModernNavigation({
       icon: Users,
       url: '/social',
       badge: null
+    },
+    {
+      id: 'subscription',
+      label: language === 'tr' ? 'Abonelik' : 'Subscription',
+      icon: Crown,
+      url: '/subscription',
+      badge: 'Premium'
     }
   ];
 

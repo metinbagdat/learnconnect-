@@ -9,6 +9,7 @@ import { CheckCircle, Clock, Brain, BarChart3, Award, ArrowRight, ArrowLeft } fr
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/language-context";
 import { apiRequest } from "@/lib/queryClient";
+import UpgradePrompt from "@/components/subscription/upgrade-prompt";
 
 interface Question {
   id: number;
@@ -63,6 +64,8 @@ export default function LevelAssessment({ subject, subCategory, onComplete, onCa
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<AssessmentResult | null>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [limitError, setLimitError] = useState<{message: string; limit: number; used: number} | null>(null);
 
   // Create assessment on component mount
   useEffect(() => {
@@ -83,10 +86,30 @@ export default function LevelAssessment({ subject, subCategory, onComplete, onCa
         language
       });
       
-      const { assessmentId } = response;
+      if (!response.ok) {
+        const data = await response.json();
+        if (response.status === 429) {
+          // Daily limit reached
+          setLimitError(data);
+          setShowUpgradePrompt(true);
+          return;
+        }
+        throw new Error(data.message || 'Failed to create assessment');
+      }
+      
+      const { assessmentId } = await response.json();
       await loadAssessment(assessmentId);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating assessment:', error);
+      
+      // Check if it's a limit error
+      if (error.response?.status === 429 || error.status === 429) {
+        const errorData = error.response?.data || error;
+        setLimitError(errorData);
+        setShowUpgradePrompt(true);
+        return;
+      }
+      
       toast({
         title: t('error'),
         description: language === 'tr' 
@@ -102,8 +125,9 @@ export default function LevelAssessment({ subject, subCategory, onComplete, onCa
   const loadAssessment = async (assessmentId: number) => {
     try {
       const response = await apiRequest('GET', `/api/assessments/${assessmentId}`);
-      setAssessment(response.assessment);
-      setQuestions(response.questions);
+      const data = await response.json();
+      setAssessment(data.assessment);
+      setQuestions(data.questions);
     } catch (error) {
       console.error('Error loading assessment:', error);
       toast({
@@ -155,11 +179,12 @@ export default function LevelAssessment({ subject, subCategory, onComplete, onCa
         timeSpent: Math.round((timeSpent[parseInt(questionId)] || 0) / 1000) // Convert to seconds
       }));
 
-      const result = await apiRequest('POST', `/api/assessments/${assessment.id}/complete`, {
+      const response = await apiRequest('POST', `/api/assessments/${assessment.id}/complete`, {
         answers: submissionAnswers,
         language
       });
 
+      const result = await response.json();
       setResults(result);
       setShowResults(true);
       
@@ -466,6 +491,18 @@ export default function LevelAssessment({ subject, subCategory, onComplete, onCa
           </div>
         </CardContent>
       </Card>
+
+      {/* Upgrade Prompt */}
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        title={limitError?.message || t('limitReached')}
+        description={
+          limitError
+            ? `${t('assessmentsUsed')}: ${limitError.used}/${limitError.limit}. ${t('limitReachedDesc')}`
+            : t('limitReachedDesc')
+        }
+      />
     </div>
   );
 }

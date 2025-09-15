@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";

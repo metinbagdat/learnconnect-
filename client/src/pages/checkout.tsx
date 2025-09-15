@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
 import { useParams, useLocation } from "wouter";
 import { Loader2, CreditCard, Lock, Check, AlertCircle, ArrowLeft } from "lucide-react";
-import { useLanguage } from '@/contexts/language-context';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 import { useQuery } from '@tanstack/react-query';
 import { Course } from '@shared/schema';
 

@@ -20,7 +20,7 @@ import {
   Brain
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarLinkProps {

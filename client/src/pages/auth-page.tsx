@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Book, Laptop, Users, Globe } from "lucide-react";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SocialLogin } from "@/components/social/social-login";
 

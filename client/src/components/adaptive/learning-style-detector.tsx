@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Headphones, Hand, BookOpen } from 'lucide-react';
-import { useLanguage } from '@/contexts/language-context';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 
 interface LearningStyleProfile {
   visual: number;

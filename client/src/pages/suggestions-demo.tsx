@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Globe } from "lucide-react";
 
 export default function SuggestionsDemoPage() {

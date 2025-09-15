@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { Check, CreditCard, Loader2, ArrowLeft, Crown, Zap, Shield, BarChart3 } from "lucide-react";
-import { useLanguage } from '@/contexts/language-context';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface SubscriptionPlan {

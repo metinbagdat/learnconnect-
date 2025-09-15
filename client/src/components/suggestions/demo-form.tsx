@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SuggestionSelect, SuggestionAutocomplete } from "./suggestion-select";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

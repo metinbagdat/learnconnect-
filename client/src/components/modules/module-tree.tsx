@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, BookOpen, Brain, Clock, Star, Target, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 
 interface ModuleTreeProps {
   courseId: number;

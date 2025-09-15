@@ -21,7 +21,7 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { useLanguage } from '@/contexts/language-context';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 import { useQuery } from '@tanstack/react-query';
 
 interface Message {

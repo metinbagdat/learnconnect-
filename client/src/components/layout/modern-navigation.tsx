@@ -21,7 +21,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
 

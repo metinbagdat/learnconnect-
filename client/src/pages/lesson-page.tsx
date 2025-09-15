@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Target, Brain, BookOpen, ChevronLeft, CheckCircle, Play, Loader2 } from "lucide-react";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { EnhancedAIAssistant } from "@/components/ui/enhanced-ai-assistant";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";

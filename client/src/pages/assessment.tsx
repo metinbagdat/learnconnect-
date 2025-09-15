@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Brain, BookOpen, Target, ArrowRight, BarChart3 } from "lucide-react";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useLocation } from "wouter";
 import PageWrapper from "@/components/layout/page-wrapper";
 import LevelAssessment from "@/components/assessment/level-assessment";

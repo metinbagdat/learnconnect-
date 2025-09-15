@@ -1,6 +1,6 @@
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
-import { LanguageProvider } from "@/contexts/language-context";
+import { LanguageProvider } from "@/contexts/consolidated-language-context";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import Dashboard from "@/pages/dashboard";

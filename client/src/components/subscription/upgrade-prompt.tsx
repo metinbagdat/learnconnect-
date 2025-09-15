@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, ArrowRight } from 'lucide-react';
-import { useLanguage } from '@/contexts/language-context';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 import { useLocation } from 'wouter';
 
 interface UpgradePromptProps {

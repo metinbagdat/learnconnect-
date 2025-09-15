@@ -5,7 +5,7 @@ import { Clock } from "lucide-react";
 import { ProgressCircle } from "./progress-circle";
 import { Course, UserCourse } from "@shared/schema";
 import { useLocation } from "wouter";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 
 interface CourseCardProps {
   course: Course;

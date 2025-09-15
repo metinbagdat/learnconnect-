@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLanguage } from "@/contexts/language-context";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 
 interface SuggestionSelectProps {
   type: "goals" | "fields" | "courseTopics" | "timeframes";

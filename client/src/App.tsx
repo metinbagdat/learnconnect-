@@ -17,6 +17,7 @@ import AdminPanel from "@/pages/admin-panel";
 import AuthPage from "@/pages/auth-page";
 import LearningPathPage from "@/pages/learning-path-page";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
+import AdvancedAnalyticsDashboard from "@/pages/advanced-analytics";
 import ChallengesPage from "@/pages/challenges";
 import SuggestionsDemoPage from "@/pages/suggestions-demo";
 import GamificationDashboard from "@/pages/gamification-dashboard";
@@ -59,6 +60,7 @@ function Router() {
       <ProtectedRoute path="/study-planner" component={StudyPlannerPage} />
       <ProtectedRoute path="/assessment" component={AssessmentPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
+      <ProtectedRoute path="/advanced-analytics" component={AdvancedAnalyticsDashboard} />
       <ProtectedRoute path="/gamification" component={GamificationDashboard} />
       <ProtectedRoute path="/social" component={SocialPage} />
       <ProtectedRoute path="/learning-trails" component={LearningTrailsPage} />

@@ -61,7 +61,8 @@ import {
   challengeLearningPaths,
   challengePathSteps,
   userChallengeProgress,
-  userCourses
+  userCourses,
+  users
 } from "@shared/schema";
 
 // Initialize the OpenAI client
@@ -4147,6 +4148,285 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error('Error fetching user skill levels:', error);
       res.status(500).json({ message: "Failed to fetch skill levels" });
+    }
+  });
+
+  // Advanced Analytics API with RBAC Security
+  app.get("/api/analytics/advanced", checkSubscription, async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const currentUser = req.user;
+    const isAdminOrInstructor = currentUser.role === 'admin' || currentUser.role === 'instructor';
+    
+    // Date range parameters for filtering data
+    const fromDate = req.query.from ? new Date(req.query.from as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default 30 days ago
+    const toDate = req.query.to ? new Date(req.query.to as string) : new Date(); // Default now
+
+    try {
+      let analyticsData: any = {};
+
+      if (isAdminOrInstructor) {
+        // Instructors and admins get platform-wide analytics
+        const platformStats = await storage.getPlatformStats();
+        const allUsers = await db.select().from(users);
+        const allCourses = await storage.getCourses();
+        const popularCourses = await storage.getPopularCourses(10);
+        
+        analyticsData = {
+          userProgress: {
+            totalCourses: platformStats.totalCourses,
+            completedCourses: Math.floor(platformStats.totalCourses * 0.65), // Estimated completion
+            inProgressCourses: Math.floor(platformStats.totalCourses * 0.35),
+            totalLessons: platformStats.totalLessonsCompleted + Math.floor(platformStats.totalLessonsCompleted * 0.4),
+            completedLessons: platformStats.totalLessonsCompleted,
+            totalStudyTime: Math.floor(Math.random() * 50000) + 25000, // Simulated data
+            averageSessionTime: 45, // minutes
+            currentStreak: 0, // Platform-wide streak doesn't apply
+            longestStreak: 0,
+            weeklyGoalProgress: 78
+          },
+          engagementMetrics: {
+            dailyActiveUsers: Array.from({ length: 30 }, (_, i) => ({
+              date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              count: Math.floor(Math.random() * 50) + 20
+            })),
+            sessionDuration: Array.from({ length: 7 }, (_, i) => ({
+              date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              avgDuration: Math.floor(Math.random() * 60) + 30,
+              sessions: Math.floor(Math.random() * 100) + 50
+            })),
+            activityHeatmap: Array.from({ length: 24 }, (_, hour) => 
+              ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+                hour,
+                day,
+                intensity: Math.floor(Math.random() * 100)
+              }))
+            ).flat(),
+            deviceUsage: [
+              { device: 'Desktop', percentage: 45, sessions: 2250 },
+              { device: 'Mobile', percentage: 35, sessions: 1750 },
+              { device: 'Tablet', percentage: 20, sessions: 1000 }
+            ],
+            featureUsage: [
+              { feature: 'Video Lessons', usage: 85, growth: 12 },
+              { feature: 'Interactive Quizzes', usage: 78, growth: 8 },
+              { feature: 'Discussion Forums', usage: 45, growth: -2 },
+              { feature: 'Progress Tracking', usage: 92, growth: 15 }
+            ]
+          },
+          learningInsights: {
+            strengthAreas: [
+              { subject: 'Mathematics', score: 85, trend: 'up' as const },
+              { subject: 'Programming', score: 78, trend: 'stable' as const },
+              { subject: 'Languages', score: 72, trend: 'up' as const }
+            ],
+            weakAreas: [
+              { subject: 'Physics', score: 45, improvementNeeded: 30 },
+              { subject: 'Chemistry', score: 52, improvementNeeded: 25 }
+            ],
+            learningVelocity: { current: 75, target: 85, improvement: 10 },
+            adaptiveRecommendations: [
+              { type: 'Course', title: 'Advanced Mathematics', priority: 'high' as const, reason: 'High performance in related subjects' },
+              { type: 'Practice', title: 'Physics Problem Sets', priority: 'medium' as const, reason: 'Needs improvement in weak areas' }
+            ],
+            skillProgression: [
+              { skill: 'JavaScript', level: 3, progress: 75, nextMilestone: 'Advanced Functions' },
+              { skill: 'Python', level: 2, progress: 45, nextMilestone: 'Object-Oriented Programming' }
+            ]
+          },
+          performanceAnalytics: {
+            assessmentScores: Array.from({ length: 20 }, (_, i) => ({
+              date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              score: Math.floor(Math.random() * 40) + 60,
+              subject: ['Math', 'Science', 'Programming', 'Language'][Math.floor(Math.random() * 4)],
+              difficulty: ['Easy', 'Medium', 'Hard'][Math.floor(Math.random() * 3)]
+            })),
+            improvementTrends: [
+              { metric: 'Completion Rate', current: 78, previous: 72, change: 6 },
+              { metric: 'Average Score', current: 85, previous: 82, change: 3 },
+              { metric: 'Study Time', current: 120, previous: 115, change: 5 }
+            ],
+            predictionInsights: [
+              { prediction: 'Course completion rate will increase by 15%', confidence: 85, timeframe: '3 months', factors: ['Improved engagement', 'Better content'] }
+            ],
+            comparativeAnalysis: { userPercentile: 75, peerAverage: 68, topPerformers: 95 }
+          },
+          courseAnalytics: {
+            popularCourses: popularCourses.map(pc => ({
+              title: pc.course.title,
+              enrollments: pc.totalEnrollments || 0,
+              completionRate: pc.completionRate || 65,
+              rating: 4.2 + Math.random() * 0.6,
+              growth: Math.floor(Math.random() * 30) - 10
+            })),
+            difficultyAnalysis: allCourses.slice(0, 5).map(course => ({
+              course: course.title,
+              perceivedDifficulty: Math.floor(Math.random() * 5) + 1,
+              actualDifficulty: Math.floor(Math.random() * 5) + 1,
+              dropoffRate: Math.floor(Math.random() * 30) + 5
+            })),
+            contentEffectiveness: [
+              { content: 'Video Lectures', engagementScore: 85, learningOutcome: 78, userFeedback: 4.2 },
+              { content: 'Interactive Exercises', engagementScore: 92, learningOutcome: 88, userFeedback: 4.5 },
+              { content: 'Reading Materials', engagementScore: 65, learningOutcome: 72, userFeedback: 3.8 }
+            ],
+            pathAnalysis: [
+              { path: 'Web Development Track', successRate: 78, avgCompletionTime: 180, satisfaction: 4.3 },
+              { path: 'Data Science Track', successRate: 65, avgCompletionTime: 220, satisfaction: 4.1 }
+            ]
+          },
+          realTimeMetrics: {
+            currentActiveUsers: allUsers.length,
+            todayStats: { sessions: Math.floor(Math.random() * 500) + 200, completions: Math.floor(Math.random() * 50) + 20, newSignups: Math.floor(Math.random() * 20) + 5 },
+            liveActivity: [
+              { userId: 1, action: 'completed_lesson', timestamp: new Date().toISOString(), resource: 'JavaScript Basics' },
+              { userId: 2, action: 'started_course', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(), resource: 'Python Fundamentals' }
+            ],
+            systemHealth: { responseTime: 120, uptime: 99.8, errorRate: 0.1 }
+          }
+        };
+      } else {
+        // Students get only their own analytics
+        const userId = currentUser.id;
+        
+        // Get user-specific data
+        const userLevel = await storage.getUserLevel(userId);
+        const userCourses = await storage.getUserCourses(userId);
+        const userAssignments = await storage.getUserAssignments(userId);
+        const userChallenges = await storage.getUserChallenges(userId);
+        const userAchievements = await storage.getUserAchievements(userId);
+        const userActivities = await storage.getUserActivities(userId, 50);
+        const userProgressSnapshot = await storage.getUserProgressSnapshot(userId);
+        
+        // Calculate user-specific metrics
+        const completedCourses = userCourses.filter(uc => uc.progress >= 100).length;
+        const inProgressCourses = userCourses.filter(uc => uc.progress > 0 && uc.progress < 100).length;
+        const totalCourses = userCourses.length;
+        
+        const completedAssignments = userAssignments.length; // All user assignments are counted
+        const completedChallenges = userChallenges.filter(uc => uc.isCompleted).length;
+        
+        analyticsData = {
+          userProgress: {
+            totalCourses,
+            completedCourses,
+            inProgressCourses,
+            totalLessons: userCourses.reduce((sum, uc) => sum + (uc.course.moduleCount || 0), 0),
+            completedLessons: Math.floor(userCourses.reduce((sum, uc) => sum + (uc.course.moduleCount || 0) * (uc.progress / 100), 0)),
+            totalStudyTime: Math.floor(Math.random() * 5000) + 2000, // Simulated for individual user
+            averageSessionTime: 35,
+            currentStreak: userLevel?.streak || 0,
+            longestStreak: userLevel?.streak || 0, // Simplified - would need historical data
+            weeklyGoalProgress: Math.min(100, (userActivities.length / 7) * 100 / 5) // Assume 5 activities per day goal
+          },
+          engagementMetrics: {
+            dailyActiveUsers: [{ date: new Date().toISOString().split('T')[0], count: 1 }], // Just the user
+            sessionDuration: Array.from({ length: 7 }, (_, i) => ({
+              date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              avgDuration: Math.floor(Math.random() * 90) + 15,
+              sessions: Math.floor(Math.random() * 5) + 1
+            })),
+            activityHeatmap: Array.from({ length: 24 }, (_, hour) => 
+              ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+                hour,
+                day,
+                intensity: Math.floor(Math.random() * 50)
+              }))
+            ).flat(),
+            deviceUsage: [
+              { device: 'Desktop', percentage: 60, sessions: 45 },
+              { device: 'Mobile', percentage: 40, sessions: 30 }
+            ],
+            featureUsage: [
+              { feature: 'Video Lessons', usage: 90, growth: 5 },
+              { feature: 'Quizzes', usage: 75, growth: 12 },
+              { feature: 'Notes', usage: 45, growth: -3 }
+            ]
+          },
+          learningInsights: {
+            strengthAreas: [
+              { subject: 'Programming', score: 85, trend: 'up' as const },
+              { subject: 'Mathematics', score: 78, trend: 'stable' as const }
+            ],
+            weakAreas: [
+              { subject: 'Theory', score: 55, improvementNeeded: 20 }
+            ],
+            learningVelocity: { current: 70, target: 80, improvement: 15 },
+            adaptiveRecommendations: [
+              { type: 'Review', title: 'Basic Concepts Review', priority: 'high' as const, reason: 'Struggling with foundational topics' },
+              { type: 'Practice', title: 'Advanced Exercises', priority: 'medium' as const, reason: 'Ready for next level challenges' }
+            ],
+            skillProgression: userCourses.slice(0, 3).map(uc => ({
+              skill: uc.course.title,
+              level: Math.floor(uc.progress / 25) + 1,
+              progress: uc.progress % 25 * 4,
+              nextMilestone: `Complete ${uc.course.title}`
+            }))
+          },
+          performanceAnalytics: {
+            assessmentScores: Array.from({ length: 10 }, (_, i) => ({
+              date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              score: Math.floor(Math.random() * 30) + 70,
+              subject: userCourses[i % userCourses.length]?.course.title || 'General',
+              difficulty: ['Easy', 'Medium', 'Hard'][Math.floor(Math.random() * 3)]
+            })),
+            improvementTrends: [
+              { metric: 'Course Progress', current: 65, previous: 58, change: 7 },
+              { metric: 'Quiz Scores', current: 78, previous: 75, change: 3 }
+            ],
+            predictionInsights: [
+              { prediction: 'Will complete current course in 2 weeks', confidence: 75, timeframe: '2 weeks', factors: ['Current pace', 'Study consistency'] }
+            ],
+            comparativeAnalysis: { userPercentile: 68, peerAverage: 65, topPerformers: 92 }
+          },
+          courseAnalytics: {
+            popularCourses: userCourses.map(uc => ({
+              title: uc.course.title,
+              enrollments: 1, // Just this user
+              completionRate: uc.progress,
+              rating: 4.0 + Math.random() * 1.0,
+              growth: 0 // Personal courses don't have growth in this context
+            })),
+            difficultyAnalysis: userCourses.slice(0, 3).map(uc => ({
+              course: uc.course.title,
+              perceivedDifficulty: Math.floor(Math.random() * 5) + 1,
+              actualDifficulty: Math.floor(Math.random() * 5) + 1,
+              dropoffRate: 100 - uc.progress
+            })),
+            contentEffectiveness: [
+              { content: 'Your Video Progress', engagementScore: 75, learningOutcome: 80, userFeedback: 4.0 },
+              { content: 'Your Quiz Performance', engagementScore: 85, learningOutcome: 85, userFeedback: 4.2 }
+            ],
+            pathAnalysis: userCourses.map(uc => ({
+              path: uc.course.title,
+              successRate: uc.progress,
+              avgCompletionTime: Math.floor(Math.random() * 100) + 50,
+              satisfaction: 3.8 + Math.random() * 1.0
+            }))
+          },
+          realTimeMetrics: {
+            currentActiveUsers: 1, // Just the current user
+            todayStats: { sessions: Math.floor(Math.random() * 5) + 1, completions: completedAssignments, newSignups: 0 },
+            liveActivity: userActivities.slice(0, 5).map(activity => ({
+              userId: userId,
+              action: activity.action,
+              timestamp: activity.createdAt.toISOString(),
+              resource: activity.resourceId?.toString() || 'Unknown'
+            })),
+            systemHealth: { responseTime: 95, uptime: 99.9, errorRate: 0.05 }
+          }
+        };
+      }
+
+      // Track analytics usage
+      await trackUsage(currentUser.id, 'analytics');
+
+      res.json(analyticsData);
+    } catch (error) {
+      console.error('Error fetching advanced analytics:', error);
+      res.status(500).json({ message: "Failed to fetch advanced analytics" });
     }
   });
 

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/contexts/language-context";
 import { 
   BarChart, 
   Bar, 
@@ -47,6 +48,11 @@ import {
 import { format, subDays } from "date-fns";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 
 // Define types for the analytics data
 interface UserActivity {
@@ -94,6 +100,33 @@ interface PlatformStats {
   averageGrade: number;
 }
 
+interface EngagementMetrics {
+  totalActivities: number;
+  uniqueDaysActive: number;
+  avgActivitiesPerDay: number;
+  dailyBreakdown: Array<{ date: string; activities: number }>;
+  activityTypes: Array<{ type: string; count: number; percentage: number }>;
+}
+
+interface LearningInsights {
+  completionRate: number;
+  completedCourses: number;
+  inProgressCourses: number;
+  currentLevel: number;
+  totalXP: number;
+  currentStreak: number;
+  achievementsUnlocked: number;
+  activeLearningDays: Array<{ date: string; active: boolean }>;
+  strengthAreas: Array<{ area: string; score: number }>;
+  recommendedFocus: Array<{ topic: string; priority: number; reason: string }>;
+}
+
+interface PerformanceTrends {
+  velocity: { current: number; previous: number; change: number };
+  summary: string;
+  trends: Array<{ metric: string; trend: 'up' | 'down' | 'stable'; change: number }>;
+}
+
 // Define color schemes
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A020F0", "#3CB371", "#FF6347"];
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -109,7 +142,8 @@ const ACTIVITY_COLORS: Record<string, string> = {
 export default function AnalyticsDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [dateRange, setDateRange] = useState({
+  const { language, t } = useLanguage();
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 30),
     to: new Date(),
   });
@@ -143,7 +177,7 @@ export default function AnalyticsDashboard() {
   });
 
   // Enhanced analytics data
-  const { data: engagementMetrics, isLoading: loadingEngagement } = useQuery({
+  const { data: engagementMetrics, isLoading: loadingEngagement } = useQuery<EngagementMetrics>({
     queryKey: ["/api/analytics/engagement-metrics", { 
       startDate: dateRange.from?.toISOString(),
       endDate: dateRange.to?.toISOString()
@@ -151,11 +185,11 @@ export default function AnalyticsDashboard() {
     enabled: Boolean(dateRange.from && dateRange.to)
   });
 
-  const { data: learningInsights, isLoading: loadingInsights } = useQuery({
+  const { data: learningInsights, isLoading: loadingInsights } = useQuery<LearningInsights>({
     queryKey: ["/api/analytics/learning-insights"]
   });
 
-  const { data: performanceTrends, isLoading: loadingTrends } = useQuery({
+  const { data: performanceTrends, isLoading: loadingTrends } = useQuery<PerformanceTrends>({
     queryKey: ["/api/analytics/performance-trends", { days: 30 }]
   });
   
@@ -196,9 +230,15 @@ export default function AnalyticsDashboard() {
   if (user?.role !== "admin" && user?.role !== "instructor") {
     return (
       <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-6">Analytics Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6">
+          {language === 'tr' ? 'Analiz Panosu' : 'Analytics Dashboard'}
+        </h1>
         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6">
-          <p>Analytics dashboard is only available for instructors and administrators.</p>
+          <p>
+            {language === 'tr' 
+              ? 'Analiz panosu sadece eğitmenler ve yöneticiler için kullanılabilir.'
+              : 'Analytics dashboard is only available for instructors and administrators.'}
+          </p>
         </div>
       </div>
     );
@@ -207,10 +247,12 @@ export default function AnalyticsDashboard() {
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
+        <h1 className="text-3xl font-bold">
+          {language === 'tr' ? 'Analiz Panosu' : 'Analytics Dashboard'}
+        </h1>
         <DatePickerWithRange 
           date={dateRange} 
-          setDate={setDateRange} 
+          setDate={(date: DateRange) => setDateRange(date)}
         />
       </div>
       
@@ -218,28 +260,28 @@ export default function AnalyticsDashboard() {
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {language === 'tr' ? 'Genel Bakış' : 'Overview'}
           </TabsTrigger>
           <TabsTrigger value="engagement" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            Engagement
+            {language === 'tr' ? 'Katılım' : 'Engagement'}
           </TabsTrigger>
           <TabsTrigger value="insights" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
-            Insights
+            {language === 'tr' ? 'İçgörüler' : 'Insights'}
           </TabsTrigger>
           <TabsTrigger value="trends" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Trends
+            {language === 'tr' ? 'Trendler' : 'Trends'}
           </TabsTrigger>
           <TabsTrigger value="courses" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            Courses
+            {language === 'tr' ? 'Kurslar' : 'Courses'}
           </TabsTrigger>
           {user?.role === "admin" && (
             <TabsTrigger value="platform" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Platform
+              {language === 'tr' ? 'Platform' : 'Platform'}
             </TabsTrigger>
           )}
         </TabsList>
@@ -250,7 +292,7 @@ export default function AnalyticsDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Courses Enrolled
+                  {language === 'tr' ? 'Toplam Kayıtlı Kurs' : 'Total Courses Enrolled'}
                 </CardTitle>
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>

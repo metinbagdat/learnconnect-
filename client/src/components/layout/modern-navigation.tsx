@@ -17,7 +17,8 @@ import {
   Users,
   Settings,
   LogOut,
-  Crown
+  Crown,
+  BarChart3
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/language-context";
@@ -77,6 +78,13 @@ export default function ModernNavigation({
       icon: TrendingUp,
       url: '/analytics',
       badge: null
+    },
+    {
+      id: 'advanced-analytics',
+      label: language === 'tr' ? 'Gelişmiş Analiz' : 'Advanced Analytics',
+      icon: BarChart3,
+      url: '/advanced-analytics',
+      badge: 'NEW'
     },
     {
       id: 'challenges',

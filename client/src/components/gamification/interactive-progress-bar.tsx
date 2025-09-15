@@ -176,18 +176,73 @@ export function InteractiveProgressBar({
               </motion.div>
             ))}
             
-            {/* Level up text */}
+            {/* Enhanced Level up text with celebration */}
             <motion.div
               className="absolute inset-0 flex items-center justify-center"
-              initial={{ opacity: 0, y: 0 }}
-              animate={{ opacity: [0, 1, 0], y: [0, -10, -20] }}
-              transition={{ duration: 2 }}
+              initial={{ opacity: 0, y: 0, scale: 0.5 }}
+              animate={{ 
+                opacity: [0, 1, 1, 0], 
+                y: [0, -10, -15, -25],
+                scale: [0.5, 1.2, 1, 0.8]
+              }}
+              transition={{ duration: 2.5, times: [0, 0.3, 0.7, 1] }}
             >
-              <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                <Star className="h-3 w-3 fill-current" />
-                Level Up!
-              </div>
+              <motion.div 
+                className="bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-xl flex items-center gap-2 border-2 border-white/20"
+                animate={{
+                  boxShadow: [
+                    "0 0 0px rgba(255, 215, 0, 0.5)",
+                    "0 0 20px rgba(255, 215, 0, 0.8)",
+                    "0 0 40px rgba(255, 215, 0, 0.6)",
+                    "0 0 0px rgba(255, 215, 0, 0.3)"
+                  ]
+                }}
+                transition={{ duration: 1.5, repeat: 2 }}
+              >
+                <motion.div
+                  animate={{ rotate: [0, 360, 720] }}
+                  transition={{ duration: 1.5 }}
+                >
+                  <Star className="h-4 w-4 fill-current" />
+                </motion.div>
+                LEVEL UP!
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ duration: 0.6, repeat: 3 }}
+                >
+                  🎉
+                </motion.div>
+              </motion.div>
             </motion.div>
+
+            {/* Additional celebration particles */}
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={`celebration-${i}`}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${50 + (Math.random() - 0.5) * 100}%`,
+                  top: `${50 + (Math.random() - 0.5) * 100}%`,
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: [0, 1, 0],
+                  opacity: [0, 1, 0],
+                  y: [0, -30, -60],
+                  x: [(Math.random() - 0.5) * 20, (Math.random() - 0.5) * 40],
+                  rotate: [0, Math.random() * 360]
+                }}
+                transition={{ 
+                  duration: 2,
+                  delay: Math.random() * 0.8,
+                  ease: "easeOut"
+                }}
+              >
+                <div className="text-lg">
+                  {['🌟', '✨', '💫', '⭐', '🎊'][Math.floor(Math.random() * 5)]}
+                </div>
+              </motion.div>
+            ))}
           </div>
         )}
       </div>

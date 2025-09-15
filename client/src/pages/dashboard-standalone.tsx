@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { Book, CheckCircle, FileText, Award, Search } from "lucide-react";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -11,6 +12,7 @@ import { EnhancedAIAssistant } from "@/components/ui/enhanced-ai-assistant";
 import { AssignmentList } from "@/components/ui/assignment-list";
 import { Course, UserCourse, Assignment, User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { PageTransition, AnimatedCard } from "@/components/animations/page-transition";
 
 // Sample data for the standalone dashboard
 const sampleCourses: (UserCourse & { course: Course })[] = [
@@ -164,14 +166,20 @@ export default function DashboardStandalone() {
   }
   
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-50">
-      {/* Sidebar - Desktop */}
-      <div className="hidden md:flex md:flex-shrink-0">
-        <Sidebar />
-      </div>
-      
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 w-0 overflow-hidden">
+    <PageTransition pageKey="dashboard">
+      <div className="flex h-screen overflow-hidden bg-neutral-50">
+        {/* Sidebar - Desktop */}
+        <motion.div 
+          className="hidden md:flex md:flex-shrink-0"
+          initial={{ x: -300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <Sidebar />
+        </motion.div>
+        
+        {/* Main Content Area */}
+        <div className="flex flex-col flex-1 w-0 overflow-hidden">
         {/* Mobile Header */}
         <div className="md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-white border-b border-neutral-100 flex items-center justify-between px-4">
           <div className="flex items-center">
@@ -210,35 +218,48 @@ export default function DashboardStandalone() {
             
             {/* Stats */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard 
-                  icon={Book} 
-                  title="Courses in Progress" 
-                  value={coursesInProgress} 
-                  color="primary" 
-                />
+              <motion.div 
+                className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <AnimatedCard delay={0}>
+                  <StatCard 
+                    icon={Book} 
+                    title="Courses in Progress" 
+                    value={coursesInProgress} 
+                    color="primary" 
+                  />
+                </AnimatedCard>
                 
-                <StatCard 
-                  icon={CheckCircle} 
-                  title="Completed Courses" 
-                  value={completedCourses} 
-                  color="success" 
-                />
+                <AnimatedCard delay={0.1}>
+                  <StatCard 
+                    icon={CheckCircle} 
+                    title="Completed Courses" 
+                    value={completedCourses} 
+                    color="success" 
+                  />
+                </AnimatedCard>
                 
-                <StatCard 
-                  icon={FileText} 
-                  title="Pending Assignments" 
-                  value={pendingAssignments} 
-                  color="warning" 
-                />
+                <AnimatedCard delay={0.2}>
+                  <StatCard 
+                    icon={FileText} 
+                    title="Pending Assignments" 
+                    value={pendingAssignments} 
+                    color="warning" 
+                  />
+                </AnimatedCard>
                 
-                <StatCard 
-                  icon={Award} 
-                  title="Achievements" 
-                  value={achievementsCount} 
-                  color="secondary" 
-                />
-              </div>
+                <AnimatedCard delay={0.3}>
+                  <StatCard 
+                    icon={Award} 
+                    title="Achievements" 
+                    value={achievementsCount} 
+                    color="secondary" 
+                  />
+                </AnimatedCard>
+              </motion.div>
             </div>
             
             {/* Continue Learning Section */}
@@ -283,5 +304,6 @@ export default function DashboardStandalone() {
         <MobileNav />
       </div>
     </div>
+    </PageTransition>
   );
 }

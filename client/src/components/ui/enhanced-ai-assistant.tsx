@@ -197,7 +197,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
               <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
             <div>
-              <CardTitle className="text-lg font-semibold text-gray-800">AI Study Companion</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-800">{t('aiStudyCompanion')}</CardTitle>
               <p className="text-sm text-gray-600">Your personal learning assistant</p>
             </div>
           </div>

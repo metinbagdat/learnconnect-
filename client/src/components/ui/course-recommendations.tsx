@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, BookOpen, BookMarked } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { apiRequest } from "@/lib/queryClient";
 
 import {
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function CourseRecommendations() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [isEnrolling, setIsEnrolling] = useState(false);
 
@@ -109,14 +111,14 @@ export function CourseRecommendations() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Course Recommendations</CardTitle>
+          <CardTitle>{t('courseRecommendations')}</CardTitle>
           <CardDescription>
-            Based on your interests and learning history
+            {t('basedOnInterestsAndHistory')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            We'll recommend courses as you continue learning. Take a few courses to get started!
+            {t('weWillRecommendCourses')}
           </p>
         </CardContent>
       </Card>
@@ -126,9 +128,9 @@ export function CourseRecommendations() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recommended For You</CardTitle>
+        <CardTitle>{t('recommendedForYou')}</CardTitle>
         <CardDescription>
-          Personalized recommendations based on your interests and learning history
+          {t('personalizedRecommendationsDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -164,7 +166,7 @@ export function CourseRecommendations() {
                         )}
                         {item.course.isAiGenerated && (
                           <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-blue-500">
-                            AI-Generated
+                            {t('aiGenerated')}
                           </Badge>
                         )}
                       </div>
@@ -182,14 +184,14 @@ export function CourseRecommendations() {
                       {isEnrolling ? (
                         <>
                           <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                          Enrolling...
+                          {t('enrolling')}
                         </>
                       ) : (
-                        "Enroll Now"
+                        t('enrollNow')
                       )}
                     </Button>
                   ) : (
-                    <p className="text-sm italic mt-2">Coming soon!</p>
+                    <p className="text-sm italic mt-2">{t('comingSoon')}</p>
                   )}
                 </div>
               </div>
@@ -199,7 +201,7 @@ export function CourseRecommendations() {
       </CardContent>
       <CardFooter>
         <Button variant="outline" className="w-full" onClick={() => window.location.href = "/courses"}>
-          View All Courses
+          {t('viewAllCourses')}
         </Button>
       </CardFooter>
     </Card>

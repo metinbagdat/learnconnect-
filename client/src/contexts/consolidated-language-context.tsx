@@ -413,7 +413,50 @@ const translations = {
     viewCourses: 'View Courses',
     startLearning: 'Start Learning',
     browseChallenges: 'Browse Challenges',
-    clearSearch: 'Clear Search'
+    clearSearch: 'Clear Search',
+    
+    // Additional Keys for Mixed Language Fix
+    learningInterests: 'Learning Interests',
+    addInterestsHelpText: 'Add your interests to get personalized course recommendations',
+    aiStudyCompanion: 'AI Study Companion',
+    viewAllCourses: 'View All Courses',
+    personalizedRecommendationsDesc: 'Personalized recommendations based on your interests and learning history',
+    
+    // Course Recommendations Complete Keys
+    courseRecommendations: 'Course Recommendations',
+    basedOnInterestsAndHistory: 'Based on your interests and learning history',
+    weWillRecommendCourses: 'We\'ll recommend courses as you continue learning. Take a few courses to get started!',
+    aiGenerated: 'AI-Generated',
+    enrolling: 'Enrolling...',
+    enrollNow: 'Enroll Now',
+    comingSoon: 'Coming soon!',
+    
+    // AI Assistant Complete Keys
+    personalLearningAssistant: 'Your personal learning assistant',
+    chat: 'Chat',
+    tips: 'Tips',
+    motivation: 'Motivation',
+    courseContextActive: 'Course context active',
+    lessonNumber: 'Lesson #',
+    explainConcept: 'Explain concept',
+    practiceProblem: 'Practice problem',
+    studyTipsLabel: 'Study tips',
+    reviewHelp: 'Review help',
+    connectionError: 'Connection Error',
+    connectionErrorDesc: 'I\'m having trouble connecting right now. Please try again.',
+    chatCleared: 'Chat Cleared',
+    chatClearedDesc: 'Your conversation history has been cleared.',
+    failedToClearChat: 'Failed to clear chat history.',
+    personalizedStudyTips: 'Personalized Study Tips',
+    refreshLabel: 'Refresh',
+    dailyMotivation: 'Daily Motivation',
+    newMessage: 'New Message',
+    personalizedStudyTipsDesc: 'Personalized study tips will appear here based on your progress',
+    dailyMotivationDesc: 'Your daily motivation message will appear here',
+    askMeAnything: 'Ask me anything about your studies...',
+    welcomeMessage: 'Hello {name}! 👋 I\'m your AI Study Companion. I\'m here to help you with your coursework, explain concepts, provide study tips, and support your learning journey.\\n\\nHow can I assist you today?',
+    troubleConnecting: 'I\'m experiencing some technical difficulties. Please try rephrasing your question or try again in a moment.',
+    chatHistoryCleared: 'Chat history cleared! How can I help you with your studies today?'
   },
   tr: {
     // Common
@@ -816,7 +859,50 @@ const translations = {
     viewCourses: 'Kursları Görüntüle',
     startLearning: 'Öğrenmeye Başla',
     browseChallenges: 'Meydan Okumaları Gözat',
-    clearSearch: 'Aramayı Temizle'
+    clearSearch: 'Aramayı Temizle',
+    
+    // Additional Keys for Mixed Language Fix
+    learningInterests: 'Öğrenme İlgi Alanları',
+    addInterestsHelpText: 'Kişiselleştirilmiş kurs önerileri almak için ilgi alanlarınızı ekleyin',
+    aiStudyCompanion: 'Yapay Zeka Çalışma Asistanı',
+    viewAllCourses: 'Tüm Kursları Görüntüle',
+    personalizedRecommendationsDesc: 'İlgi alanlarınız ve öğrenme geçmişiniz temelinde kişiselleştirilmiş öneriler',
+    
+    // Course Recommendations Complete Keys
+    courseRecommendations: 'Kurs Önerileri',
+    basedOnInterestsAndHistory: 'İlgi alanlarınız ve öğrenme geçmişiniz temelinde',
+    weWillRecommendCourses: 'Öğrenmeye devam ederken kurslar önereceğiz. Başlamak için birkaç kursa katılın!',
+    aiGenerated: 'Yapay Zeka Oluşturuldu',
+    enrolling: 'Kaydolunuyor...',
+    enrollNow: 'Şimdi Kaydol',
+    comingSoon: 'Yakında!',
+    
+    // AI Assistant Complete Keys
+    personalLearningAssistant: 'Kişisel öğrenme asistanınız',
+    chat: 'Sohbet',
+    tips: 'İpuçları',
+    motivation: 'Motivasyon',
+    courseContextActive: 'Kurs bağlamı etkin',
+    lessonNumber: 'Ders #',
+    explainConcept: 'Kavramı açıkla',
+    practiceProblem: 'Alıştırma problemi',
+    studyTipsLabel: 'Çalışma ipuçları',
+    reviewHelp: 'İnceleme yardımı',
+    connectionError: 'Bağlantı Hatası',
+    connectionErrorDesc: 'Şu anda bağlanmakta zorlanıyorum. Lütfen tekrar deneyin.',
+    chatCleared: 'Sohbet Temizlendi',
+    chatClearedDesc: 'Konuşma geçmişiniz temizlendi.',
+    failedToClearChat: 'Sohbet geçmişi temizlenemedi.',
+    personalizedStudyTips: 'Kişiselleştirilmiş Çalışma İpuçları',
+    refreshLabel: 'Yenile',
+    dailyMotivation: 'Günlük Motivasyon',
+    newMessage: 'Yeni Mesaj',
+    personalizedStudyTipsDesc: 'İlerlemenize göre kişiselleştirilmiş çalışma ipuçları burada görünecek',
+    dailyMotivationDesc: 'Günlük motivasyon mesajınız burada görünecek',
+    askMeAnything: 'Çalışmalarınızla ilgili her şeyi sorabilirsiniz...',
+    welcomeMessage: 'Merhaba {name}! 👋 Ben senin Yapay Zeka Çalışma Asistanınım. Ders çalışmanızda, kavramları açıklamada, çalışma ipuçları sunmada ve öğrenme yolculuğunuzu desteklemede buradayım.\\n\\nBugün nasıl yardımcı olabilirim?',
+    troubleConnecting: 'Teknik zorluklarla karşılaşıyorum. Lütfen sorunuzu yeniden ifade edin veya biraz sonra tekrar deneyin.',
+    chatHistoryCleared: 'Sohbet geçmişi temizlendi! Bugün çalışmalarınızda nasıl yardımcı olabilirim?'
   }
 };
 

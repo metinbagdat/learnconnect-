@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, X, PlusCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useToast } from "@/hooks/use-toast";
 
 import {
@@ -28,6 +29,7 @@ const SUGGESTED_INTERESTS = [
 
 export function UserInterests() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newInterest, setNewInterest] = useState("");
@@ -111,9 +113,9 @@ export function UserInterests() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Learning Interests</CardTitle>
+        <CardTitle>{t('learningInterests')}</CardTitle>
         <CardDescription>
-          Add your interests to get personalized course recommendations
+          {t('addInterestsHelpText')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

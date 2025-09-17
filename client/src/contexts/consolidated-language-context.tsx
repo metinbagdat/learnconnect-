@@ -908,7 +908,7 @@ const translations = {
     personalizedStudyTipsDesc: 'İlerlemenize göre kişiselleştirilmiş çalışma ipuçları burada görünecek',
     dailyMotivationDesc: 'Günlük motivasyon mesajınız burada görünecek',
     askMeAnything: 'Çalışmalarınızla ilgili her şeyi sorabilirsiniz...',
-    welcomeMessage: 'Merhaba {name}! 👋 Ben senin Yapay Zeka Çalışma Asistanınım. Ders çalışmanızda, kavramları açıklamada, çalışma ipuçları sunmada ve öğrenme yolculuğunuzu desteklemede buradayım.\\n\\nBugün nasıl yardımcı olabilirim?',
+    welcomeMessage: 'Merhaba {name}! 👋 Ben sizin Yapay Zeka Çalışma Asistanınızım. Ders çalışmanızda, kavramları açıklamada, çalışma ipuçları sunmada ve öğrenme yolculuğunuzu desteklemede buradayım.\\n\\nBugün nasıl yardımcı olabilirim?',
     troubleConnecting: 'Teknik zorluklarla karşılaşıyorum. Lütfen sorunuzu yeniden ifade edin veya biraz sonra tekrar deneyin.',
     chatHistoryCleared: 'Sohbet geçmişi temizlendi! Bugün çalışmalarınızda nasıl yardımcı olabilirim?',
     
@@ -917,10 +917,10 @@ const translations = {
     enrolledDescription: 'Bu kursa başarıyla kaydoldunuz',
     failedToEnroll: 'Kayıt başarısız',
     failedToEnrollDesc: 'Kursa kaydolma işleminde bir hata oluştu',
-    explainConceptPrompt: 'Bu kavramı basit terimlerle açıklayabilir misin?',
-    practiceProblemPrompt: 'Üzerinde çalışabileceğim bir alıştırma problemi ver',
-    studyTipsPrompt: 'Hangi çalışma stratejilerini önerirsin?',
-    reviewHelpPrompt: 'Öğrendiklerimi gözden geçirmeme yardım et'
+    explainConceptPrompt: 'Bu kavramı basit terimlerle açıklayabilir misiniz?',
+    practiceProblemPrompt: 'Üzerinde çalışabileceğim bir alıştırma problemi verebilir misiniz?',
+    studyTipsPrompt: 'Hangi çalışma stratejilerini önerirsiniz?',
+    reviewHelpPrompt: 'Öğrendiklerimi gözden geçirmeme yardım edebilir misiniz?'
   }
 };
 

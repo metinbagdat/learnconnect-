@@ -136,7 +136,6 @@ const translations = {
     enrolled: 'Enrolled',
     myCourses: 'My Courses',
     inProgress: 'In Progress',
-    enrollNow: 'Enroll Now',
     continueButton: 'Continue',
     noCourses: 'No courses available',
     courseDuration: 'Duration',
@@ -456,7 +455,17 @@ const translations = {
     askMeAnything: 'Ask me anything about your studies...',
     welcomeMessage: 'Hello {name}! 👋 I\'m your AI Study Companion. I\'m here to help you with your coursework, explain concepts, provide study tips, and support your learning journey.\\n\\nHow can I assist you today?',
     troubleConnecting: 'I\'m experiencing some technical difficulties. Please try rephrasing your question or try again in a moment.',
-    chatHistoryCleared: 'Chat history cleared! How can I help you with your studies today?'
+    chatHistoryCleared: 'Chat history cleared! How can I help you with your studies today?',
+    
+    // Complete Missing Keys
+    enrolledSuccessfully: 'Enrolled successfully',
+    enrolledDescription: 'You\'ve been enrolled in this course',
+    failedToEnroll: 'Failed to enroll',
+    failedToEnrollDesc: 'There was an error enrolling you in this course',
+    explainConceptPrompt: 'Can you explain this concept in simple terms?',
+    practiceProblemPrompt: 'Give me a practice problem to work on',
+    studyTipsPrompt: 'What study strategies would you recommend?',
+    reviewHelpPrompt: 'Help me review what I\'ve learned'
   },
   tr: {
     // Common
@@ -582,7 +591,6 @@ const translations = {
     enrolled: 'Kayıtlı',
     myCourses: 'Kurslarım',
     inProgress: 'Devam Eden',
-    enrollNow: 'Şimdi Kaydol',
     continueButton: 'Devam Et',
     noCourses: 'Mevcut kurs yok',
     courseDuration: 'Süre',
@@ -902,7 +910,17 @@ const translations = {
     askMeAnything: 'Çalışmalarınızla ilgili her şeyi sorabilirsiniz...',
     welcomeMessage: 'Merhaba {name}! 👋 Ben senin Yapay Zeka Çalışma Asistanınım. Ders çalışmanızda, kavramları açıklamada, çalışma ipuçları sunmada ve öğrenme yolculuğunuzu desteklemede buradayım.\\n\\nBugün nasıl yardımcı olabilirim?',
     troubleConnecting: 'Teknik zorluklarla karşılaşıyorum. Lütfen sorunuzu yeniden ifade edin veya biraz sonra tekrar deneyin.',
-    chatHistoryCleared: 'Sohbet geçmişi temizlendi! Bugün çalışmalarınızda nasıl yardımcı olabilirim?'
+    chatHistoryCleared: 'Sohbet geçmişi temizlendi! Bugün çalışmalarınızda nasıl yardımcı olabilirim?',
+    
+    // Complete Missing Keys
+    enrolledSuccessfully: 'Kayıt başarılı',
+    enrolledDescription: 'Bu kursa başarıyla kaydoldunuz',
+    failedToEnroll: 'Kayıt başarısız',
+    failedToEnrollDesc: 'Kursa kaydolma işleminde bir hata oluştu',
+    explainConceptPrompt: 'Bu kavramı basit terimlerle açıklayabilir misin?',
+    practiceProblemPrompt: 'Üzerinde çalışabileceğim bir alıştırma problemi ver',
+    studyTipsPrompt: 'Hangi çalışma stratejilerini önerirsin?',
+    reviewHelpPrompt: 'Öğrendiklerimi gözden geçirmeme yardım et'
   }
 };
 

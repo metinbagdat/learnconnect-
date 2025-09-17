@@ -64,7 +64,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
     if (user && messages.length === 0) {
       const welcomeMessage: Message = {
         role: 'assistant',
-        content: `Merhaba ${user.displayName}! 👋 I'm your AI Study Companion. I'm here to help you with your coursework, explain concepts, provide study tips, and support your learning journey.\n\nHow can I assist you today?`,
+        content: t('welcomeMessage').replace('{name}', user.displayName),
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
@@ -117,15 +117,15 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
     } catch (error) {
       console.error('Chat error:', error);
       toast({
-        title: "Connection Error",
-        description: "I'm having trouble connecting right now. Please try again.",
+        title: t('connectionError'),
+        description: t('connectionErrorDesc'),
         variant: "destructive",
       });
       
       // Add fallback message
       const errorMessage: Message = {
         role: 'assistant',
-        content: "I'm experiencing some technical difficulties. Please try rephrasing your question or try again in a moment.",
+        content: t('troubleConnecting'),
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -140,18 +140,18 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
       await apiRequest('DELETE', '/api/ai/chat/history');
       setMessages([{
         role: 'assistant',
-        content: "Chat history cleared! How can I help you with your studies today?",
+        content: t('chatHistoryCleared'),
         timestamp: new Date()
       }]);
       toast({
-        title: "Chat Cleared",
-        description: "Your conversation history has been cleared.",
+        title: t('chatCleared'),
+        description: t('chatClearedDesc'),
       });
     } catch (error) {
       console.error('Error clearing chat:', error);
       toast({
-        title: "Error",
-        description: "Failed to clear chat history.",
+        title: t('error'),
+        description: t('failedToClearChat'),
         variant: "destructive",
       });
     }
@@ -168,20 +168,20 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
   // Quick action buttons
   const quickActions = [
     {
-      label: "Explain concept",
-      action: () => setInputMessage("Can you explain this concept in simple terms?")
+      label: t('explainConcept'),
+      action: () => setInputMessage(t('explainConceptPrompt'))
     },
     {
-      label: "Practice problem",
-      action: () => setInputMessage("Give me a practice problem to work on")
+      label: t('practiceProblem'),
+      action: () => setInputMessage(t('practiceProblemPrompt'))
     },
     {
-      label: "Study tips",
-      action: () => setInputMessage("What study strategies would you recommend?")
+      label: t('studyTipsLabel'),
+      action: () => setInputMessage(t('studyTipsPrompt'))
     },
     {
-      label: "Review help",
-      action: () => setInputMessage("Help me review what I've learned")
+      label: t('reviewHelp'),
+      action: () => setInputMessage(t('reviewHelpPrompt'))
     }
   ];
 
@@ -198,7 +198,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
             </div>
             <div>
               <CardTitle className="text-lg font-semibold text-gray-800">{t('aiStudyCompanion')}</CardTitle>
-              <p className="text-sm text-gray-600">Your personal learning assistant</p>
+              <p className="text-sm text-gray-600">{t('personalLearningAssistant')}</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -225,15 +225,15 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
           <TabsList className="grid w-full grid-cols-3 bg-gray-50">
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
-              Chat
+              {t('chat')}
             </TabsTrigger>
             <TabsTrigger value="tips" className="flex items-center gap-2">
               <Lightbulb className="h-4 w-4" />
-              Tips
+              {t('tips')}
             </TabsTrigger>
             <TabsTrigger value="motivation" className="flex items-center gap-2">
               <Heart className="h-4 w-4" />
-              Motivation
+              {t('motivation')}
             </TabsTrigger>
           </TabsList>
 
@@ -244,10 +244,10 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-blue-700">
                   <BookOpen className="h-4 w-4" />
-                  <span className="text-sm font-medium">Course context active</span>
+                  <span className="text-sm font-medium">{t('courseContextActive')}</span>
                   {lessonId && (
                     <Badge variant="secondary" className="text-xs">
-                      Lesson #{lessonId}
+                      {t('lessonNumber')}{lessonId}
                     </Badge>
                   )}
                 </div>
@@ -337,7 +337,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask me anything about your studies..."
+                  placeholder={t('askMeAnything')}
                   className="w-full p-3 pr-12 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={2}
                   disabled={isLoading}
@@ -360,7 +360,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-gray-800 flex items-center gap-2">
                   <Target className="h-5 w-5 text-blue-500" />
-                  Personalized Study Tips
+                  {t('personalizedStudyTips')}
                 </h3>
                 <Button 
                   variant="outline" 
@@ -369,7 +369,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
                   className="text-xs"
                 >
                   <RefreshCw className="h-3 w-3 mr-1" />
-                  Refresh
+                  {t('refreshLabel')}
                 </Button>
               </div>
               
@@ -389,7 +389,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     <Lightbulb className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p>Personalized study tips will appear here based on your progress</p>
+                    <p>{t('personalizedStudyTipsDesc')}</p>
                   </div>
                 )}
               </div>
@@ -402,7 +402,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-gray-800 flex items-center gap-2">
                   <Zap className="h-5 w-5 text-purple-500" />
-                  Daily Motivation
+                  {t('dailyMotivation')}
                 </h3>
                 <Button 
                   variant="outline" 
@@ -411,7 +411,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
                   className="text-xs"
                 >
                   <RefreshCw className="h-3 w-3 mr-1" />
-                  New Message
+                  {t('newMessage')}
                 </Button>
               </div>
               
@@ -425,7 +425,7 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Heart className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p>Your daily motivation message will appear here</p>
+                  <p>{t('dailyMotivationDesc')}</p>
                 </div>
               )}
             </div>

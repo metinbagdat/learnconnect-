@@ -85,13 +85,13 @@ export function CourseRecommendations() {
     try {
       await apiRequest("POST", "/api/user/courses", { courseId });
       toast({
-        title: "Enrolled successfully",
-        description: "You've been enrolled in this course",
+        title: t('enrolledSuccessfully'),
+        description: t('enrolledDescription'),
       });
     } catch (error) {
       toast({
-        title: "Failed to enroll",
-        description: "There was an error enrolling you in this course",
+        title: t('failedToEnroll'),
+        description: t('failedToEnrollDesc'),
         variant: "destructive",
       });
     } finally {

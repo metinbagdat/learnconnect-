@@ -772,7 +772,51 @@ const translations = {
     opportunity: 'Fırsat',
     risk: 'Risk',
     noInsightsAvailable: 'Henüz içgörü mevcut değil',
-    insightsWillAppearAsYouProgress: 'Öğrenme yolculuğunuz ilerledikçe içgörüler görünecek'
+    insightsWillAppearAsYouProgress: 'Öğrenme yolculuğunuz ilerledikçe içgörüler görünecek',
+    
+    // Error States
+    unexpectedError: 'Bir Hata Oluştu',
+    errorBoundaryDescription: 'Beklenmedik bir hata oluştu. Özür dileriz.',
+    errorDetails: 'Hata Detayları',
+    tryAgain: 'Tekrar Dene',
+    goHome: 'Ana Sayfaya Git',
+    networkError: 'Ağ Hatası',
+    networkErrorDesc: 'Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.',
+    serverError: 'Sunucu Hatası',
+    serverErrorDesc: 'Sunucularımızda sorun yaşanıyor. Lütfen biraz sonra tekrar deneyin.',
+    permissionError: 'Erişim Reddedildi',
+    permissionErrorDesc: 'Bu kaynağa erişim yetkiniz yok.',
+    notFoundError: 'Bulunamadı',
+    notFoundErrorDesc: 'İstenen kaynak bulunamadı.',
+    genericErrorDesc: 'Beklenmedik bir hata oluştu. Lütfen tekrar deneyin.',
+    failedToLoadCourses: 'Kurslar yüklenemedi',
+    coursesErrorDesc: 'Kurslarınız yüklenemedi. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.',
+    failedToLoadAssignments: 'Ödevler yüklenemedi',
+    assignmentsErrorDesc: 'Ödevleriniz yüklenemedi. Lütfen tekrar deneyin.',
+    
+    // Loading States
+    loadingCourses: 'Kurslar yükleniyor...',
+    loadingAssignments: 'Ödevler yükleniyor...',
+    pleaseWait: 'Lütfen bekleyin...',
+    retrying: 'Yeniden deneniyor...',
+    
+    // Empty States
+    noCoursesTitle: 'Kurs Bulunamadı',
+    noCoursesDesc: 'Kurs kataloğumuzu keşfederek öğrenme yolculuğunuzu başlatın.',
+    noAssignmentsTitle: 'Ödev Yok',
+    noAssignmentsDesc: 'Harika! Şu anda bekleyen ödeviniz yok.',
+    noAchievementsTitle: 'Henüz Başarı Yok',
+    noAchievementsDesc: 'İlk başarınızı açmak için kursları ve meydan okumaları tamamlayın!',
+    noChallengesTitle: 'Aktif Meydan Okuma Yok',
+    noChallengesDesc: 'Beceri geliştiren egzersizler ve yarışmalarla kendinize meydan okuyun.',
+    noSearchResultsTitle: 'Sonuç bulunamadı',
+    noSearchResultsDesc: 'Arama terimlerinizi ayarlamayı deneyin veya önerilerimize göz atın.',
+    noDataTitle: 'Veri Mevcut Değil',
+    noDataDesc: 'Şu anda burada gösterilecek bir şey yok.',
+    viewCourses: 'Kursları Görüntüle',
+    startLearning: 'Öğrenmeye Başla',
+    browseChallenges: 'Meydan Okumaları Gözat',
+    clearSearch: 'Aramayı Temizle'
   }
 };
 

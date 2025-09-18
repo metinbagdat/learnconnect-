@@ -435,51 +435,79 @@ export default function AnimatedProgressDemo() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3 items-center">
             <Button
               onClick={() => simulateProgressMutation.mutate()}
               disabled={simulateProgressMutation.isPending}
-              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 min-w-0"
             >
-              <BilingualText text={simulateProgressMutation.isPending ? t('updating') : t('simulateProgress')} secondaryClassName="text-xs opacity-50" />
+              <BilingualText 
+                text={simulateProgressMutation.isPending ? t('updating') : t('simulateProgress')} 
+                compact 
+                secondaryClassName="text-xs opacity-40" 
+              />
             </Button>
             
             <Button
               onClick={() => addRandomBubbleMutation.mutate()}
               disabled={addRandomBubbleMutation.isPending}
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 min-w-0"
             >
-              <Plus className="w-4 h-4" />
-              <BilingualText text={addRandomBubbleMutation.isPending ? t('adding') : t('addRandomBubble')} secondaryClassName="text-xs opacity-50" />
+              <Plus className="w-4 h-4 shrink-0" />
+              <BilingualText 
+                text={addRandomBubbleMutation.isPending ? t('adding') : t('addRandomBubble')} 
+                compact 
+                secondaryClassName="text-xs opacity-40" 
+              />
             </Button>
 
             <Button
               onClick={() => setIsSimulating(!isSimulating)}
               variant={isSimulating ? "destructive" : "default"}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 min-w-0"
             >
-              <BilingualText text={isSimulating ? t('stopAutoSimulation') : t('startAutoSimulation')} secondaryClassName="text-xs opacity-50" />
+              <BilingualText 
+                text={isSimulating ? t('stopAutoSimulation') : t('startAutoSimulation')} 
+                compact 
+                secondaryClassName="text-xs opacity-40" 
+              />
             </Button>
             
             <Button
               onClick={resetProgress}
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 min-w-0"
             >
-              <Shuffle className="w-4 h-4" />
-              <BilingualText text={t('resetProgress')} secondaryClassName="text-xs opacity-50" />
+              <Shuffle className="w-4 h-4 shrink-0" />
+              <BilingualText 
+                text={t('resetProgress')} 
+                compact 
+                secondaryClassName="text-xs opacity-40" 
+              />
             </Button>
             
-            <div className="flex gap-4 text-sm text-muted-foreground items-center">
-              <Badge variant="outline" className="px-3 py-1">
-                <BilingualText text={`${t('totalBubbles')}: ${progressData.length}`} secondaryClassName="text-xs opacity-50" />
+            <div className="flex flex-wrap gap-2 text-sm text-muted-foreground items-center">
+              <Badge variant="outline" className="px-2 py-1 min-w-0">
+                <BilingualText 
+                  text={`${t('totalBubbles')}: ${progressData.length}`} 
+                  compact 
+                  secondaryClassName="text-xs opacity-40" 
+                />
               </Badge>
-              <Badge variant="outline" className="px-3 py-1">
-                <BilingualText text={`${t('completed')}: ${progressData.filter(b => b.progress >= 100).length}`} secondaryClassName="text-xs opacity-50" />
+              <Badge variant="outline" className="px-2 py-1 min-w-0">
+                <BilingualText 
+                  text={`${t('completed')}: ${progressData.filter(b => b.progress >= 100).length}`} 
+                  compact 
+                  secondaryClassName="text-xs opacity-40" 
+                />
               </Badge>
-              <Badge variant="outline" className="px-3 py-1">
-                <BilingualText text={`${t('active')}: ${progressData.filter(b => b.isActive).length}`} secondaryClassName="text-xs opacity-50" />
+              <Badge variant="outline" className="px-2 py-1 min-w-0">
+                <BilingualText 
+                  text={`${t('active')}: ${progressData.filter(b => b.isActive).length}`} 
+                  compact 
+                  secondaryClassName="text-xs opacity-40" 
+                />
               </Badge>
             </div>
           </div>
@@ -488,9 +516,23 @@ export default function AnimatedProgressDemo() {
 
       {/* Progress Bubbles Display */}
       <Tabs defaultValue="bubbles" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-          <TabsTrigger value="bubbles"><BilingualText text={t('interactiveBubbles')} secondaryClassName="text-xs opacity-50" /></TabsTrigger>
-          <TabsTrigger value="details"><BilingualText text={t('bubbleDetails')} secondaryClassName="text-xs opacity-50" /></TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto h-auto">
+          <TabsTrigger value="bubbles" className="min-w-0 px-3">
+            <BilingualText 
+              text={t('interactiveBubbles')} 
+              compact 
+              secondaryClassName="text-xs opacity-50" 
+              className="w-full"
+            />
+          </TabsTrigger>
+          <TabsTrigger value="details" className="min-w-0 px-3">
+            <BilingualText 
+              text={t('bubbleDetails')} 
+              compact 
+              secondaryClassName="text-xs opacity-50" 
+              className="w-full"
+            />
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="bubbles" className="space-y-6">

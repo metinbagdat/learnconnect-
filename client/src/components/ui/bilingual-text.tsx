@@ -29,7 +29,7 @@ export const BilingualText: React.FC<BilingualTextProps> = ({
   // Compact mode for tabs, buttons, and constrained spaces
   if (compact) {
     return (
-      <span className={`${className} flex items-center gap-1 min-w-0`}>
+      <span className={`${className} flex items-center gap-1 min-w-0`} title={`${primary} – ${secondary}`}>
         <span className={`${primaryClassName} truncate`}>{primary}</span>
         <span className="opacity-30 text-xs shrink-0">•</span>
         <span className={`${secondaryClassName} text-xs opacity-50 truncate`}>{secondary}</span>

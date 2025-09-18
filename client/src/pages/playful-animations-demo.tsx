@@ -345,7 +345,7 @@ export default function PlayfulAnimationsDemo() {
             <h3 className="text-lg font-medium mb-2"><BilingualText text={t('authenticationRequired')} secondaryClassName="text-base opacity-50" /></h3>
             <p className="text-gray-500 mb-6"><BilingualText text={t('pleaseLoginToExperience')} secondaryClassName="text-sm opacity-50" /></p>
             <Button asChild>
-              <a href="/auth">Login</a>
+              <a href="/auth"><BilingualText text={t('login')} compact secondaryClassName="text-xs opacity-50" /></a>
             </Button>
           </CardContent>
         </Card>
@@ -412,36 +412,36 @@ export default function PlayfulAnimationsDemo() {
             <div className="flex flex-wrap gap-4">
               <Button
                 onClick={triggerRandomAchievement}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 min-w-0"
               >
-                <BilingualText text={t('triggerAchievement')} secondaryClassName="text-xs opacity-50" />
+                <BilingualText text={t('triggerAchievement')} compact secondaryClassName="text-xs opacity-40" />
               </Button>
               
               <Button
                 onClick={changeMascotMood}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-w-0"
               >
-                <Smile className="w-4 h-4" />
-                <BilingualText text={t('changeMascotMood')} secondaryClassName="text-xs opacity-50" />
+                <Smile className="w-4 h-4 shrink-0" />
+                <BilingualText text={t('changeMascotMood')} compact secondaryClassName="text-xs opacity-40" />
               </Button>
 
               <Button
                 onClick={simulateProgress}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-w-0"
               >
-                <TrendingUp className="w-4 h-4" />
-                <BilingualText text={t('simulateProgress')} secondaryClassName="text-xs opacity-50" />
+                <TrendingUp className="w-4 h-4 shrink-0" />
+                <BilingualText text={t('simulateProgress')} compact secondaryClassName="text-xs opacity-40" />
               </Button>
               
               <Button
                 onClick={resetDemo}
                 variant="outline"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-w-0"
               >
-                <RotateCcw className="w-4 h-4" />
-                <BilingualText text={t('resetDemo')} secondaryClassName="text-xs opacity-50" />
+                <RotateCcw className="w-4 h-4 shrink-0" />
+                <BilingualText text={t('resetDemo')} compact secondaryClassName="text-xs opacity-40" />
               </Button>
             </div>
             
@@ -488,11 +488,19 @@ export default function PlayfulAnimationsDemo() {
 
         {/* Main Demo Content */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="skills">Skill Tree</TabsTrigger>
-            <TabsTrigger value="progress">Progress Bubbles</TabsTrigger>
-            <TabsTrigger value="celebrations">Celebrations</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 max-w-3xl mx-auto h-auto">
+            <TabsTrigger value="overview" className="min-w-0 px-2">
+              <BilingualText text={t('overview')} compact secondaryClassName="text-xs opacity-50" />
+            </TabsTrigger>
+            <TabsTrigger value="skills" className="min-w-0 px-2">
+              <BilingualText text={t('skillTree')} compact secondaryClassName="text-xs opacity-50" />
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="min-w-0 px-2">
+              <BilingualText text={t('progressBubbles')} compact secondaryClassName="text-xs opacity-50" />
+            </TabsTrigger>
+            <TabsTrigger value="celebrations" className="min-w-0 px-2">
+              <BilingualText text={t('celebrations')} compact secondaryClassName="text-xs opacity-50" />
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -541,25 +549,25 @@ export default function PlayfulAnimationsDemo() {
                       <div className="text-2xl font-bold text-blue-600">
                         {skillData.filter(s => s.isUnlocked).length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Skills Unlocked</div>
+                      <div className="text-sm text-muted-foreground"><BilingualText text={t('skillsUnlocked')} compact secondaryClassName="text-xs opacity-50" /></div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-green-600">
                         {Math.round(progressData.reduce((acc, p) => acc + p.progress, 0) / progressData.length)}%
                       </div>
-                      <div className="text-sm text-muted-foreground">Avg Progress</div>
+                      <div className="text-sm text-muted-foreground"><BilingualText text={t('avgProgress')} compact secondaryClassName="text-xs opacity-50" /></div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-purple-600">
                         {progressData.filter(p => p.progress >= 100).length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Completed</div>
+                      <div className="text-sm text-muted-foreground"><BilingualText text={t('completed')} compact secondaryClassName="text-xs opacity-50" /></div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-orange-600">
                         {progressData.filter(p => p.isActive).length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Active</div>
+                      <div className="text-sm text-muted-foreground"><BilingualText text={t('active')} compact secondaryClassName="text-xs opacity-50" /></div>
                     </div>
                   </div>
                 </CardContent>
@@ -570,30 +578,30 @@ export default function PlayfulAnimationsDemo() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    Animation Features
+                    <BilingualText text={t('animationFeatures')} compact secondaryClassName="text-base opacity-50" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span>Floating Learning Mascot</span>
+                      <BilingualText text={t('floatingLearningMascot')} compact secondaryClassName="text-xs opacity-50" />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>Achievement Celebrations</span>
+                      <BilingualText text={t('achievementCelebration')} compact secondaryClassName="text-xs opacity-50" />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span>Interactive Skill Trees</span>
+                      <BilingualText text={t('interactiveSkillTrees')} compact secondaryClassName="text-xs opacity-50" />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                      <span>Progress Bubble Animations</span>
+                      <BilingualText text={t('progressBubbleAnimations')} compact secondaryClassName="text-xs opacity-50" />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
-                      <span>Particle Effects</span>
+                      <BilingualText text={t('particleEffects')} compact secondaryClassName="text-xs opacity-50" />
                     </div>
                   </div>
                 </CardContent>

@@ -516,7 +516,7 @@ export default function AnimatedProgressDemo() {
 
       {/* Progress Bubbles Display */}
       <Tabs defaultValue="bubbles" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto h-auto">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 max-w-lg mx-auto h-auto">
           <TabsTrigger value="bubbles" className="min-w-0 px-3">
             <BilingualText 
               text={t('interactiveBubbles')} 

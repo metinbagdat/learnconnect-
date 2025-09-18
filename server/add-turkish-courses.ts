@@ -18,8 +18,8 @@ async function addTurkishCourses() {
     // TYT Courses (First stage of YKS)
     
     const tytMath = await storage.createCourse({
-      title: "TYT Mathematics",
-      description: "Comprehensive course covering all TYT mathematics topics including basic math, algebra, geometry, and problem-solving techniques required for the Turkish university entrance exam.",
+      title: "TYT Matematik – TYT Mathematics",
+      description: "YKS TYT matematik konularının tümünü kapsayan kapsamlı kurs: temel matematik, cebir, geometri ve problem çözme teknikleri. Comprehensive course covering all TYT mathematics topics including basic math, algebra, geometry, and problem-solving techniques required for the Turkish university entrance exam.",
       category: "Turkish YKS - TYT",
       moduleCount: 12,
       durationHours: 36,
@@ -30,8 +30,8 @@ async function addTurkishCourses() {
     });
     
     const tytTurkish = await storage.createCourse({
-      title: "TYT Turkish Language",
-      description: "Master Turkish language grammar, comprehension, and literature for the TYT exam with this comprehensive course designed by expert instructors.",
+      title: "TYT Türkçe – TYT Turkish Language",
+      description: "TYT sınavı için Türkçe dil bilgisi, anlama ve edebiyat konularında ustalaşma kursu. Master Turkish language grammar, comprehension, and literature for the TYT exam with this comprehensive course designed by expert instructors.",
       category: "Turkish YKS - TYT",
       moduleCount: 10,
       durationHours: 30,
@@ -42,8 +42,8 @@ async function addTurkishCourses() {
     });
     
     const tytScience = await storage.createCourse({
-      title: "TYT Basic Sciences",
-      description: "Complete preparation for TYT science sections covering physics, chemistry, and biology fundamentals with practice tests and solved examples.",
+      title: "TYT Temel Bilimler – TYT Basic Sciences",
+      description: "TYT fen bilimleri bölümü için fizik, kimya ve biyoloji temellerini kapsayan tam hazırlık kursu. Complete preparation for TYT science sections covering physics, chemistry, and biology fundamentals with practice tests and solved examples.",
       category: "Turkish YKS - TYT",
       moduleCount: 15,
       durationHours: 40,
@@ -54,8 +54,8 @@ async function addTurkishCourses() {
     });
     
     const tytSocial = await storage.createCourse({
-      title: "TYT Social Sciences",
-      description: "Comprehensive coverage of history, geography, philosophy, and religion & ethics topics for the TYT exam with practice questions.",
+      title: "TYT Sosyal Bilimler – TYT Social Sciences",
+      description: "TYT sınavı için tarih, coğrafya, felsefe ve din-etik konularının kapsamlı işlenmesi. Comprehensive coverage of history, geography, philosophy, and religion & ethics topics for the TYT exam with practice questions.",
       category: "Turkish YKS - TYT",
       moduleCount: 8,
       durationHours: 24,

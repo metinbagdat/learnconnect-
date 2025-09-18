@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -216,6 +217,7 @@ const generateProgressBubbles = (): ProgressBubbleData[] => [
 export default function PlayfulAnimationsDemo() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   // Component states
   const [mascot, setMascot] = useState<LearningMascot>({
@@ -282,15 +284,15 @@ export default function PlayfulAnimationsDemo() {
     })));
 
     toast({
-      title: "Progress Updated! 📈",
-      description: "Learning progress simulated across all areas",
+      title: t('progressUpdated'),
+      description: t('learningProgressSimulated'),
     });
   };
 
   const handleSkillUnlock = (skill: SkillNode) => {
     toast({
-      title: "Skill Unlocked! ✨",
-      description: `${skill.title} is now available for learning!`,
+      title: t('skillUnlocked'),
+      description: `${skill.title} ${t('skillNowAvailable')}`,
     });
     
     // Trigger mini celebration
@@ -298,7 +300,7 @@ export default function PlayfulAnimationsDemo() {
       ...prev,
       mood: 'excited',
       animation: 'bounce',
-      message: 'New skill unlocked! 🚀'
+      message: t('newSkillUnlocked')
     }));
   };
 
@@ -318,7 +320,7 @@ export default function PlayfulAnimationsDemo() {
     setProgressData(generateProgressBubbles());
     setMascot({
       id: 'buddy',
-      name: 'Learning Buddy',
+      name: t('learningBuddy'),
       mood: 'happy',
       position: { x: 150, y: 150 },
       size: 'medium',
@@ -328,8 +330,8 @@ export default function PlayfulAnimationsDemo() {
     setCurrentAchievement(null);
     
     toast({
-      title: "Demo Reset",
-      description: "All animations and progress have been reset",
+      title: t('demoReset'),
+      description: t('allAnimationsReset'),
     });
   };
 
@@ -339,8 +341,8 @@ export default function PlayfulAnimationsDemo() {
         <Card>
           <CardContent className="text-center py-12">
             <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
-            <p className="text-gray-500 mb-6">Please log in to experience the playful learning animations</p>
+            <h3 className="text-lg font-medium mb-2">{t('authenticationRequired')}</h3>
+            <p className="text-gray-500 mb-6">{t('pleaseLoginToExperience')}</p>
             <Button asChild>
               <a href="/auth">Login</a>
             </Button>
@@ -373,27 +375,26 @@ export default function PlayfulAnimationsDemo() {
               <Wand2 className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Playful Learning Progress Animations
+              {t('playfulLearningProgressAnimations')}
             </h1>
           </motion.div>
           
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Experience learning like never before with interactive animations, celebrations, and a friendly learning mascot. 
-            Every achievement becomes a moment of joy and motivation!
+            {t('experienceLearningLikeNever')}
           </p>
 
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-pink-600" />
-              <span>Interactive Mascot</span>
+              <span>{t('interactiveMascot')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-purple-600" />
-              <span>Achievement Celebrations</span>
+              <span>{t('achievementCelebrations')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-blue-600" />
-              <span>Skill Tree Progression</span>
+              <span>{t('skillTreeProgression')}</span>
             </div>
           </div>
         </div>
@@ -403,7 +404,7 @@ export default function PlayfulAnimationsDemo() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Animation Controls
+              {t('animationControls')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -412,7 +413,7 @@ export default function PlayfulAnimationsDemo() {
                 onClick={triggerRandomAchievement}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               >
-                🎉 Trigger Achievement
+                {t('triggerAchievement')}
               </Button>
               
               <Button
@@ -421,7 +422,7 @@ export default function PlayfulAnimationsDemo() {
                 className="flex items-center gap-2"
               >
                 <Smile className="w-4 h-4" />
-                Change Mascot Mood
+                {t('changeMascotMood')}
               </Button>
 
               <Button
@@ -430,7 +431,7 @@ export default function PlayfulAnimationsDemo() {
                 className="flex items-center gap-2"
               >
                 <TrendingUp className="w-4 h-4" />
-                Simulate Progress
+                {t('simulateProgress')}
               </Button>
               
               <Button
@@ -439,7 +440,7 @@ export default function PlayfulAnimationsDemo() {
                 className="flex items-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                Reset Demo
+                {t('resetDemo')}
               </Button>
             </div>
             
@@ -454,7 +455,7 @@ export default function PlayfulAnimationsDemo() {
                 >
                   {mascotEnabled ? <Smile className="w-4 h-4" /> : <User className="w-4 h-4" />}
                 </Button>
-                <span className="text-sm">Mascot</span>
+                <span className="text-sm">{t('mascot')}</span>
               </div>
               
               <div className="flex items-center gap-2">
@@ -466,7 +467,7 @@ export default function PlayfulAnimationsDemo() {
                 >
                   {animationsEnabled ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                 </Button>
-                <span className="text-sm">Animations</span>
+                <span className="text-sm">{t('animations')}</span>
               </div>
               
               <div className="flex items-center gap-2">
@@ -478,7 +479,7 @@ export default function PlayfulAnimationsDemo() {
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </Button>
-                <span className="text-sm">Sound</span>
+                <span className="text-sm">{t('sound')}</span>
               </div>
             </div>
           </CardContent>

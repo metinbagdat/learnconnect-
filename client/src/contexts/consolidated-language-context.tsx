@@ -465,7 +465,76 @@ const translations = {
     explainConceptPrompt: 'Can you explain this concept in simple terms?',
     practiceProblemPrompt: 'Give me a practice problem to work on',
     studyTipsPrompt: 'What study strategies would you recommend?',
-    reviewHelpPrompt: 'Help me review what I\'ve learned'
+    reviewHelpPrompt: 'Help me review what I\'ve learned',
+    
+    // Playful Animation Demo Page
+    playfulLearningProgressAnimations: 'Playful Learning Progress Animations',
+    experienceLearningLikeNever: 'Experience learning like never before with interactive animations, celebrations, and a friendly learning mascot. Every achievement becomes a moment of joy and motivation!',
+    interactiveMascot: 'Interactive Mascot',
+    achievementCelebrations: 'Achievement Celebrations',
+    skillTreeProgression: 'Skill Tree Progression',
+    animationControls: 'Animation Controls',
+    triggerAchievement: 'Trigger Achievement',
+    changeMascotMood: 'Change Mascot Mood',
+    simulateProgress: 'Simulate Progress',
+    resetDemo: 'Reset Demo',
+    mascot: 'Mascot',
+    animations: 'Animations',
+    sound: 'Sound',
+    pleaseLoginToExperience: 'Please log in to experience the playful learning animations',
+    progressUpdated: 'Progress Updated!',
+    learningProgressSimulated: 'Learning progress simulated across all areas',
+    skillUnlocked: 'Skill Unlocked!',
+    skillNowAvailable: 'is now available for learning!',
+    newSkillUnlocked: 'New skill unlocked!',
+    demoReset: 'Demo Reset',
+    allAnimationsReset: 'All animations and progress have been reset',
+    learningBuddy: 'Learning Buddy',
+    
+    // Demo Skills
+    javascriptBasics: 'JavaScript Basics',
+    advancedJavascript: 'Advanced JavaScript',
+    reactFundamentals: 'React Fundamentals',
+    reactHooks: 'React Hooks',
+    typescript: 'TypeScript',
+    fullStackDeveloper: 'Full Stack Developer',
+    
+    // Demo Achievements
+    firstLessonComplete: 'First Lesson Complete!',
+    firstLessonDesc: 'You completed your very first lesson! Great start on your learning journey.',
+    weekWarrior: 'Week Warrior!',
+    weekWarriorDesc: 'Maintained a 7-day learning streak. Consistency is key to mastery!',
+    skillMasteryAchieved: 'Skill Mastery Achieved!',
+    skillMasteryDesc: 'You have mastered JavaScript fundamentals. Ready for the next challenge?',
+    learningBreakthrough: 'Learning Breakthrough!',
+    learningBreakthroughDesc: 'You solved a complex problem that challenged you. Incredible growth!',
+    
+    // Progress Bubbles
+    javascriptMastery: 'JavaScript Mastery',
+    buildingJSFoundations: 'Building strong JavaScript foundations',
+    dayStreak: '14-Day Streak',
+    consistentDailyLearning: 'Consistent daily learning',
+    problemSolver: 'Problem Solver',
+    analyticalThinkingSkills: 'Analytical thinking skills',
+    
+    // Tab Labels
+    skillTree: 'Skill Tree',
+    progressBubbles: 'Progress Bubbles',
+    celebrations: 'Celebrations',
+    
+    // Learning Features
+    learningMascot: 'Learning Mascot',
+    learningStats: 'Learning Stats',
+    animationFeatures: 'Animation Features',
+    floatingLearningMascot: 'Floating Learning Mascot',
+    achievementCelebration: 'Achievement Celebrations',
+    interactiveSkillTrees: 'Interactive Skill Trees',
+    progressBubbleAnimations: 'Progress Bubble Animations',
+    particleEffects: 'Particle Effects',
+    skillsUnlocked: 'Skills Unlocked',
+    avgProgress: 'Avg Progress',
+    active: 'Active',
+    happyFloat: 'Happy \u2022 Float'
   },
   tr: {
     // Common
@@ -920,7 +989,76 @@ const translations = {
     explainConceptPrompt: 'Bu kavramı basit terimlerle açıklayabilir misiniz?',
     practiceProblemPrompt: 'Üzerinde çalışabileceğim bir alıştırma problemi verebilir misiniz?',
     studyTipsPrompt: 'Hangi çalışma stratejilerini önerirsiniz?',
-    reviewHelpPrompt: 'Öğrendiklerimi gözden geçirmeme yardım edebilir misiniz?'
+    reviewHelpPrompt: 'Öğrendiklerimi gözden geçirmeme yardım edebilir misiniz?',
+    
+    // Playful Animation Demo Page
+    playfulLearningProgressAnimations: 'Eğlenceli Öğrenme İlerleme Animasyonları – Playful Learning Progress Animations',
+    experienceLearningLikeNever: 'Etkileşimli animasyonlar, kutlamalar ve dostane öğrenme maskotu ile öğrenmeyi hiç olmadığı gibi yaşayın. Her başarı bir sevinç ve motivasyon anına dönüşür! – Experience learning like never before with interactive animations, celebrations, and a friendly learning mascot.',
+    interactiveMascot: 'Etkileşimli Maskot – Interactive Mascot',
+    achievementCelebrations: 'Başarı Kutlamaları – Achievement Celebrations',
+    skillTreeProgression: 'Yetenek Ağacı İlerlemesi – Skill Tree Progression',
+    animationControls: 'Animasyon Kontrolleri – Animation Controls',
+    triggerAchievement: '🎉 Başarıyı Tetikle – Trigger Achievement',
+    changeMascotMood: 'Maskot Ruh Halini Değiştir – Change Mascot Mood',
+    simulateProgress: 'İlerlemeyi Simüle Et – Simulate Progress',
+    resetDemo: 'Demoyu Sıfırla – Reset Demo',
+    mascot: 'Maskot – Mascot',
+    animations: 'Animasyonlar – Animations',
+    sound: 'Ses – Sound',
+    pleaseLoginToExperience: 'Eğlenceli öğrenme animasyonlarını yaşamak için lütfen giriş yapın – Please log in to experience the playful learning animations',
+    progressUpdated: 'İlerleme Güncellendi! 📈 – Progress Updated!',
+    learningProgressSimulated: 'Tüm alanlarda öğrenme ilerlemesi simüle edildi – Learning progress simulated across all areas',
+    skillUnlocked: 'Yetenek Açıldı! ✨ – Skill Unlocked!',
+    skillNowAvailable: 'artık öğrenim için mevcut! – is now available for learning!',
+    newSkillUnlocked: 'Yeni yetenek açıldı! 🚀 – New skill unlocked!',
+    demoReset: 'Demo Sıfırlandı – Demo Reset',
+    allAnimationsReset: 'Tüm animasyonlar ve ilerleme sıfırlandı – All animations and progress have been reset',
+    learningBuddy: 'Öğrenme Arkadaşı – Learning Buddy',
+    
+    // Demo Skills
+    javascriptBasics: 'JavaScript Temelleri – JavaScript Basics',
+    advancedJavascript: 'İleri JavaScript – Advanced JavaScript',
+    reactFundamentals: 'React Temelleri – React Fundamentals',
+    reactHooks: 'React Hooks',
+    typescript: 'TypeScript',
+    fullStackDeveloper: 'Full Stack Geliştirici – Full Stack Developer',
+    
+    // Demo Achievements
+    firstLessonComplete: 'İlk Ders Tamamlandı! – First Lesson Complete!',
+    firstLessonDesc: 'İlk dersinizi tamamladınız! Öğrenme yolculuğunuza harika bir başlangıç. – You completed your very first lesson! Great start on your learning journey.',
+    weekWarrior: 'Hafta Savaşçısı! – Week Warrior!',
+    weekWarriorDesc: '7 günlük öğrenme serisini sürdürdünüz. Tutarlılık ustalaşmanın anahtarıdır! – Maintained a 7-day learning streak. Consistency is key to mastery!',
+    skillMasteryAchieved: 'Yetenek Ustalaşması Başarıldı! – Skill Mastery Achieved!',
+    skillMasteryDesc: 'JavaScript temellerinde ustalaştınız. Sonraki meydan okumaya hazır mısınız? – You have mastered JavaScript fundamentals. Ready for the next challenge?',
+    learningBreakthrough: 'Öğrenme Atlımı! – Learning Breakthrough!',
+    learningBreakthroughDesc: 'Sizi zorlayan karmaşık bir sorunu çözdünüz. İnanılmaz gelişim! – You solved a complex problem that challenged you. Incredible growth!',
+    
+    // Progress Bubbles
+    javascriptMastery: 'JavaScript Ustalaşması – JavaScript Mastery',
+    buildingJSFoundations: 'Güçlü JavaScript temelleri inşa etme – Building strong JavaScript foundations',
+    dayStreak: '14 Günlük Seri – 14-Day Streak',
+    consistentDailyLearning: 'Tutarlı günlük öğrenme – Consistent daily learning',
+    problemSolver: 'Problem Çözücü – Problem Solver',
+    analyticalThinkingSkills: 'Analitik düşünme becerileri – Analytical thinking skills',
+    
+    // Tab Labels
+    skillTree: 'Yetenek Ağacı – Skill Tree',
+    progressBubbles: 'İlerleme Baloncukları – Progress Bubbles',
+    celebrations: 'Kutlamalar – Celebrations',
+    
+    // Learning Features
+    learningMascot: 'Öğrenme Maskotu – Learning Mascot',
+    learningStats: 'Öğrenme İstatistikleri – Learning Stats',
+    animationFeatures: 'Animasyon Özellikleri – Animation Features',
+    floatingLearningMascot: 'Yüzen Öğrenme Maskotu – Floating Learning Mascot',
+    achievementCelebration: 'Başarı Kutlaması – Achievement Celebrations',
+    interactiveSkillTrees: 'Etkileşimli Yetenek Ağaçları – Interactive Skill Trees',
+    progressBubbleAnimations: 'İlerleme Baloncuk Animasyonları – Progress Bubble Animations',
+    particleEffects: 'Parçacık Efektleri – Particle Effects',
+    skillsUnlocked: 'Açılan Yetenekler – Skills Unlocked',
+    avgProgress: 'Ortalama İlerleme – Avg Progress',
+    active: 'Aktif – Active',
+    happyFloat: 'Mutlu • Yüzer – Happy \u2022 Float'
   }
 };
 

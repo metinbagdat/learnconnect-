@@ -1058,7 +1058,32 @@ const translations = {
     skillsUnlocked: 'Açılan Yetenekler – Skills Unlocked',
     avgProgress: 'Ortalama İlerleme – Avg Progress',
     active: 'Aktif – Active',
-    happyFloat: 'Mutlu • Yüzer – Happy \u2022 Float'
+    happyFloat: 'Mutlu • Yüzer – Happy \u2022 Float',
+    
+    // Animated Progress Demo
+    animatedLearningProgressBubbles: 'Canlandırılmış Öğrenme İlerleme Balonları – Animated Learning Progress Bubbles',
+    visualizeLearningJourney: 'Öğrenme yolculuğunuzu başarılarınıza cevap veren güzel, etkileşimli ilerleme balonları ile görsellestirin. Kursları, becerileri, başarıları, serileri ve seviye ilerlemesini çekici görsel formatta takip edin. – Visualize your learning journey with beautiful, interactive progress bubbles.',
+    interactiveAnimations: 'Etkileşimli Animasyonlar – Interactive Animations',
+    realTimeUpdates: 'Gerçek Zamanlı Güncellemeler – Real-time Updates',
+    demoControls: 'Demo Kontrolleri – Demo Controls',
+    addRandomBubble: 'Rastgele Balon Ekle – Add Random Bubble',
+    startAutoSimulation: 'Otomatik Simülasyonu Başlat – Start Auto-Simulation',
+    stopAutoSimulation: 'Otomatik Simülasyonu Durdur – Stop Auto-Simulation',
+    resetProgress: 'İlerlemeyi Sıfırla – Reset Progress',
+    totalBubbles: 'Toplam Balon – Total Bubbles',
+    interactiveBubbles: 'Etkileşimli Balonlar – Interactive Bubbles',
+    bubbleDetails: 'Balon Detayları – Bubble Details',
+    selectProgressBubble: 'Bir İlerleme Balonu Seçin – Select a Progress Bubble',
+    clickBubbleForDetails: 'Detaylı bilgileri görmek için Etkileşimli Balonlar sekmesindeki herhangi bir balona tıklayın! – Click any bubble for detailed information!',
+    viewFirstBubble: 'İlk Balonu Görüntüle – View First Bubble',
+    progress: 'İlerleme – Progress',
+    completion: 'Tamamlama – Completion',
+    timeSpent: 'Harcanan Süre – Time Spent',
+    difficulty: 'Zorluk – Difficulty',
+    lastUpdated: 'Son güncelleme – Last updated',
+    updating: 'Güncelleniyor... – Updating...',
+    adding: 'Ekleniyor... – Adding...',
+    home: 'Ana Sayfa – Home'
   }
 };
 

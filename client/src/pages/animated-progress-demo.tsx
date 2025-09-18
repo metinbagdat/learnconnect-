@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/consolidated-language-context';
+import { BilingualText } from '@/components/ui/bilingual-text';
 import { 
   Sparkles, 
   Trophy, 
@@ -23,9 +25,12 @@ import {
   TrendingUp,
   Zap,
   Clock,
-  Award
+  Award,
+  ArrowLeft,
+  Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
 
 // Demo data for animated progress bubbles
 const generateDemoProgressData = (): ProgressBubbleData[] => [
@@ -209,6 +214,8 @@ const generateDemoProgressData = (): ProgressBubbleData[] => [
 export default function AnimatedProgressDemo() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const [, navigate] = useLocation();
   const [progressData, setProgressData] = useState<ProgressBubbleData[]>(generateDemoProgressData());
   const [selectedBubble, setSelectedBubble] = useState<ProgressBubbleData | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -347,10 +354,10 @@ export default function AnimatedProgressDemo() {
         <Card>
           <CardContent className="text-center py-12">
             <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
-            <p className="text-gray-500 mb-6">Please log in to experience the animated progress bubbles</p>
+            <h3 className="text-lg font-medium mb-2"><BilingualText text={t('authenticationRequired')} secondaryClassName="text-base opacity-50" /></h3>
+            <p className="text-gray-500 mb-6"><BilingualText text={t('pleaseLoginToExperience')} secondaryClassName="text-sm opacity-50" /></p>
             <Button asChild>
-              <a href="/auth">Login</a>
+              <a href="/auth"><BilingualText text={t('login')} secondaryClassName="text-xs opacity-50" /></a>
             </Button>
           </CardContent>
         </Card>
@@ -360,6 +367,30 @@ export default function AnimatedProgressDemo() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Navigation */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            <BilingualText text={t('home')} className="font-medium" secondaryClassName="text-xs opacity-50" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-3 py-2 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <BilingualText text={t('back')} className="font-medium" secondaryClassName="text-xs opacity-50" />
+          </Button>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="text-center space-y-4">
         <motion.div
@@ -371,27 +402,26 @@ export default function AnimatedProgressDemo() {
             <TrendingUp className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Animated Learning Progress Bubbles
+            <BilingualText text={t('animatedLearningProgressBubbles')} />
           </h1>
         </motion.div>
         
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Visualize your learning journey with beautiful, interactive progress bubbles that animate and respond to your achievements. 
-          Track courses, skills, achievements, streaks, and level progression in an engaging visual format.
+          <BilingualText text={t('visualizeLearningJourney')} secondaryClassName="text-base opacity-50" />
         </p>
 
         <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-blue-600" />
-            <span>Interactive Animations</span>
+            <BilingualText text={t('interactiveAnimations')} secondaryClassName="text-xs opacity-50" />
           </div>
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-purple-600" />
-            <span>Real-time Updates</span>
+            <BilingualText text={t('realTimeUpdates')} secondaryClassName="text-xs opacity-50" />
           </div>
           <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-gold-600" />
-            <span>Progress Tracking</span>
+            <BilingualText text={t('progressTracking')} secondaryClassName="text-xs opacity-50" />
           </div>
         </div>
       </div>
@@ -401,7 +431,7 @@ export default function AnimatedProgressDemo() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Rocket className="h-5 w-5" />
-            Demo Controls
+            <BilingualText text={t('demoControls')} secondaryClassName="text-base opacity-50" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -411,7 +441,7 @@ export default function AnimatedProgressDemo() {
               disabled={simulateProgressMutation.isPending}
               className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
             >
-              {simulateProgressMutation.isPending ? 'Updating...' : 'Simulate Progress'}
+              <BilingualText text={simulateProgressMutation.isPending ? t('updating') : t('simulateProgress')} secondaryClassName="text-xs opacity-50" />
             </Button>
             
             <Button
@@ -421,7 +451,7 @@ export default function AnimatedProgressDemo() {
               className="flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              {addRandomBubbleMutation.isPending ? 'Adding...' : 'Add Random Bubble'}
+              <BilingualText text={addRandomBubbleMutation.isPending ? t('adding') : t('addRandomBubble')} secondaryClassName="text-xs opacity-50" />
             </Button>
 
             <Button
@@ -429,7 +459,7 @@ export default function AnimatedProgressDemo() {
               variant={isSimulating ? "destructive" : "default"}
               className="flex items-center gap-2"
             >
-              {isSimulating ? 'Stop Auto-Simulation' : 'Start Auto-Simulation'}
+              <BilingualText text={isSimulating ? t('stopAutoSimulation') : t('startAutoSimulation')} secondaryClassName="text-xs opacity-50" />
             </Button>
             
             <Button
@@ -438,18 +468,18 @@ export default function AnimatedProgressDemo() {
               className="flex items-center gap-2"
             >
               <Shuffle className="w-4 h-4" />
-              Reset Progress
+              <BilingualText text={t('resetProgress')} secondaryClassName="text-xs opacity-50" />
             </Button>
             
             <div className="flex gap-4 text-sm text-muted-foreground items-center">
               <Badge variant="outline" className="px-3 py-1">
-                Total Bubbles: {progressData.length}
+                <BilingualText text={`${t('totalBubbles')}: ${progressData.length}`} secondaryClassName="text-xs opacity-50" />
               </Badge>
               <Badge variant="outline" className="px-3 py-1">
-                Completed: {progressData.filter(b => b.progress >= 100).length}
+                <BilingualText text={`${t('completed')}: ${progressData.filter(b => b.progress >= 100).length}`} secondaryClassName="text-xs opacity-50" />
               </Badge>
               <Badge variant="outline" className="px-3 py-1">
-                Active: {progressData.filter(b => b.isActive).length}
+                <BilingualText text={`${t('active')}: ${progressData.filter(b => b.isActive).length}`} secondaryClassName="text-xs opacity-50" />
               </Badge>
             </div>
           </div>
@@ -459,8 +489,8 @@ export default function AnimatedProgressDemo() {
       {/* Progress Bubbles Display */}
       <Tabs defaultValue="bubbles" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-          <TabsTrigger value="bubbles">Interactive Bubbles</TabsTrigger>
-          <TabsTrigger value="details">Bubble Details</TabsTrigger>
+          <TabsTrigger value="bubbles"><BilingualText text={t('interactiveBubbles')} secondaryClassName="text-xs opacity-50" /></TabsTrigger>
+          <TabsTrigger value="details"><BilingualText text={t('bubbleDetails')} secondaryClassName="text-xs opacity-50" /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="bubbles" className="space-y-6">
@@ -501,16 +531,16 @@ export default function AnimatedProgressDemo() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold">{selectedBubble.progress}%</div>
-                      <div className="text-sm text-muted-foreground">Progress</div>
+                      <div className="text-sm text-muted-foreground"><BilingualText text={t('progress')} secondaryClassName="text-xs opacity-50" /></div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold">{selectedBubble.currentValue}/{selectedBubble.maxValue}</div>
-                      <div className="text-sm text-muted-foreground">Completion</div>
+                      <div className="text-sm text-muted-foreground"><BilingualText text={t('completion')} secondaryClassName="text-xs opacity-50" /></div>
                     </div>
                     {selectedBubble.metadata?.timeSpent && (
                       <div className="text-center">
                         <div className="text-2xl font-bold">{selectedBubble.metadata.timeSpent}m</div>
-                        <div className="text-sm text-muted-foreground">Time Spent</div>
+                        <div className="text-sm text-muted-foreground"><BilingualText text={t('timeSpent')} secondaryClassName="text-xs opacity-50" /></div>
                       </div>
                     )}
                     {selectedBubble.metadata?.difficulty && (
@@ -518,7 +548,7 @@ export default function AnimatedProgressDemo() {
                         <Badge variant="outline" className="text-lg px-3 py-1">
                           {selectedBubble.metadata.difficulty}
                         </Badge>
-                        <div className="text-sm text-muted-foreground mt-1">Difficulty</div>
+                        <div className="text-sm text-muted-foreground mt-1"><BilingualText text={t('difficulty')} secondaryClassName="text-xs opacity-50" /></div>
                       </div>
                     )}
                   </div>
@@ -526,7 +556,7 @@ export default function AnimatedProgressDemo() {
                   {selectedBubble.metadata?.lastUpdate && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-4 h-4" />
-                      Last updated: {new Date(selectedBubble.metadata.lastUpdate).toLocaleString()}
+                      <BilingualText text={`${t('lastUpdated')}: ${new Date(selectedBubble.metadata.lastUpdate).toLocaleString()}`} secondaryClassName="text-xs opacity-50" />
                     </div>
                   )}
                 </CardContent>
@@ -535,12 +565,12 @@ export default function AnimatedProgressDemo() {
           ) : (
             <div className="text-center py-12">
               <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Select a Progress Bubble</h3>
+              <h3 className="text-lg font-medium mb-2"><BilingualText text={t('selectProgressBubble')} secondaryClassName="text-base opacity-50" /></h3>
               <p className="text-muted-foreground mb-6">
-                Click on any bubble from the Interactive Bubbles tab to see detailed information here!
+                <BilingualText text={t('clickBubbleForDetails')} secondaryClassName="text-sm opacity-50" />
               </p>
               <Button onClick={() => setSelectedBubble(progressData[0])}>
-                View First Bubble
+                <BilingualText text={t('viewFirstBubble')} secondaryClassName="text-xs opacity-50" />
               </Button>
             </div>
           )}

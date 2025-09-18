@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/consolidated-language-context';
+import { BilingualText } from '@/components/ui/bilingual-text';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -341,8 +342,8 @@ export default function PlayfulAnimationsDemo() {
         <Card>
           <CardContent className="text-center py-12">
             <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">{t('authenticationRequired')}</h3>
-            <p className="text-gray-500 mb-6">{t('pleaseLoginToExperience')}</p>
+            <h3 className="text-lg font-medium mb-2"><BilingualText text={t('authenticationRequired')} secondaryClassName="text-base opacity-50" /></h3>
+            <p className="text-gray-500 mb-6"><BilingualText text={t('pleaseLoginToExperience')} secondaryClassName="text-sm opacity-50" /></p>
             <Button asChild>
               <a href="/auth">Login</a>
             </Button>
@@ -375,26 +376,26 @@ export default function PlayfulAnimationsDemo() {
               <Wand2 className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              {t('playfulLearningProgressAnimations')}
+              <BilingualText text={t('playfulLearningProgressAnimations')} />
             </h1>
           </motion.div>
           
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            {t('experienceLearningLikeNever')}
+            <BilingualText text={t('experienceLearningLikeNever')} secondaryClassName="text-base opacity-50" />
           </p>
 
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-pink-600" />
-              <span>{t('interactiveMascot')}</span>
+              <BilingualText text={t('interactiveMascot')} secondaryClassName="text-xs opacity-50" />
             </div>
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-purple-600" />
-              <span>{t('achievementCelebrations')}</span>
+              <BilingualText text={t('achievementCelebrations')} secondaryClassName="text-xs opacity-50" />
             </div>
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-blue-600" />
-              <span>{t('skillTreeProgression')}</span>
+              <BilingualText text={t('skillTreeProgression')} secondaryClassName="text-xs opacity-50" />
             </div>
           </div>
         </div>
@@ -404,7 +405,7 @@ export default function PlayfulAnimationsDemo() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              {t('animationControls')}
+              <BilingualText text={t('animationControls')} secondaryClassName="text-base opacity-50" />
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -413,7 +414,7 @@ export default function PlayfulAnimationsDemo() {
                 onClick={triggerRandomAchievement}
                 className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               >
-                {t('triggerAchievement')}
+                <BilingualText text={t('triggerAchievement')} secondaryClassName="text-xs opacity-50" />
               </Button>
               
               <Button
@@ -422,7 +423,7 @@ export default function PlayfulAnimationsDemo() {
                 className="flex items-center gap-2"
               >
                 <Smile className="w-4 h-4" />
-                {t('changeMascotMood')}
+                <BilingualText text={t('changeMascotMood')} secondaryClassName="text-xs opacity-50" />
               </Button>
 
               <Button
@@ -431,7 +432,7 @@ export default function PlayfulAnimationsDemo() {
                 className="flex items-center gap-2"
               >
                 <TrendingUp className="w-4 h-4" />
-                {t('simulateProgress')}
+                <BilingualText text={t('simulateProgress')} secondaryClassName="text-xs opacity-50" />
               </Button>
               
               <Button
@@ -440,7 +441,7 @@ export default function PlayfulAnimationsDemo() {
                 className="flex items-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                {t('resetDemo')}
+                <BilingualText text={t('resetDemo')} secondaryClassName="text-xs opacity-50" />
               </Button>
             </div>
             
@@ -455,7 +456,7 @@ export default function PlayfulAnimationsDemo() {
                 >
                   {mascotEnabled ? <Smile className="w-4 h-4" /> : <User className="w-4 h-4" />}
                 </Button>
-                <span className="text-sm">{t('mascot')}</span>
+                <BilingualText text={t('mascot')} className="text-sm" secondaryClassName="text-xs opacity-50" />
               </div>
               
               <div className="flex items-center gap-2">
@@ -467,7 +468,7 @@ export default function PlayfulAnimationsDemo() {
                 >
                   {animationsEnabled ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                 </Button>
-                <span className="text-sm">{t('animations')}</span>
+                <BilingualText text={t('animations')} className="text-sm" secondaryClassName="text-xs opacity-50" />
               </div>
               
               <div className="flex items-center gap-2">
@@ -479,7 +480,7 @@ export default function PlayfulAnimationsDemo() {
                 >
                   {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                 </Button>
-                <span className="text-sm">{t('sound')}</span>
+                <BilingualText text={t('sound')} className="text-sm" secondaryClassName="text-xs opacity-50" />
               </div>
             </div>
           </CardContent>

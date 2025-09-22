@@ -37,6 +37,7 @@ import StudyPlannerPage from "@/pages/study-planner";
 import AssessmentPage from "@/pages/assessment";
 import Checkout from "@/pages/checkout";
 import SubscriptionPage from "@/pages/subscription";
+import TytDashboard from "@/pages/tyt-dashboard";
 
 function Router() {
   return (
@@ -57,6 +58,10 @@ function Router() {
       <ProtectedRoute path="/challenge-paths" component={ChallengePathsPage} />
       <ProtectedRoute path="/challenge-analytics" component={ChallengeAnalyticsDashboard} />
       <ProtectedRoute path="/entrance-exam-prep" component={EntranceExamPrep} />
+      <ProtectedRoute path="/tyt-dashboard" component={TytDashboard} />
+      <ProtectedRoute path="/tyt/profile-setup" component={TytDashboard} />
+      <ProtectedRoute path="/tyt/tasks/new" component={TytDashboard} />
+      <ProtectedRoute path="/tyt/trials/new" component={TytDashboard} />
       <ProtectedRoute path="/study-planner" component={StudyPlannerPage} />
       <ProtectedRoute path="/assessment" component={AssessmentPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />

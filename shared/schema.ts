@@ -409,6 +409,160 @@ export const learningAnalytics = pgTable("learning_analytics", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// TYT Study Planning System Tables
+
+// TYT Student Profiles
+export const tytStudentProfiles = pgTable("tyt_student_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  studentClass: integer("student_class").notNull(), // 9, 10, 11, 12
+  examYear: integer("exam_year").notNull(), // Target exam year
+  targetNetScore: integer("target_net_score").notNull(), // Target total net score
+  dailyStudyHoursTarget: integer("daily_study_hours_target").notNull(), // Target daily study hours
+  weeklyStudyHoursTarget: integer("weekly_study_hours_target").notNull(), // Target weekly study hours
+  selectedSubjects: text("selected_subjects").array().default([]), // TYT subjects: turkish, math, science, social
+  weakSubjects: text("weak_subjects").array().default([]), // Subjects student struggles with
+  strongSubjects: text("strong_subjects").array().default([]), // Subjects student excels at
+  studyPreferences: jsonb("study_preferences").default({}), // Study time preferences, break intervals, etc.
+  motivationLevel: integer("motivation_level").default(5), // 1-10 scale
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// TYT Subjects and Topics
+export const tytSubjects = pgTable("tyt_subjects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // turkish, math, science, social
+  displayName: text("display_name").notNull(), // Turkish: Türkçe, Math: Matematik
+  description: text("description"),
+  totalQuestions: integer("total_questions").notNull(), // Number of questions in TYT exam
+  isActive: boolean("is_active").default(true),
+});
+
+export const tytTopics = pgTable("tyt_topics", {
+  id: serial("id").primaryKey(),
+  subjectId: integer("subject_id").notNull().references(() => tytSubjects.id),
+  name: text("name").notNull(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  difficulty: text("difficulty").notNull().default("medium"), // easy, medium, hard
+  estimatedStudyHours: integer("estimated_study_hours").default(2),
+  order: integer("order").notNull().default(0),
+  prerequisites: text("prerequisites").array().default([]), // Topic names that should be studied first
+  isActive: boolean("is_active").default(true),
+});
+
+// User Topic Progress
+export const userTopicProgress = pgTable("user_topic_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  topicId: integer("topic_id").notNull().references(() => tytTopics.id),
+  status: text("status").notNull().default("not_started"), // not_started, working, repeated, completed, missing
+  progressPercent: integer("progress_percent").default(0), // 0-100
+  timeSpent: integer("time_spent_minutes").default(0),
+  lastStudiedAt: timestamp("last_studied_at"),
+  masteryLevel: integer("mastery_level").default(0), // 0-5 scale
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// TYT Trial Exams
+export const tytTrialExams = pgTable("tyt_trial_exams", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  examName: text("exam_name").notNull(), // Name/source of the trial exam
+  examDate: date("exam_date").notNull(),
+  duration: integer("duration_minutes").notNull(), // Exam duration in minutes
+  totalQuestions: integer("total_questions").notNull(),
+  correctAnswers: integer("correct_answers").notNull(),
+  wrongAnswers: integer("wrong_answers").notNull(),
+  emptyAnswers: integer("empty_answers").notNull(),
+  netScore: numeric("net_score", { precision: 5, scale: 2 }).notNull(), // Calculated net score
+  subjectScores: jsonb("subject_scores").notNull().default({}), // Scores per subject
+  percentileRank: integer("percentile_rank"), // If available from exam source
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Daily Study Tasks
+export const dailyStudyTasks = pgTable("daily_study_tasks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  subjectId: integer("subject_id").references(() => tytSubjects.id),
+  topicId: integer("topic_id").references(() => tytTopics.id),
+  taskType: text("task_type").notNull(), // study, practice, review, trial_exam, homework
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  estimatedDuration: integer("estimated_duration_minutes").default(60),
+  actualDuration: integer("actual_duration_minutes"),
+  scheduledDate: date("scheduled_date").notNull(),
+  scheduledTime: text("scheduled_time"), // HH:MM format for preferred time
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  difficulty: integer("difficulty_rating"), // 1-5, filled after completion
+  satisfaction: integer("satisfaction_rating"), // 1-5, user satisfaction with task
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// TYT Study Sessions  
+export const tytStudySessions = pgTable("tyt_study_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  subjectId: integer("subject_id").references(() => tytSubjects.id),
+  topicId: integer("topic_id").references(() => tytTopics.id),
+  taskId: integer("task_id").references(() => dailyStudyTasks.id),
+  sessionType: text("session_type").notNull(), // focused_study, practice, review, break
+  startTime: timestamp("start_time").notNull().defaultNow(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration_minutes"),
+  focusRating: integer("focus_rating"), // 1-5, how focused was the session
+  productivityRating: integer("productivity_rating"), // 1-5, how productive was the session
+  distractions: text("distractions").array().default([]), // phone, social_media, noise, etc.
+  studyMethod: text("study_method"), // reading, note_taking, practice_questions, flashcards, etc.
+  materialsUsed: text("materials_used").array().default([]), // textbook, online_course, video, etc.
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Study Goals and Targets
+export const tytStudyGoals = pgTable("tyt_study_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  goalType: text("goal_type").notNull(), // daily, weekly, monthly, exam_preparation
+  title: text("title").notNull(),
+  description: text("description"),
+  targetValue: integer("target_value").notNull(), // hours, questions, topics, etc.
+  currentValue: integer("current_value").default(0),
+  unit: text("unit").notNull(), // hours, questions, topics, trials, etc.
+  deadline: date("deadline"),
+  priority: text("priority").default("medium"), // low, medium, high
+  category: text("category").notNull(), // study_time, net_score, subject_mastery, trial_performance
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  metadata: jsonb("metadata").default({}), // Additional goal-specific data
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Study Streaks and Habits
+export const tytStudyStreaks = pgTable("tyt_study_streaks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  streakType: text("streak_type").notNull(), // daily_study, weekly_target, trial_improvement
+  currentStreak: integer("current_streak").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  lastActivityDate: date("last_activity_date"),
+  streakStartDate: date("streak_start_date"),
+  target: jsonb("target").default({}), // What constitutes maintaining the streak
+  rewards: jsonb("rewards").default({}), // Rewards for streak milestones
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -471,6 +625,79 @@ export const insertPersonalizedRecommendationSchema = createInsertSchema(persona
 });
 
 export const insertLearningAnalyticsSchema = createInsertSchema(learningAnalytics).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+// TYT Study Planning insert schemas
+export const insertTytStudentProfileSchema = createInsertSchema(tytStudentProfiles, {
+  studentClass: z.number().min(9).max(12),
+  examYear: z.number().min(2024).max(2030),
+  targetNetScore: z.number().min(0).max(200),
+  dailyStudyHoursTarget: z.number().min(1).max(12),
+  weeklyStudyHoursTarget: z.number().min(7).max(84),
+  motivationLevel: z.number().min(1).max(10),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertTytSubjectSchema = createInsertSchema(tytSubjects).omit({ id: true });
+
+export const insertTytTopicSchema = createInsertSchema(tytTopics, {
+  difficulty: z.enum(["easy", "medium", "hard"]),
+}).omit({ id: true });
+
+export const insertUserTopicProgressSchema = createInsertSchema(userTopicProgress, {
+  status: z.enum(["not_started", "working", "repeated", "completed", "missing"]),
+  progressPercent: z.number().min(0).max(100),
+  masteryLevel: z.number().min(0).max(5),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true, 
+  lastStudiedAt: true 
+});
+
+export const insertTytTrialExamSchema = createInsertSchema(tytTrialExams).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertDailyStudyTaskSchema = createInsertSchema(dailyStudyTasks, {
+  taskType: z.enum(["study", "practice", "review", "trial_exam", "homework"]),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true, 
+  completedAt: true 
+});
+
+export const insertTytStudySessionSchema = createInsertSchema(tytStudySessions, {
+  sessionType: z.enum(["focused_study", "practice", "review", "break"]),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  endTime: true 
+});
+
+export const insertTytStudyGoalSchema = createInsertSchema(tytStudyGoals, {
+  goalType: z.enum(["daily", "weekly", "monthly", "exam_preparation"]),
+  priority: z.enum(["low", "medium", "high"]),
+  category: z.enum(["study_time", "net_score", "subject_mastery", "trial_performance"]),
+  unit: z.enum(["hours", "minutes", "questions", "topics", "trials", "points"]),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true, 
+  completedAt: true 
+});
+
+export const insertTytStudyStreakSchema = createInsertSchema(tytStudyStreaks, {
+  streakType: z.enum(["daily_study", "weekly_target", "trial_improvement"]),
+}).omit({ 
   id: true, 
   createdAt: true 
 });
@@ -1038,3 +1265,25 @@ export type InsertUserUsageTracking = z.infer<typeof insertUserUsageTracking>;
 export type InsertLearningMilestone = z.infer<typeof insertLearningMilestoneSchema>;
 export type EmojiReaction = typeof emojiReactions.$inferSelect;
 export type InsertEmojiReaction = z.infer<typeof insertEmojiReactionSchema>;
+
+// TYT Study Planning type exports
+export type TytStudentProfile = typeof tytStudentProfiles.$inferSelect;
+export type TytSubject = typeof tytSubjects.$inferSelect;
+export type TytTopic = typeof tytTopics.$inferSelect;
+export type UserTopicProgress = typeof userTopicProgress.$inferSelect;
+export type TytTrialExam = typeof tytTrialExams.$inferSelect;
+export type DailyStudyTask = typeof dailyStudyTasks.$inferSelect;
+export type TytStudySession = typeof tytStudySessions.$inferSelect;
+export type TytStudyGoal = typeof tytStudyGoals.$inferSelect;
+export type TytStudyStreak = typeof tytStudyStreaks.$inferSelect;
+
+// TYT Insert type exports
+export type InsertTytStudentProfile = z.infer<typeof insertTytStudentProfileSchema>;
+export type InsertTytSubject = z.infer<typeof insertTytSubjectSchema>;
+export type InsertTytTopic = z.infer<typeof insertTytTopicSchema>;
+export type InsertUserTopicProgress = z.infer<typeof insertUserTopicProgressSchema>;
+export type InsertTytTrialExam = z.infer<typeof insertTytTrialExamSchema>;
+export type InsertDailyStudyTask = z.infer<typeof insertDailyStudyTaskSchema>;
+export type InsertTytStudySession = z.infer<typeof insertTytStudySessionSchema>;
+export type InsertTytStudyGoal = z.infer<typeof insertTytStudyGoalSchema>;
+export type InsertTytStudyStreak = z.infer<typeof insertTytStudyStreakSchema>;

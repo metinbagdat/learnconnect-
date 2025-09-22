@@ -1,0 +1,89 @@
+develop and construct in the dashboard esp. TYT student plan ( also for other courses) that will help itself, and reminder system for it. And make relation with the all aspect of the app such as message, ai and social groups
+1. analysis and planning stage
+Target User Profile: A high school student prepared for TYT.
+Need Analysis:
+Daily / Weekly Working Plan
+Target Determination (Net Number, Subject Completion, Trial Tracking)
+TIME MANAGEMENT (Course Time, Break Order)
+Motivation (reminders, success graphics)
+Competitor review: Which planner or mobile applications have, what students like/what do they find missing?
+2. Determination of features
+Registration & Profile: Student's class, lessons, target.
+Target Determination: Daily Net Target, Weekly Course Hours Target.
+Subject Tracking: List of Topics → “Working / Repeated / Missing”.
+Trial Tracking: Net, Duration, False → Graphics.
+Planning module:
+Daily task list (AI support).
+Weekly Course Distribution Recommendation.
+Motivation & Gamification:
+Points System, Success Rosettes, Streak (Streak).
+Progress graph.
+Reminder & notification: Working time, break time.
+3. Design Stage
+Simple, simple, student friendly interface.
+Mobile priority design (ease of access via phone).
+Color Psychology → The colors that do not tire, motivate (blue, green, orange).
+4. Technical Development
+Database:
+Student Information
+Course, Subject, Net and Plan Records
+Backend (Server): User Verification, Planning Algorithms.
+Frontend (Interface): Providing a list of plans, graphics and tasks to the student.
+AI module:
+Plan proposal according to the student's previous performance
+Daily motivation messages
+5. Test & Feedback
+Test by opening it to a small group of students.
+Where are they forced, which features are useful, which are unnecessary?
+6. Publishing and Improvement
+Web App or mobile application (Android/iOS).
+Announcement to students through social media.
+Update by feedback.
+Initially, a simple version comes → (Subject Tracking + Trial Tracking + Daily Mission List).
+Then add AI supported planning and gamification.
+prepare a minimum of gradual road map (MVP plan) for this: In which order studrnt develop, which feature should be in the first version, which should be added later.
+🚀 Stage 1: Minimum running version (MVP)
+Objective: To solve the student's basic planning need.
+Registration & Profile
+Name, class, target (eg: 80 net, 3 hours/day).
+Course Selection (Turkish, Mathematics, Science, Social).
+Subject Tracking
+Course → List of Topics.
+Marking: “Work / Repeated / Missing”.
+Trial tracking
+Date, Net Number, Duration.
+Simple table and graph (progress curve).
+Daily task list
+The tasks that the student himself can add.
+Marking when the task is completed.
+🔄 Stage 2: Development and gamification
+Target: To motivate the student constantly.
+Dramatization
+Working Series (Streak).
+Point System (completed task → +10 points).
+Rosette (such as “you've worked for 10 days in a row).
+Motivation module
+Daily short motivation message.
+Graph (weekly time, net increase) showing the progress of the student.
+Reminder & Notification
+Notification when it is time to work.
+“Today, 2 issues are missing” warnings such as.
+🤖 Stage 3: AI supported smart planning
+Objective: To support the student like a personal assistant.
+Smart Course Distribution
+A weekly program proposal according to the student's weak courses.
+Daily task proposal according to subject shortcomings.
+Performance analysis
+Detecting the most wrong courses in trials.
+Do not recommend working accordingly.
+Personal AI Study Buddy
+Weekly target setting by asking questions to the student.
+Motivation sentences.
+🛠️ Stage 4: Dissemination and Community
+Target: To ensure that students learn from each other.
+Adding friends & competition
+Adding friends and seeing who collects more points.
+Common study rooms.
+Consultant / mentor support
+The teacher or mentor seeing the student's data.
+Sending homework or suggestions.

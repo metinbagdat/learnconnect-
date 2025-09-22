@@ -149,7 +149,44 @@ import {
   userSkillLevels,
   insertLevelAssessment,
   insertAssessmentQuestion,
-  insertUserSkillLevel
+  insertUserSkillLevel,
+  // TYT Study Planning system imports
+  type TytStudentProfile,
+  type TytSubject,
+  type TytTopic,
+  type UserTopicProgress,
+  type TytTrialExam,
+  type DailyStudyTask,
+  type TytStudySession,
+  type TytStudyGoal,
+  type TytStudyStreak,
+  type InsertTytStudentProfile,
+  type InsertTytSubject,
+  type InsertTytTopic,
+  type InsertUserTopicProgress,
+  type InsertTytTrialExam,
+  type InsertDailyStudyTask,
+  type InsertTytStudySession,
+  type InsertTytStudyGoal,
+  type InsertTytStudyStreak,
+  tytStudentProfiles,
+  tytSubjects,
+  tytTopics,
+  userTopicProgress,
+  tytTrialExams,
+  dailyStudyTasks,
+  tytStudySessions,
+  tytStudyGoals,
+  tytStudyStreaks,
+  insertTytStudentProfileSchema,
+  insertTytSubjectSchema,
+  insertTytTopicSchema,
+  insertUserTopicProgressSchema,
+  insertTytTrialExamSchema,
+  insertDailyStudyTaskSchema,
+  insertTytStudySessionSchema,
+  insertTytStudyGoalSchema,
+  insertTytStudyStreakSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -362,6 +399,69 @@ export interface IStorage {
   getUserSkillLevels(userId: number): Promise<UserSkillLevel[]>;
   getUserSkillLevel(userId: number, subject: string, subCategory?: string): Promise<UserSkillLevel | undefined>;
   updateUserSkillLevel(userId: number, skillData: InsertUserSkillLevel): Promise<UserSkillLevel>;
+
+  // TYT Study Planning System operations
+  
+  // Student Profile operations
+  getTytStudentProfile(userId: number): Promise<TytStudentProfile | undefined>;
+  createTytStudentProfile(profile: InsertTytStudentProfile): Promise<TytStudentProfile>;
+  updateTytStudentProfile(userId: number, data: Partial<TytStudentProfile>): Promise<TytStudentProfile | undefined>;
+  
+  // Subject and Topic operations
+  getTytSubjects(): Promise<TytSubject[]>;
+  getTytSubject(id: number): Promise<TytSubject | undefined>;
+  createTytSubject(subject: InsertTytSubject): Promise<TytSubject>;
+  getTytTopics(subjectId?: number): Promise<TytTopic[]>;
+  getTytTopic(id: number): Promise<TytTopic | undefined>;
+  createTytTopic(topic: InsertTytTopic): Promise<TytTopic>;
+  
+  // User Topic Progress operations
+  getUserTopicProgress(userId: number, topicId?: number): Promise<UserTopicProgress[]>;
+  updateUserTopicProgress(userId: number, topicId: number, data: Partial<UserTopicProgress>): Promise<UserTopicProgress>;
+  createUserTopicProgress(progress: InsertUserTopicProgress): Promise<UserTopicProgress>;
+  
+  // Trial Exam operations
+  getTytTrialExams(userId: number): Promise<TytTrialExam[]>;
+  getTytTrialExam(id: number): Promise<TytTrialExam | undefined>;
+  createTytTrialExam(exam: InsertTytTrialExam): Promise<TytTrialExam>;
+  deleteTytTrialExam(id: number): Promise<boolean>;
+  
+  // Daily Study Task operations
+  getDailyStudyTasks(userId: number, date?: string): Promise<DailyStudyTask[]>;
+  getDailyStudyTask(id: number): Promise<DailyStudyTask | undefined>;
+  createDailyStudyTask(task: InsertDailyStudyTask): Promise<DailyStudyTask>;
+  updateDailyStudyTask(id: number, data: Partial<DailyStudyTask>): Promise<DailyStudyTask | undefined>;
+  deleteDailyStudyTask(id: number): Promise<boolean>;
+  completeDailyStudyTask(id: number, actualDuration?: number): Promise<DailyStudyTask | undefined>;
+  
+  // Study Session operations
+  getTytStudySessions(userId: number, filters?: { startDate?: Date; endDate?: Date; subjectId?: number }): Promise<TytStudySession[]>;
+  getTytStudySession(id: number): Promise<TytStudySession | undefined>;
+  createTytStudySession(session: InsertTytStudySession): Promise<TytStudySession>;
+  updateTytStudySession(id: number, data: Partial<TytStudySession>): Promise<TytStudySession | undefined>;
+  endTytStudySession(id: number): Promise<TytStudySession | undefined>;
+  
+  // Study Goal operations
+  getTytStudyGoals(userId: number, goalType?: string): Promise<TytStudyGoal[]>;
+  getTytStudyGoal(id: number): Promise<TytStudyGoal | undefined>;
+  createTytStudyGoal(goal: InsertTytStudyGoal): Promise<TytStudyGoal>;
+  updateTytStudyGoal(id: number, data: Partial<TytStudyGoal>): Promise<TytStudyGoal | undefined>;
+  deleteTytStudyGoal(id: number): Promise<boolean>;
+  
+  // Study Streak operations
+  getTytStudyStreaks(userId: number): Promise<TytStudyStreak[]>;
+  getTytStudyStreak(userId: number, streakType: string): Promise<TytStudyStreak | undefined>;
+  createTytStudyStreak(streak: InsertTytStudyStreak): Promise<TytStudyStreak>;
+  updateTytStudyStreak(userId: number, streakType: string, data: Partial<TytStudyStreak>): Promise<TytStudyStreak | undefined>;
+  
+  // Analytics and Summary operations
+  getTytStudyStats(userId: number, timeframe?: 'daily' | 'weekly' | 'monthly'): Promise<{
+    totalStudyTime: number;
+    completedTasks: number;
+    averageNetScore: number;
+    subjectProgress: Array<{ subject: string; progress: number; timeSpent: number }>;
+    streaks: Array<{ type: string; current: number; longest: number }>;
+  }>;
 
   // Session store
   sessionStore: SessionStore;
@@ -2483,6 +2583,374 @@ export class DatabaseStorage implements IStorage {
       const [newSkillLevel] = await db.insert(userSkillLevels).values(skillData).returning();
       return newSkillLevel;
     }
+  }
+
+  // TYT Study Planning System implementations
+
+  // Student Profile operations
+  async getTytStudentProfile(userId: number): Promise<TytStudentProfile | undefined> {
+    const profile = await db.select().from(tytStudentProfiles).where(eq(tytStudentProfiles.userId, userId)).limit(1);
+    return profile[0];
+  }
+
+  async createTytStudentProfile(profile: InsertTytStudentProfile): Promise<TytStudentProfile> {
+    const [newProfile] = await db.insert(tytStudentProfiles).values(profile).returning();
+    return newProfile;
+  }
+
+  async updateTytStudentProfile(userId: number, data: Partial<TytStudentProfile>): Promise<TytStudentProfile | undefined> {
+    const [updated] = await db
+      .update(tytStudentProfiles)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(tytStudentProfiles.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Subject and Topic operations
+  async getTytSubjects(): Promise<TytSubject[]> {
+    return await db.select().from(tytSubjects).where(eq(tytSubjects.isActive, true)).orderBy(tytSubjects.id);
+  }
+
+  async getTytSubject(id: number): Promise<TytSubject | undefined> {
+    const subject = await db.select().from(tytSubjects).where(eq(tytSubjects.id, id)).limit(1);
+    return subject[0];
+  }
+
+  async createTytSubject(subject: InsertTytSubject): Promise<TytSubject> {
+    const [newSubject] = await db.insert(tytSubjects).values(subject).returning();
+    return newSubject;
+  }
+
+  async getTytTopics(subjectId?: number): Promise<TytTopic[]> {
+    let query = db.select().from(tytTopics).where(eq(tytTopics.isActive, true));
+    if (subjectId) {
+      query = query.where(eq(tytTopics.subjectId, subjectId));
+    }
+    return await query.orderBy(tytTopics.subjectId, tytTopics.order);
+  }
+
+  async getTytTopic(id: number): Promise<TytTopic | undefined> {
+    const topic = await db.select().from(tytTopics).where(eq(tytTopics.id, id)).limit(1);
+    return topic[0];
+  }
+
+  async createTytTopic(topic: InsertTytTopic): Promise<TytTopic> {
+    const [newTopic] = await db.insert(tytTopics).values(topic).returning();
+    return newTopic;
+  }
+
+  // User Topic Progress operations
+  async getUserTopicProgress(userId: number, topicId?: number): Promise<UserTopicProgress[]> {
+    let query = db.select().from(userTopicProgress).where(eq(userTopicProgress.userId, userId));
+    if (topicId) {
+      query = query.where(eq(userTopicProgress.topicId, topicId));
+    }
+    return await query.orderBy(userTopicProgress.topicId);
+  }
+
+  async updateUserTopicProgress(userId: number, topicId: number, data: Partial<UserTopicProgress>): Promise<UserTopicProgress> {
+    const existing = await db
+      .select()
+      .from(userTopicProgress)
+      .where(and(eq(userTopicProgress.userId, userId), eq(userTopicProgress.topicId, topicId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(userTopicProgress)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userTopicProgress.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      const [newProgress] = await db
+        .insert(userTopicProgress)
+        .values({ userId, topicId, ...data })
+        .returning();
+      return newProgress;
+    }
+  }
+
+  async createUserTopicProgress(progress: InsertUserTopicProgress): Promise<UserTopicProgress> {
+    const [newProgress] = await db.insert(userTopicProgress).values(progress).returning();
+    return newProgress;
+  }
+
+  // Trial Exam operations
+  async getTytTrialExams(userId: number): Promise<TytTrialExam[]> {
+    return await db
+      .select()
+      .from(tytTrialExams)
+      .where(eq(tytTrialExams.userId, userId))
+      .orderBy(desc(tytTrialExams.examDate));
+  }
+
+  async getTytTrialExam(id: number): Promise<TytTrialExam | undefined> {
+    const exam = await db.select().from(tytTrialExams).where(eq(tytTrialExams.id, id)).limit(1);
+    return exam[0];
+  }
+
+  async createTytTrialExam(exam: InsertTytTrialExam): Promise<TytTrialExam> {
+    const [newExam] = await db.insert(tytTrialExams).values(exam).returning();
+    return newExam;
+  }
+
+  async deleteTytTrialExam(id: number): Promise<boolean> {
+    const result = await db.delete(tytTrialExams).where(eq(tytTrialExams.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Daily Study Task operations
+  async getDailyStudyTasks(userId: number, date?: string): Promise<DailyStudyTask[]> {
+    let query = db.select().from(dailyStudyTasks).where(eq(dailyStudyTasks.userId, userId));
+    if (date) {
+      query = query.where(eq(dailyStudyTasks.scheduledDate, date));
+    }
+    return await query.orderBy(dailyStudyTasks.scheduledDate, dailyStudyTasks.scheduledTime);
+  }
+
+  async getDailyStudyTask(id: number): Promise<DailyStudyTask | undefined> {
+    const task = await db.select().from(dailyStudyTasks).where(eq(dailyStudyTasks.id, id)).limit(1);
+    return task[0];
+  }
+
+  async createDailyStudyTask(task: InsertDailyStudyTask): Promise<DailyStudyTask> {
+    const [newTask] = await db.insert(dailyStudyTasks).values(task).returning();
+    return newTask;
+  }
+
+  async updateDailyStudyTask(id: number, data: Partial<DailyStudyTask>): Promise<DailyStudyTask | undefined> {
+    const [updated] = await db
+      .update(dailyStudyTasks)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(dailyStudyTasks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteDailyStudyTask(id: number): Promise<boolean> {
+    const result = await db.delete(dailyStudyTasks).where(eq(dailyStudyTasks.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async completeDailyStudyTask(id: number, actualDuration?: number): Promise<DailyStudyTask | undefined> {
+    const updateData: any = {
+      isCompleted: true,
+      completedAt: new Date(),
+      updatedAt: new Date()
+    };
+    if (actualDuration) {
+      updateData.actualDuration = actualDuration;
+    }
+
+    const [updated] = await db
+      .update(dailyStudyTasks)
+      .set(updateData)
+      .where(eq(dailyStudyTasks.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Study Session operations
+  async getTytStudySessions(userId: number, filters?: { startDate?: Date; endDate?: Date; subjectId?: number }): Promise<TytStudySession[]> {
+    let query = db.select().from(tytStudySessions).where(eq(tytStudySessions.userId, userId));
+    
+    if (filters?.startDate) {
+      query = query.where(sql`${tytStudySessions.startTime} >= ${filters.startDate}`);
+    }
+    if (filters?.endDate) {
+      query = query.where(sql`${tytStudySessions.startTime} <= ${filters.endDate}`);
+    }
+    if (filters?.subjectId) {
+      query = query.where(eq(tytStudySessions.subjectId, filters.subjectId));
+    }
+
+    return await query.orderBy(desc(tytStudySessions.startTime));
+  }
+
+  async getTytStudySession(id: number): Promise<TytStudySession | undefined> {
+    const session = await db.select().from(tytStudySessions).where(eq(tytStudySessions.id, id)).limit(1);
+    return session[0];
+  }
+
+  async createTytStudySession(session: InsertTytStudySession): Promise<TytStudySession> {
+    const [newSession] = await db.insert(tytStudySessions).values(session).returning();
+    return newSession;
+  }
+
+  async updateTytStudySession(id: number, data: Partial<TytStudySession>): Promise<TytStudySession | undefined> {
+    const [updated] = await db
+      .update(tytStudySessions)
+      .set(data)
+      .where(eq(tytStudySessions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async endTytStudySession(id: number): Promise<TytStudySession | undefined> {
+    const session = await this.getTytStudySession(id);
+    if (!session || session.endTime) return session;
+
+    const endTime = new Date();
+    const startTime = new Date(session.startTime);
+    const duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000); // minutes
+
+    const [updated] = await db
+      .update(tytStudySessions)
+      .set({
+        endTime: endTime,
+        duration: duration
+      })
+      .where(eq(tytStudySessions.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Study Goal operations
+  async getTytStudyGoals(userId: number, goalType?: string): Promise<TytStudyGoal[]> {
+    let query = db.select().from(tytStudyGoals).where(eq(tytStudyGoals.userId, userId));
+    if (goalType) {
+      query = query.where(eq(tytStudyGoals.goalType, goalType));
+    }
+    return await query.orderBy(tytStudyGoals.deadline, desc(tytStudyGoals.createdAt));
+  }
+
+  async getTytStudyGoal(id: number): Promise<TytStudyGoal | undefined> {
+    const goal = await db.select().from(tytStudyGoals).where(eq(tytStudyGoals.id, id)).limit(1);
+    return goal[0];
+  }
+
+  async createTytStudyGoal(goal: InsertTytStudyGoal): Promise<TytStudyGoal> {
+    const [newGoal] = await db.insert(tytStudyGoals).values(goal).returning();
+    return newGoal;
+  }
+
+  async updateTytStudyGoal(id: number, data: Partial<TytStudyGoal>): Promise<TytStudyGoal | undefined> {
+    const [updated] = await db
+      .update(tytStudyGoals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(tytStudyGoals.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTytStudyGoal(id: number): Promise<boolean> {
+    const result = await db.delete(tytStudyGoals).where(eq(tytStudyGoals.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Study Streak operations
+  async getTytStudyStreaks(userId: number): Promise<TytStudyStreak[]> {
+    return await db
+      .select()
+      .from(tytStudyStreaks)
+      .where(eq(tytStudyStreaks.userId, userId))
+      .orderBy(tytStudyStreaks.streakType);
+  }
+
+  async getTytStudyStreak(userId: number, streakType: string): Promise<TytStudyStreak | undefined> {
+    const streak = await db
+      .select()
+      .from(tytStudyStreaks)
+      .where(and(eq(tytStudyStreaks.userId, userId), eq(tytStudyStreaks.streakType, streakType)))
+      .limit(1);
+    return streak[0];
+  }
+
+  async createTytStudyStreak(streak: InsertTytStudyStreak): Promise<TytStudyStreak> {
+    const [newStreak] = await db.insert(tytStudyStreaks).values(streak).returning();
+    return newStreak;
+  }
+
+  async updateTytStudyStreak(userId: number, streakType: string, data: Partial<TytStudyStreak>): Promise<TytStudyStreak | undefined> {
+    const [updated] = await db
+      .update(tytStudyStreaks)
+      .set(data)
+      .where(and(eq(tytStudyStreaks.userId, userId), eq(tytStudyStreaks.streakType, streakType)))
+      .returning();
+    return updated;
+  }
+
+  // Analytics and Summary operations
+  async getTytStudyStats(userId: number, timeframe?: 'daily' | 'weekly' | 'monthly'): Promise<{
+    totalStudyTime: number;
+    completedTasks: number;
+    averageNetScore: number;
+    subjectProgress: Array<{ subject: string; progress: number; timeSpent: number }>;
+    streaks: Array<{ type: string; current: number; longest: number }>;
+  }> {
+    // Calculate date range based on timeframe
+    let startDate = new Date();
+    switch (timeframe) {
+      case 'daily':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'weekly':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case 'monthly':
+        startDate.setMonth(startDate.getMonth() - 1);
+        break;
+      default:
+        startDate = new Date(0); // All time
+    }
+
+    // Get study sessions for total study time
+    const sessions = await this.getTytStudySessions(userId, { startDate });
+    const totalStudyTime = sessions.reduce((total, session) => total + (session.duration || 0), 0);
+
+    // Get completed tasks count
+    const tasks = await db
+      .select()
+      .from(dailyStudyTasks)
+      .where(and(
+        eq(dailyStudyTasks.userId, userId),
+        eq(dailyStudyTasks.isCompleted, true),
+        sql`${dailyStudyTasks.completedAt} >= ${startDate}`
+      ));
+    const completedTasks = tasks.length;
+
+    // Get trial exams for average net score
+    const trials = await db
+      .select()
+      .from(tytTrialExams)
+      .where(and(
+        eq(tytTrialExams.userId, userId),
+        sql`${tytTrialExams.examDate} >= ${startDate}`
+      ));
+    const averageNetScore = trials.length > 0 
+      ? trials.reduce((sum, trial) => sum + parseFloat(trial.netScore.toString()), 0) / trials.length 
+      : 0;
+
+    // Get subject progress (simplified)
+    const subjectProgress = await db
+      .select({
+        subject: tytSubjects.displayName,
+        progress: sql<number>`AVG(${userTopicProgress.progressPercent})`,
+        timeSpent: sql<number>`SUM(${userTopicProgress.timeSpent})`
+      })
+      .from(userTopicProgress)
+      .leftJoin(tytTopics, eq(userTopicProgress.topicId, tytTopics.id))
+      .leftJoin(tytSubjects, eq(tytTopics.subjectId, tytSubjects.id))
+      .where(eq(userTopicProgress.userId, userId))
+      .groupBy(tytSubjects.id, tytSubjects.displayName);
+
+    // Get streaks
+    const streakData = await this.getTytStudyStreaks(userId);
+    const streaks = streakData.map(streak => ({
+      type: streak.streakType,
+      current: streak.currentStreak,
+      longest: streak.longestStreak
+    }));
+
+    return {
+      totalStudyTime,
+      completedTasks,
+      averageNetScore,
+      subjectProgress,
+      streaks
+    };
   }
 }
 

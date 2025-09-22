@@ -24,7 +24,17 @@ import {
   studyGoals,
   studySchedules,
   learningRecommendations,
-  studyProgress
+  studyProgress,
+  // TYT Study Planning schemas
+  insertTytStudentProfileSchema,
+  insertTytSubjectSchema,
+  insertTytTopicSchema,
+  insertUserTopicProgressSchema,
+  insertTytTrialExamSchema,
+  insertDailyStudyTaskSchema,
+  insertTytStudySessionSchema,
+  insertTytStudyGoalSchema,
+  insertTytStudyStreakSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
@@ -4427,6 +4437,514 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error('Error fetching advanced analytics:', error);
       res.status(500).json({ message: "Failed to fetch advanced analytics" });
+    }
+  });
+
+  // ============================
+  // TYT STUDY PLANNING API ROUTES
+  // ============================
+
+  // Student Profile routes
+  app.get("/api/tyt/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const profile = await storage.getTytStudentProfile(req.user.id);
+      res.json(profile || null);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch TYT profile" });
+    }
+  });
+
+  app.post("/api/tyt/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertTytStudentProfileSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const profile = await storage.createTytStudentProfile(validatedData);
+      res.status(201).json(profile);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create TYT profile" });
+    }
+  });
+
+  app.put("/api/tyt/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertTytStudentProfileSchema.omit({ userId: true }).partial().parse(req.body);
+      const updated = await storage.updateTytStudentProfile(req.user.id, validatedData);
+      if (!updated) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update TYT profile" });
+    }
+  });
+
+  // Subject and Topic routes
+  app.get("/api/tyt/subjects", async (req, res) => {
+    try {
+      const subjects = await storage.getTytSubjects();
+      res.json(subjects);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch TYT subjects" });
+    }
+  });
+
+  app.get("/api/tyt/topics", async (req, res) => {
+    const subjectId = req.query.subjectId ? parseInt(req.query.subjectId as string) : undefined;
+    
+    try {
+      const topics = await storage.getTytTopics(subjectId);
+      res.json(topics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch TYT topics" });
+    }
+  });
+
+  // User Topic Progress routes
+  app.get("/api/tyt/progress/topics", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const topicId = req.query.topicId ? parseInt(req.query.topicId as string) : undefined;
+    
+    try {
+      const progress = await storage.getUserTopicProgress(req.user.id, topicId);
+      res.json(progress);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch topic progress" });
+    }
+  });
+
+  app.put("/api/tyt/progress/topics/:topicId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const topicId = parseInt(req.params.topicId);
+      const validatedData = insertUserTopicProgressSchema.partial().parse(req.body);
+      const progress = await storage.updateUserTopicProgress(req.user.id, topicId, validatedData);
+      res.json(progress);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid progress data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update topic progress" });
+    }
+  });
+
+  // Trial Exam routes
+  app.get("/api/tyt/trials", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const trials = await storage.getTytTrialExams(req.user.id);
+      res.json(trials);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch trial exams" });
+    }
+  });
+
+  app.get("/api/tyt/trials/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const trialId = parseInt(req.params.id);
+      const trial = await storage.getTytTrialExam(trialId);
+      
+      if (!trial || trial.userId !== req.user.id) {
+        return res.status(404).json({ message: "Trial exam not found" });
+      }
+      
+      res.json(trial);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch trial exam" });
+    }
+  });
+
+  app.post("/api/tyt/trials", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertTytTrialExamSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const trial = await storage.createTytTrialExam(validatedData);
+      res.status(201).json(trial);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid trial exam data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create trial exam" });
+    }
+  });
+
+  app.delete("/api/tyt/trials/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const trialId = parseInt(req.params.id);
+      if (isNaN(trialId)) {
+        return res.status(400).json({ message: "Invalid trial ID" });
+      }
+      
+      const trial = await storage.getTytTrialExam(trialId);
+      
+      if (!trial) {
+        return res.status(404).json({ message: "Trial exam not found" });
+      }
+      
+      if (trial.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You can only delete your own trial exams" });
+      }
+      
+      const success = await storage.deleteTytTrialExam(trialId);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete trial exam" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete trial exam" });
+    }
+  });
+
+  // Daily Study Tasks routes
+  app.get("/api/tyt/tasks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const date = req.query.date as string;
+    
+    try {
+      const tasks = await storage.getDailyStudyTasks(req.user.id, date);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch daily study tasks" });
+    }
+  });
+
+  app.post("/api/tyt/tasks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertDailyStudyTaskSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const task = await storage.createDailyStudyTask(validatedData);
+      res.status(201).json(task);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create daily study task" });
+    }
+  });
+
+  app.put("/api/tyt/tasks/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.id);
+      if (isNaN(taskId)) {
+        return res.status(400).json({ message: "Invalid task ID" });
+      }
+      
+      const task = await storage.getDailyStudyTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You can only update your own tasks" });
+      }
+      
+      const validatedData = insertDailyStudyTaskSchema.omit({ userId: true }).partial().parse(req.body);
+      const updated = await storage.updateDailyStudyTask(taskId, validatedData);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update daily study task" });
+    }
+  });
+
+  app.post("/api/tyt/tasks/:id/complete", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.id);
+      const { actualDuration } = req.body;
+      
+      const task = await storage.getDailyStudyTask(taskId);
+      if (!task || task.userId !== req.user.id) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      const completed = await storage.completeDailyStudyTask(taskId, actualDuration);
+      res.json(completed);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to complete daily study task" });
+    }
+  });
+
+  app.delete("/api/tyt/tasks/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.id);
+      if (isNaN(taskId)) {
+        return res.status(400).json({ message: "Invalid task ID" });
+      }
+      
+      const task = await storage.getDailyStudyTask(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You can only delete your own tasks" });
+      }
+      
+      const success = await storage.deleteDailyStudyTask(taskId);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete task" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete daily study task" });
+    }
+  });
+
+  // Study Sessions routes
+  app.get("/api/tyt/sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const filters: any = {};
+    if (req.query.startDate) filters.startDate = new Date(req.query.startDate as string);
+    if (req.query.endDate) filters.endDate = new Date(req.query.endDate as string);
+    if (req.query.subjectId) filters.subjectId = parseInt(req.query.subjectId as string);
+    
+    try {
+      const sessions = await storage.getTytStudySessions(req.user.id, filters);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch study sessions" });
+    }
+  });
+
+  app.post("/api/tyt/sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertTytStudySessionSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const session = await storage.createTytStudySession(validatedData);
+      res.status(201).json(session);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid session data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create study session" });
+    }
+  });
+
+  app.post("/api/tyt/sessions/:id/end", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const sessionId = parseInt(req.params.id);
+      const session = await storage.getTytStudySession(sessionId);
+      
+      if (!session || session.userId !== req.user.id) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      const ended = await storage.endTytStudySession(sessionId);
+      res.json(ended);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to end study session" });
+    }
+  });
+
+  // Study Goals routes
+  app.get("/api/tyt/goals", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const goalType = req.query.type as string;
+    
+    try {
+      const goals = await storage.getTytStudyGoals(req.user.id, goalType);
+      res.json(goals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch study goals" });
+    }
+  });
+
+  app.post("/api/tyt/goals", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertTytStudyGoalSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const goal = await storage.createTytStudyGoal(validatedData);
+      res.status(201).json(goal);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid goal data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create study goal" });
+    }
+  });
+
+  app.put("/api/tyt/goals/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const goalId = parseInt(req.params.id);
+      if (isNaN(goalId)) {
+        return res.status(400).json({ message: "Invalid goal ID" });
+      }
+      
+      const goal = await storage.getTytStudyGoal(goalId);
+      
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+      
+      if (goal.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You can only update your own goals" });
+      }
+      
+      const validatedData = insertTytStudyGoalSchema.omit({ userId: true }).partial().parse(req.body);
+      const updated = await storage.updateTytStudyGoal(goalId, validatedData);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid goal data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update study goal" });
+    }
+  });
+
+  app.delete("/api/tyt/goals/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const goalId = parseInt(req.params.id);
+      if (isNaN(goalId)) {
+        return res.status(400).json({ message: "Invalid goal ID" });
+      }
+      
+      const goal = await storage.getTytStudyGoal(goalId);
+      
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+      
+      if (goal.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden: You can only delete your own goals" });
+      }
+      
+      const success = await storage.deleteTytStudyGoal(goalId);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: "Failed to delete goal" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete study goal" });
+    }
+  });
+
+  // Study Streaks routes
+  app.get("/api/tyt/streaks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const streaks = await storage.getTytStudyStreaks(req.user.id);
+      res.json(streaks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch study streaks" });
+    }
+  });
+
+  // Analytics and Stats route
+  app.get("/api/tyt/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const timeframe = req.query.timeframe as 'daily' | 'weekly' | 'monthly' | undefined;
+    
+    try {
+      const stats = await storage.getTytStudyStats(req.user.id, timeframe);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch TYT study stats" });
     }
   });
 

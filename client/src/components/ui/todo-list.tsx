@@ -15,9 +15,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/contexts/consolidated-language-context';
-import { CheckCircle2, Circle, Plus, Clock, AlertCircle, Calendar, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, Plus, Clock, AlertCircle, Calendar, Trash2, Target } from 'lucide-react';
+import { Link } from 'wouter';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+
+interface CurriculumContext {
+  curriculumTaskId: number;
+  curriculumId: number;
+  curriculumTitleEn: string;
+  curriculumTitleTr: string;
+  skillName?: string;
+  taskTitleEn: string;
+  taskTitleTr: string;
+}
 
 interface DailyTask {
   id: number;
@@ -31,6 +42,7 @@ interface DailyTask {
   scheduledTime?: string;
   isCompleted: boolean;
   completedAt?: Date;
+  curriculumContext?: CurriculumContext | null;
 }
 
 interface TodoListProps {
@@ -119,7 +131,7 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks', { date: selectedDate }] });
       toast({
         title: language === 'tr' ? 'Tebrikler!' : 'Congratulations!',
         description: language === 'tr' ? 'Görev tamamlandı!' : 'Task completed!',
@@ -133,7 +145,7 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks', { date: selectedDate }] });
     },
   });
 
@@ -143,7 +155,7 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks', { date: selectedDate }] });
       setIsDialogOpen(false);
       form.reset();
       toast({
@@ -376,6 +388,24 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
                     <Badge variant="outline" className="text-xs">
                       {taskTypeLabels[task.taskType as keyof typeof taskTypeLabels]}
                     </Badge>
+                    {task.curriculumContext && (
+                      <Link href="/my-curriculum">
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 cursor-pointer transition-colors flex items-center gap-1 max-w-[200px]"
+                          data-testid={`curriculum-badge-${task.id}`}
+                          title={`${language === 'tr' ? task.curriculumContext.curriculumTitleTr : task.curriculumContext.curriculumTitleEn}${task.curriculumContext.skillName ? ` • ${task.curriculumContext.skillName}` : ''}`}
+                        >
+                          <Target className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {language === 'tr' ? task.curriculumContext.curriculumTitleTr : task.curriculumContext.curriculumTitleEn}
+                            {task.curriculumContext.skillName && (
+                              <span className="ml-1 opacity-70">• {task.curriculumContext.skillName}</span>
+                            )}
+                          </span>
+                        </Badge>
+                      </Link>
+                    )}
                     {task.estimatedDuration && (
                       <span className="text-xs text-gray-500 flex items-center gap-1">
                         <Clock className="h-3 w-3" />

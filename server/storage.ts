@@ -466,6 +466,15 @@ export interface IStorage {
   updateDailyStudyTask(id: number, data: Partial<DailyStudyTask>): Promise<DailyStudyTask | undefined>;
   deleteDailyStudyTask(id: number): Promise<boolean>;
   completeDailyStudyTask(id: number, actualDuration?: number): Promise<DailyStudyTask | undefined>;
+  getCurriculumContextForDailyTasks(userId: number, taskIds: number[]): Promise<Map<number, {
+    curriculumTaskId: number;
+    curriculumId: number;
+    curriculumTitleEn: string;
+    curriculumTitleTr: string;
+    skillName: string | null;
+    taskTitleEn: string;
+    taskTitleTr: string;
+  }>>;
   
   // Study Session operations
   getTytStudySessions(userId: number, filters?: { startDate?: Date; endDate?: Date; subjectId?: number }): Promise<TytStudySession[]>;
@@ -2840,6 +2849,65 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dailyStudyTasks.id, id))
       .returning();
     return updated;
+  }
+
+  async getCurriculumContextForDailyTasks(userId: number, taskIds: number[]): Promise<Map<number, {
+    curriculumTaskId: number;
+    curriculumId: number;
+    curriculumTitleEn: string;
+    curriculumTitleTr: string;
+    skillName: string | null;
+    taskTitleEn: string;
+    taskTitleTr: string;
+  }>> {
+    if (taskIds.length === 0) return new Map();
+
+    const results = await db
+      .select({
+        dailyTaskId: userCurriculumTasks.dailyTaskId,
+        curriculumTaskId: userCurriculumTasks.id,
+        curriculumId: userCurriculums.curriculumId,
+        curriculumTitleEn: courseCurriculums.titleEn,
+        curriculumTitleTr: courseCurriculums.titleTr,
+        skillName: curriculumSkills.name,
+        taskTitleEn: userCurriculumTasks.titleEn,
+        taskTitleTr: userCurriculumTasks.titleTr,
+      })
+      .from(userCurriculumTasks)
+      .innerJoin(userCurriculums, eq(userCurriculumTasks.userCurriculumId, userCurriculums.id))
+      .innerJoin(courseCurriculums, eq(userCurriculums.curriculumId, courseCurriculums.id))
+      .leftJoin(curriculumSkills, eq(userCurriculumTasks.skillId, curriculumSkills.id))
+      .where(
+        and(
+          eq(userCurriculums.userId, userId),
+          inArray(userCurriculumTasks.dailyTaskId, taskIds)
+        )
+      );
+
+    const contextMap = new Map<number, {
+      curriculumTaskId: number;
+      curriculumId: number;
+      curriculumTitleEn: string;
+      curriculumTitleTr: string;
+      skillName: string | null;
+      taskTitleEn: string;
+      taskTitleTr: string;
+    }>();
+    
+    for (const row of results) {
+      if (row.dailyTaskId) {
+        contextMap.set(row.dailyTaskId, {
+          curriculumTaskId: row.curriculumTaskId,
+          curriculumId: row.curriculumId,
+          curriculumTitleEn: row.curriculumTitleEn,
+          curriculumTitleTr: row.curriculumTitleTr,
+          skillName: row.skillName,
+          taskTitleEn: row.taskTitleEn,
+          taskTitleTr: row.taskTitleTr,
+        });
+      }
+    }
+    return contextMap;
   }
 
   // Study Session operations

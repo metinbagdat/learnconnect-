@@ -4774,9 +4774,114 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     
     try {
       const tasks = await storage.getDailyStudyTasks(req.user.id, date);
-      res.json(tasks);
+      
+      // Get curriculum context for tasks
+      const taskIds = tasks.map(t => t.id);
+      const curriculumContext = await storage.getCurriculumContextForDailyTasks(req.user.id, taskIds);
+      
+      // Merge curriculum context with tasks
+      const tasksWithContext = tasks.map(task => ({
+        ...task,
+        curriculumContext: curriculumContext.get(task.id) || null
+      }));
+      
+      res.json(tasksWithContext);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch daily study tasks" });
+    }
+  });
+
+  // User-facing daily tasks API (used by TodoList component)
+  app.get("/api/user/daily-tasks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const date = req.query.date as string;
+    
+    try {
+      const tasks = await storage.getDailyStudyTasks(req.user.id, date);
+      
+      // Get curriculum context for tasks
+      const taskIds = tasks.map(t => t.id);
+      const curriculumContext = await storage.getCurriculumContextForDailyTasks(req.user.id, taskIds);
+      
+      // Merge curriculum context with tasks
+      const tasksWithContext = tasks.map(task => ({
+        ...task,
+        curriculumContext: curriculumContext.get(task.id) || null
+      }));
+      
+      res.json(tasksWithContext);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch daily tasks" });
+    }
+  });
+
+  app.post("/api/user/daily-tasks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertDailyStudyTaskSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const task = await storage.createDailyStudyTask(validatedData);
+      res.status(201).json(task);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create daily task" });
+    }
+  });
+
+  app.post("/api/user/daily-tasks/:id/complete", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.id);
+      if (isNaN(taskId)) {
+        return res.status(400).json({ message: "Invalid task ID" });
+      }
+      
+      const task = await storage.getDailyStudyTask(taskId);
+      if (!task || task.userId !== req.user.id) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      const { actualDuration } = req.body;
+      const completedTask = await storage.completeDailyStudyTask(taskId, actualDuration);
+      res.json(completedTask);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to complete task" });
+    }
+  });
+
+  app.delete("/api/user/daily-tasks/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.id);
+      if (isNaN(taskId)) {
+        return res.status(400).json({ message: "Invalid task ID" });
+      }
+      
+      const task = await storage.getDailyStudyTask(taskId);
+      if (!task || task.userId !== req.user.id) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      await storage.deleteDailyStudyTask(taskId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete task" });
     }
   });
 

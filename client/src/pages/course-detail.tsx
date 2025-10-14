@@ -18,16 +18,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
-import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine, Globe } from "lucide-react";
+import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine, Globe, DollarSign, Calendar, Target } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { getLocalizedField } from "@/lib/language-utils";
 
 export default function CourseDetail() {
   const { courseId } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { triggerSkillChallenge } = useSkillChallenge();
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [lessonContent, setLessonContent] = useState<string | null>(null);
@@ -154,6 +155,20 @@ export default function CourseDetail() {
       </div>
     );
   }
+
+  // Get localized course content
+  const courseTitle = getLocalizedField(course, 'title', language);
+  const courseDescription = getLocalizedField(course, 'description', language);
+
+  // Calculate daily time recommendations based on course duration
+  const getDailyTimeRecommendation = (totalHours: number) => {
+    if (totalHours <= 10) return { days: 14, hoursPerDay: 1 };
+    if (totalHours <= 30) return { days: 30, hoursPerDay: 1 };
+    if (totalHours <= 60) return { days: 30, hoursPerDay: 2 };
+    return { days: 60, hoursPerDay: 2 };
+  };
+
+  const recommendation = course.durationHours ? getDailyTimeRecommendation(course.durationHours) : null;
   
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
@@ -181,29 +196,75 @@ export default function CourseDetail() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               {/* Course Header */}
               <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-                <div className="relative h-48 bg-gradient-to-r from-primary to-primary-600">
-                  <div className="absolute inset-0 flex items-center px-6 py-4">
-                    <div className="max-w-2xl">
-                      <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{course.title}</h1>
-                      <p className="text-primary-100 text-sm md:text-base">{course.description}</p>
+                <div className="relative h-64 bg-gradient-to-r from-primary to-primary-600">
+                  {course.imageUrl && (
+                    <img 
+                      src={course.imageUrl} 
+                      alt={courseTitle}
+                      className="absolute inset-0 w-full h-full object-cover opacity-30"
+                    />
+                  )}
+                  <div className="absolute inset-0 flex items-center px-6 py-4 bg-gradient-to-r from-black/40 to-transparent">
+                    <div className="max-w-4xl">
+                      <h1 className="text-3xl md:text-4xl font-bold text-white mb-3" data-testid="course-title">{courseTitle}</h1>
+                      <p className="text-white/90 text-base md:text-lg max-w-2xl" data-testid="course-description">{courseDescription}</p>
                       
                       <div className="flex flex-wrap gap-4 mt-4">
-                        <div className="flex items-center text-white">
+                        <div className="flex items-center text-white bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
                           <Clock className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{course.durationHours} hours</span>
+                          <span className="text-sm font-medium">{course.durationHours} {language === 'tr' ? 'saat' : 'hours'}</span>
                         </div>
-                        <div className="flex items-center text-white">
+                        <div className="flex items-center text-white bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
                           <Book className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{course.moduleCount} modules</span>
+                          <span className="text-sm font-medium">{course.moduleCount} {language === 'tr' ? 'modül' : 'modules'}</span>
                         </div>
-                        <div className="flex items-center text-white">
-                          <User className="h-4 w-4 mr-1" />
-                          <span className="text-sm">Instructor ID: {course.instructorId}</span>
-                        </div>
+                        {course.price && parseFloat(course.price.toString()) > 0 && (
+                          <div className="flex items-center text-white bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            <span className="text-sm font-medium">${course.price}</span>
+                          </div>
+                        )}
+                        {course.level && (
+                          <Badge className="bg-white/20 text-white border-white/30" data-testid="course-level">
+                            {course.level}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
+                
+                {/* Study Planning Section */}
+                {recommendation && (
+                  <div className="px-6 py-4 bg-blue-50 border-t border-blue-100">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <Target className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                          {language === 'tr' ? 'Önerilen Çalışma Planı' : 'Recommended Study Plan'}
+                        </h3>
+                        <p className="text-sm text-blue-700">
+                          {language === 'tr' 
+                            ? `Bu kursu ${recommendation.days} gün içinde tamamlamak için günde ${recommendation.hoursPerDay} saat çalışmanız önerilir.`
+                            : `We recommend studying ${recommendation.hoursPerDay} ${recommendation.hoursPerDay === 1 ? 'hour' : 'hours'} per day to complete this course in ${recommendation.days} days.`
+                          }
+                        </p>
+                        <div className="mt-2 flex items-center gap-4 text-xs text-blue-600">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{recommendation.days} {language === 'tr' ? 'gün' : 'days'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{recommendation.hoursPerDay} {language === 'tr' ? 'saat/gün' : 'hours/day'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* AI-Enhanced Module Tree with Personalized Content */}

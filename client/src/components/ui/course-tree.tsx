@@ -4,11 +4,17 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
+import { useLanguage } from '@/contexts/consolidated-language-context';
+import { getLocalizedField } from '@/lib/language-utils';
 
 interface CourseTreeNode {
   id: number;
   title: string;
   description: string;
+  titleEn?: string;
+  titleTr?: string;
+  descriptionEn?: string;
+  descriptionTr?: string;
   category: string;
   imageUrl?: string;
   depth: number;
@@ -36,7 +42,11 @@ interface CourseNodeProps {
 function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodeProps) {
   const [isExpanded, setIsExpanded] = useState(course.depth === 0); // Root courses expanded by default
   const [, navigate] = useLocation();
+  const { language } = useLanguage();
   const hasChildren = course.children && course.children.length > 0;
+
+  const localizedTitle = getLocalizedField(course, 'title', language);
+  const localizedDescription = getLocalizedField(course, 'description', language);
 
   const getDepthColor = (depth: number) => {
     const colors = [
@@ -87,7 +97,7 @@ function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodePr
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
-                      {course.title}
+                      {localizedTitle}
                     </h3>
                     {course.completed && (
                       <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" data-testid={`completed-${course.id}`} />
@@ -97,7 +107,7 @@ function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodePr
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {course.description}
+                    {localizedDescription}
                   </p>
                   
                   {/* Progress Bar for Enrolled Courses */}

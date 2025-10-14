@@ -130,6 +130,17 @@ EduLearn Platform is a sophisticated e-learning and educational platform built w
 
 ```
 Changelog:
+- October 14, 2025. Implemented Hierarchical Course System
+  * Restructured courses to support tree-based curriculum organization
+  * Added parent-child relationships: parentCourseId, depth, order fields to courses schema
+  * Created hierarchical API endpoints: /api/courses/tree and /api/user/courses/tree
+  * Implemented CourseTree component with expand/collapse functionality and depth-based styling
+  * Updated My Courses page to display courses in tree structure (AYT → Mathematics → Topics)
+  * Removed duplicate course listings through hierarchical parent-child relationships
+  * Added ID-based Set handling for efficient ancestor/descendant collection
+  * Implemented recursive tree building with complete hierarchy support (root to leaf nodes)
+  * Enhanced course navigation with visual hierarchy and enrollment status indicators
+  * Integrated enrollment and progress tracking in tree view with Continue/Enroll buttons
 - August 28, 2025. Implemented Comprehensive Study Planning & Scheduling System
   * Created complete Study Planning & Scheduling System as core platform feature
   * Added modern navigation system with back buttons and page titles

@@ -17,8 +17,12 @@ export const users = pgTable("users", {
 
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
+  title: text("title").notNull(), // Legacy field - deprecated
+  description: text("description").notNull(), // Legacy field - deprecated
+  titleEn: text("title_en").notNull().default(""),
+  titleTr: text("title_tr").notNull().default(""),
+  descriptionEn: text("description_en").notNull().default(""),
+  descriptionTr: text("description_tr").notNull().default(""),
   category: text("category").notNull(),
   imageUrl: text("image_url"),
   moduleCount: integer("module_count").notNull().default(1),
@@ -39,19 +43,29 @@ export const courses = pgTable("courses", {
 export const modules = pgTable("modules", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
+  title: text("title").notNull(), // Legacy field - deprecated
+  description: text("description").notNull(), // Legacy field - deprecated
+  titleEn: text("title_en").notNull().default(""),
+  titleTr: text("title_tr").notNull().default(""),
+  descriptionEn: text("description_en").notNull().default(""),
+  descriptionTr: text("description_tr").notNull().default(""),
   order: integer("order").notNull(),
 });
 
 export const lessons = pgTable("lessons", {
   id: serial("id").primaryKey(),
   moduleId: integer("module_id").notNull(),
-  title: text("title").notNull(),
-  content: text("content"),
+  title: text("title").notNull(), // Legacy field - deprecated
+  content: text("content"), // Legacy field - deprecated
+  titleEn: text("title_en").notNull().default(""),
+  titleTr: text("title_tr").notNull().default(""),
+  contentEn: text("content_en").notNull().default(""),
+  contentTr: text("content_tr").notNull().default(""),
+  description: text("description"), // Legacy field - deprecated
+  descriptionEn: text("description_en").notNull().default(""),
+  descriptionTr: text("description_tr").notNull().default(""),
   order: integer("order").notNull(),
   estimatedTime: integer("estimated_time").default(30), // duration in minutes
-  description: text("description"),
   tags: text("tags").array().default([]), // Searchable tags
 });
 

@@ -38,6 +38,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
+import * as aiCurriculumService from "./ai-curriculum-service";
 import { 
   generateLessonTrail, 
   saveLessonTrail, 
@@ -258,7 +259,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const userCourse = await storage.enrollUserInCourse(validatedData);
+      
+      // Respond immediately to user
       res.status(201).json(userCourse);
+      
+      // Trigger AI curriculum generation asynchronously (fully detached from request)
+      // Using setImmediate to ensure complete detachment from request lifecycle
+      setImmediate(async () => {
+        try {
+          const user = await storage.getUserById(req.user.id);
+          if (!user) {
+            console.warn(`[Curriculum] User ${req.user.id} not found, skipping curriculum generation`);
+            return;
+          }
+          
+          await aiCurriculumService.generateAndSyncCurriculum(
+            req.user.id,
+            validatedData.courseId,
+            user.language || 'en',
+            storage
+          );
+          
+          console.log(`[Curriculum] Successfully generated curriculum for user ${req.user.id}, course ${validatedData.courseId}`);
+        } catch (error) {
+          console.error(`[Curriculum] Failed to generate curriculum for user ${req.user.id}, course ${validatedData.courseId}:`, error);
+          // Log the error for monitoring - in production, this should trigger alerts
+          // Consider implementing a retry queue or manual retry mechanism
+        }
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid enrollment data", errors: error.errors });

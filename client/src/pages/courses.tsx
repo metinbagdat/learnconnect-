@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import { CourseCard } from "@/components/ui/course-card";
+import { CourseTree } from "@/components/ui/course-tree";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { ApiError } from "@/components/error-states/api-error";
 import { EmptyState } from "@/components/error-states/empty-state";
 import { CourseCardSkeleton } from "@/components/loading-states/enhanced-skeleton";
 import { Search } from "lucide-react";
-import { Course, UserCourse } from "@shared/schema";
+import { Course } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -24,35 +24,40 @@ export default function Courses() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Fetch user courses
-  const { data: userCourses = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<(UserCourse & { course: Course })[]>({
-    queryKey: ["/api/user/courses"],
+  // Fetch hierarchical user courses
+  const { data: userCoursesTree = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<any[]>({
+    queryKey: ["/api/user/courses/tree"],
   });
   
-  // Fetch all available courses
-  const { data: allCourses = [], isLoading: allCoursesLoading, error: allCoursesError, refetch: refetchAllCourses } = useQuery<Course[]>({
-    queryKey: ["/api/courses"],
+  // Fetch hierarchical all courses
+  const { data: allCoursesTree = [], isLoading: allCoursesLoading, error: allCoursesError, refetch: refetchAllCourses } = useQuery<any[]>({
+    queryKey: ["/api/courses/tree"],
   });
   
-  // Filter courses that the user is not enrolled in
-  const availableCourses = allCourses.filter(
-    course => !userCourses.some(uc => uc.courseId === course.id)
-  );
+  // Helper function to filter tree based on search query
+  const filterCourseTree = (courses: any[], query: string): any[] => {
+    if (!query) return courses;
+    
+    return courses.reduce((acc: any[], course: any) => {
+      const matchesSearch = 
+        course.title.toLowerCase().includes(query.toLowerCase()) || 
+        course.category.toLowerCase().includes(query.toLowerCase());
+      
+      const filteredChildren = course.children ? filterCourseTree(course.children, query) : [];
+      
+      if (matchesSearch || filteredChildren.length > 0) {
+        acc.push({
+          ...course,
+          children: filteredChildren
+        });
+      }
+      
+      return acc;
+    }, []);
+  };
   
-  // Filter courses based on search query
-  const filteredUserCourses = userCourses.filter(
-    uc => uc.course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          uc.course.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const filteredAvailableCourses = availableCourses.filter(
-    course => course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-             course.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  // Split user courses into in-progress and completed
-  const inProgressCourses = filteredUserCourses.filter(uc => !uc.completed);
-  const completedCourses = filteredUserCourses.filter(uc => uc.completed);
+  const filteredUserCourses = filterCourseTree(userCoursesTree, searchQuery);
+  const filteredAvailableCourses = filterCourseTree(allCoursesTree, searchQuery);
   
   // Handle course enrollment
   const enrollInCourse = async (courseId: number) => {
@@ -124,13 +129,13 @@ export default function Courses() {
             </div>
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
-              <Tabs defaultValue="available">
+              <Tabs defaultValue="enrolled">
                 <TabsList>
-                  <TabsTrigger value="enrolled">{t('myCourses')} ({filteredUserCourses.length})</TabsTrigger>
-                  <TabsTrigger value="available">{t('availableCourses')} ({filteredAvailableCourses.length})</TabsTrigger>
+                  <TabsTrigger value="enrolled">{t('myCourses')}</TabsTrigger>
+                  <TabsTrigger value="available">{t('availableCourses')}</TabsTrigger>
                 </TabsList>
                 
-                {/* Enrolled Courses Tab */}
+                {/* Enrolled Courses Tab - Hierarchical Tree View */}
                 <TabsContent value="enrolled" className="mt-6">
                   {userCoursesError ? (
                     <ApiError 
@@ -141,8 +146,8 @@ export default function Courses() {
                       description={t('coursesErrorDesc', 'Unable to load your enrolled courses. Please check your connection and try again.')}
                     />
                   ) : userCoursesLoading ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {[...Array(4)].map((_, i) => (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, i) => (
                         <CourseCardSkeleton key={i} />
                       ))}
                     </div>
@@ -152,56 +157,18 @@ export default function Courses() {
                       onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
                     />
                   ) : (
-                    <>
-                      {/* In Progress Courses */}
-                      {inProgressCourses.length > 0 && (
-                        <>
-                          <div className="mb-6">
-                            <h2 className="text-xl font-semibold text-neutral-900">{t('inProgress')}</h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Pick up where you left off - click any course to continue learning!
-                            </p>
-                          </div>
-                          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
-                            {inProgressCourses.map((userCourse) => (
-                              <CourseCard
-                                key={userCourse.id}
-                                course={userCourse.course}
-                                userCourse={userCourse}
-                                showContinue={true}
-                                onContinue={() => navigate(`/courses/${userCourse.courseId}`)}
-                              />
-                            ))}
-                          </div>
-                        </>
-                      )}
-                      
-                      {/* Completed Courses */}
-                      {completedCourses.length > 0 && (
-                        <>
-                          <div className="mb-6">
-                            <h2 className="text-xl font-semibold text-neutral-900">{t('completed')}</h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Well done! Review completed courses or share your achievements.
-                            </p>
-                          </div>
-                          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {completedCourses.map((userCourse) => (
-                              <CourseCard
-                                key={userCourse.id}
-                                course={userCourse.course}
-                                userCourse={userCourse}
-                                showContinue={false}
-                              />
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </>
+                    <div className="space-y-6">
+                      <div className="mb-4">
+                        <p className="text-sm text-muted-foreground">
+                          Your courses are organized in a hierarchical structure. Click to expand and explore sub-courses.
+                        </p>
+                      </div>
+                      <CourseTree courses={filteredUserCourses} />
+                    </div>
                   )}
                 </TabsContent>
                 
-                {/* Available Courses Tab */}
+                {/* Available Courses Tab - Hierarchical Tree View */}
                 <TabsContent value="available" className="mt-6">
                   {allCoursesError ? (
                     <ApiError 
@@ -212,8 +179,8 @@ export default function Courses() {
                       description={t('coursesErrorDesc', 'Unable to load available courses. Please try again.')}
                     />
                   ) : allCoursesLoading ? (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {[...Array(4)].map((_, i) => (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, i) => (
                         <CourseCardSkeleton key={i} />
                       ))}
                     </div>
@@ -223,16 +190,17 @@ export default function Courses() {
                       onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {filteredAvailableCourses.map((course) => (
-                        <CourseCard
-                          key={course.id}
-                          course={course}
-                          showEnroll={true}
-                          onEnroll={() => enrollInCourse(course.id)}
-                          onCheckout={() => navigate(`/checkout/${course.id}`)}
-                        />
-                      ))}
+                    <div className="space-y-6">
+                      <div className="mb-4">
+                        <p className="text-sm text-muted-foreground">
+                          Browse available courses organized by curriculum structure. Enroll in any course to begin learning.
+                        </p>
+                      </div>
+                      <CourseTree 
+                        courses={filteredAvailableCourses} 
+                        showEnrollButton={true}
+                        onEnroll={enrollInCourse}
+                      />
                     </div>
                   )}
                 </TabsContent>

@@ -85,6 +85,18 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Helper function to build hierarchical course tree
+function buildCourseTree(courses: any[], parentId: number | null = null): any[] {
+  const children = courses
+    .filter(course => course.parentCourseId === parentId)
+    .sort((a, b) => a.order - b.order)
+    .map(course => ({
+      ...course,
+      children: buildCourseTree(courses, course.id)
+    }));
+  return children;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
@@ -99,6 +111,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(courses);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+  
+  // Hierarchical Courses API - returns courses in tree structure
+  app.get("/api/courses/tree", async (req, res) => {
+    try {
+      const courses = await storage.getCourses();
+      const courseTree = buildCourseTree(courses, null);
+      res.json(courseTree);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch course tree" });
     }
   });
   
@@ -145,6 +168,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(userCourses);
     } catch (error) {
       return res.status(500).json({ message: "Failed to fetch user courses" });
+    }
+  });
+  
+  // Hierarchical User Courses API - returns courses with full hierarchy
+  app.get("/api/user/courses/tree", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCourses = await storage.getUserCourses(req.user.id);
+      const allCourses = await storage.getCourses();
+      
+      // Create a map for fast course lookup
+      const courseMap = new Map(allCourses.map(c => [c.id, c]));
+      
+      // Get enrolled course IDs
+      const enrolledCourseIds = new Set(userCourses.map(uc => uc.courseId));
+      
+      // Helper function to get all descendants of a course ID
+      const getAllDescendants = (courseId: number): number[] => {
+        const children = allCourses.filter(c => c.parentCourseId === courseId).map(c => c.id);
+        const descendants = [...children];
+        children.forEach(childId => {
+          descendants.push(...getAllDescendants(childId));
+        });
+        return descendants;
+      };
+      
+      // Helper function to get all ancestors up to root
+      const getAllAncestors = (courseId: number): number[] => {
+        const ancestors: number[] = [];
+        const course = courseMap.get(courseId);
+        if (course && course.parentCourseId) {
+          ancestors.push(course.parentCourseId);
+          ancestors.push(...getAllAncestors(course.parentCourseId));
+        }
+        return ancestors;
+      };
+      
+      // Collect all relevant course IDs: enrolled + ancestors + descendants
+      const relevantCourseIds = new Set<number>();
+      
+      // Add enrolled courses
+      enrolledCourseIds.forEach(id => relevantCourseIds.add(id));
+      
+      // Add all ancestors for enrolled courses (up to root)
+      enrolledCourseIds.forEach(id => {
+        getAllAncestors(id).forEach(ancestorId => relevantCourseIds.add(ancestorId));
+      });
+      
+      // Add all descendants for enrolled courses
+      enrolledCourseIds.forEach(id => {
+        getAllDescendants(id).forEach(descId => relevantCourseIds.add(descId));
+      });
+      
+      // Build final course array with enrollment info
+      const coursesWithEnrollment = Array.from(relevantCourseIds)
+        .map(id => courseMap.get(id))
+        .filter(c => c !== undefined)
+        .map(course => {
+          const userCourse = userCourses.find(uc => uc.courseId === course.id);
+          return {
+            ...course,
+            isEnrolled: !!userCourse,
+            progress: userCourse?.progress || 0,
+            completed: userCourse?.completed || false,
+            userCourseId: userCourse?.id
+          };
+        });
+      
+      const courseTree = buildCourseTree(coursesWithEnrollment, null);
+      return res.json(courseTree);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to fetch user course tree" });
     }
   });
   

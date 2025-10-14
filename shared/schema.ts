@@ -30,6 +30,9 @@ export const courses = pgTable("courses", {
   price: numeric("price", { precision: 10, scale: 2 }).default("0.00"), // Course price in USD
   isPremium: boolean("is_premium").default(false), // Whether course requires payment
   stripePriceId: text("stripe_price_id"), // Stripe price ID for recurring billing
+  parentCourseId: integer("parent_course_id"), // For hierarchical course structure
+  depth: integer("depth").notNull().default(0), // Tree depth: 0 = root (e.g., AYT), 1 = subject (e.g., Mathematics), 2+ = subtopics
+  order: integer("order").notNull().default(0), // Display order within same parent
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

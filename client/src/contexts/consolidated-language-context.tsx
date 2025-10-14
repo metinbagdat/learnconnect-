@@ -534,7 +534,35 @@ const translations = {
     skillsUnlocked: 'Skills Unlocked',
     avgProgress: 'Avg Progress',
     active: 'Active',
-    happyFloat: 'Happy \u2022 Float'
+    happyFloat: 'Happy \u2022 Float',
+    
+    // Curriculum (unique keys only, avoid duplicates)
+    myCurriculum: 'My Curriculum',
+    trackYourPersonalizedLearningJourney: 'Track your personalized learning journey',
+    noCurriculaYet: 'No Curricula Yet',
+    enrollInCourseToGenerateCurriculum: 'Enroll in a course to generate a personalized curriculum',
+    yourCurricula: 'Your Curricula',
+    selectCurriculumToViewDetails: 'Select a curriculum to view details',
+    tasks: 'Tasks',
+    skills: 'Skills',
+    checkpoints: 'Checkpoints',
+    overallProgress: 'Overall Progress',
+    startDate: 'Start Date',
+    estimatedCompletion: 'Estimated Completion',
+    successRate: 'Success Rate',
+    noCurriculumTasksYet: 'No tasks yet',
+    noCurriculumSkillsYet: 'No skills tracked yet',
+    noCurriculumCheckpointsYet: 'No checkpoints yet',
+    high: 'High',
+    medium: 'Medium',
+    low: 'Low',
+    in_progress: 'In Progress',
+    overdue: 'Overdue',
+    practical: 'Practical',
+    project: 'Project',
+    skill_assessment: 'Skill Assessment',
+    milestone: 'Milestone',
+    ai_evaluation: 'AI Evaluation'
   },
   tr: {
     // Common
@@ -1083,7 +1111,35 @@ const translations = {
     lastUpdated: 'Son güncelleme – Last updated',
     updating: 'Güncelleniyor... – Updating...',
     adding: 'Ekleniyor... – Adding...',
-    home: 'Ana Sayfa – Home'
+    home: 'Ana Sayfa – Home',
+    
+    // Curriculum (unique keys only, avoid duplicates)
+    myCurriculum: 'Müfredatım – My Curriculum',
+    trackYourPersonalizedLearningJourney: 'Kişiselleştirilmiş öğrenme yolculuğunuzu takip edin – Track your personalized learning journey',
+    noCurriculaYet: 'Henüz Müfredat Yok – No Curricula Yet',
+    enrollInCourseToGenerateCurriculum: 'Kişiselleştirilmiş müfredat oluşturmak için bir kursa kaydolun – Enroll in a course to generate a personalized curriculum',
+    yourCurricula: 'Müfredatlarınız – Your Curricula',
+    selectCurriculumToViewDetails: 'Detayları görmek için bir müfredat seçin – Select a curriculum to view details',
+    tasks: 'Görevler – Tasks',
+    skills: 'Beceriler – Skills',
+    checkpoints: 'Kontrol Noktaları – Checkpoints',
+    overallProgress: 'Genel İlerleme – Overall Progress',
+    startDate: 'Başlangıç Tarihi – Start Date',
+    estimatedCompletion: 'Tahmini Tamamlanma – Estimated Completion',
+    successRate: 'Başarı Oranı – Success Rate',
+    noCurriculumTasksYet: 'Henüz görev yok – No tasks yet',
+    noCurriculumSkillsYet: 'Henüz takip edilen beceri yok – No skills tracked yet',
+    noCurriculumCheckpointsYet: 'Henüz kontrol noktası yok – No checkpoints yet',
+    high: 'Yüksek – High',
+    medium: 'Orta – Medium',
+    low: 'Düşük – Low',
+    in_progress: 'Devam Ediyor – In Progress',
+    overdue: 'Gecikmiş – Overdue',
+    practical: 'Pratik – Practical',
+    project: 'Proje – Project',
+    skill_assessment: 'Beceri Değerlendirmesi – Skill Assessment',
+    milestone: 'Kilometre Taşı – Milestone',
+    ai_evaluation: 'AI Değerlendirmesi – AI Evaluation'
   }
 };
 

@@ -17,7 +17,8 @@ import {
   Map,
   Lightbulb,
   Trophy,
-  Brain
+  Brain,
+  Target
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/contexts/consolidated-language-context";
@@ -83,6 +84,19 @@ export function Sidebar() {
             isActive={location === '/courses'}
           >
             {t('myCourses')}
+          </SidebarLink>
+          
+          <SidebarLink 
+            href="/my-curriculum" 
+            icon={<Target className="h-5 w-5" />}
+            isActive={location === '/my-curriculum'}
+          >
+            <span className="flex items-center">
+              {t('myCurriculum')}
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+                AI
+              </span>
+            </span>
           </SidebarLink>
           
           <SidebarLink 

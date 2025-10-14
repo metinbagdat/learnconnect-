@@ -186,7 +186,40 @@ import {
   insertDailyStudyTaskSchema,
   insertTytStudySessionSchema,
   insertTytStudyGoalSchema,
-  insertTytStudyStreakSchema
+  insertTytStudyStreakSchema,
+  // AI Curriculum System types
+  type CourseCurriculum,
+  type InsertCourseCurriculum,
+  type CurriculumSkill,
+  type InsertCurriculumSkill,
+  type CurriculumModule,
+  type InsertCurriculumModule,
+  type UserCurriculum,
+  type InsertUserCurriculum,
+  type UserCurriculumTask,
+  type InsertUserCurriculumTask,
+  type UserSkillProgress,
+  type InsertUserSkillProgress,
+  type CurriculumCheckpoint,
+  type InsertCurriculumCheckpoint,
+  type SkillAssessment,
+  type InsertSkillAssessment,
+  courseCurriculums,
+  curriculumSkills,
+  curriculumModules,
+  userCurriculums,
+  userCurriculumTasks,
+  userSkillProgress,
+  curriculumCheckpoints,
+  skillAssessments,
+  insertCourseCurriculumSchema,
+  insertCurriculumSkillSchema,
+  insertCurriculumModuleSchema,
+  insertUserCurriculumSchema,
+  insertUserCurriculumTaskSchema,
+  insertUserSkillProgressSchema,
+  insertCurriculumCheckpointSchema,
+  insertSkillAssessmentSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -461,6 +494,63 @@ export interface IStorage {
     averageNetScore: number;
     subjectProgress: Array<{ subject: string; progress: number; timeSpent: number }>;
     streaks: Array<{ type: string; current: number; longest: number }>;
+  }>;
+
+  // AI Curriculum System operations
+  // Course Curriculum operations
+  getCourseCurriculum(courseId: number): Promise<CourseCurriculum | undefined>;
+  createCourseCurriculum(curriculum: InsertCourseCurriculum): Promise<CourseCurriculum>;
+  updateCourseCurriculum(id: number, data: Partial<CourseCurriculum>): Promise<CourseCurriculum | undefined>;
+  
+  // Curriculum Skill operations
+  getCurriculumSkills(curriculumId: number): Promise<CurriculumSkill[]>;
+  getCurriculumSkill(id: number): Promise<CurriculumSkill | undefined>;
+  createCurriculumSkill(skill: InsertCurriculumSkill): Promise<CurriculumSkill>;
+  updateCurriculumSkill(id: number, data: Partial<CurriculumSkill>): Promise<CurriculumSkill | undefined>;
+  
+  // Curriculum Module operations
+  getCurriculumModules(curriculumId: number): Promise<CurriculumModule[]>;
+  getCurriculumModule(id: number): Promise<CurriculumModule | undefined>;
+  createCurriculumModule(module: InsertCurriculumModule): Promise<CurriculumModule>;
+  updateCurriculumModule(id: number, data: Partial<CurriculumModule>): Promise<CurriculumModule | undefined>;
+  
+  // User Curriculum operations
+  getUserCurriculum(userId: number, courseId: number): Promise<UserCurriculum | undefined>;
+  getUserCurriculums(userId: number): Promise<UserCurriculum[]>;
+  createUserCurriculum(userCurriculum: InsertUserCurriculum): Promise<UserCurriculum>;
+  updateUserCurriculumProgress(id: number, progress: number): Promise<UserCurriculum | undefined>;
+  
+  // User Curriculum Task operations
+  getUserCurriculumTasks(userCurriculumId: number): Promise<UserCurriculumTask[]>;
+  getUserCurriculumTask(id: number): Promise<UserCurriculumTask | undefined>;
+  createUserCurriculumTask(task: InsertUserCurriculumTask): Promise<UserCurriculumTask>;
+  updateUserCurriculumTask(id: number, data: Partial<UserCurriculumTask>): Promise<UserCurriculumTask | undefined>;
+  deleteUserCurriculumTask(id: number): Promise<boolean>;
+  completeUserCurriculumTask(id: number, score?: number): Promise<UserCurriculumTask | undefined>;
+  
+  // User Skill Progress operations
+  getUserSkillProgress(userCurriculumId: number): Promise<UserSkillProgress[]>;
+  getUserSkillProgressBySkill(userCurriculumId: number, skillId: number): Promise<UserSkillProgress | undefined>;
+  createUserSkillProgress(progress: InsertUserSkillProgress): Promise<UserSkillProgress>;
+  updateUserSkillProgress(id: number, data: Partial<UserSkillProgress>): Promise<UserSkillProgress | undefined>;
+  
+  // Curriculum Checkpoint operations
+  getCurriculumCheckpoints(curriculumId: number): Promise<CurriculumCheckpoint[]>;
+  getCurriculumCheckpoint(id: number): Promise<CurriculumCheckpoint | undefined>;
+  createCurriculumCheckpoint(checkpoint: InsertCurriculumCheckpoint): Promise<CurriculumCheckpoint>;
+  updateCurriculumCheckpoint(id: number, data: Partial<CurriculumCheckpoint>): Promise<CurriculumCheckpoint | undefined>;
+  
+  // Skill Assessment operations
+  getSkillAssessments(userCurriculumId: number): Promise<SkillAssessment[]>;
+  getSkillAssessment(id: number): Promise<SkillAssessment | undefined>;
+  createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment>;
+  updateSkillAssessment(id: number, data: Partial<SkillAssessment>): Promise<SkillAssessment | undefined>;
+  
+  // Curriculum generation and task sync
+  generateAndSyncCurriculum(userId: number, courseId: number): Promise<{
+    curriculum: UserCurriculum;
+    tasks: UserCurriculumTask[];
+    skills: CurriculumSkill[];
   }>;
 
   // Session store
@@ -2951,6 +3041,535 @@ export class DatabaseStorage implements IStorage {
       subjectProgress,
       streaks
     };
+  }
+
+  // ==================== AI Curriculum System Implementations ====================
+  
+  // Course Curriculum operations
+  async getCourseCurriculum(courseId: number): Promise<CourseCurriculum | undefined> {
+    const [curriculum] = await db
+      .select()
+      .from(courseCurriculums)
+      .where(eq(courseCurriculums.courseId, courseId))
+      .limit(1);
+    return curriculum;
+  }
+
+  async createCourseCurriculum(curriculum: InsertCourseCurriculum): Promise<CourseCurriculum> {
+    const [newCurriculum] = await db
+      .insert(courseCurriculums)
+      .values(curriculum)
+      .returning();
+    return newCurriculum;
+  }
+
+  async updateCourseCurriculum(id: number, data: Partial<CourseCurriculum>): Promise<CourseCurriculum | undefined> {
+    const [updated] = await db
+      .update(courseCurriculums)
+      .set(data)
+      .where(eq(courseCurriculums.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Curriculum Skill operations
+  async getCurriculumSkills(curriculumId: number): Promise<CurriculumSkill[]> {
+    return await db
+      .select()
+      .from(curriculumSkills)
+      .where(eq(curriculumSkills.curriculumId, curriculumId))
+      .orderBy(asc(curriculumSkills.order));
+  }
+
+  async getCurriculumSkill(id: number): Promise<CurriculumSkill | undefined> {
+    const [skill] = await db
+      .select()
+      .from(curriculumSkills)
+      .where(eq(curriculumSkills.id, id))
+      .limit(1);
+    return skill;
+  }
+
+  async createCurriculumSkill(skill: InsertCurriculumSkill): Promise<CurriculumSkill> {
+    const [newSkill] = await db
+      .insert(curriculumSkills)
+      .values(skill)
+      .returning();
+    return newSkill;
+  }
+
+  async updateCurriculumSkill(id: number, data: Partial<CurriculumSkill>): Promise<CurriculumSkill | undefined> {
+    const [updated] = await db
+      .update(curriculumSkills)
+      .set(data)
+      .where(eq(curriculumSkills.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Curriculum Module operations
+  async getCurriculumModules(curriculumId: number): Promise<CurriculumModule[]> {
+    return await db
+      .select()
+      .from(curriculumModules)
+      .where(eq(curriculumModules.curriculumId, curriculumId))
+      .orderBy(asc(curriculumModules.order));
+  }
+
+  async getCurriculumModule(id: number): Promise<CurriculumModule | undefined> {
+    const [module] = await db
+      .select()
+      .from(curriculumModules)
+      .where(eq(curriculumModules.id, id))
+      .limit(1);
+    return module;
+  }
+
+  async createCurriculumModule(module: InsertCurriculumModule): Promise<CurriculumModule> {
+    const [newModule] = await db
+      .insert(curriculumModules)
+      .values(module)
+      .returning();
+    return newModule;
+  }
+
+  async updateCurriculumModule(id: number, data: Partial<CurriculumModule>): Promise<CurriculumModule | undefined> {
+    const [updated] = await db
+      .update(curriculumModules)
+      .set(data)
+      .where(eq(curriculumModules.id, id))
+      .returning();
+    return updated;
+  }
+
+  // User Curriculum operations
+  async getUserCurriculum(userId: number, courseId: number): Promise<UserCurriculum | undefined> {
+    const [userCurriculum] = await db
+      .select()
+      .from(userCurriculums)
+      .where(and(
+        eq(userCurriculums.userId, userId),
+        eq(userCurriculums.courseId, courseId)
+      ))
+      .limit(1);
+    return userCurriculum;
+  }
+
+  async getUserCurriculums(userId: number): Promise<UserCurriculum[]> {
+    return await db
+      .select()
+      .from(userCurriculums)
+      .where(eq(userCurriculums.userId, userId))
+      .orderBy(desc(userCurriculums.createdAt));
+  }
+
+  async createUserCurriculum(userCurriculum: InsertUserCurriculum): Promise<UserCurriculum> {
+    const [newUserCurriculum] = await db
+      .insert(userCurriculums)
+      .values(userCurriculum)
+      .returning();
+    return newUserCurriculum;
+  }
+
+  async updateUserCurriculumProgress(id: number, progress: number): Promise<UserCurriculum | undefined> {
+    const [updated] = await db
+      .update(userCurriculums)
+      .set({ 
+        progress,
+        lastAccessedAt: new Date()
+      })
+      .where(eq(userCurriculums.id, id))
+      .returning();
+    return updated;
+  }
+
+  // User Curriculum Task operations
+  async getUserCurriculumTasks(userCurriculumId: number): Promise<UserCurriculumTask[]> {
+    return await db
+      .select()
+      .from(userCurriculumTasks)
+      .where(eq(userCurriculumTasks.userCurriculumId, userCurriculumId))
+      .orderBy(asc(userCurriculumTasks.scheduledDate));
+  }
+
+  async getUserCurriculumTask(id: number): Promise<UserCurriculumTask | undefined> {
+    const [task] = await db
+      .select()
+      .from(userCurriculumTasks)
+      .where(eq(userCurriculumTasks.id, id))
+      .limit(1);
+    return task;
+  }
+
+  async createUserCurriculumTask(task: InsertUserCurriculumTask): Promise<UserCurriculumTask> {
+    const [newTask] = await db
+      .insert(userCurriculumTasks)
+      .values(task)
+      .returning();
+    return newTask;
+  }
+
+  async updateUserCurriculumTask(id: number, data: Partial<UserCurriculumTask>): Promise<UserCurriculumTask | undefined> {
+    const [updated] = await db
+      .update(userCurriculumTasks)
+      .set(data)
+      .where(eq(userCurriculumTasks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteUserCurriculumTask(id: number): Promise<boolean> {
+    const result = await db
+      .delete(userCurriculumTasks)
+      .where(eq(userCurriculumTasks.id, id));
+    return true;
+  }
+
+  async completeUserCurriculumTask(id: number, score?: number): Promise<UserCurriculumTask | undefined> {
+    const [updated] = await db
+      .update(userCurriculumTasks)
+      .set({
+        isCompleted: true,
+        completedAt: new Date(),
+        score: score || null
+      })
+      .where(eq(userCurriculumTasks.id, id))
+      .returning();
+    return updated;
+  }
+
+  // User Skill Progress operations
+  async getUserSkillProgress(userCurriculumId: number): Promise<UserSkillProgress[]> {
+    return await db
+      .select()
+      .from(userSkillProgress)
+      .where(eq(userSkillProgress.userCurriculumId, userCurriculumId));
+  }
+
+  async getUserSkillProgressBySkill(userCurriculumId: number, skillId: number): Promise<UserSkillProgress | undefined> {
+    const [progress] = await db
+      .select()
+      .from(userSkillProgress)
+      .where(and(
+        eq(userSkillProgress.userCurriculumId, userCurriculumId),
+        eq(userSkillProgress.skillId, skillId)
+      ))
+      .limit(1);
+    return progress;
+  }
+
+  async createUserSkillProgress(progress: InsertUserSkillProgress): Promise<UserSkillProgress> {
+    const [newProgress] = await db
+      .insert(userSkillProgress)
+      .values(progress)
+      .returning();
+    return newProgress;
+  }
+
+  async updateUserSkillProgress(id: number, data: Partial<UserSkillProgress>): Promise<UserSkillProgress | undefined> {
+    const [updated] = await db
+      .update(userSkillProgress)
+      .set({
+        ...data,
+        lastAttemptAt: new Date()
+      })
+      .where(eq(userSkillProgress.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Curriculum Checkpoint operations
+  async getCurriculumCheckpoints(curriculumId: number): Promise<CurriculumCheckpoint[]> {
+    return await db
+      .select()
+      .from(curriculumCheckpoints)
+      .where(eq(curriculumCheckpoints.curriculumId, curriculumId))
+      .orderBy(asc(curriculumCheckpoints.order));
+  }
+
+  async getCurriculumCheckpoint(id: number): Promise<CurriculumCheckpoint | undefined> {
+    const [checkpoint] = await db
+      .select()
+      .from(curriculumCheckpoints)
+      .where(eq(curriculumCheckpoints.id, id))
+      .limit(1);
+    return checkpoint;
+  }
+
+  async createCurriculumCheckpoint(checkpoint: InsertCurriculumCheckpoint): Promise<CurriculumCheckpoint> {
+    const [newCheckpoint] = await db
+      .insert(curriculumCheckpoints)
+      .values(checkpoint)
+      .returning();
+    return newCheckpoint;
+  }
+
+  async updateCurriculumCheckpoint(id: number, data: Partial<CurriculumCheckpoint>): Promise<CurriculumCheckpoint | undefined> {
+    const [updated] = await db
+      .update(curriculumCheckpoints)
+      .set(data)
+      .where(eq(curriculumCheckpoints.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Skill Assessment operations
+  async getSkillAssessments(userCurriculumId: number): Promise<SkillAssessment[]> {
+    return await db
+      .select()
+      .from(skillAssessments)
+      .where(eq(skillAssessments.userCurriculumId, userCurriculumId))
+      .orderBy(desc(skillAssessments.attemptedAt));
+  }
+
+  async getSkillAssessment(id: number): Promise<SkillAssessment | undefined> {
+    const [assessment] = await db
+      .select()
+      .from(skillAssessments)
+      .where(eq(skillAssessments.id, id))
+      .limit(1);
+    return assessment;
+  }
+
+  async createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment> {
+    const [newAssessment] = await db
+      .insert(skillAssessments)
+      .values(assessment)
+      .returning();
+    return newAssessment;
+  }
+
+  async updateSkillAssessment(id: number, data: Partial<SkillAssessment>): Promise<SkillAssessment | undefined> {
+    const [updated] = await db
+      .update(skillAssessments)
+      .set(data)
+      .where(eq(skillAssessments.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Curriculum generation and task sync
+  async generateAndSyncCurriculum(userId: number, courseId: number): Promise<{
+    curriculum: UserCurriculum;
+    tasks: UserCurriculumTask[];
+    skills: CurriculumSkill[];
+  }> {
+    // Check if curriculum already exists for this user and course
+    const existingUserCurriculum = await this.getUserCurriculum(userId, courseId);
+    if (existingUserCurriculum) {
+      // Return existing curriculum with tasks and skills
+      const tasks = await this.getUserCurriculumTasks(existingUserCurriculum.id);
+      const courseCurriculum = await db
+        .select()
+        .from(courseCurriculums)
+        .where(eq(courseCurriculums.id, existingUserCurriculum.curriculumId))
+        .limit(1);
+      const skills = courseCurriculum[0] 
+        ? await this.getCurriculumSkills(courseCurriculum[0].id)
+        : [];
+      
+      return {
+        curriculum: existingUserCurriculum,
+        tasks,
+        skills
+      };
+    }
+
+    try {
+      // Import AI service dynamically to avoid circular dependencies
+      const { generateCourseCurriculum, generateCurriculumTasks } = await import('./ai-curriculum-service');
+      
+      // Get course, modules, and lessons (outside transaction)
+      const course = await this.getCourse(courseId);
+      if (!course) {
+        throw new Error(`Course ${courseId} not found`);
+      }
+      
+      const modules = await db
+        .select()
+        .from(db._.schema.modules)
+        .where(eq(db._.schema.modules.courseId, courseId))
+        .orderBy(asc(db._.schema.modules.order));
+      
+      const lessons = await db
+        .select()
+        .from(db._.schema.lessons)
+        .where(inArray(
+          db._.schema.lessons.moduleId,
+          modules.map(m => m.id)
+        ))
+        .orderBy(asc(db._.schema.lessons.order));
+
+      // Get user profile for personalization (outside transaction)
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`User ${userId} not found`);
+      }
+
+      const userProfile = {
+        currentLevel: user.level || 'Beginner',
+        weeklyStudyHours: 10,
+        learningPace: 'normal' as const,
+        goals: user.interests || [],
+        strengths: [],
+        weaknesses: [],
+        preferredLanguage: (user.language || 'en') as 'en' | 'tr'
+      };
+
+      // Generate curriculum and tasks using AI (outside transaction)
+      const generatedCurriculum = await generateCourseCurriculum(
+        course,
+        modules,
+        lessons,
+        userProfile
+      );
+
+      const generatedTasks = await generateCurriculumTasks(
+        generatedCurriculum,
+        userProfile.weeklyStudyHours,
+        new Date()
+      );
+
+      // Wrap all database operations in a transaction for atomicity
+      return await db.transaction(async (tx) => {
+        // Create course curriculum
+        const [courseCurriculum] = await tx
+          .insert(courseCurriculums)
+          .values({
+            courseId,
+            titleEn: generatedCurriculum.titleEn,
+            titleTr: generatedCurriculum.titleTr,
+            descriptionEn: generatedCurriculum.descriptionEn,
+            descriptionTr: generatedCurriculum.descriptionTr,
+            goals: generatedCurriculum.goals,
+            prerequisites: generatedCurriculum.prerequisites,
+            totalDuration: generatedCurriculum.totalDuration,
+            difficultyLevel: generatedCurriculum.difficultyLevel
+          })
+          .returning();
+
+        // Create skills
+        const createdSkills: CurriculumSkill[] = [];
+        for (const skill of generatedCurriculum.skills) {
+          const [createdSkill] = await tx
+            .insert(curriculumSkills)
+            .values({
+              curriculumId: courseCurriculum.id,
+              titleEn: skill.titleEn,
+              titleTr: skill.titleTr,
+              descriptionEn: skill.descriptionEn,
+              descriptionTr: skill.descriptionTr,
+              category: skill.category,
+              estimatedHours: skill.estimatedHours,
+              order: skill.order,
+              prerequisites: skill.prerequisites,
+              assessmentCriteria: skill.assessmentCriteria
+            })
+            .returning();
+          createdSkills.push(createdSkill);
+        }
+
+        // Create curriculum modules
+        for (const module of generatedCurriculum.modules) {
+          await tx
+            .insert(curriculumModules)
+            .values({
+              curriculumId: courseCurriculum.id,
+              skillId: module.skillIndex !== undefined ? createdSkills[module.skillIndex]?.id || null : null,
+              titleEn: module.titleEn,
+              titleTr: module.titleTr,
+              descriptionEn: module.descriptionEn,
+              descriptionTr: module.descriptionTr,
+              order: module.order,
+              estimatedDuration: module.estimatedDuration,
+              learningObjectives: module.learningObjectives,
+              resources: module.resources
+            });
+        }
+
+        // Create checkpoints
+        for (const checkpoint of generatedCurriculum.checkpoints) {
+          await tx
+            .insert(curriculumCheckpoints)
+            .values({
+              curriculumId: courseCurriculum.id,
+              titleEn: checkpoint.titleEn,
+              titleTr: checkpoint.titleTr,
+              descriptionEn: checkpoint.descriptionEn,
+              descriptionTr: checkpoint.descriptionTr,
+              checkpointType: checkpoint.checkpointType,
+              order: checkpoint.order,
+              requiredProgress: checkpoint.requiredProgress,
+              requiredSkills: checkpoint.requiredSkills,
+              passingScore: checkpoint.passingScore,
+              estimatedDuration: checkpoint.estimatedDuration
+            });
+        }
+
+        // Create user curriculum
+        const [userCurriculum] = await tx
+          .insert(userCurriculums)
+          .values({
+            userId,
+            curriculumId: courseCurriculum.id,
+            courseId,
+            progress: 0,
+            startedAt: new Date(),
+            lastAccessedAt: new Date()
+          })
+          .returning();
+
+        // Initialize skill progress for all skills
+        for (const skill of createdSkills) {
+          await tx
+            .insert(userSkillProgress)
+            .values({
+              userCurriculumId: userCurriculum.id,
+              skillId: skill.id,
+              progress: 0,
+              masteryLevel: 'beginner',
+              attempts: 0,
+              averageScore: 0,
+              lastAttemptAt: null
+            });
+        }
+
+        // Create tasks in database
+        const createdTasks: UserCurriculumTask[] = [];
+        for (const task of generatedTasks) {
+          const [createdTask] = await tx
+            .insert(userCurriculumTasks)
+            .values({
+              userCurriculumId: userCurriculum.id,
+              skillId: task.skillIndices && task.skillIndices.length > 0 
+                ? createdSkills[task.skillIndices[0]]?.id || null 
+                : null,
+              moduleId: null,
+              titleEn: task.titleEn,
+              titleTr: task.titleTr,
+              descriptionEn: task.descriptionEn,
+              descriptionTr: task.descriptionTr,
+              taskType: task.taskType,
+              scheduledDate: task.scheduledDate,
+              estimatedDuration: task.estimatedDuration,
+              isCompleted: false,
+              completedAt: null,
+              score: null
+            })
+            .returning();
+          createdTasks.push(createdTask);
+        }
+
+        return {
+          curriculum: userCurriculum,
+          tasks: createdTasks,
+          skills: createdSkills
+        };
+      });
+    } catch (error) {
+      console.error('Error generating and syncing curriculum:', error);
+      throw new Error(`Failed to generate curriculum: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
 

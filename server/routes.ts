@@ -5046,5 +5046,328 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // ==================== AI Curriculum System Routes ====================
+  
+  // Generate curriculum for a course
+  app.post("/api/curriculum/generate", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { courseId } = req.body;
+      if (!courseId) {
+        return res.status(400).json({ message: "Course ID is required" });
+      }
+      
+      const result = await storage.generateAndSyncCurriculum(req.user.id, courseId);
+      res.json(result);
+    } catch (error) {
+      console.error('Curriculum generation error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate curriculum", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Get user's curricula
+  app.get("/api/user/curricula", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const curricula = await storage.getUserCurriculums(req.user.id);
+      res.json(curricula);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch curricula" });
+    }
+  });
+
+  // Get specific user curriculum with details
+  app.get("/api/user/curriculum/:userCurriculumId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCurriculumId = parseInt(req.params.userCurriculumId);
+      if (isNaN(userCurriculumId)) {
+        return res.status(400).json({ message: "Invalid curriculum ID" });
+      }
+      
+      // Get user curriculum
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      
+      if (!userCurriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+      
+      // Get related data
+      const skills = await storage.getCurriculumSkills(userCurriculum.curriculumId);
+      const modules = await storage.getCurriculumModules(userCurriculum.curriculumId);
+      const checkpoints = await storage.getCurriculumCheckpoints(userCurriculum.curriculumId);
+      const tasks = await storage.getUserCurriculumTasks(userCurriculumId);
+      const skillProgress = await storage.getUserSkillProgress(userCurriculumId);
+      
+      res.json({
+        curriculum: userCurriculum,
+        skills,
+        modules,
+        checkpoints,
+        tasks,
+        skillProgress
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch curriculum details" });
+    }
+  });
+
+  // Get curriculum tasks for user
+  app.get("/api/user/curriculum/:userCurriculumId/tasks", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCurriculumId = parseInt(req.params.userCurriculumId);
+      if (isNaN(userCurriculumId)) {
+        return res.status(400).json({ message: "Invalid curriculum ID" });
+      }
+      
+      // Verify ownership
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!userCurriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+      
+      const tasks = await storage.getUserCurriculumTasks(userCurriculumId);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+  });
+
+  // Complete a curriculum task
+  app.post("/api/user/curriculum/task/:taskId/complete", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.taskId);
+      if (isNaN(taskId)) {
+        return res.status(400).json({ message: "Invalid task ID" });
+      }
+      
+      // Verify task exists and ownership
+      const task = await storage.getUserCurriculumTask(taskId);
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const ownsTask = userCurriculums.some(uc => uc.id === task.userCurriculumId);
+      if (!ownsTask) {
+        return res.status(403).json({ message: "Forbidden: Cannot access this task" });
+      }
+      
+      const { score } = req.body;
+      const updatedTask = await storage.completeUserCurriculumTask(taskId, score);
+      res.json(updatedTask);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to complete task" });
+    }
+  });
+
+  // Update curriculum task
+  app.patch("/api/user/curriculum/task/:taskId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const taskId = parseInt(req.params.taskId);
+      if (isNaN(taskId)) {
+        return res.status(400).json({ message: "Invalid task ID" });
+      }
+      
+      // Verify task exists and ownership
+      const task = await storage.getUserCurriculumTask(taskId);
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const ownsTask = userCurriculums.some(uc => uc.id === task.userCurriculumId);
+      if (!ownsTask) {
+        return res.status(403).json({ message: "Forbidden: Cannot access this task" });
+      }
+      
+      const updatedTask = await storage.updateUserCurriculumTask(taskId, req.body);
+      res.json(updatedTask);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update task" });
+    }
+  });
+
+  // Update curriculum progress
+  app.patch("/api/user/curriculum/:userCurriculumId/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCurriculumId = parseInt(req.params.userCurriculumId);
+      if (isNaN(userCurriculumId)) {
+        return res.status(400).json({ message: "Invalid curriculum ID" });
+      }
+      
+      // Verify ownership
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!userCurriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+      
+      const { progress } = req.body;
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return res.status(400).json({ message: "Invalid progress value (must be 0-100)" });
+      }
+      
+      const updated = await storage.updateUserCurriculumProgress(userCurriculumId, progress);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+
+  // Get skill progress
+  app.get("/api/user/curriculum/:userCurriculumId/skill-progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCurriculumId = parseInt(req.params.userCurriculumId);
+      if (isNaN(userCurriculumId)) {
+        return res.status(400).json({ message: "Invalid curriculum ID" });
+      }
+      
+      // Verify ownership
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!userCurriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+      
+      const skillProgress = await storage.getUserSkillProgress(userCurriculumId);
+      res.json(skillProgress);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch skill progress" });
+    }
+  });
+
+  // Update skill progress
+  app.patch("/api/user/skill-progress/:progressId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const progressId = parseInt(req.params.progressId);
+      if (isNaN(progressId)) {
+        return res.status(400).json({ message: "Invalid progress ID" });
+      }
+      
+      // First get all user curricula to verify ownership
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculumIds = userCurriculums.map(uc => uc.id);
+      
+      // Get all skill progress for user's curricula to verify this progress belongs to user
+      let ownsProgress = false;
+      for (const curriculumId of userCurriculumIds) {
+        const progressList = await storage.getUserSkillProgress(curriculumId);
+        if (progressList.some(p => p.id === progressId)) {
+          ownsProgress = true;
+          break;
+        }
+      }
+      
+      if (!ownsProgress) {
+        return res.status(404).json({ message: "Skill progress not found" });
+      }
+      
+      const updated = await storage.updateUserSkillProgress(progressId, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update skill progress" });
+    }
+  });
+
+  // Get skill assessments
+  app.get("/api/user/curriculum/:userCurriculumId/assessments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCurriculumId = parseInt(req.params.userCurriculumId);
+      if (isNaN(userCurriculumId)) {
+        return res.status(400).json({ message: "Invalid curriculum ID" });
+      }
+      
+      // Verify ownership
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!userCurriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+      
+      const assessments = await storage.getSkillAssessments(userCurriculumId);
+      res.json(assessments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch assessments" });
+    }
+  });
+
+  // Create skill assessment
+  app.post("/api/user/skill-assessment", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { userCurriculumId, skillId, score, assessmentType, questionDetails } = req.body;
+      
+      if (!userCurriculumId || !skillId || score === undefined) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Verify ownership
+      const userCurriculums = await storage.getUserCurriculums(req.user.id);
+      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!userCurriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+      
+      const assessment = await storage.createSkillAssessment({
+        userId: req.user.id,
+        userCurriculumId,
+        skillId,
+        score,
+        assessmentType: assessmentType || "quiz",
+        questionDetails
+      });
+      
+      res.json(assessment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create assessment" });
+    }
+  });
+
   return httpServer;
 }

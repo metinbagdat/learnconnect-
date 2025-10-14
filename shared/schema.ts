@@ -580,6 +580,145 @@ export const tytStudyStreaks = pgTable("tyt_study_streaks", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// AI-Driven Curriculum System
+export const courseCurriculums = pgTable("course_curriculums", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  titleEn: text("title_en").notNull(),
+  titleTr: text("title_tr").notNull(),
+  descriptionEn: text("description_en").notNull(),
+  descriptionTr: text("description_tr").notNull(),
+  goals: text("goals").array().default([]), // Learning goals
+  prerequisites: text("prerequisites").array().default([]), // Required prior knowledge
+  totalDuration: integer("total_duration_hours"), // Total curriculum duration
+  difficultyLevel: text("difficulty_level"), // Beginner, Intermediate, Advanced
+  isAiGenerated: boolean("is_ai_generated").default(true),
+  aiModel: text("ai_model"), // Which AI model generated this (gpt-4, claude-3, etc.)
+  generationPrompt: text("generation_prompt"), // Prompt used for generation
+  metadata: jsonb("metadata").default({}), // Additional curriculum data
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const curriculumSkills = pgTable("curriculum_skills", {
+  id: serial("id").primaryKey(),
+  curriculumId: integer("curriculum_id").notNull().references(() => courseCurriculums.id),
+  titleEn: text("title_en").notNull(),
+  titleTr: text("title_tr").notNull(),
+  descriptionEn: text("description_en").notNull(),
+  descriptionTr: text("description_tr").notNull(),
+  category: text("category").notNull(), // technical, analytical, practical, conceptual
+  estimatedHours: integer("estimated_hours"), // Hours to master this skill
+  order: integer("order").notNull().default(0), // Display order
+  prerequisites: integer("prerequisites").array().default([]), // IDs of prerequisite skills
+  assessmentCriteria: text("assessment_criteria").array().default([]), // How to assess mastery
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const curriculumModules = pgTable("curriculum_modules", {
+  id: serial("id").primaryKey(),
+  curriculumId: integer("curriculum_id").notNull().references(() => courseCurriculums.id),
+  skillId: integer("skill_id").references(() => curriculumSkills.id), // Optional: link to skill being taught
+  titleEn: text("title_en").notNull(),
+  titleTr: text("title_tr").notNull(),
+  descriptionEn: text("description_en").notNull(),
+  descriptionTr: text("description_tr").notNull(),
+  order: integer("order").notNull().default(0),
+  estimatedDuration: integer("estimated_duration_hours"),
+  learningObjectives: text("learning_objectives").array().default([]),
+  resources: jsonb("resources").default({}), // Links, materials, references
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userCurriculums = pgTable("user_curriculums", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  curriculumId: integer("curriculum_id").notNull().references(() => courseCurriculums.id),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  status: text("status").default("active"), // active, paused, completed
+  progress: integer("progress").default(0), // 0-100 percentage
+  startDate: date("start_date").notNull().defaultNow(),
+  targetCompletionDate: date("target_completion_date"),
+  actualCompletionDate: date("actual_completion_date"),
+  weeklyStudyHours: integer("weekly_study_hours").default(10), // User's available time
+  pacePreference: text("pace_preference").default("normal"), // slow, normal, fast, intensive
+  adaptations: jsonb("adaptations").default({}), // AI-personalized adjustments
+  lastEvaluationDate: timestamp("last_evaluation_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userCurriculumTasks = pgTable("user_curriculum_tasks", {
+  id: serial("id").primaryKey(),
+  userCurriculumId: integer("user_curriculum_id").notNull().references(() => userCurriculums.id),
+  dailyTaskId: integer("daily_task_id").references(() => dailyStudyTasks.id), // Link to daily task
+  curriculumModuleId: integer("curriculum_module_id").references(() => curriculumModules.id),
+  skillId: integer("skill_id").references(() => curriculumSkills.id),
+  taskType: text("task_type").notNull(), // study, practice, assessment, checkpoint
+  titleEn: text("title_en").notNull(),
+  titleTr: text("title_tr").notNull(),
+  descriptionEn: text("description_en"),
+  descriptionTr: text("description_tr"),
+  scheduledDate: date("scheduled_date"),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  skillProgress: integer("skill_progress"), // Contribution to skill mastery (0-100)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userSkillProgress = pgTable("user_skill_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  skillId: integer("skill_id").notNull().references(() => curriculumSkills.id),
+  userCurriculumId: integer("user_curriculum_id").notNull().references(() => userCurriculums.id),
+  masteryLevel: integer("mastery_level").default(0), // 0-100 scale
+  assessmentScore: integer("assessment_score"), // Latest assessment score
+  practiceHours: integer("practice_hours").default(0), // Total practice time
+  lastPracticeDate: timestamp("last_practice_date"),
+  strengthAreas: text("strength_areas").array().default([]),
+  improvementAreas: text("improvement_areas").array().default([]),
+  aiRecommendations: text("ai_recommendations").array().default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const curriculumCheckpoints = pgTable("curriculum_checkpoints", {
+  id: serial("id").primaryKey(),
+  curriculumId: integer("curriculum_id").notNull().references(() => courseCurriculums.id),
+  titleEn: text("title_en").notNull(),
+  titleTr: text("title_tr").notNull(),
+  descriptionEn: text("description_en").notNull(),
+  descriptionTr: text("description_tr").notNull(),
+  checkpointType: text("checkpoint_type").notNull(), // quiz, project, skill_assessment, milestone
+  order: integer("order").notNull().default(0),
+  requiredProgress: integer("required_progress"), // Progress % needed to unlock
+  requiredSkills: integer("required_skills").array().default([]), // Skill IDs required
+  passingScore: integer("passing_score"), // Minimum score to pass
+  estimatedDuration: integer("estimated_duration_minutes"),
+  resources: jsonb("resources").default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const skillAssessments = pgTable("skill_assessments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  skillId: integer("skill_id").notNull().references(() => curriculumSkills.id),
+  checkpointId: integer("checkpoint_id").references(() => curriculumCheckpoints.id),
+  userCurriculumId: integer("user_curriculum_id").notNull().references(() => userCurriculums.id),
+  assessmentType: text("assessment_type").notNull(), // quiz, practical, project, ai_evaluation
+  score: integer("score").notNull(), // 0-100
+  totalQuestions: integer("total_questions"),
+  correctAnswers: integer("correct_answers"),
+  timeSpent: integer("time_spent_minutes"),
+  feedback: text("feedback"),
+  aiFeedback: text("ai_feedback"), // AI-generated personalized feedback
+  strengths: text("strengths").array().default([]),
+  weaknesses: text("weaknesses").array().default([]),
+  recommendations: text("recommendations").array().default([]),
+  completedAt: timestamp("completed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -717,6 +856,65 @@ export const insertTytStudyStreakSchema = createInsertSchema(tytStudyStreaks, {
 }).omit({ 
   id: true, 
   createdAt: true 
+});
+
+// AI-Driven Curriculum System insert schemas
+export const insertCourseCurriculumSchema = createInsertSchema(courseCurriculums, {
+  difficultyLevel: z.enum(["Beginner", "Intermediate", "Advanced"]).optional(),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertCurriculumSkillSchema = createInsertSchema(curriculumSkills, {
+  category: z.enum(["technical", "analytical", "practical", "conceptual"]),
+}).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertCurriculumModuleSchema = createInsertSchema(curriculumModules).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertUserCurriculumSchema = createInsertSchema(userCurriculums, {
+  status: z.enum(["active", "paused", "completed"]),
+  pacePreference: z.enum(["slow", "normal", "fast", "intensive"]),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertUserCurriculumTaskSchema = createInsertSchema(userCurriculumTasks, {
+  taskType: z.enum(["study", "practice", "assessment", "checkpoint"]),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  completedAt: true 
+});
+
+export const insertUserSkillProgressSchema = createInsertSchema(userSkillProgress).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertCurriculumCheckpointSchema = createInsertSchema(curriculumCheckpoints, {
+  checkpointType: z.enum(["quiz", "project", "skill_assessment", "milestone"]),
+}).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments, {
+  assessmentType: z.enum(["quiz", "practical", "project", "ai_evaluation"]),
+}).omit({ 
+  id: true, 
+  createdAt: true, 
+  completedAt: true 
 });
 
 // Adaptive Learning Reward System insert schemas
@@ -1304,3 +1502,23 @@ export type InsertDailyStudyTask = z.infer<typeof insertDailyStudyTaskSchema>;
 export type InsertTytStudySession = z.infer<typeof insertTytStudySessionSchema>;
 export type InsertTytStudyGoal = z.infer<typeof insertTytStudyGoalSchema>;
 export type InsertTytStudyStreak = z.infer<typeof insertTytStudyStreakSchema>;
+
+// AI-Driven Curriculum System type exports
+export type CourseCurriculum = typeof courseCurriculums.$inferSelect;
+export type CurriculumSkill = typeof curriculumSkills.$inferSelect;
+export type CurriculumModule = typeof curriculumModules.$inferSelect;
+export type UserCurriculum = typeof userCurriculums.$inferSelect;
+export type UserCurriculumTask = typeof userCurriculumTasks.$inferSelect;
+export type UserSkillProgress = typeof userSkillProgress.$inferSelect;
+export type CurriculumCheckpoint = typeof curriculumCheckpoints.$inferSelect;
+export type SkillAssessment = typeof skillAssessments.$inferSelect;
+
+// AI-Driven Curriculum Insert type exports
+export type InsertCourseCurriculum = z.infer<typeof insertCourseCurriculumSchema>;
+export type InsertCurriculumSkill = z.infer<typeof insertCurriculumSkillSchema>;
+export type InsertCurriculumModule = z.infer<typeof insertCurriculumModuleSchema>;
+export type InsertUserCurriculum = z.infer<typeof insertUserCurriculumSchema>;
+export type InsertUserCurriculumTask = z.infer<typeof insertUserCurriculumTaskSchema>;
+export type InsertUserSkillProgress = z.infer<typeof insertUserSkillProgressSchema>;
+export type InsertCurriculumCheckpoint = z.infer<typeof insertCurriculumCheckpointSchema>;
+export type InsertSkillAssessment = z.infer<typeof insertSkillAssessmentSchema>;

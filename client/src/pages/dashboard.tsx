@@ -11,6 +11,7 @@ import { AssignmentList } from "@/components/ui/assignment-list";
 import { CourseRecommendations } from "@/components/ui/course-recommendations";
 import { UserInterests } from "@/components/ui/user-interests";
 import { UserLevelCard } from "@/components/challenges/user-level-card";
+import { TodoList } from "@/components/ui/todo-list";
 import { InteractiveProgressBar } from "@/components/gamification/interactive-progress-bar";
 import { PlayfulLearningAnimations, FloatingMascot, AchievementCelebration as AchievementCelebrationComponent, LearningMascot, AchievementCelebration as AchievementType } from "@/components/animations/playful-learning-animations";
 import { AnimatedProgressBubbles, ProgressBubbleData } from "@/components/progress/animated-progress-bubbles";
@@ -827,11 +828,11 @@ export default function Dashboard() {
               </div>
             </div>
             
-            {/* Three-column layout */}
+            {/* Three-column layout with prominent To-Do List */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* User Interests */}
+              {/* To-Do List - Most Prominent Position */}
               <div className="md:col-span-1">
-                <UserInterests />
+                <TodoList showAddButton={true} maxHeight="600px" />
               </div>
               
               {/* AI Assistant */}

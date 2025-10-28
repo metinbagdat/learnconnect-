@@ -123,6 +123,59 @@ export const userBadges = pgTable("user_badges", {
   earnedAt: timestamp("earned_at").notNull().defaultNow(),
 });
 
+// File uploads table for handling images, documents, and essay submissions
+export const uploads = pgTable("uploads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  filename: text("filename").notNull(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(), // file size in bytes
+  path: text("path").notNull(), // storage path or URL
+  uploadType: text("upload_type", { enum: ["general", "avatar", "essay", "assignment", "document"] }).notNull().default("general"),
+  entityType: text("entity_type", { enum: ["course", "assignment", "essay", "user"] }), // optional entity association
+  entityId: integer("entity_id"), // reference to the associated entity
+  uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
+});
+
+// Essays table for essay tracking and submissions
+export const essays = pgTable("essays", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  courseId: integer("course_id").references(() => courses.id),
+  title: text("title").notNull(),
+  prompt: text("prompt"), // Essay prompt/question
+  content: text("content"), // Essay text content
+  fileId: integer("file_id").references(() => uploads.id), // Reference to uploads table if submitted as file
+  status: text("status", { enum: ["draft", "submitted", "reviewed", "graded"] }).notNull().default("draft"),
+  wordCount: integer("word_count"),
+  submittedAt: timestamp("submitted_at"),
+  reviewedAt: timestamp("reviewed_at"),
+  grade: integer("grade"),
+  aiFeedback: text("ai_feedback"), // AI-generated feedback from GPT-4
+  instructorFeedback: text("instructor_feedback"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Weekly study plans table for planning weekly study schedules
+export const weeklyStudyPlans = pgTable("weekly_study_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  weekStartDate: date("week_start_date").notNull(),
+  weekEndDate: date("week_end_date").notNull(),
+  totalPlannedHours: integer("total_planned_hours"),
+  totalActualHours: integer("total_actual_hours").default(0),
+  goals: text("goals").array().default([]),
+  priorities: text("priorities").array().default([]),
+  aiRecommendations: text("ai_recommendations"), // GPT-4 generated study recommendations
+  status: text("status", { enum: ["active", "completed", "archived"] }).default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueUserWeek: sql`UNIQUE (user_id, week_start_date)`, // Prevent duplicate weekly plans for same user
+}));
+
 export const courseRecommendations = pgTable("course_recommendations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -737,6 +790,9 @@ export const insertAssignmentSchema = createInsertSchema(assignments).omit({ id:
 export const insertUserAssignmentSchema = createInsertSchema(userAssignments).omit({ id: true, submittedAt: true });
 export const insertBadgeSchema = createInsertSchema(badges).omit({ id: true });
 export const insertUserBadgeSchema = createInsertSchema(userBadges).omit({ id: true, earnedAt: true });
+export const insertUploadSchema = createInsertSchema(uploads).omit({ id: true, uploadedAt: true });
+export const insertEssaySchema = createInsertSchema(essays).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWeeklyStudyPlanSchema = createInsertSchema(weeklyStudyPlans).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCourseRecommendationSchema = createInsertSchema(courseRecommendations).omit({ id: true, createdAt: true });
 export const insertLearningPathSchema = createInsertSchema(learningPaths).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertLearningPathStepSchema = createInsertSchema(learningPathSteps).omit({ id: true });
@@ -1522,3 +1578,11 @@ export type InsertUserCurriculumTask = z.infer<typeof insertUserCurriculumTaskSc
 export type InsertUserSkillProgress = z.infer<typeof insertUserSkillProgressSchema>;
 export type InsertCurriculumCheckpoint = z.infer<typeof insertCurriculumCheckpointSchema>;
 export type InsertSkillAssessment = z.infer<typeof insertSkillAssessmentSchema>;
+
+// New module type exports
+export type Upload = typeof uploads.$inferSelect;
+export type InsertUpload = z.infer<typeof insertUploadSchema>;
+export type Essay = typeof essays.$inferSelect;
+export type InsertEssay = z.infer<typeof insertEssaySchema>;
+export type WeeklyStudyPlan = typeof weeklyStudyPlans.$inferSelect;
+export type InsertWeeklyStudyPlan = z.infer<typeof insertWeeklyStudyPlanSchema>;

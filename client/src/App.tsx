@@ -39,6 +39,7 @@ import Checkout from "@/pages/checkout";
 import SubscriptionPage from "@/pages/subscription";
 import TytDashboard from "@/pages/tyt-dashboard";
 import MyCurriculumPage from "@/pages/my-curriculum";
+import EssaysPage from "@/pages/essays";
 
 function Router() {
   return (
@@ -82,6 +83,7 @@ function Router() {
       <ProtectedRoute path="/mentor-control-panel" component={MentorControlPanel} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/checkout/:courseId" component={Checkout} />
+      <ProtectedRoute path="/essays" component={EssaysPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

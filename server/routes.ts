@@ -34,7 +34,11 @@ import {
   insertDailyStudyTaskSchema,
   insertTytStudySessionSchema,
   insertTytStudyGoalSchema,
-  insertTytStudyStreakSchema
+  insertTytStudyStreakSchema,
+  // New feature schemas
+  insertUploadSchema,
+  insertEssaySchema,
+  insertWeeklyStudyPlanSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
@@ -5499,6 +5503,375 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       res.json(assessment);
     } catch (error) {
       res.status(500).json({ message: "Failed to create assessment" });
+    }
+  });
+
+  // ===========================
+  // FILE UPLOAD ROUTES
+  // ===========================
+  
+  // Get user's uploads
+  app.get("/api/uploads", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const uploadType = req.query.type as string | undefined;
+      const uploads = await storage.getUserUploads(req.user.id, uploadType);
+      res.json(uploads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch uploads" });
+    }
+  });
+
+  // Get specific upload
+  app.get("/api/uploads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const uploadId = parseInt(req.params.id);
+      const upload = await storage.getUpload(uploadId);
+      
+      if (!upload) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Verify ownership
+      if (upload.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(upload);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch upload" });
+    }
+  });
+
+  // Create upload metadata (actual file upload will be handled by multipart middleware later)
+  app.post("/api/uploads", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertUploadSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      const upload = await storage.createUpload(validatedData);
+      res.status(201).json(upload);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid upload data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create upload" });
+    }
+  });
+
+  // Delete upload
+  app.delete("/api/uploads/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const uploadId = parseInt(req.params.id);
+      const upload = await storage.getUpload(uploadId);
+      
+      if (!upload) {
+        return res.status(404).json({ message: "Upload not found" });
+      }
+      
+      // Verify ownership
+      if (upload.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const deleted = await storage.deleteUpload(uploadId);
+      if (deleted) {
+        res.json({ message: "Upload deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to delete upload" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete upload" });
+    }
+  });
+
+  // ===========================
+  // ESSAY ROUTES
+  // ===========================
+  
+  // Get user's essays
+  app.get("/api/essays", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const courseId = req.query.courseId ? parseInt(req.query.courseId as string) : undefined;
+      const essays = await storage.getUserEssays(req.user.id, courseId);
+      res.json(essays);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch essays" });
+    }
+  });
+
+  // Get specific essay
+  app.get("/api/essays/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const essayId = parseInt(req.params.id);
+      const essay = await storage.getEssay(essayId);
+      
+      if (!essay) {
+        return res.status(404).json({ message: "Essay not found" });
+      }
+      
+      // Verify ownership
+      if (essay.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(essay);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch essay" });
+    }
+  });
+
+  // Create essay
+  app.post("/api/essays", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertEssaySchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      // Validate that essay has either content or fileId
+      if (!validatedData.content && !validatedData.fileId) {
+        return res.status(400).json({ message: "Essay must have either content or file" });
+      }
+      
+      const essay = await storage.createEssay(validatedData);
+      res.status(201).json(essay);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid essay data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create essay" });
+    }
+  });
+
+  // Update essay
+  app.patch("/api/essays/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const essayId = parseInt(req.params.id);
+      const essay = await storage.getEssay(essayId);
+      
+      if (!essay) {
+        return res.status(404).json({ message: "Essay not found" });
+      }
+      
+      // Verify ownership
+      if (essay.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const updated = await storage.updateEssay(essayId, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update essay" });
+    }
+  });
+
+  // Submit essay
+  app.post("/api/essays/:id/submit", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const essayId = parseInt(req.params.id);
+      const essay = await storage.getEssay(essayId);
+      
+      if (!essay) {
+        return res.status(404).json({ message: "Essay not found" });
+      }
+      
+      // Verify ownership
+      if (essay.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const submitted = await storage.submitEssay(essayId);
+      
+      // Generate AI feedback if content exists
+      if (submitted && essay.content) {
+        const aiFeedback = await storage.generateAiFeedback(essayId, essay.content);
+        const withFeedback = await storage.updateEssay(essayId, { 
+          aiFeedback,
+          reviewedAt: new Date()
+        });
+        return res.json(withFeedback);
+      }
+      
+      res.json(submitted);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to submit essay" });
+    }
+  });
+
+  // ===========================
+  // WEEKLY STUDY PLAN ROUTES
+  // ===========================
+  
+  // Get user's weekly study plans
+  app.get("/api/weekly-study-plans", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const plans = await storage.getUserWeeklyStudyPlans(req.user.id);
+      res.json(plans);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch weekly study plans" });
+    }
+  });
+
+  // Get active weekly study plan
+  app.get("/api/weekly-study-plans/active", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const plan = await storage.getActiveWeeklyPlan(req.user.id);
+      res.json(plan || null);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch active weekly study plan" });
+    }
+  });
+
+  // Get specific weekly study plan
+  app.get("/api/weekly-study-plans/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const planId = parseInt(req.params.id);
+      const plan = await storage.getWeeklyStudyPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ message: "Weekly study plan not found" });
+      }
+      
+      // Verify ownership
+      if (plan.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch weekly study plan" });
+    }
+  });
+
+  // Create weekly study plan
+  app.post("/api/weekly-study-plans", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertWeeklyStudyPlanSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      
+      const plan = await storage.createWeeklyStudyPlan(validatedData);
+      
+      // Generate AI recommendations if requested
+      if (req.body.generateRecommendations) {
+        const aiRecommendations = await storage.generateWeeklyAiRecommendations(req.user.id, plan.id);
+        const withRecommendations = await storage.updateWeeklyStudyPlan(plan.id, { aiRecommendations });
+        return res.status(201).json(withRecommendations);
+      }
+      
+      res.status(201).json(plan);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid weekly study plan data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create weekly study plan" });
+    }
+  });
+
+  // Update weekly study plan
+  app.patch("/api/weekly-study-plans/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const planId = parseInt(req.params.id);
+      const plan = await storage.getWeeklyStudyPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ message: "Weekly study plan not found" });
+      }
+      
+      // Verify ownership
+      if (plan.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const updated = await storage.updateWeeklyStudyPlan(planId, req.body);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update weekly study plan" });
+    }
+  });
+
+  // Complete weekly study plan
+  app.post("/api/weekly-study-plans/:id/complete", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const planId = parseInt(req.params.id);
+      const plan = await storage.getWeeklyStudyPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ message: "Weekly study plan not found" });
+      }
+      
+      // Verify ownership
+      if (plan.userId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const completed = await storage.completeWeeklyPlan(planId);
+      res.json(completed);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to complete weekly study plan" });
     }
   });
 

@@ -105,7 +105,7 @@ export default function EssaysPage() {
       return;
     }
 
-    const wordCount = newEssay.content.trim().split(/\s+/).length;
+    const wordCount = newEssay.content.trim().split(/\s+/).filter(w => w).length;
     createEssayMutation.mutate({ ...newEssay, wordCount } as any);
   };
 
@@ -255,7 +255,7 @@ export default function EssaysPage() {
                     : 'Create your first essay and receive AI-powered feedback'
                   }
                 </p>
-                <Button onClick={() => setShowCreateForm(true)}>
+                <Button onClick={() => setShowCreateForm(true)} data-testid="button-create-first-essay">
                   {language === 'tr' ? 'İlk Denemenizi Oluşturun' : 'Create Your First Essay'}
                 </Button>
               </CardContent>
@@ -431,7 +431,7 @@ export default function EssaysPage() {
         </Dialog>
 
         {/* View Essay Dialog */}
-        <Dialog open={!!selectedEssay} onOpenChange={() => setSelectedEssay(null)}>
+        <Dialog open={!!selectedEssay} onOpenChange={(open) => !open && setSelectedEssay(null)}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             {selectedEssay && (
               <>
@@ -496,6 +496,7 @@ export default function EssaysPage() {
                   <Button
                     variant="outline"
                     onClick={() => setSelectedEssay(null)}
+                    data-testid="button-close-essay-dialog"
                   >
                     {language === 'tr' ? 'Kapat' : 'Close'}
                   </Button>

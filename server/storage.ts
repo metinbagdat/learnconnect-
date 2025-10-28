@@ -219,7 +219,20 @@ import {
   insertUserCurriculumTaskSchema,
   insertUserSkillProgressSchema,
   insertCurriculumCheckpointSchema,
-  insertSkillAssessmentSchema
+  insertSkillAssessmentSchema,
+  // New feature tables
+  type Upload,
+  type InsertUpload,
+  type Essay,
+  type InsertEssay,
+  type WeeklyStudyPlan,
+  type InsertWeeklyStudyPlan,
+  uploads,
+  essays,
+  weeklyStudyPlans,
+  insertUploadSchema,
+  insertEssaySchema,
+  insertWeeklyStudyPlanSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -561,6 +574,29 @@ export interface IStorage {
     tasks: UserCurriculumTask[];
     skills: CurriculumSkill[];
   }>;
+
+  // File Upload operations
+  getUpload(id: number): Promise<Upload | undefined>;
+  getUserUploads(userId: number, uploadType?: string): Promise<Upload[]>;
+  createUpload(upload: InsertUpload): Promise<Upload>;
+  deleteUpload(id: number): Promise<boolean>;
+
+  // Essay operations
+  getEssay(id: number): Promise<Essay | undefined>;
+  getUserEssays(userId: number, courseId?: number): Promise<Essay[]>;
+  createEssay(essay: InsertEssay): Promise<Essay>;
+  updateEssay(id: number, data: Partial<Essay>): Promise<Essay | undefined>;
+  submitEssay(id: number): Promise<Essay | undefined>;
+  generateAiFeedback(essayId: number, content: string): Promise<string>;
+  
+  // Weekly Study Plan operations
+  getWeeklyStudyPlan(id: number): Promise<WeeklyStudyPlan | undefined>;
+  getUserWeeklyStudyPlans(userId: number): Promise<WeeklyStudyPlan[]>;
+  getActiveWeeklyPlan(userId: number): Promise<WeeklyStudyPlan | undefined>;
+  createWeeklyStudyPlan(plan: InsertWeeklyStudyPlan): Promise<WeeklyStudyPlan>;
+  updateWeeklyStudyPlan(id: number, data: Partial<WeeklyStudyPlan>): Promise<WeeklyStudyPlan | undefined>;
+  completeWeeklyPlan(id: number): Promise<WeeklyStudyPlan | undefined>;
+  generateWeeklyAiRecommendations(userId: number, planId: number): Promise<string>;
 
   // Session store
   sessionStore: SessionStore;
@@ -3638,6 +3674,127 @@ export class DatabaseStorage implements IStorage {
       console.error('Error generating and syncing curriculum:', error);
       throw new Error(`Failed to generate curriculum: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  async getUpload(id: number): Promise<Upload | undefined> {
+    const [upload] = await db.select().from(uploads).where(eq(uploads.id, id)).limit(1);
+    return upload;
+  }
+
+  async getUserUploads(userId: number, uploadType?: string): Promise<Upload[]> {
+    if (uploadType) {
+      return await db.select().from(uploads)
+        .where(and(eq(uploads.userId, userId), eq(uploads.uploadType, uploadType)))
+        .orderBy(desc(uploads.uploadedAt));
+    }
+    return await db.select().from(uploads)
+      .where(eq(uploads.userId, userId))
+      .orderBy(desc(uploads.uploadedAt));
+  }
+
+  async createUpload(upload: InsertUpload): Promise<Upload> {
+    const [created] = await db.insert(uploads).values(upload).returning();
+    return created;
+  }
+
+  async deleteUpload(id: number): Promise<boolean> {
+    const result = await db.delete(uploads).where(eq(uploads.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async getEssay(id: number): Promise<Essay | undefined> {
+    const [essay] = await db.select().from(essays).where(eq(essays.id, id)).limit(1);
+    return essay;
+  }
+
+  async getUserEssays(userId: number, courseId?: number): Promise<Essay[]> {
+    if (courseId) {
+      return await db.select().from(essays)
+        .where(and(eq(essays.userId, userId), eq(essays.courseId, courseId)))
+        .orderBy(desc(essays.createdAt));
+    }
+    return await db.select().from(essays)
+      .where(eq(essays.userId, userId))
+      .orderBy(desc(essays.createdAt));
+  }
+
+  async createEssay(essay: InsertEssay): Promise<Essay> {
+    const [created] = await db.insert(essays).values(essay).returning();
+    return created;
+  }
+
+  async updateEssay(id: number, data: Partial<Essay>): Promise<Essay | undefined> {
+    const [updated] = await db.update(essays)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(essays.id, id))
+      .returning();
+    return updated;
+  }
+
+  async submitEssay(id: number): Promise<Essay | undefined> {
+    const [updated] = await db.update(essays)
+      .set({ 
+        status: 'submitted', 
+        submittedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(essays.id, id))
+      .returning();
+    return updated;
+  }
+
+  async generateAiFeedback(essayId: number, content: string): Promise<string> {
+    return "AI feedback feature requires OpenAI API key configuration. Placeholder feedback returned.";
+  }
+
+  async getWeeklyStudyPlan(id: number): Promise<WeeklyStudyPlan | undefined> {
+    const [plan] = await db.select().from(weeklyStudyPlans).where(eq(weeklyStudyPlans.id, id)).limit(1);
+    return plan;
+  }
+
+  async getUserWeeklyStudyPlans(userId: number): Promise<WeeklyStudyPlan[]> {
+    return await db.select().from(weeklyStudyPlans)
+      .where(eq(weeklyStudyPlans.userId, userId))
+      .orderBy(desc(weeklyStudyPlans.weekStartDate));
+  }
+
+  async getActiveWeeklyPlan(userId: number): Promise<WeeklyStudyPlan | undefined> {
+    const [plan] = await db.select().from(weeklyStudyPlans)
+      .where(and(
+        eq(weeklyStudyPlans.userId, userId),
+        eq(weeklyStudyPlans.status, 'active')
+      ))
+      .orderBy(desc(weeklyStudyPlans.weekStartDate))
+      .limit(1);
+    return plan;
+  }
+
+  async createWeeklyStudyPlan(plan: InsertWeeklyStudyPlan): Promise<WeeklyStudyPlan> {
+    const [created] = await db.insert(weeklyStudyPlans).values(plan).returning();
+    return created;
+  }
+
+  async updateWeeklyStudyPlan(id: number, data: Partial<WeeklyStudyPlan>): Promise<WeeklyStudyPlan | undefined> {
+    const [updated] = await db.update(weeklyStudyPlans)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(weeklyStudyPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async completeWeeklyPlan(id: number): Promise<WeeklyStudyPlan | undefined> {
+    const [updated] = await db.update(weeklyStudyPlans)
+      .set({ 
+        status: 'completed',
+        updatedAt: new Date()
+      })
+      .where(eq(weeklyStudyPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async generateWeeklyAiRecommendations(userId: number, planId: number): Promise<string> {
+    return "AI recommendations feature requires OpenAI API key configuration. Placeholder recommendations returned.";
   }
 }
 

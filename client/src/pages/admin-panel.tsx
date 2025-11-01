@@ -2,9 +2,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { AddTurkishCourses } from "@/components/ui/add-turkish-courses";
+import { CategoryManager } from "@/components/admin/category-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Shield, Settings, Database, Book } from "lucide-react";
+import { Loader2, Shield, Settings, Database, Book, FolderTree } from "lucide-react";
 import { Redirect } from "wouter";
 
 export default function AdminPanel() {
@@ -47,8 +48,12 @@ export default function AdminPanel() {
             </div>
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-6">
-              <Tabs defaultValue="courses">
-                <TabsList className="grid w-full grid-cols-3">
+              <Tabs defaultValue="categories">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="categories">
+                    <FolderTree className="h-4 w-4 mr-2" />
+                    Categories
+                  </TabsTrigger>
                   <TabsTrigger value="courses">
                     <Book className="h-4 w-4 mr-2" />
                     Courses
@@ -63,26 +68,15 @@ export default function AdminPanel() {
                   </TabsTrigger>
                 </TabsList>
                 
+                <TabsContent value="categories" className="mt-6">
+                  <CategoryManager />
+                </TabsContent>
+                
                 <TabsContent value="courses" className="mt-6 space-y-6">
                   {/* Course Administration */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6">
                     {/* Add Turkish University Entrance Exam Courses */}
                     <AddTurkishCourses />
-                    
-                    {/* Course Categories Management */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Course Categories</CardTitle>
-                        <CardDescription>
-                          Manage and organize course categories
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          Feature coming soon - you'll be able to add, edit, and organize course categories.
-                        </p>
-                      </CardContent>
-                    </Card>
                   </div>
                 </TabsContent>
                 

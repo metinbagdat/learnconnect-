@@ -1604,3 +1604,12 @@ export type Essay = typeof essays.$inferSelect;
 export type InsertEssay = z.infer<typeof insertEssaySchema>;
 export type WeeklyStudyPlan = typeof weeklyStudyPlans.$inferSelect;
 export type InsertWeeklyStudyPlan = z.infer<typeof insertWeeklyStudyPlanSchema>;
+
+// Course category type exports
+export const insertCourseCategorySchema = createInsertSchema(courseCategories).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+export type CourseCategory = typeof courseCategories.$inferSelect;
+export type InsertCourseCategory = z.infer<typeof insertCourseCategorySchema>;

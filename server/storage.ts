@@ -282,6 +282,15 @@ export interface IStorage {
   updateCourse(id: number, data: Partial<Course>): Promise<Course | undefined>;
   getAiGeneratedCourses(): Promise<Course[]>;
   
+  // Course category operations
+  getCategories(): Promise<CourseCategory[]>;
+  getCategory(id: number): Promise<CourseCategory | undefined>;
+  createCategory(category: InsertCourseCategory): Promise<CourseCategory>;
+  updateCategory(id: number, data: Partial<CourseCategory>): Promise<CourseCategory | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
+  getCategoryTree(): Promise<CourseCategory[]>;
+  getCoursesInCategory(categoryId: number): Promise<Course[]>;
+  
   // Module operations
   getModules(courseId: number): Promise<Module[]>;
   createModule(module: InsertModule): Promise<Module>;

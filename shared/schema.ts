@@ -23,7 +23,8 @@ export const courses = pgTable("courses", {
   titleTr: text("title_tr").notNull().default(""),
   descriptionEn: text("description_en").notNull().default(""),
   descriptionTr: text("description_tr").notNull().default(""),
-  category: text("category").notNull(),
+  category: text("category").notNull(), // Legacy text category - kept for backwards compatibility
+  categoryId: integer("category_id").references(() => courseCategories.id, { onDelete: 'set null' }), // New: references courseCategories table
   imageUrl: text("image_url"),
   moduleCount: integer("module_count").notNull().default(1),
   durationHours: integer("duration_hours"),
@@ -175,6 +176,23 @@ export const weeklyStudyPlans = pgTable("weekly_study_plans", {
 }, (table) => ({
   uniqueUserWeek: sql`UNIQUE (user_id, week_start_date)`, // Prevent duplicate weekly plans for same user
 }));
+
+// Course categories table for hierarchical organization (e.g., Math → Algebra → Linear Algebra)
+export const courseCategories = pgTable("course_categories", {
+  id: serial("id").primaryKey(),
+  nameEn: text("name_en").notNull(),
+  nameTr: text("name_tr").notNull(),
+  descriptionEn: text("description_en"),
+  descriptionTr: text("description_tr"),
+  parentCategoryId: integer("parent_category_id").references((): any => courseCategories.id, { onDelete: 'set null' }), // null for root categories
+  icon: text("icon"), // icon name from lucide-react or URL
+  color: text("color").default("#3B82F6"), // hex color for UI theming
+  order: integer("order").notNull().default(0), // display order within same parent
+  depth: integer("depth").notNull().default(0), // 0 = root category, 1 = subcategory, etc.
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
 export const courseRecommendations = pgTable("course_recommendations", {
   id: serial("id").primaryKey(),

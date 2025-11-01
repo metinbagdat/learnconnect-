@@ -69,8 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${user.displayName}`,
       });
       
-      // Manually redirect to main dashboard page (protected route)
-      window.location.href = '/';
+      // Redirect admin users to admin panel, others to dashboard
+      window.location.href = user.role === 'admin' ? '/admin-panel' : '/';
     },
     onError: (error: Error) => {
       toast({
@@ -102,8 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome to EduLearn, ${user.displayName}`,
       });
       
-      // Manually redirect to main dashboard page (protected route)
-      window.location.href = '/';
+      // Redirect admin users to admin panel, others to dashboard
+      window.location.href = user.role === 'admin' ? '/admin-panel' : '/';
     },
     onError: (error: Error) => {
       toast({

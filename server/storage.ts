@@ -108,6 +108,11 @@ import {
   type InsertLearningMilestone,
   type EmojiReaction,
   type InsertEmojiReaction,
+  // Course category types
+  type CourseCategory,
+  type InsertCourseCategory,
+  courseCategories,
+  insertCourseCategorySchema,
   // Mentor and Program types
   type Mentor,
   type InsertMentor,
@@ -923,6 +928,48 @@ export class DatabaseStorage implements IStorage {
       .from(courses)
       .where(eq(courses.isAiGenerated, true))
       .orderBy(desc(courses.createdAt));
+  }
+  
+  // Course category operations
+  async getCategories(): Promise<CourseCategory[]> {
+    return db.select().from(courseCategories).where(eq(courseCategories.isActive, true)).orderBy(courseCategories.order);
+  }
+  
+  async getCategory(id: number): Promise<CourseCategory | undefined> {
+    const [category] = await db.select().from(courseCategories).where(eq(courseCategories.id, id));
+    return category;
+  }
+  
+  async createCategory(category: InsertCourseCategory): Promise<CourseCategory> {
+    const [newCategory] = await db.insert(courseCategories).values(category).returning();
+    return newCategory;
+  }
+  
+  async updateCategory(id: number, data: Partial<CourseCategory>): Promise<CourseCategory | undefined> {
+    const [updated] = await db.update(courseCategories)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(courseCategories.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteCategory(id: number): Promise<boolean> {
+    // Soft delete - just mark as inactive
+    const result = await db.update(courseCategories)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(courseCategories.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+  
+  async getCategoryTree(): Promise<CourseCategory[]> {
+    // Get all active categories ordered by depth and order
+    return db.select().from(courseCategories)
+      .where(eq(courseCategories.isActive, true))
+      .orderBy(courseCategories.depth, courseCategories.order);
+  }
+  
+  async getCoursesInCategory(categoryId: number): Promise<Course[]> {
+    return db.select().from(courses).where(eq(courses.categoryId, categoryId));
   }
   
   // Module operations

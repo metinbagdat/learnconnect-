@@ -38,7 +38,8 @@ import {
   // New feature schemas
   insertUploadSchema,
   insertEssaySchema,
-  insertWeeklyStudyPlanSchema
+  insertWeeklyStudyPlanSchema,
+  insertCourseCategorySchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
@@ -159,6 +160,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid course data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+  
+  // Course Category Routes
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+  
+  app.get("/api/categories/tree", async (req, res) => {
+    try {
+      const categories = await storage.getCategoryTree();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch category tree" });
+    }
+  });
+  
+  app.get("/api/categories/:id", async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      if (!Number.isInteger(categoryId) || categoryId < 1) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const category = await storage.getCategory(categoryId);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+  
+  app.post("/api/categories", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const validatedData = insertCourseCategorySchema.parse(req.body);
+      const category = await storage.createCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+  
+  app.patch("/api/categories/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const categoryId = parseInt(req.params.id);
+      if (!Number.isInteger(categoryId) || categoryId < 1) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const updateSchema = insertCourseCategorySchema.partial().omit({ 
+        id: true, 
+        createdAt: true 
+      });
+      const validatedData = updateSchema.parse(req.body);
+      
+      const updated = await storage.updateCategory(categoryId, validatedData);
+      
+      if (!updated) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+  
+  app.delete("/api/categories/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const categoryId = parseInt(req.params.id);
+      if (!Number.isInteger(categoryId) || categoryId < 1) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const deleted = await storage.deleteCategory(categoryId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+  
+  app.get("/api/categories/:id/courses", async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.id);
+      if (!Number.isInteger(categoryId) || categoryId < 1) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const courses = await storage.getCoursesInCategory(categoryId);
+      res.json(courses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch courses in category" });
     }
   });
   

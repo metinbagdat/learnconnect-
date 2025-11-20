@@ -5308,6 +5308,238 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // ==================== New Time Tracking & Analytics Routes ====================
+  
+  // Daily Study Goals routes
+  app.get("/api/study-goals/daily", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { date, startDate, endDate } = req.query;
+      
+      if (date) {
+        const goal = await storage.getDailyStudyGoal(req.user.id, date as string);
+        res.json(goal);
+      } else {
+        const goals = await storage.getDailyStudyGoals(
+          req.user.id, 
+          startDate as string | undefined, 
+          endDate as string | undefined
+        );
+        res.json(goals);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch daily study goals" });
+    }
+  });
+
+  app.post("/api/study-goals/daily", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const goalData = { ...req.body, userId: req.user.id };
+      const newGoal = await storage.createDailyStudyGoal(goalData);
+      res.status(201).json(newGoal);
+    } catch (error) {
+      console.error('Failed to create daily goal:', error);
+      res.status(500).json({ message: "Failed to create daily study goal" });
+    }
+  });
+
+  app.put("/api/study-goals/daily/:date", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { date } = req.params;
+      const updated = await storage.updateDailyStudyGoal(req.user.id, date, req.body);
+      
+      if (updated) {
+        res.json(updated);
+      } else {
+        res.status(404).json({ message: "Daily study goal not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update daily study goal" });
+    }
+  });
+
+  // Study Habits routes
+  app.get("/api/study-habits", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { period } = req.query;
+      const habits = await storage.getStudyHabits(req.user.id, period as string | undefined);
+      res.json(habits);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch study habits" });
+    }
+  });
+
+  app.post("/api/study-habits", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const habitData = { ...req.body, userId: req.user.id };
+      const newHabit = await storage.createStudyHabit(habitData);
+      res.status(201).json(newHabit);
+    } catch (error) {
+      console.error('Failed to create study habit:', error);
+      res.status(500).json({ message: "Failed to create study habit" });
+    }
+  });
+
+  // TYT Resources routes
+  app.get("/api/tyt/resources/:topicId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const topicId = parseInt(req.params.topicId);
+      if (isNaN(topicId)) {
+        return res.status(400).json({ message: "Invalid topic ID" });
+      }
+      
+      const resources = await storage.getTytResources(topicId);
+      res.json(resources);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch TYT resources" });
+    }
+  });
+
+  app.post("/api/tyt/resources", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const newResource = await storage.createTytResource(req.body);
+      res.status(201).json(newResource);
+    } catch (error) {
+      console.error('Failed to create TYT resource:', error);
+      res.status(500).json({ message: "Failed to create TYT resource" });
+    }
+  });
+
+  app.put("/api/tyt/resources/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid resource ID" });
+      }
+      
+      const updated = await storage.updateTytResource(id, req.body);
+      if (updated) {
+        res.json(updated);
+      } else {
+        res.status(404).json({ message: "Resource not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update TYT resource" });
+    }
+  });
+
+  app.delete("/api/tyt/resources/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid resource ID" });
+      }
+      
+      const success = await storage.deleteTytResource(id);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: "Resource not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete TYT resource" });
+    }
+  });
+
+  // AI Daily Plans routes
+  app.get("/api/ai-daily-plans", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { date, startDate, endDate } = req.query;
+      
+      if (date) {
+        const plan = await storage.getAiDailyPlan(req.user.id, date as string);
+        res.json(plan);
+      } else {
+        const plans = await storage.getAiDailyPlans(
+          req.user.id,
+          startDate as string | undefined,
+          endDate as string | undefined
+        );
+        res.json(plans);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch AI daily plans" });
+    }
+  });
+
+  app.post("/api/ai-daily-plans", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const planData = { ...req.body, userId: req.user.id };
+      const newPlan = await storage.createAiDailyPlan(planData);
+      res.status(201).json(newPlan);
+    } catch (error) {
+      console.error('Failed to create AI daily plan:', error);
+      res.status(500).json({ message: "Failed to create AI daily plan" });
+    }
+  });
+
+  app.put("/api/ai-daily-plans/:date/progress", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { date } = req.params;
+      const { completionRate } = req.body;
+      
+      if (typeof completionRate !== 'number') {
+        return res.status(400).json({ message: "Completion rate must be a number" });
+      }
+      
+      const updated = await storage.updateAiDailyPlanProgress(req.user.id, date, completionRate);
+      if (updated) {
+        res.json(updated);
+      } else {
+        res.status(404).json({ message: "AI daily plan not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update AI daily plan progress" });
+    }
+  });
+
   // ==================== AI Curriculum System Routes ====================
   
   // Generate curriculum for a course

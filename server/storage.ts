@@ -192,6 +192,23 @@ import {
   insertTytStudySessionSchema,
   insertTytStudyGoalSchema,
   insertTytStudyStreakSchema,
+  // New Time Tracking & Analytics types
+  type DailyStudyGoal,
+  type StudyHabit,
+  type TytResource,
+  type AiDailyPlan,
+  type InsertDailyStudyGoal,
+  type InsertStudyHabit,
+  type InsertTytResource,
+  type InsertAiDailyPlan,
+  dailyStudyGoals,
+  studyHabits,
+  tytResources,
+  aiDailyPlans,
+  insertDailyStudyGoalSchema,
+  insertStudyHabitSchema,
+  insertTytResourceSchema,
+  insertAiDailyPlanSchema,
   // AI Curriculum System types
   type CourseCurriculum,
   type InsertCourseCurriculum,
@@ -531,6 +548,31 @@ export interface IStorage {
     subjectProgress: Array<{ subject: string; progress: number; timeSpent: number }>;
     streaks: Array<{ type: string; current: number; longest: number }>;
   }>;
+
+  // New Time Tracking & Analytics operations
+  // Daily Study Goals operations
+  getDailyStudyGoal(userId: number, date: string): Promise<DailyStudyGoal | undefined>;
+  getDailyStudyGoals(userId: number, startDate?: string, endDate?: string): Promise<DailyStudyGoal[]>;
+  createDailyStudyGoal(goal: InsertDailyStudyGoal): Promise<DailyStudyGoal>;
+  updateDailyStudyGoal(userId: number, date: string, data: Partial<DailyStudyGoal>): Promise<DailyStudyGoal | undefined>;
+  
+  // Study Habits operations
+  getStudyHabits(userId: number, period?: string): Promise<StudyHabit[]>;
+  getStudyHabit(id: number): Promise<StudyHabit | undefined>;
+  createStudyHabit(habit: InsertStudyHabit): Promise<StudyHabit>;
+  
+  // TYT Resources operations
+  getTytResources(topicId: number): Promise<TytResource[]>;
+  getTytResource(id: number): Promise<TytResource | undefined>;
+  createTytResource(resource: InsertTytResource): Promise<TytResource>;
+  updateTytResource(id: number, data: Partial<TytResource>): Promise<TytResource | undefined>;
+  deleteTytResource(id: number): Promise<boolean>;
+  
+  // AI Daily Plans operations
+  getAiDailyPlan(userId: number, date: string): Promise<AiDailyPlan | undefined>;
+  getAiDailyPlans(userId: number, startDate?: string, endDate?: string): Promise<AiDailyPlan[]>;
+  createAiDailyPlan(plan: InsertAiDailyPlan): Promise<AiDailyPlan>;
+  updateAiDailyPlanProgress(userId: number, date: string, completionRate: number): Promise<AiDailyPlan | undefined>;
 
   // AI Curriculum System operations
   // Course Curriculum operations
@@ -3201,6 +3243,149 @@ export class DatabaseStorage implements IStorage {
       subjectProgress,
       streaks
     };
+  }
+
+  // ==================== New Time Tracking & Analytics Implementations ====================
+  
+  // Daily Study Goals operations
+  async getDailyStudyGoal(userId: number, date: string): Promise<DailyStudyGoal | undefined> {
+    const [goal] = await db
+      .select()
+      .from(dailyStudyGoals)
+      .where(and(eq(dailyStudyGoals.userId, userId), eq(dailyStudyGoals.date, date)))
+      .limit(1);
+    return goal;
+  }
+
+  async getDailyStudyGoals(userId: number, startDate?: string, endDate?: string): Promise<DailyStudyGoal[]> {
+    let query = db.select().from(dailyStudyGoals).where(eq(dailyStudyGoals.userId, userId));
+    
+    if (startDate && endDate) {
+      query = query.where(and(
+        eq(dailyStudyGoals.userId, userId),
+        sql`${dailyStudyGoals.date} >= ${startDate}`,
+        sql`${dailyStudyGoals.date} <= ${endDate}`
+      ));
+    } else if (startDate) {
+      query = query.where(and(
+        eq(dailyStudyGoals.userId, userId),
+        sql`${dailyStudyGoals.date} >= ${startDate}`
+      ));
+    }
+    
+    return await query.orderBy(desc(dailyStudyGoals.date));
+  }
+
+  async createDailyStudyGoal(goal: InsertDailyStudyGoal): Promise<DailyStudyGoal> {
+    const [newGoal] = await db.insert(dailyStudyGoals).values(goal).returning();
+    return newGoal;
+  }
+
+  async updateDailyStudyGoal(userId: number, date: string, data: Partial<DailyStudyGoal>): Promise<DailyStudyGoal | undefined> {
+    const [updated] = await db
+      .update(dailyStudyGoals)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(dailyStudyGoals.userId, userId), eq(dailyStudyGoals.date, date)))
+      .returning();
+    return updated;
+  }
+
+  // Study Habits operations
+  async getStudyHabits(userId: number, period?: string): Promise<StudyHabit[]> {
+    let query = db.select().from(studyHabits).where(eq(studyHabits.userId, userId));
+    
+    if (period) {
+      query = query.where(and(eq(studyHabits.userId, userId), eq(studyHabits.period, period)));
+    }
+    
+    return await query.orderBy(desc(studyHabits.startDate));
+  }
+
+  async getStudyHabit(id: number): Promise<StudyHabit | undefined> {
+    const [habit] = await db.select().from(studyHabits).where(eq(studyHabits.id, id)).limit(1);
+    return habit;
+  }
+
+  async createStudyHabit(habit: InsertStudyHabit): Promise<StudyHabit> {
+    const [newHabit] = await db.insert(studyHabits).values(habit).returning();
+    return newHabit;
+  }
+
+  // TYT Resources operations
+  async getTytResources(topicId: number): Promise<TytResource[]> {
+    return await db
+      .select()
+      .from(tytResources)
+      .where(eq(tytResources.topicId, topicId))
+      .orderBy(asc(tytResources.id));
+  }
+
+  async getTytResource(id: number): Promise<TytResource | undefined> {
+    const [resource] = await db.select().from(tytResources).where(eq(tytResources.id, id)).limit(1);
+    return resource;
+  }
+
+  async createTytResource(resource: InsertTytResource): Promise<TytResource> {
+    const [newResource] = await db.insert(tytResources).values(resource).returning();
+    return newResource;
+  }
+
+  async updateTytResource(id: number, data: Partial<TytResource>): Promise<TytResource | undefined> {
+    const [updated] = await db
+      .update(tytResources)
+      .set(data)
+      .where(eq(tytResources.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTytResource(id: number): Promise<boolean> {
+    const result = await db.delete(tytResources).where(eq(tytResources.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // AI Daily Plans operations
+  async getAiDailyPlan(userId: number, date: string): Promise<AiDailyPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(aiDailyPlans)
+      .where(and(eq(aiDailyPlans.userId, userId), eq(aiDailyPlans.date, date)))
+      .limit(1);
+    return plan;
+  }
+
+  async getAiDailyPlans(userId: number, startDate?: string, endDate?: string): Promise<AiDailyPlan[]> {
+    let query = db.select().from(aiDailyPlans).where(eq(aiDailyPlans.userId, userId));
+    
+    if (startDate && endDate) {
+      query = query.where(and(
+        eq(aiDailyPlans.userId, userId),
+        sql`${aiDailyPlans.date} >= ${startDate}`,
+        sql`${aiDailyPlans.date} <= ${endDate}`
+      ));
+    } else if (startDate) {
+      query = query.where(and(
+        eq(aiDailyPlans.userId, userId),
+        sql`${aiDailyPlans.date} >= ${startDate}`
+      ));
+    }
+    
+    return await query.orderBy(desc(aiDailyPlans.date));
+  }
+
+  async createAiDailyPlan(plan: InsertAiDailyPlan): Promise<AiDailyPlan> {
+    const [newPlan] = await db.insert(aiDailyPlans).values(plan).returning();
+    return newPlan;
+  }
+
+  async updateAiDailyPlanProgress(userId: number, date: string, completionRate: number): Promise<AiDailyPlan | undefined> {
+    const completed = completionRate >= 100;
+    const [updated] = await db
+      .update(aiDailyPlans)
+      .set({ completionRate, completed })
+      .where(and(eq(aiDailyPlans.userId, userId), eq(aiDailyPlans.date, date)))
+      .returning();
+    return updated;
   }
 
   // ==================== AI Curriculum System Implementations ====================

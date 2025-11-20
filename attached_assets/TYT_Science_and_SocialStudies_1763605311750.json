@@ -1,0 +1,252 @@
+{
+  "YKS": {
+    "TYT": {
+      "Science": {
+        "Biology": {
+          "SubSubjects": {
+            "Cell and Its Structure (Hücre ve Yapısı)": {
+              "Topics": {
+                "Organelles (Organel)": {
+                  "LearningOutcomes": [
+                    "Explains the structure and functions of cell organelles. | Hücre organellerinin yapı ve görevlerini açıklar.",
+                    "Compares plant and animal cells. | Bitki ve hayvan hücrelerini karşılaştırır."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Biology", "Structure"],
+                  "AIGuide": "Use diagrams to label organelles. | Hücre diyagramı çiz ve organelleri etiketle.",
+                  "SuggestedTime": "35 min/day",
+                  "WeeklyPlan": {
+                    "Monday": {"Tasks": "Watch intro video | Tanıtım videosunu izle"},
+                    "Wednesday": {"Tasks": "Quiz: identify organelles | Organelleri tanı testini çöz"}
+                  },
+                  "ScoreWeight": 0.05,
+                  "Resources": [
+                    {"Type": "video", "Name": "Hücre Yapısı | Hocalara Geldik", "URL": "https://youtu.be/example_bio1"}
+                  ]
+                },
+                "Cell Division (Hücre Bölünmesi)": {
+                  "LearningOutcomes": [
+                    "Describes mitosis and meiosis stages. | Mitoz ve mayoz evrelerini açıklar.",
+                    "Identifies differences between mitosis and meiosis. | Mitoz ile mayoz arasındaki farkları belirler."
+                  ],
+                  "Difficulty": "Hard",
+                  "AITag": ["Process", "Genetics"],
+                  "AIGuide": "Simulate each stage using animations. | Animasyonlarla evreleri canlandır.",
+                  "SuggestedTime": "40 min/day",
+                  "ScoreWeight": 0.06,
+                  "Resources": [
+                    {"Type": "video", "Name": "Mitoz-Mayoz | Tonguç Akademi", "URL": "https://youtu.be/example_bio2"}
+                  ]
+                }
+              }
+            },
+            "Human Systems (İnsan Sistemleri)": {
+              "Topics": {
+                "Digestive System (Sindirim Sistemi)": {
+                  "LearningOutcomes": [
+                    "Explains organs and enzymes of digestion. | Sindirim sistemi organlarını ve enzimlerini açıklar.",
+                    "Describes chemical and mechanical digestion. | Kimyasal ve mekanik sindirimi açıklar."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Anatomy", "Function"],
+                  "AIGuide": "Create organ flow chart. | Organ akış diyagramı oluştur.",
+                  "SuggestedTime": "30 min/day",
+                  "ScoreWeight": 0.04
+                }
+              }
+            }
+          }
+        },
+
+        "Physics": {
+          "SubSubjects": {
+            "Basic Concepts and Motion (Temel Kavramlar ve Hareket)": {
+              "Topics": {
+                "Speed and Velocity (Hız ve Sürat)": {
+                  "LearningOutcomes": [
+                    "Distinguishes between speed and velocity. | Hız ve sürat kavramlarını ayırt eder.",
+                    "Solves average speed problems. | Ortalama hız problemlerini çözer."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Kinematics", "Computation"],
+                  "AIGuide": "Solve 10 motion questions daily. | Her gün 10 hareket sorusu çöz.",
+                  "SuggestedTime": "30 min/day",
+                  "ScoreWeight": 0.05
+                },
+                "Acceleration (İvme)": {
+                  "LearningOutcomes": [
+                    "Defines acceleration. | İvme kavramını tanımlar.",
+                    "Analyzes motion graphs. | Hareket grafiklerini yorumlar."
+                  ],
+                  "Difficulty": "Hard",
+                  "AITag": ["Kinematics", "Graph"],
+                  "AIGuide": "Practice with distance-time and velocity-time graphs. | Yol-zaman ve hız-zaman grafiklerini çalış.",
+                  "SuggestedTime": "40 min/day",
+                  "ScoreWeight": 0.06
+                }
+              }
+            },
+            "Force and Energy (Kuvvet ve Enerji)": {
+              "Topics": {
+                "Newton’s Laws (Newton Yasaları)": {
+                  "LearningOutcomes": [
+                    "Explains Newton’s three laws of motion. | Newton’un üç hareket yasasını açıklar.",
+                    "Applies the laws to problem-solving. | Yasaları problem çözmede uygular."
+                  ],
+                  "Difficulty": "Hard",
+                  "AITag": ["Dynamics", "Problem Solving"],
+                  "AIGuide": "Work through 5 numerical examples daily. | Günlük 5 sayısal örnek çöz.",
+                  "SuggestedTime": "40 min/day",
+                  "ScoreWeight": 0.07
+                }
+              }
+            }
+          }
+        },
+
+        "Chemistry": {
+          "SubSubjects": {
+            "Matter and Properties (Madde ve Özellikleri)": {
+              "Topics": {
+                "States of Matter (Maddenin Halleri)": {
+                  "LearningOutcomes": [
+                    "Compares solid, liquid, and gas properties. | Katı, sıvı ve gazların özelliklerini karşılaştırır.",
+                    "Explains phase changes. | Hal değişimlerini açıklar."
+                  ],
+                  "Difficulty": "Easy",
+                  "AITag": ["Concept", "Thermodynamics"],
+                  "AIGuide": "Draw phase diagrams. | Hal diyagramı çiz.",
+                  "SuggestedTime": "25 min/day",
+                  "ScoreWeight": 0.04
+                },
+                "Mixtures (Karışımlar)": {
+                  "LearningOutcomes": [
+                    "Classifies homogeneous and heterogeneous mixtures. | Homojen ve heterojen karışımları sınıflandırır.",
+                    "Describes separation methods. | Ayırma yöntemlerini açıklar."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Classification", "Lab Skills"],
+                  "AIGuide": "Watch experiment video on separation. | Ayırma deney videosunu izle.",
+                  "SuggestedTime": "30 min/day",
+                  "ScoreWeight": 0.05
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "SocialStudies": {
+        "History": {
+          "SubSubjects": {
+            "First Turkish States (İlk Türk Devletleri)": {
+              "Topics": {
+                "Asian Hun Empire (Asya Hun Devleti)": {
+                  "LearningOutcomes": [
+                    "Knows location and importance of the Hun Empire. | Asya Hun Devleti’nin konumu ve önemini bilir.",
+                    "Explains contributions to Turkish culture. | Türk kültürüne katkılarını açıklar."
+                  ],
+                  "Difficulty": "Easy",
+                  "AITag": ["History", "Culture"],
+                  "AIGuide": "Make a short timeline. | Kısa zaman çizelgesi oluştur.",
+                  "SuggestedTime": "20 min/day",
+                  "ScoreWeight": 0.03
+                }
+              }
+            },
+            "Ottoman Empire (Osmanlı Devleti)": {
+              "Topics": {
+                "Foundation and Rise (Kuruluş ve Yükselme)": {
+                  "LearningOutcomes": [
+                    "Explains factors in Ottoman rise. | Osmanlı’nın yükselme sebeplerini açıklar.",
+                    "Identifies key sultans and events. | Önemli padişahları ve olayları tanır."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Empires", "Timeline"],
+                  "AIGuide": "Use flashcards for names and dates. | İsim ve tarihleri kartlarla çalış.",
+                  "SuggestedTime": "30 min/day",
+                  "ScoreWeight": 0.04
+                }
+              }
+            }
+          }
+        },
+
+        "Geography": {
+          "SubSubjects": {
+            "Natural Systems (Doğal Sistemler)": {
+              "Topics": {
+                "Earth’s Structure (Yer Kabuğu ve Yapısı)": {
+                  "LearningOutcomes": [
+                    "Describes Earth's layers. | Dünya’nın katmanlarını açıklar.",
+                    "Explains plate tectonics. | Levha tektoniğini açıklar."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Geology", "Earth Science"],
+                  "AIGuide": "Sketch Earth's cross-section. | Dünya kesiti çiz.",
+                  "SuggestedTime": "25 min/day",
+                  "ScoreWeight": 0.04
+                }
+              }
+            },
+            "Human Systems (Beşerî Sistemler)": {
+              "Topics": {
+                "Population (Nüfus)": {
+                  "LearningOutcomes": [
+                    "Analyzes population distribution. | Nüfus dağılışını analiz eder.",
+                    "Interprets population pyramids. | Nüfus piramitlerini yorumlar."
+                  ],
+                  "Difficulty": "Medium",
+                  "AITag": ["Demography", "Data Analysis"],
+                  "AIGuide": "Compare country populations visually. | Ülke nüfuslarını grafikle karşılaştır.",
+                  "SuggestedTime": "30 min/day",
+                  "ScoreWeight": 0.05
+                }
+              }
+            }
+          }
+        },
+
+        "Philosophy": {
+          "SubSubjects": {
+            "Philosophy and Knowledge (Felsefe ve Bilgi)": {
+              "Topics": {
+                "Definition of Philosophy (Felsefenin Tanımı)": {
+                  "LearningOutcomes": [
+                    "Defines philosophy and its purpose. | Felsefenin tanımını ve amacını açıklar.",
+                    "Distinguishes philosophy from science. | Felsefeyi bilimden ayırır."
+                  ],
+                  "Difficulty": "Easy",
+                  "AITag": ["Thinking", "Definition"],
+                  "AIGuide": "Summarize one philosopher's definition per day. | Her gün bir filozofun tanımını özetle.",
+                  "SuggestedTime": "20 min/day",
+                  "ScoreWeight": 0.03
+                }
+              }
+            }
+          }
+        },
+
+        "Religion and Ethics (Din Kültürü ve Ahlak Bilgisi)": {
+          "SubSubjects": {
+            "Basic Beliefs (Temel İnançlar)": {
+              "Topics": {
+                "Faith in God (Allah İnancı)": {
+                  "LearningOutcomes": [
+                    "Explains the concept of God in Islam. | İslam’da Allah inancını açıklar.",
+                    "Recognizes attributes of God. | Allah’ın sıfatlarını tanır."
+                  ],
+                  "Difficulty": "Easy",
+                  "AITag": ["Religion", "Belief"],
+                  "AIGuide": "Memorize key concepts daily. | Günlük temel kavramları ezberle.",
+                  "SuggestedTime": "20 min/day",
+                  "ScoreWeight": 0.03
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+src/
+├── components/          # React components
+│   ├── Auth/           # Authentication
+│   ├── Dashboard/      # Main dashboard
+│   ├── Courses/        # Course management
+│   ├── Exams/          # Exam tracking
+│   └── Admin/          # Admin panel
+├── hooks/              # Custom React hooks
+├── services/           # Firebase services
+├── utils/              # Utility functions
+└── styles/             # Global styles

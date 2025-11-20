@@ -1,0 +1,143 @@
+{
+  "YKS": {
+    "TYT": {
+      "Turkish": {
+        "SubSubjects": {
+          "Vocabulary and Meaning (Sözcükte Anlam)": {
+            "Topics": {
+              "Word Meaning (Sözcük Anlamı)": {
+                "LearningOutcomes": [
+                  "Understands different meanings of words in context. | Sözcüklerin bağlama göre farklı anlamlarını kavrar.",
+                  "Recognizes figurative and literal meanings. | Gerçek ve mecaz anlamları ayırt eder."
+                ],
+                "Difficulty": "Medium",
+                "AITag": ["Reading", "Comprehension"],
+                "AIGuide": "Read 10 sample sentences and classify meanings. | 10 örnek cümle oku ve anlam türünü belirle.",
+                "SuggestedTime": "30 min/day",
+                "WeeklyPlan": {
+                  "Monday": {"Tasks": "Study basic meaning types | Anlam türlerini çalış", "QuestionCount": 15},
+                  "Wednesday": {"Tasks": "Solve mixed practice test | Karışık test çöz", "QuestionCount": 20}
+                },
+                "ScoreWeight": 0.04,
+                "Resources": [
+                  {"Type": "video", "Name": "Sözcükte Anlam | Yargı Yayınları", "URL": "https://youtu.be/example_turkish1"},
+                  {"Type": "test", "Name": "TYT Türkçe - Sözcükte Anlam", "URL": "https://testico.com/tyt-sozcukte-anlam"}
+                ]
+              },
+              "Word Relations (Sözcükler Arası İlişkiler)": {
+                "LearningOutcomes": [
+                  "Identifies synonymy and antonymy relations. | Eş anlamlı ve zıt anlamlı ilişkileri belirler.",
+                  "Understands idioms and proverbs. | Deyim ve atasözlerini kavrar."
+                ],
+                "Difficulty": "Medium",
+                "AITag": ["Vocabulary", "Cultural Knowledge"],
+                "AIGuide": "Create a two-column list of synonyms and antonyms. | Eş-zıt anlamlı sözcükleri tabloya yaz.",
+                "SuggestedTime": "25 min/day",
+                "ScoreWeight": 0.03,
+                "Resources": [
+                  {"Type": "video", "Name": "Eş ve Zıt Anlamlı Sözcükler | Hocalara Geldik", "URL": "https://youtu.be/example_turkish2"}
+                ]
+              }
+            }
+          },
+          "Paragraph (Paragraf)": {
+            "Topics": {
+              "Main Idea (Ana Fikir)": {
+                "LearningOutcomes": [
+                  "Finds the main idea in a paragraph. | Paragrafın ana fikrini bulur.",
+                  "Distinguishes supporting ideas. | Yardımcı düşünceleri ayırt eder."
+                ],
+                "Difficulty": "Medium",
+                "AITag": ["Comprehension", "Critical Thinking"],
+                "AIGuide": "Practice 3 paragraphs daily and explain the main idea aloud. | Her gün 3 paragraf çöz, ana fikri sesli açıkla.",
+                "SuggestedTime": "40 min/day",
+                "WeeklyPlan": {
+                  "Tuesday": {"Tasks": "Watch strategy video | Strateji videosunu izle", "QuestionCount": 15},
+                  "Thursday": {"Tasks": "Solve timed paragraph test | Süreli paragraf testi çöz", "QuestionCount": 20}
+                },
+                "ScoreWeight": 0.07,
+                "Resources": [
+                  {"Type": "video", "Name": "Paragrafta Anlam | Tonguç Akademi", "URL": "https://youtu.be/example_para1"}
+                ]
+              }
+            }
+          }
+        }
+      },
+
+      "Mathematics": {
+        "SubSubjects": {
+          "Basic Concepts (Temel Kavramlar)": {
+            "Topics": {
+              "Number Concept (Sayı Kavramı)": {
+                "LearningOutcomes": [
+                  "Understands natural, integer, rational, and irrational numbers. | Doğal, tam, rasyonel ve irrasyonel sayıları tanır.",
+                  "Explains relationships between number sets. | Sayı kümeleri arasındaki ilişkileri açıklar."
+                ],
+                "Difficulty": "Easy",
+                "AITag": ["Logic", "Foundation"],
+                "AIGuide": "Study in 2 days: theory + practice. | 2 günde çalış: konu anlatımı + test çöz.",
+                "SuggestedTime": "40 min/day",
+                "WeeklyPlan": {
+                  "Monday": {"Tasks": "Watch intro video | Giriş videosunu izle", "QuestionCount": 20},
+                  "Tuesday": {"Tasks": "Solve mixed problems | Karışık sorular çöz", "QuestionCount": 25}
+                },
+                "ScoreWeight": 0.05,
+                "Resources": [
+                  {"Type": "video", "Name": "Sayı Kavramı | Tonguç Akademi", "URL": "https://youtu.be/example_math1"},
+                  {"Type": "test", "Name": "TYT Mathematics - Number Concept", "URL": "https://testico.com/tyt-sayi-kavrami"}
+                ]
+              },
+              "Number Digits (Sayı Basamakları)": {
+                "LearningOutcomes": [
+                  "Finds digit value of a number. | Bir sayının basamak değerini bulur.",
+                  "Decomposes numbers into expanded form. | Sayıları çözümlemesine ayırır."
+                ],
+                "Difficulty": "Medium",
+                "AITag": ["Computation", "Pattern Recognition"],
+                "AIGuide": "Repeat with 15-question drills daily. | Her gün 15 soru çözerek pekiştir.",
+                "SuggestedTime": "35 min/day",
+                "ScoreWeight": 0.04,
+                "Resources": [
+                  {"Type": "video", "Name": "Basamak Değeri | Hocalara Geldik", "URL": "https://youtu.be/example_math2"}
+                ]
+              }
+            }
+          },
+          "Problems (Problemler)": {
+            "Topics": {
+              "Ratio and Proportion (Oran-Orantı)": {
+                "LearningOutcomes": [
+                  "Defines ratio and proportion. | Oran ve orantı kavramlarını tanımlar.",
+                  "Solves proportional problems. | Orantı kurarak problem çözer."
+                ],
+                "Difficulty": "Hard",
+                "AITag": ["Problem Solving", "Logic"],
+                "AIGuide": "Solve 10 problems daily and review with AI feedback. | Her gün 10 problem çöz, yanlışlarını AI açıklasın.",
+                "SuggestedTime": "45 min/day",
+                "ScoreWeight": 0.06,
+                "Resources": [
+                  {"Type": "test", "Name": "TYT Oran-Orantı Testi", "URL": "https://testico.com/oran-oranti"}
+                ]
+              },
+              "Percentages and Averages (Yüzdeler ve Ortalamalar)": {
+                "LearningOutcomes": [
+                  "Calculates percentage increase/decrease. | Yüzde artış-azalış hesaplar.",
+                  "Finds weighted averages. | Ağırlıklı ortalama hesaplar."
+                ],
+                "Difficulty": "Medium",
+                "AITag": ["Computation", "Data Analysis"],
+                "AIGuide": "Mix theory with real examples (discounts, interest). | Günlük örneklerle pekiştir (indirim, faiz).",
+                "SuggestedTime": "40 min/day",
+                "ScoreWeight": 0.05,
+                "Resources": [
+                  {"Type": "video", "Name": "Yüzdeler | Benim Hocam", "URL": "https://youtu.be/example_math3"}
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

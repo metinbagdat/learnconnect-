@@ -1,0 +1,87 @@
+{
+  "StudentProfile": {
+    "userId": "UID_12345",
+    "name": "Ahmet Yılmaz",
+    "gradeLevel": "12",
+    "targetExam": "TYT",
+    "targetScore": 400,
+    "availableTimePerDay": 180,
+    "studyPreferences": {
+      "focusTime": 40,
+      "breakTime": 10,
+      "preferredSubjects": ["Mathematics", "Turkish"],
+      "weakSubjects": ["Physics", "Paragraph"]
+    },
+    "learningStyle": "visual", 
+    "motivationLevel": "medium",
+    "progress": {
+      "Mathematics": 0.45,
+      "Turkish": 0.6,
+      "Science": 0.3,
+      "SocialStudies": 0.5
+    },
+    "AIStatus": {
+      "lastUpdate": "2025-11-04",
+      "recommendedPlanVersion": 2
+    }
+  },
+  "AIPlanningEngine": {
+    "Step1_AnalyzeInputs": "Read StudentProfile, ExamTarget, and Progress data.",
+    "Step2_AssessWeaknesses": "Compare test accuracy vs. target. Identify low-performing topics.",
+    "Step3_SelectContent": "From TYT JSON data, select topics with highest ScoreWeight × (1 - progress).",
+    "Step4_AllocateTime": "Distribute daily minutes based on topic importance and student’s availableTimePerDay.",
+    "Step5_GeneratePlan": "Produce structured tasks (e.g., watch, solve, review) for each day.",
+    "Step6_ReviewFeedback": "After each session, update progress using performance logs."
+  },
+    "DailyPlan": {
+    "date": "2025-11-04",
+    "focusSubjects": ["Mathematics", "Turkish"],
+    "tasks": [
+      {
+        "subject": "Mathematics",
+        "topic": "Number Concept (Sayı Kavramı)",
+        "taskType": "Practice Test",
+        "AITip": "Focus on rational numbers; your last accuracy was 60%.",
+        "duration": 40,
+        "expectedQuestions": 25
+      },
+      {
+        "subject": "Turkish",
+        "topic": "Paragraph - Main Idea",
+        "taskType": "AI-guided comprehension exercise",
+        "AITip": "Re-read mistaken paragraphs and explain in your own words.",
+        "duration": 35,
+        "expectedQuestions": 20
+      },
+      {
+        "subject": "Physics",
+        "topic": "Speed and Velocity",
+        "taskType": "Concept Video + 10 questions",
+        "AITip": "Try to visualize motion graphs.",
+        "duration": 30
+      }
+    ],
+    "motivationNote": "Remember: consistency beats intensity! 😊"
+},
+  "PerformanceLog": {
+    "userId": "UID_12345",
+    "date": "2025-11-04",
+    "subject": "Mathematics",
+    "topic": "Number Concept",
+    "accuracy": 0.8,
+    "timeSpent": 38,
+    "difficultyFelt": "medium",
+    "AIResponse": "Good job! Move to Number Digits next. Reduce time by 5 minutes tomorrow.",
+    "nextStep": "Review Number Digits tomorrow."
+},
+"AIDecisionRules": {
+    "if_accuracy_below": 0.6,
+    "then": "Reassign topic in 2 days with easier examples.",
+    "if_accuracy_between": [0.6, 0.8],
+    "then": "Repeat topic next week with medium difficulty.",
+    "if_accuracy_above": 0.8,
+    "then": "Mark as mastered, skip for 10 days.",
+    "if_motivation_low": "Add short motivational video and light topic next session.",
+    "if_time_constraint_high": "Prioritize high-weight topics only."
+  }
+}

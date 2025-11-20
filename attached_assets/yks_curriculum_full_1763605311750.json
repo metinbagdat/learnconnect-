@@ -1,0 +1,68 @@
+{
+  "YKS": {
+    "TYT": {
+      "Mathematics": {
+        "SubSubjects": {
+          "Basic Concepts (Temel Kavramlar)": {
+            "Topics": {
+              "Number Concept (Sayı Kavramı)": {
+                "LearningOutcomes": [
+                  "Understands natural, integer, rational, and irrational numbers.",
+                  "Explains the relationships between number sets."
+                ],
+                "Difficulty": "Easy",
+                "AITag": ["Logic", "Foundation"],
+                "AIGuide": "Study in 2 days: review theory on day 1, solve 20 questions on day 2.",
+                "SuggestedTime": "40 min/day",
+                "WeeklyPlan": {
+                  "Monday": {"Tasks": "Watch intro video", "QuestionCount": 20},
+                  "Tuesday": {"Tasks": "Solve mixed problems", "QuestionCount": 25}
+                },
+                "ScoreWeight": 0.05,
+                "Resources": [
+                  {"Type": "video", "Name": "Sayı Kavramı | Tonguç Akademi", "URL": "https://youtu.be/example1"},
+                  {"Type": "test", "Name": "TYT Mathematics - Number Concept", "URL": "https://www.testico.com/tyt-sayi-kavrami"}
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "AYT": {
+      "Mathematics-2": {
+        "SubSubjects": {
+          "Derivative (Türev)": {
+            "Topics": {
+              "Derivative Basics (Türevin Tanımı)": {
+                "LearningOutcomes": [
+                  "Defines the derivative concept.",
+                  "Applies derivative rules to algebraic functions."
+                ],
+                "Difficulty": "Hard",
+                "AITag": ["Calculation", "Analysis"],
+                "AIGuide": "Practice 10 derivative problems per day. Let AI explain your mistakes.",
+                "SuggestedTime": "60 min/day",
+                "ScoreWeight": 0.08,
+                "Resources": [
+                  {"Type": "video", "Name": "Türev | Hocalara Geldik", "URL": "https://youtu.be/exampleTurev"}
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+,"LearningOutcomes": [
+    "Understands natural, integer, rational, and irrational numbers. | Doğal, tam, rasyonel ve irrasyonel sayıları tanır.",
+    "Explains relationships between number sets. | Sayı kümeleri arasındaki ilişkileri açıklar."
+  ],
+  "AIGuide": "Study in 2 days: review theory on day 1, solve 20 questions on day 2. | 2 günde çalış: 1. gün konu tekrarı, 2. gün 20 soru çöz.",
+  "WeeklyPlan": {
+    "Monday": {"Tasks": "Watch intro video | Giriş videosunu izle", "QuestionCount": 20},
+    "Tuesday": {"Tasks": "Solve mixed problems | Karışık sorular çöz", "QuestionCount": 25}
+  }
+}
+

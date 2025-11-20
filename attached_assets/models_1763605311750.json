@@ -1,0 +1,12 @@
+{
+  "AIDecisionRules": {
+    // ...existing rules...
+  },
+  "AIModels": {
+    "ClaudeSonnet3_5": {
+      "enabledForAllClients": true,
+      "version": "3.5",
+      "notes": "Enabled by admin flag"
+    }
+  }
+}

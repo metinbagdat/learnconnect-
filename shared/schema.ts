@@ -790,6 +790,69 @@ export const skillAssessments = pgTable("skill_assessments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// New Time Tracking & Analytics Tables (complementary to existing TYT tables)
+export const dailyStudyGoals = pgTable("daily_study_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  targetStudyTime: integer("target_study_time").notNull(), // in minutes
+  actualStudyTime: integer("actual_study_time").default(0), // in minutes
+  subjects: jsonb("subjects").default({}), // { "Math": { target: 120, actual: 90, sessions: 2 }, ... }
+  completed: boolean("completed").default(false),
+  completionRate: integer("completion_rate").default(0), // percentage
+  streak: integer("streak").default(0), // consecutive days meeting goals
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueUserDate: sql`UNIQUE (user_id, date)`,
+}));
+
+export const studyHabits = pgTable("study_habits", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  period: text("period").notNull(), // week, month
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  totalStudyTime: integer("total_study_time").default(0), // in minutes
+  averageSessionLength: integer("average_session_length"), // in minutes
+  preferredStudyTimes: jsonb("preferred_study_times").default({}), // { morning: 35, afternoon: 25, evening: 40 }
+  mostProductiveDays: text("most_productive_days").array().default([]),
+  efficiencyTrend: integer("efficiency_trend").array().default([]),
+  commonDistractions: text("common_distractions").array().default([]),
+  recommendations: text("recommendations").array().default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// TYT Resources table (new addition to existing TYT system)
+export const tytResources = pgTable("tyt_resources", {
+  id: serial("id").primaryKey(),
+  topicId: integer("topic_id").notNull().references(() => tytTopics.id),
+  type: text("type").notNull(), // video, test, pdf, link
+  nameEn: text("name_en").notNull(),
+  nameTr: text("name_tr").notNull(),
+  url: text("url").notNull(),
+  description: text("description"),
+  duration: integer("duration"), // in minutes for videos
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// AI Daily Study Plans
+export const aiDailyPlans = pgTable("ai_daily_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  plan: jsonb("plan").notNull(), // { morning: [...], afternoon: [...], evening: [...] }
+  totalStudyTime: integer("total_study_time").notNull(), // in minutes
+  motivationalMessage: text("motivational_message"),
+  studyTips: text("study_tips").array().default([]),
+  completed: boolean("completed").default(false),
+  completionRate: integer("completion_rate").default(0),
+  generatedAt: timestamp("generated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueUserDate: sql`UNIQUE (user_id, date)`,
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -1613,3 +1676,18 @@ export const insertCourseCategorySchema = createInsertSchema(courseCategories).o
 });
 export type CourseCategory = typeof courseCategories.$inferSelect;
 export type InsertCourseCategory = z.infer<typeof insertCourseCategorySchema>;
+
+// New Time Tracking & Analytics insert schemas and type exports
+export const insertDailyStudyGoalSchema = createInsertSchema(dailyStudyGoals).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertStudyHabitSchema = createInsertSchema(studyHabits).omit({ id: true, createdAt: true });
+export const insertTytResourceSchema = createInsertSchema(tytResources).omit({ id: true, createdAt: true });
+export const insertAiDailyPlanSchema = createInsertSchema(aiDailyPlans).omit({ id: true, createdAt: true, generatedAt: true });
+
+export type DailyStudyGoal = typeof dailyStudyGoals.$inferSelect;
+export type StudyHabit = typeof studyHabits.$inferSelect;
+export type TytResource = typeof tytResources.$inferSelect;
+export type AiDailyPlan = typeof aiDailyPlans.$inferSelect;
+export type InsertDailyStudyGoal = z.infer<typeof insertDailyStudyGoalSchema>;
+export type InsertStudyHabit = z.infer<typeof insertStudyHabitSchema>;
+export type InsertTytResource = z.infer<typeof insertTytResourceSchema>;
+export type InsertAiDailyPlan = z.infer<typeof insertAiDailyPlanSchema>;

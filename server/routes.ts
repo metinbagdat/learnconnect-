@@ -5540,6 +5540,40 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // AI Daily Plan Generation route
+  app.post("/api/ai-daily-plans/generate", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { date, language, targetStudyTime, focusSubjects } = req.body;
+      
+      if (!date) {
+        return res.status(400).json({ message: "Date is required" });
+      }
+
+      // Import AI daily plan service
+      const { generateAndSaveDailyPlan } = await import("./ai-daily-plan-service");
+      
+      const plan = await generateAndSaveDailyPlan({
+        userId: req.user.id,
+        date,
+        language: language || "tr",
+        targetStudyTime: targetStudyTime || 240,
+        focusSubjects,
+      });
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('AI daily plan generation error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate AI daily plan", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // ==================== AI Curriculum System Routes ====================
   
   // Generate curriculum for a course

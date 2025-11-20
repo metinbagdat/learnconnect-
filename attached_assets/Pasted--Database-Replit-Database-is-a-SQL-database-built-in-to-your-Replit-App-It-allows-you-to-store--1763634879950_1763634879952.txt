@@ -1,0 +1,240 @@
+# Database
+
+> Replit Database is a SQL database built-in to your Replit App. It allows you to store and retrieve data for your app and users.
+
+export const YouTubeEmbed = ({videoId, title = "YouTube video", startAt}) => {
+  if (!videoId) {
+    return null;
+  }
+  let url = "https://www.youtube.com/embed/" + videoId;
+  if (startAt) {
+    url = url + "?start=" + startAt;
+  }
+  return <Frame>
+      <iframe src={url} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen></iframe>
+    </Frame>;
+};
+
+Replit Database uses a fully-managed SQL database that lets you add persistent data storage to your Replit App from the Workspace.
+
+<Note>
+  The fastest way to get started is to ask **Agent** to add a database to your app. Agent will set up the integration, create the database schema, and update your app to store and retrieve data.
+</Note>
+
+<Frame>
+  <img src="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=16fcd4d9230fbf84d6721fa467423d29" alt="screenshot of the database editor" data-og-width="1920" width="1920" data-og-height="1080" height="1080" data-path="images/databases/database-editor.jpg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?w=280&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=46814b06fd73dbb8200070551b3ab612 280w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?w=560&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=bc1f1fef5aa4cdb3a3d3d8473c7a1006 560w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?w=840&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=2fde3bf85b4a81f41139d2b267b35a93 840w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?w=1100&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=40cb13187d58b25753a51f4e15f0ed29 1100w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?w=1650&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=2bdc3f46f45ceaf051399517f9b0a588 1650w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/database-editor.jpg?w=2500&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=5395c33625f7eb8bbd37eeb53f0d4cef 2500w" />
+</Frame>
+
+## Features
+
+The Replit Database tool provides the following features:
+
+* **Instant setup**: Add a production-ready SQL database with a single click
+* **Database tools**: Run queries, manage database schema, and visualize data with the built-in SQL tools
+* **Point-in-time restore**: Restore your database to a specific point in time within your specified retention period
+* **Usage-based billing**: Pay only for the storage and data transfer you use
+* **Environment variables**: Use environment variables in your Replit App to securely access the database
+
+## Usage
+
+<YouTubeEmbed videoId="zbyRuoPNIc8" />
+
+You can access the Replit Database tool directly in your Replit App Workspace.
+The following sections guide you through setting up and managing your Database.
+
+<Accordion title="How to access the Replit Database tool">
+  From the left **Tool dock**:
+
+  1. Select <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5b2c72713cc17ac272098bcbfd624d84" alt="All tools icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/workspace-all-tools-button.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=284639f38f8e91da05d14611e44a9ae6 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=d0e802a9c50a81e5c825cf1ddce00a64 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=b5c4e38a7cf923221d2412e904bbdc94 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3b43a87adf314fbb300376b404ab8a22 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=a11f8a405c4156ff625219a372c2ceca 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-all-tools-button.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=7c86d2f1bfa4611aeca168daf29d08ff 2500w" /> **All tools** to see a list of workspace tools.
+  2. Select <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3cf383ef9ff4e8b5bad4792121dd6769" alt="PostgresSQL database icon" data-og-width="24" width="24" data-og-height="24" height="24" data-path="images/icons/postgres.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=17b80617d665ef3812021c0fdb3b43cf 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=10bdd7a13380255ddf3af617d08c9220 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=a5cacd83bc584eca88ddf943cc98b52f 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=cfa8597cf0b3622644faedce574dae7d 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5cf63513422bdc89684306e71bc0d267 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=14b4db671a736545614e0140edff2fdd 2500w" /> **Database**.
+
+  From the **Search bar**:
+
+  1. Select the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4a0eb8f6b17ff6761d53167334a68b30" alt="magnifying glass icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/workspace-search-icon.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=baa20919b2c8e7db2fad2562c732edd0 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5fcfa3935da89ed6c1c6f893998c4f4a 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=2a24f3fcc4dd990d9062598eab165cff 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=a3258e068d5ead6bacadcbe6e5785575 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=d08ebecb3063ed18a657beb563ac9c3c 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/workspace-search-icon.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=e63dd2009929a4b375b86e44ed6d7732 2500w" /> magnifying glass at the top to open the search tool
+  2. Type "Replit Database" to locate the tool and select it from the results.
+</Accordion>
+
+### Add a database
+
+Use one of the following methods to add a Replit Database integration to your Replit App:
+
+* Ask **Agent** to add a PostgreSQL database to your Replit App, including details on what
+  data your Replit App should store. Agent sets up the integration, creates the database schema,
+  and updates the app to communicate with the database.
+
+* From the **Replit Database** tool, select **Create a database**. When using this method, you
+  must create the tables and update your app to connect to the database.
+
+  <Frame>
+    <img src="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=76fef31b36b385f858210ccd82365c83" alt="screenshot of the create database screen" data-og-width="2221" width="2221" data-og-height="1139" height="1139" data-path="images/databases/create-database.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?w=280&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=b088f528e59fa2d732c0f5ad54a6e5e5 280w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?w=560&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=100b3bbc94a7bf82c70911f6cdfc5bbd 560w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?w=840&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=1c57e9427f17933e7f44014a73f6d684 840w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?w=1100&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=c7db3dfef9395b4fadd0b06ea6ca8520 1100w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?w=1650&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=7b4c5ae76d0c11505e741b3eaa96de56 1650w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/create-database.png?w=2500&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=8706c25f8a76a80551d727cd703964d6 2500w" />
+  </Frame>
+
+### Run database commands
+
+The SQL runner is a Workspace tool that lets you run SQL commands on your database and view the results.
+
+<Accordion title="How to access SQL runner">
+  From the **Replit Database** tool:
+
+  1. Select the **My Data** tab
+  2. Select <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4f2e172b249503888506d56a5f7ba6b8" alt="SQL runner icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/sql-runner-icon.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=cea74a96d54872b6fca9a0e2894fa758 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=7938d3c944b60a72ac89b2ee545627bb 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=76c11cfa82562777d3d6fd6caac08b90 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=d85752c4c2569041cfa4d5a74f71aa26 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=801bbcdcf3475a4f95c7fb7ab674e7d3 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-runner-icon.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5d63171cf521aa1938952f3a7571765b 2500w" /> **SQL runner**
+</Accordion>
+
+To run a query, enter the SQL statement in the text area and select the
+adjacent <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=09a71d59110569ebe7d0d4def83e24ac" alt="sql run icon" data-og-width="18" width="18" data-og-height="18" height="18" data-path="images/icons/sql-play.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=42205b2701320867d3c30bb9470413ee 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=30ad9ca945dc61541836549ed1dd9fe5 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=bcd637e207a19d4f546211a6f56c4452 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=b86f39281a91c06102265a51bf7a8f2e 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=fbd1089a57f148f2cbe008471bfe0f63 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/sql-play.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=66624797f8cff119e8d719723f80bba7 2500w" /> run button
+as shown below:
+
+<Frame>
+  <img src="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=2008c7ed50b153c09f9e5694d1f533d2" alt="screenshot of the SQL runner and run button" data-og-width="1302" width="1302" data-og-height="276" height="276" data-path="images/databases/sql-runner-run.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?w=280&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=ee9188a527b5ce04dd4905149aa965ea 280w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?w=560&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=734ccbda7353bd0ed1f6ba2e2b6b0409 560w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?w=840&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=23fa29fbcd480bff675fccc30fd65e2d 840w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?w=1100&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=062a6ca659c70ce34c99445c1370f894 1100w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?w=1650&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=632e2ff0ae479029e6aabbc733b5efc3 1650w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/sql-runner-run.png?w=2500&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=001499b126d9d0a54535e8dcdbf880e4 2500w" />
+</Frame>
+
+### Browse and modify data visually
+
+The Replit Database tool includes <a href="https://orm.drizzle.team/drizzle-studio/overview" target="_blank">Drizzle Studio</a>,
+a tool that lets you browse and modify data visually.
+
+These visual tools help you avoid syntax errors and offer the following functionality:
+
+* Filter and sort data to focus on specific information
+* Export data to a file for external use
+* Insert or modify row data
+* Create and manage schema, tables, views, and enums
+
+You can access these tools in the **My Data** tab in the **Replit Database** tool.
+
+The following image shows a view from the Drizzle Studio builder interface:
+
+<Frame>
+  <img src="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=b24eb9f5e046a060fcb21276737a8b33" alt="image of the table structure editor" data-og-width="3296" width="3296" data-og-height="2112" height="2112" data-path="images/databases/table-structure-editor.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?w=280&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=b029fdea85103d5f03bc62c618d6c6bb 280w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?w=560&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=20f0a371526cf4ca7a8911e15a64d7a1 560w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?w=840&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=4e49210f9fa0762a6f771b8063a069e0 840w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?w=1100&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=f9e3aa31b3b338e1f0220612a81ca740 1100w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?w=1650&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=efde99c080873596fbd52140a5c815d0 1650w, https://mintcdn.com/replit/jSmYU1wBTvl8UMyc/images/databases/table-structure-editor.png?w=2500&fit=max&auto=format&n=jSmYU1wBTvl8UMyc&q=85&s=ef0c76901502c17e5433ccdfd9660d2c 2500w" />
+</Frame>
+
+<Tip>
+  You can connect to your database using any PostgresSQL-compatible SQL client using the connection string
+  found in your [environment variables](#environment-variables).
+</Tip>
+
+### View database connection credentials
+
+When you add a database, the Replit Database tool automatically saves your connection credentials
+as environment variables in your Replit App. Your app uses the credentials to securely
+connect to the database and run commands.
+
+<Accordion title="How to access your database connection credentials">
+  1. Navigate to the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3cf383ef9ff4e8b5bad4792121dd6769" alt="PostgresSQL database icon" data-og-width="24" width="24" data-og-height="24" height="24" data-path="images/icons/postgres.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=17b80617d665ef3812021c0fdb3b43cf 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=10bdd7a13380255ddf3af617d08c9220 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=a5cacd83bc584eca88ddf943cc98b52f 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=cfa8597cf0b3622644faedce574dae7d 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5cf63513422bdc89684306e71bc0d267 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=14b4db671a736545614e0140edff2fdd 2500w" /> **Replit Database** tool in your workspace
+  2. Select the <img class="icon-svg" src="https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=aa97c1d6b9eae7dfa4af01802636a8a5" alt="angled brackets icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/angled-brackets.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?w=280&fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=27b4cca399aa3b3514339fe68a009a48 280w, https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?w=560&fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=550894bc46ebe65b7d45c4d53f2a9b68 560w, https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?w=840&fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=4743dfbd26844b1b4482a41e40b79f66 840w, https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?w=1100&fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=84f1640fb44502b77f4db2a553341bef 1100w, https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?w=1650&fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=eeb65fe53c551e5a3f2358c28dff9524 1650w, https://mintcdn.com/replit/rBzGsKp9NcWJ7sib/images/icons/angled-brackets.svg?w=2500&fit=max&auto=format&n=rBzGsKp9NcWJ7sib&q=85&s=d2661b0703d206906cd198357bd20efd 2500w" /> **Commands** tab and scroll to the **Environment variables** section
+</Accordion>
+
+The list includes the following environment variables, which you can reference from your Replit App's code:
+
+<Warning>
+  Do not share your `DATABASE_URL`. It contains your database credentials. Never paste it in public places or support tickets. When contacting support, provide your app URL or masked connection details instead.
+</Warning>
+
+* `DATABASE_URL`: Database connection string which contains all details for a secure connection
+* `PGHOST`: database hostname
+* `PGUSER`: database username
+* `PGPASSWORD`: database password
+
+To learn how to use these credentials in your code, see [Connect your app to a SQL database](/getting-started/quickstarts/database-connection/).
+
+### Restore tool
+
+The Restore tool lets you revert your database to a specific point in time.
+To activate this tool, you must select a retention period in the **History Retention** option.
+You can then restore from any point within that period.
+
+<Warning>
+  Point-in-time restore cannot be undone or rolled forward. After you restore to a chosen timestamp, you cannot return to a later point in time.
+
+  If you need a later state, run another restore using a later timestamp within your retention window. To minimize data loss, choose the closest valid timestamp to your desired restore point.
+</Warning>
+
+<Frame>
+  <img src="https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=9d12344d4571455f7a65bca637bb02c1" alt="Database rollbacks interface showing rollback options" data-og-width="2515" width="2515" data-og-height="1886" height="1886" data-path="images/replitai/database-rollbacks.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?w=280&fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=bd15861f9d5ec21e43c1f211e71a265b 280w, https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?w=560&fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=7c80859e858b55017fa2af4c5013bc87 560w, https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?w=840&fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=23e7cb12d21d4a24a3cb12dcf41b745a 840w, https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?w=1100&fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=0115e95635ed00258109916331876f5c 1100w, https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?w=1650&fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=1dc400a8b990184db3442abb92dd806a 1650w, https://mintcdn.com/replit/0UCOQvZyQpUEM03B/images/replitai/database-rollbacks.png?w=2500&fit=max&auto=format&n=0UCOQvZyQpUEM03B&q=85&s=6949b20ab77cd39cf6184aa57e13562a 2500w" />
+</Frame>
+
+Common uses for the Restore tool include the following:
+
+* Recovering from accidental data deletion or corruption
+* Reverting to a previous state for testing or debugging
+* Reviewing historical data from a specific point in time
+
+<Accordion title="How to access the Restore tool and History Retention setting">
+  1. Navigate to the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3cf383ef9ff4e8b5bad4792121dd6769" alt="PostgresSQL database icon" data-og-width="24" width="24" data-og-height="24" height="24" data-path="images/icons/postgres.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=17b80617d665ef3812021c0fdb3b43cf 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=10bdd7a13380255ddf3af617d08c9220 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=a5cacd83bc584eca88ddf943cc98b52f 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=cfa8597cf0b3622644faedce574dae7d 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5cf63513422bdc89684306e71bc0d267 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=14b4db671a736545614e0140edff2fdd 2500w" /> **Replit Database** tool in your workspace
+  2. Select the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=39c5a0a4872b7416378ddad9f2bef608" alt="gear icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/settings-icon.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=e0a36e6a9a2078c02467d2abf0b8ba9e 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3be97f139b63f478d536ccaa51518c9a 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4eba230fefbe9836ffd37672275aa7d1 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=97e5099639faf4a5490d8e000c00149a 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4d9552209cee3306d2bc2a02e747ecb6 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=d84a81284c0c9af295e0b86273d5c291 2500w" /> **Settings** tab and scroll to the **Restore** and **History Retention** sections
+</Accordion>
+
+To restore your database to a specific time, follow the steps below:
+
+1. Enter the target date and time in the **Timestamp** field
+2. Select **Restore**. Select **Continue** to proceed in the confirmation dialog.
+
+### Remove tool
+
+<Warning>
+  The remove action is irreversible. Make sure to back up any important data before proceeding.
+</Warning>
+
+If you no longer need a database for your Replit App, you can remove it and all its data.
+
+<Accordion title="How to remove a database">
+  From the **Replit Database** tool:
+
+  1. Select the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=39c5a0a4872b7416378ddad9f2bef608" alt="gear icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/settings-icon.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=e0a36e6a9a2078c02467d2abf0b8ba9e 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3be97f139b63f478d536ccaa51518c9a 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4eba230fefbe9836ffd37672275aa7d1 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=97e5099639faf4a5490d8e000c00149a 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4d9552209cee3306d2bc2a02e747ecb6 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=d84a81284c0c9af295e0b86273d5c291 2500w" /> **Settings** tab
+  2. Select **Remove database** and confirm by selecting **Yes, Remove database**
+</Accordion>
+
+### Billing and resource usage
+
+Replit optimizes your cost savings for database usage by using Neon, a serverless database provider.
+
+Neon's serverless capabilities include the following:
+
+* Zero infrastructure setup or maintenance
+* Automatic scaling to handle your usage needs
+* Compute time billing only when the database is active
+
+The database enters an idle state after five minutes of inactivity, pausing compute time billing.
+It instantly reactivates when it receives a query.
+
+<Tip>
+  To learn more about this serverless database technology, see the
+  <a href="https://neon.tech/docs/introduction/compute-lifecycle" target="_blank">Neon Compute lifecycle</a> documentation.
+</Tip>
+
+Replit provides real-time tracking of your database usage.
+You can view the breakdown of compute time and storage usage for the current Replit App
+or for each Replit App on your account.
+
+<Accordion title="How to access database usage">
+  To view your database compute time and storage usage for the current billing period, follow the steps below:
+
+  From the **Replit Database** tool:
+
+  1. Navigate to the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3cf383ef9ff4e8b5bad4792121dd6769" alt="PostgresSQL database icon" data-og-width="24" width="24" data-og-height="24" height="24" data-path="images/icons/postgres.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=17b80617d665ef3812021c0fdb3b43cf 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=10bdd7a13380255ddf3af617d08c9220 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=a5cacd83bc584eca88ddf943cc98b52f 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=cfa8597cf0b3622644faedce574dae7d 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=5cf63513422bdc89684306e71bc0d267 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/postgres.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=14b4db671a736545614e0140edff2fdd 2500w" /> **Replit Database** tool in your workspace
+  2. Select the <img class="icon-svg" src="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=39c5a0a4872b7416378ddad9f2bef608" alt="gear icon" data-og-width="16" width="16" data-og-height="16" height="16" data-path="images/icons/settings-icon.svg" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=280&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=e0a36e6a9a2078c02467d2abf0b8ba9e 280w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=560&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=3be97f139b63f478d536ccaa51518c9a 560w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=840&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4eba230fefbe9836ffd37672275aa7d1 840w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=1100&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=97e5099639faf4a5490d8e000c00149a 1100w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=1650&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=4d9552209cee3306d2bc2a02e747ecb6 1650w, https://mintcdn.com/replit/7jcTEkTXPQwUz2BL/images/icons/settings-icon.svg?w=2500&fit=max&auto=format&n=7jcTEkTXPQwUz2BL&q=85&s=d84a81284c0c9af295e0b86273d5c291 2500w" /> **Settings** tab
+  3. Scroll to the **Account resource usage** section to view a usage summary
+
+  To view for every Replit App on your account from the **Account resource usage** section, follow the steps below:
+
+  1. Select **View account resource limits** to open the **Usage** page
+  2. Scroll to **Resource usage** section
+  3. Expand the **PostgresSQL Storage** and **PostgresSQL Compute** rows for details on each Replit App
+</Accordion>
+
+To learn how Replit charges for database usage, see [Deployments and Database Billing](/billing/about-usage-based-billing#databases).
+
+### Security features
+
+When you add a database integration using **Agent**, it adds an Object-Relational Mapper (ORM)
+that handles all database communications with built-in security.
+
+This ORM layer, combined with Agent's security best practice implementation, protects your app from
+exploits through the following features:
+
+* **Schema validation**: Verifies data conforms to expected formats
+* **Data sanitization**: Automatically cleans up builder input to prevent SQL injection attacks
+
+## Next steps
+
+To learn how to connect to a Replit SQL database from code, see [Connect your app to a SQL database](/getting-started/quickstarts/database-connection/).

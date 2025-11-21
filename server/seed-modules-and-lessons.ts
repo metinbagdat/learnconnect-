@@ -295,7 +295,6 @@ export async function seedModulesAndLessons() {
               titleTr: lessonTemplate.titleTr,
               contentEn: lessonTemplate.contentEn,
               contentTr: lessonTemplate.contentTr,
-              description: lessonTemplate.descriptionEn, // Legacy field
               descriptionEn: lessonTemplate.descriptionEn,
               descriptionTr: lessonTemplate.descriptionTr,
               order: j,

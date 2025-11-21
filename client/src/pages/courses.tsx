@@ -32,19 +32,24 @@ export default function Courses() {
   });
   
   const filterCourseTree = (courses: any[], query: string): any[] => {
-    if (!query) return courses;
+    if (!query || !courses) return courses || [];
     
     return courses.reduce((acc: any[], course: any) => {
+      if (!course) return acc;
+      
+      const courseTitle = course.title || course.titleEn || course.titleTr || "";
+      const courseCategory = course.category || "";
+      
       const matchesSearch = 
-        course.title.toLowerCase().includes(query.toLowerCase()) || 
-        course.category.toLowerCase().includes(query.toLowerCase());
+        String(courseTitle).toLowerCase().includes(query.toLowerCase()) || 
+        String(courseCategory).toLowerCase().includes(query.toLowerCase());
       
       const filteredChildren = course.children ? filterCourseTree(course.children, query) : [];
       
       if (matchesSearch || filteredChildren.length > 0) {
         acc.push({
           ...course,
-          children: filteredChildren
+          children: filteredChildren.length > 0 ? filteredChildren : course.children
         });
       }
       
@@ -53,13 +58,16 @@ export default function Courses() {
   };
   
   const removeEnrolledCourses = (courses: any[], enrolledTree: any[]): any[] => {
+    if (!courses) return [];
+    
     const enrolledIds = new Set<number>();
     const collectEnrolledIds = (courses: any[]) => {
+      if (!courses) return;
       courses.forEach(course => {
-        if (course.isEnrolled) {
+        if (course && course.isEnrolled) {
           enrolledIds.add(course.id);
         }
-        if (course.children) {
+        if (course && course.children) {
           collectEnrolledIds(course.children);
         }
       });
@@ -67,6 +75,8 @@ export default function Courses() {
     collectEnrolledIds(enrolledTree);
     
     return courses.reduce((acc: any[], course: any) => {
+      if (!course) return acc;
+      
       if (enrolledIds.has(course.id)) {
         return acc;
       }
@@ -75,7 +85,7 @@ export default function Courses() {
       
       acc.push({
         ...course,
-        children: filteredChildren
+        children: filteredChildren.length > 0 ? filteredChildren : course.children
       });
       
       return acc;
@@ -175,12 +185,12 @@ export default function Courses() {
                           <CourseCardSkeleton key={i} />
                         ))}
                       </div>
-                    ) : filteredUserCourses.length === 0 ? (
+                    ) : filteredUserCourses && filteredUserCourses.length === 0 ? (
                       <EmptyState 
                         type={searchQuery ? "search" : "courses"}
                         onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
                       />
-                    ) : (
+                    ) : filteredUserCourses && filteredUserCourses.length > 0 ? (
                       <div className="space-y-6">
                         <div className="mb-4">
                           <p className="text-sm text-muted-foreground">
@@ -189,7 +199,7 @@ export default function Courses() {
                         </div>
                         <CourseTree courses={filteredUserCourses} />
                       </div>
-                    )}
+                    ) : null}
                   </TabsContent>
                   
                   <TabsContent value="available" className="mt-6">
@@ -207,12 +217,12 @@ export default function Courses() {
                           <CourseCardSkeleton key={i} />
                         ))}
                       </div>
-                    ) : filteredAvailableCourses.length === 0 ? (
+                    ) : filteredAvailableCourses && filteredAvailableCourses.length === 0 ? (
                       <EmptyState 
                         type={searchQuery ? "search" : "courses"}
                         onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
                       />
-                    ) : (
+                    ) : filteredAvailableCourses && filteredAvailableCourses.length > 0 ? (
                       <div className="space-y-6">
                         <div className="mb-4">
                           <p className="text-sm text-muted-foreground">
@@ -225,7 +235,7 @@ export default function Courses() {
                           onEnroll={enrollInCourse}
                         />
                       </div>
-                    )}
+                    ) : null}
                   </TabsContent>
                 </Tabs>
               </div>

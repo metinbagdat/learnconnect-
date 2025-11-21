@@ -40,13 +40,15 @@ interface CourseNodeProps {
 }
 
 function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodeProps) {
+  if (!course) return null;
+  
   const [isExpanded, setIsExpanded] = useState(course.depth === 0); // Root courses expanded by default
   const [, navigate] = useLocation();
   const { language } = useLanguage();
   const hasChildren = course.children && course.children.length > 0;
 
-  const localizedTitle = getLocalizedField(course, 'title', language);
-  const localizedDescription = getLocalizedField(course, 'description', language);
+  const localizedTitle = course.title || getLocalizedField(course, 'title', language) || 'Untitled Course';
+  const localizedDescription = getLocalizedField(course, 'description', language) || '';
 
   const getDepthColor = (depth: number) => {
     const colors = [
@@ -178,9 +180,20 @@ export function CourseTree({ courses, showEnrollButton = false, onEnroll }: Cour
     );
   }
 
+  const validCourses = courses.filter(c => c && typeof c === 'object');
+  
+  if (validCourses.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+        <p className="text-gray-600">No courses available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4" data-testid="course-tree">
-      {courses.map((course) => (
+      {validCourses.map((course) => (
         <CourseNode
           key={course.id}
           course={course}

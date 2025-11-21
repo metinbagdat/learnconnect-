@@ -370,7 +370,6 @@ export default function LearningPathPage() {
             </div>
           </div>
         </div>
-        </div>
       )}
     </div>
   );

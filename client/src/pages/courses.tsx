@@ -249,10 +249,8 @@ export default function Courses() {
           </div>
         </main>
       </div>
-      
-      {/* Mobile Bottom Navigation */}
       <MobileNav />
     </div>
-    </div>
+  </div>
   );
 }

@@ -59,19 +59,19 @@ export default function AIDailyPlan() {
 
   // Fetch today's plan
   const { data: plan, isLoading } = useQuery<DailyPlan>({
-    queryKey: [`/api/ai-daily-plan/${today}`],
+    queryKey: [`/api/ai-daily-plans?date=${today}`],
     enabled: !!user,
   });
 
   // Generate plan mutation
   const generatePlan = useMutation({
     mutationFn: async () => {
-      return await apiRequest("POST", `/api/ai-daily-plan/generate`, {
+      return await apiRequest("POST", `/api/ai-daily-plans/generate`, {
         date: today,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/ai-daily-plan/${today}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/ai-daily-plans?date=${today}`] });
       toast({
         title: t("planGeneratedSuccess"),
         description: t("aiRecommendations"),

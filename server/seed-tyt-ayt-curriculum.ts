@@ -669,8 +669,9 @@ export async function seedTytAytCurriculum() {
               descriptionTr: lesson.description.tr,
               order: j,
               estimatedTime: lesson.estimatedTime,
-              tags: ["exam", "tyt", "ayt", curriculum.courseName.en.toLowerCase()]
+              tags: ["exam", "tyt", "ayt", curriculum.courseName.en.toLowerCase().replace(/\s+/g, "-")]
             });
+          
           
           lessonCount++;
         }

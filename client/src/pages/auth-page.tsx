@@ -9,10 +9,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Book, Laptop, Users, Globe } from "lucide-react";
+import { Book, Laptop, Users, Globe, CheckCircle, Zap, Award } from "lucide-react";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SocialLogin } from "@/components/social/social-login";
+import { StudentTestimonials } from "@/components/ui/student-testimonials";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -67,7 +68,8 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 flex">
       {/* Left side - Forms */}
       <div className="flex-1 flex items-center justify-center p-6 bg-white">
         <div className="w-full max-w-md">
@@ -79,7 +81,7 @@ export default function AuthPage() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-neutral-900">EduLearn</h1>
-            <p className="text-neutral-600 mt-2">Access your learning platform</p>
+            <p className="text-neutral-600 mt-2">Transform Your Learning Journey</p>
           </div>
           
           <Tabs defaultValue="login">
@@ -214,46 +216,52 @@ export default function AuthPage() {
       </div>
       
       {/* Right side - Hero Section */}
-      <div className="hidden lg:flex flex-1 bg-primary-50 p-6 items-center justify-center">
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 items-center justify-center">
         <div className="max-w-xl text-center">
-          <h2 className="text-4xl font-bold text-primary mb-6">Transform Your Learning Experience</h2>
-          <p className="text-neutral-700 mb-8">
-            Join our comprehensive e-learning platform designed for students, professionals, and lifelong learners. Access high-quality courses, interactive content, and personalized learning paths.
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+            Master Your Skills, Achieve Your Goals
+          </h2>
+          <p className="text-neutral-700 mb-8 text-lg">
+            Join 50,000+ learners transforming their careers with personalized, AI-powered learning paths and expert guidance.
           </p>
           
           <div className="grid grid-cols-3 gap-6 mt-12">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="w-12 h-12 bg-primary-100 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <Book className="h-6 w-6" />
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-neutral-900 mb-2">Rich Course Library</h3>
+              <h3 className="font-bold text-neutral-900 mb-2">AI-Powered</h3>
               <p className="text-sm text-neutral-600">
-                Extensive collection of courses in STEM, business, and more
+                Personalized learning paths adapted to your pace
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="w-12 h-12 bg-secondary-500 bg-opacity-10 text-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Laptop className="h-6 w-6" />
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Award className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-neutral-900 mb-2">AI-Enhanced Learning</h3>
+              <h3 className="font-bold text-neutral-900 mb-2">Certified</h3>
               <p className="text-sm text-neutral-600">
-                Personalized assistance and adaptive content to optimize your learning
+                Earn recognized certificates and credentials
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="w-12 h-12 bg-accent-500 bg-opacity-10 text-accent-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-6 w-6" />
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-6 w-6" />
               </div>
-              <h3 className="font-bold text-neutral-900 mb-2">Community Support</h3>
+              <h3 className="font-bold text-neutral-900 mb-2">Proven Results</h3>
               <p className="text-sm text-neutral-600">
-                Connect with peers and instructors for collaborative learning
+                92% success rate across all courses
               </p>
             </div>
           </div>
         </div>
       </div>
+      </div>
+
+      {/* Testimonials Section - Mobile & Desktop */}
+      <StudentTestimonials />
     </div>
   );
 }

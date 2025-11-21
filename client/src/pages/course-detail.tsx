@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useSkillChallenge } from "@/hooks/use-skill-challenge";
-import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine, Globe, DollarSign, Calendar, Target } from "lucide-react";
+import { Book, CheckCircle, Clock, FileText, LucideIcon, Play, User, Brain, TreePine, Globe, DollarSign, Calendar, Target, ChevronRight, ChevronLeft, Bookmark } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -33,6 +33,8 @@ export default function CourseDetail() {
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [lessonContent, setLessonContent] = useState<string | null>(null);
   const [loadingContent, setLoadingContent] = useState<boolean>(false);
+  const [lessonMetadata, setLessonMetadata] = useState<any>(null);
+  const [contentCache, setContentCache] = useState<Record<number, { content: string; metadata: any }>>({});
   
   // Fetch course details
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
@@ -71,8 +73,16 @@ export default function CourseDetail() {
     }
   };
   
-  // Generate lesson content when a lesson is clicked
+  // Generate lesson content when a lesson is clicked with caching
   const generateLessonContent = async (lessonId: number, lessonTitle: string, moduleTitle: string) => {
+    // Check cache first
+    if (contentCache[lessonId]) {
+      setSelectedLessonId(lessonId);
+      setLessonContent(contentCache[lessonId].content);
+      setLessonMetadata(contentCache[lessonId].metadata);
+      return;
+    }
+    
     if (selectedLessonId === lessonId && lessonContent) {
       return; // Content already loaded
     }
@@ -80,25 +90,37 @@ export default function CourseDetail() {
     setSelectedLessonId(lessonId);
     setLoadingContent(true);
     setLessonContent(null);
+    setLessonMetadata(null);
     
     try {
       const response = await apiRequest("POST", "/api/ai/generate-lesson-content", {
         lessonId,
         lessonTitle,
         moduleTitle,
-        courseTitle: course?.title
+        courseTitle: course?.title,
+        language // Pass current language
       });
       
       const data = await response.json();
       setLessonContent(data.content);
+      setLessonMetadata(data.metadata);
+      
+      // Cache the content
+      setContentCache(prev => ({
+        ...prev,
+        [lessonId]: { content: data.content, metadata: data.metadata }
+      }));
     } catch (error) {
       console.error("Failed to generate lesson content:", error);
       toast({
-        title: "Error",
-        description: "Failed to generate lesson content. Please try again.",
+        title: language === 'tr' ? "Hata" : "Error",
+        description: language === 'tr' ? "Ders içeriği oluşturulamadı. Lütfen tekrar deneyin." : "Failed to generate lesson content. Please try again.",
         variant: "destructive",
       });
-      setLessonContent("# Content Generation Failed\n\nWe're having trouble generating the content for this lesson. Please try again later or contact support if the problem persists.");
+      const errorContent = language === 'tr' 
+        ? "# İçerik Oluşturma Başarısız\n\nBu dersin içeriğini oluşturmakta sorun yaşanıyor. Lütfen daha sonra tekrar deneyin."
+        : "# Content Generation Failed\n\nWe're having trouble generating the content for this lesson. Please try again later.";
+      setLessonContent(errorContent);
     } finally {
       setLoadingContent(false);
     }
@@ -387,17 +409,41 @@ export default function CourseDetail() {
                             </div>
                           </div>
                         ) : lessonContent ? (
-                          <div>
-                            <div className="prose prose-neutral max-w-none">
+                          <div className="space-y-6">
+                            {/* Lesson Metadata */}
+                            {lessonMetadata && (
+                              <div className="flex flex-wrap gap-4 pb-4 border-b border-neutral-200">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-neutral-500" />
+                                  <span className="text-sm text-neutral-600">
+                                    {lessonMetadata.estimatedReadingTime} {language === 'tr' ? 'dk' : 'min'} {language === 'tr' ? 'okuma' : 'read'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-neutral-500" />
+                                  <span className="text-sm text-neutral-600">
+                                    {lessonMetadata.wordCount} {language === 'tr' ? 'kelime' : 'words'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Lesson Content */}
+                            <div className="prose prose-neutral max-w-none dark:prose-invert">
                               <ReactMarkdown>
                                 {lessonContent}
                               </ReactMarkdown>
                             </div>
                             
-                            <div className="mt-8 pt-6 border-t border-neutral-200">
+                            {/* Action Buttons */}
+                            <div className="mt-8 pt-6 border-t border-neutral-200 flex flex-wrap gap-3">
                               <Button onClick={markLessonAsCompleted} className="flex items-center">
                                 <CheckCircle className="mr-2 h-4 w-4" />
-                                Mark as Completed
+                                {language === 'tr' ? 'Tamamlandı İşaretle' : 'Mark as Completed'}
+                              </Button>
+                              <Button variant="outline" className="flex items-center">
+                                <Bookmark className="mr-2 h-4 w-4" />
+                                {language === 'tr' ? 'Kaydet' : 'Bookmark'}
                               </Button>
                             </div>
                           </div>
@@ -405,8 +451,12 @@ export default function CourseDetail() {
                           <div className="flex items-center justify-center h-64">
                             <div className="text-center">
                               <FileText className="h-12 w-12 mx-auto text-neutral-300 mb-4" />
-                              <h3 className="text-lg font-medium text-neutral-900">Loading content...</h3>
-                              <p className="text-neutral-500 mt-1">Please wait a moment.</p>
+                              <h3 className="text-lg font-medium text-neutral-900">
+                                {language === 'tr' ? 'İçerik yükleniyor...' : 'Loading content...'}
+                              </h3>
+                              <p className="text-neutral-500 mt-1">
+                                {language === 'tr' ? 'Lütfen biraz bekleyin.' : 'Please wait a moment.'}
+                              </p>
                             </div>
                           </div>
                         )

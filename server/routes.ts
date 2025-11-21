@@ -599,14 +599,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Generate lesson content on demand
+  // Generate lesson content on demand with enhanced features
   app.post("/api/ai/generate-lesson-content", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     
     try {
-      const { lessonId, lessonTitle, moduleTitle, courseTitle } = req.body;
+      const { lessonId, lessonTitle, moduleTitle, courseTitle, language = 'en' } = req.body;
       
       if (!lessonId || !lessonTitle) {
         return res.status(400).json({ message: "Lesson ID and title are required" });
@@ -614,29 +614,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate content based on the lesson and course info
       let content = "";
+      const isTurkish = language === 'tr';
+      
+      const languageInstructions = isTurkish 
+        ? "Tüm içeriği Türkçe olarak oluştur. Başlıklar, örnekler ve etkinlikler dahil olmak üzere tüm içeriği Türkçe yazı."
+        : "Create all content in English.";
       
       try {
         // Try Anthropic Claude first (higher quality content)
         if (process.env.ANTHROPIC_API_KEY) {
           try {
-            // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
             const message = await anthropic.messages.create({
               model: "claude-3-7-sonnet-20250219",
-              max_tokens: 2000,
-              system: "You are an expert educational content creator with deep knowledge across various subjects. Create detailed, accurate, and engaging lesson content that includes explanations, examples, and practice activities. Format the content in Markdown.",
+              max_tokens: 2500,
+              system: `You are an expert educational content creator with deep knowledge across various subjects. Create detailed, accurate, and engaging lesson content that includes explanations, examples, and practice activities. Format the content in Markdown with clear sections. ${languageInstructions}`,
               messages: [
                 {
                   role: "user",
-                  content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". 
-                  
-Format the content with these sections:
-1. Introduction
-2. Core Concepts
-3. Examples
-4. Practice Activities
-5. Summary
+                  content: `Create comprehensive lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}".
 
-Use markdown formatting. Be comprehensive and educational.`
+Include these sections in this exact order:
+1. Learning Objectives (3-5 bullet points of what students will learn)
+2. Introduction (engaging overview of the topic)
+3. Core Concepts (break down into subsections with key ideas)
+4. Real-World Examples (2-3 practical applications)
+5. Step-by-Step Guide or Examples with Code/Diagrams
+6. Practice Activities (3 activities with increasing difficulty)
+7. Common Mistakes to Avoid
+8. Summary and Key Takeaways
+9. Additional Resources (suggested topics to explore next)
+
+Make the content engaging, use formatting effectively, include practical examples, and structure it for easy reading.`
                 }
               ],
             });
@@ -647,7 +655,6 @@ Use markdown formatting. Be comprehensive and educational.`
             console.log("Generated content with Anthropic Claude");
           } catch (claudeError) {
             console.error("Error generating content with Anthropic Claude:", claudeError);
-            // Fall through to OpenAI instead of throwing
           }
         }
         
@@ -659,23 +666,17 @@ Use markdown formatting. Be comprehensive and educational.`
               messages: [
                 { 
                   role: "system", 
-                  content: "You are an expert educational content creator. Create detailed, accurate, and engaging lesson content that includes explanations, examples, and practice activities." 
+                  content: `You are an expert educational content creator. Create detailed, accurate, and engaging lesson content. ${languageInstructions}`
                 },
                 { 
                   role: "user", 
-                  content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". 
-                  
-Format the content with these sections:
-1. Introduction
-2. Core Concepts
-3. Examples
-4. Practice Activities
-5. Summary
+                  content: `Create comprehensive lesson content for "${lessonTitle}" from module "${moduleTitle || 'N/A'}" in course "${courseTitle || 'N/A'}".
 
-Use markdown formatting. Be comprehensive and educational.` 
+Include: Learning Objectives, Introduction, Core Concepts, Real-World Examples, Step-by-Step Guide, Practice Activities, Common Mistakes, Summary, Additional Resources.`
                 }
               ],
               temperature: 0.7,
+              max_tokens: 2000,
             });
             
             content = generatedContent.choices[0].message.content || "";
@@ -684,19 +685,52 @@ Use markdown formatting. Be comprehensive and educational.`
             console.error("Error generating content with OpenAI:", openaiError);
           }
         }
-        
-        // If no AI providers available or all failed, use fallback
-        if (!content) {
-          console.log("Using fallback content for lesson");
-        }
       } catch (error) {
         console.error("Error generating content with AI providers:", error);
       }
       
-      // Always provide fallback content if nothing was generated
+      // Fallback content if AI generation failed
       if (!content) {
-        content = `
+        content = isTurkish ? `
 # ${lessonTitle}
+
+## Öğrenme Hedefleri
+- Bu dersin ana kavramlarını anlamak
+- Pratik uygulamaları öğrenmek
+- Gerçek dünya örneklerini incelemek
+
+## Giriş
+Bu ders ${lessonTitle} konusunun temel kavramlarını ve uygulamalarını kapsamaktadır. Temel ilkeleri, pratik uygulamaları ve bu bilgileri çeşitli senaryolarda nasıl uygulayacağınızı öğreneceksiniz.
+
+## Temel Kavramlar
+- ${lessonTitle}'nin temelleri
+- Ana ilkeler ve metodolojiler
+- Tarihsel bağlam ve gelişim
+- Modern uygulamalar ve teknikler
+
+## Örnekler
+${lessonTitle} nasıl uygulandığına dair pratik örnekler:
+
+1. **Örnek 1**: Temel bir uygulamanın detaylı açıklaması
+2. **Örnek 2**: Daha karmaşık bir senaryo
+3. **Örnek 3**: Gerçek dünya vaka çalışması
+
+## Alıştırmalar
+Anlamanızı pekiştirmek için bu etkinlikleri deneyin:
+
+1. **Etkinlik 1**: Temel kavramları basit bir problemi çözmek için uygulayın
+2. **Etkinlik 2**: ${lessonTitle} ile ilgili bir vaka çalışmasını analiz edin
+3. **Etkinlik 3**: Anahtar ilkeleri uygulayan kendi projenizi oluşturun
+
+## Özet
+Bu derste ${lessonTitle} hakkında, temel kavramlarını, pratik uygulamalarını ve bu fikirleri çeşitli senaryolarda nasıl uygulayacağınızı öğrendiniz.
+        ` : `
+# ${lessonTitle}
+
+## Learning Objectives
+- Understand the core concepts of ${lessonTitle}
+- Learn practical applications and use cases
+- Explore real-world examples and implementations
 
 ## Introduction
 This lesson covers the key concepts and applications of ${lessonTitle}. You will learn about the fundamental principles, practical applications, and how to apply this knowledge in real-world scenarios.
@@ -726,17 +760,19 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         `;
       }
       
-      // Update the lesson in the database with the generated content
-      const lessons = await storage.getLessons(0);
-      const lesson = lessons.find(l => l.id === lessonId);
+      // Calculate reading time (rough estimate: 200 words per minute)
+      const wordCount = content.split(/\s+/).length;
+      const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
       
-      if (lesson) {
-        // Update the lesson content in the database
-        // This is a placeholder - you would need to implement this method in your storage interface
-        // await storage.updateLessonContent(lessonId, content);
-      }
-      
-      res.json({ content });
+      res.json({ 
+        content,
+        metadata: {
+          estimatedReadingTime: readingTimeMinutes,
+          wordCount,
+          language,
+          generatedAt: new Date().toISOString()
+        }
+      });
     } catch (error: any) {
       console.error("Error generating lesson content:", error);
       res.status(500).json({ 

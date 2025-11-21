@@ -6,6 +6,11 @@ EduLearn Platform is a sophisticated e-learning solution designed to deliver dyn
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Deployment
+- **Custom Domain**: learnconnect.net (registered and ready to configure)
+- **Deployment Platform**: Replit (Autoscale deployment with custom domain support)
+- **Status**: Ready for production deployment
+
 ## System Architecture
 
 ### UI/UX Decisions

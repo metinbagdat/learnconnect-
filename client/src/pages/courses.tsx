@@ -117,7 +117,10 @@ export default function Courses() {
   };
   
   return (
-    <div className="flex h-screen overflow-hidden bg-neutral-50">
+    <div className="min-h-screen flex flex-col">
+      <ModernNavigation pageTitle={t('myCourses')} currentPage="courses" />
+      
+      <div className="flex h-screen overflow-hidden bg-neutral-50">
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <Sidebar />
@@ -250,6 +253,8 @@ export default function Courses() {
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden">
         <MobileNav />
+      </div>
+    </div>
       </div>
     </div>
   );

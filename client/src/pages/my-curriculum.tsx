@@ -149,7 +149,9 @@ export default function MyCurriculumPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen flex flex-col">
+      <ModernNavigation pageTitle={t('myCurriculum')} currentPage="myCurriculum" />
+      <div className="flex-1 container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -509,6 +511,7 @@ export default function MyCurriculumPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

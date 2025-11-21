@@ -246,11 +246,12 @@ export default function TytDashboard() {
   const studyStreak = studyStats?.streaks.find(s => s.type === 'daily')?.current || 0;
 
   return (
-    <PageWrapper 
-      currentPage={language === 'tr' ? 'TYT Öğrenci Paneli' : 'TYT Student Dashboard'}
-      showBackButton={true}
-      backUrl="/"
-    >
+    <div className="min-h-screen flex flex-col">
+      <ModernNavigation 
+        pageTitle={language === 'tr' ? 'TYT Öğrenci Paneli' : 'TYT Student Dashboard'} 
+        currentPage="tytDashboard" 
+      />
+      <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-950 dark:to-slate-900 py-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
@@ -829,6 +830,7 @@ export default function TytDashboard() {
           </Tabs>
         </motion.div>
       </div>
-    </PageWrapper>
+      </div>
+    </div>
   );
 }

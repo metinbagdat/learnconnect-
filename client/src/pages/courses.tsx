@@ -174,75 +174,71 @@ export default function Courses() {
                     <TabsTrigger value="enrolled">{t('myCourses')}</TabsTrigger>
                     <TabsTrigger value="available">{t('availableCourses')}</TabsTrigger>
                   </TabsList>
-                  
-                  {/* Enrolled Courses Tab - Hierarchical Tree View */}
                   <TabsContent value="enrolled" className="mt-6">
-                  {userCoursesError ? (
-                    <ApiError 
-                      error={userCoursesError}
-                      onRetry={refetchUserCourses}
-                      type="network"
-                      title={t('failedToLoadCourses', 'Failed to load your courses')}
-                      description={t('coursesErrorDesc', 'Unable to load your enrolled courses. Please check your connection and try again.')}
-                    />
-                  ) : userCoursesLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <CourseCardSkeleton key={i} />
-                      ))}
-                    </div>
-                  ) : filteredUserCourses.length === 0 ? (
-                    <EmptyState 
-                      type={searchQuery ? "search" : "courses"}
-                      onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
-                    />
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground">
-                          Your courses are organized in a hierarchical structure. Click to expand and explore sub-courses.
-                        </p>
-                      </div>
-                      <CourseTree courses={filteredUserCourses} />
-                    </div>
-                  )}
-                </TabsContent>
-                
-                {/* Available Courses Tab - Hierarchical Tree View */}
-                <TabsContent value="available" className="mt-6">
-                  {allCoursesError ? (
-                    <ApiError 
-                      error={allCoursesError}
-                      onRetry={refetchAllCourses}
-                      type="server"
-                      title={t('failedToLoadCourses', 'Failed to load available courses')}
-                      description={t('coursesErrorDesc', 'Unable to load available courses. Please try again.')}
-                    />
-                  ) : allCoursesLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <CourseCardSkeleton key={i} />
-                      ))}
-                    </div>
-                  ) : filteredAvailableCourses.length === 0 ? (
-                    <EmptyState 
-                      type={searchQuery ? "search" : "courses"}
-                      onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
-                    />
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="mb-4">
-                        <p className="text-sm text-muted-foreground">
-                          Browse available courses organized by curriculum structure. Enroll in any course to begin learning.
-                        </p>
-                      </div>
-                      <CourseTree 
-                        courses={filteredAvailableCourses} 
-                        showEnrollButton={true}
-                        onEnroll={enrollInCourse}
+                    {userCoursesError ? (
+                      <ApiError 
+                        error={userCoursesError}
+                        onRetry={refetchUserCourses}
+                        type="network"
+                        title={t('failedToLoadCourses', 'Failed to load your courses')}
+                        description={t('coursesErrorDesc', 'Unable to load your enrolled courses. Please check your connection and try again.')}
                       />
-                    </div>
-                  )}
+                    ) : userCoursesLoading ? (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <CourseCardSkeleton key={i} />
+                        ))}
+                      </div>
+                    ) : filteredUserCourses.length === 0 ? (
+                      <EmptyState 
+                        type={searchQuery ? "search" : "courses"}
+                        onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
+                      />
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="mb-4">
+                          <p className="text-sm text-muted-foreground">
+                            Your courses are organized in a hierarchical structure. Click to expand and explore sub-courses.
+                          </p>
+                        </div>
+                        <CourseTree courses={filteredUserCourses} />
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="available" className="mt-6">
+                    {allCoursesError ? (
+                      <ApiError 
+                        error={allCoursesError}
+                        onRetry={refetchAllCourses}
+                        type="server"
+                        title={t('failedToLoadCourses', 'Failed to load available courses')}
+                        description={t('coursesErrorDesc', 'Unable to load available courses. Please try again.')}
+                      />
+                    ) : allCoursesLoading ? (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <CourseCardSkeleton key={i} />
+                        ))}
+                      </div>
+                    ) : filteredAvailableCourses.length === 0 ? (
+                      <EmptyState 
+                        type={searchQuery ? "search" : "courses"}
+                        onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
+                      />
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="mb-4">
+                          <p className="text-sm text-muted-foreground">
+                            Browse available courses organized by curriculum structure. Enroll in any course to begin learning.
+                          </p>
+                        </div>
+                        <CourseTree 
+                          courses={filteredAvailableCourses} 
+                          showEnrollButton={true}
+                          onEnroll={enrollInCourse}
+                        />
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
               </div>

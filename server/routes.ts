@@ -647,22 +647,24 @@ Use markdown formatting. Be comprehensive and educational.`
             console.log("Generated content with Anthropic Claude");
           } catch (claudeError) {
             console.error("Error generating content with Anthropic Claude:", claudeError);
-            throw claudeError; // Fall through to OpenAI
+            // Fall through to OpenAI instead of throwing
           }
-        } 
+        }
+        
         // Try using OpenAI API if Anthropic is not available or failed
-        else if (process.env.OPENAI_API_KEY) {
-          const generatedContent = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [
-              { 
-                role: "system", 
-                content: "You are an expert educational content creator. Create detailed, accurate, and engaging lesson content that includes explanations, examples, and practice activities." 
-              },
-              { 
-                role: "user", 
-                content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". 
-                
+        if (!content && process.env.OPENAI_API_KEY) {
+          try {
+            const generatedContent = await openai.chat.completions.create({
+              model: "gpt-3.5-turbo",
+              messages: [
+                { 
+                  role: "system", 
+                  content: "You are an expert educational content creator. Create detailed, accurate, and engaging lesson content that includes explanations, examples, and practice activities." 
+                },
+                { 
+                  role: "user", 
+                  content: `Create detailed lesson content for "${lessonTitle}" which is part of the module "${moduleTitle || 'N/A'}" in the course "${courseTitle || 'N/A'}". 
+                  
 Format the content with these sections:
 1. Introduction
 2. Core Concepts
@@ -671,20 +673,28 @@ Format the content with these sections:
 5. Summary
 
 Use markdown formatting. Be comprehensive and educational.` 
-              }
-            ],
-            temperature: 0.7,
-          });
-          
-          content = generatedContent.choices[0].message.content || "";
-          console.log("Generated content with OpenAI");
-        } else {
-          throw new Error("No AI provider API keys available");
+                }
+              ],
+              temperature: 0.7,
+            });
+            
+            content = generatedContent.choices[0].message.content || "";
+            console.log("Generated content with OpenAI");
+          } catch (openaiError) {
+            console.error("Error generating content with OpenAI:", openaiError);
+          }
+        }
+        
+        // If no AI providers available or all failed, use fallback
+        if (!content) {
+          console.log("Using fallback content for lesson");
         }
       } catch (error) {
         console.error("Error generating content with AI providers:", error);
-        
-        // Fallback content generation
+      }
+      
+      // Always provide fallback content if nothing was generated
+      if (!content) {
         content = `
 # ${lessonTitle}
 

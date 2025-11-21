@@ -386,14 +386,12 @@ export default function CourseDetail() {
                               <p className="text-neutral-500 mt-1">Please wait while we prepare the lesson content.</p>
                             </div>
                           </div>
-                        ) : (
+                        ) : lessonContent ? (
                           <div>
                             <div className="prose prose-neutral max-w-none">
-                              {lessonContent && (
-                                <ReactMarkdown>
-                                  {lessonContent}
-                                </ReactMarkdown>
-                              )}
+                              <ReactMarkdown>
+                                {lessonContent}
+                              </ReactMarkdown>
                             </div>
                             
                             <div className="mt-8 pt-6 border-t border-neutral-200">
@@ -401,6 +399,14 @@ export default function CourseDetail() {
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Mark as Completed
                               </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-64">
+                            <div className="text-center">
+                              <FileText className="h-12 w-12 mx-auto text-neutral-300 mb-4" />
+                              <h3 className="text-lg font-medium text-neutral-900">Loading content...</h3>
+                              <p className="text-neutral-500 mt-1">Please wait a moment.</p>
                             </div>
                           </div>
                         )

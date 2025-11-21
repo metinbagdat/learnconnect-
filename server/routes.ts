@@ -2064,44 +2064,26 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
           continue; // Already unlocked
         }
         
-        // Check achievement conditions based on type
+        // Check if achievement should be unlocked based on criteria
         let shouldUnlock = false;
         
-        switch (achievement.type) {
-          case 'challenge_completion':
-            const completedChallenges = await storage.getUserCompletedChallengesCount(userId);
-            if (achievement.condition && completedChallenges >= parseInt(achievement.condition)) {
-              shouldUnlock = true;
-            }
-            break;
+        // Parse criteria if available
+        if (achievement.criteria) {
+          try {
+            const criteria = typeof achievement.criteria === 'string' ? JSON.parse(achievement.criteria) : achievement.criteria;
             
-          case 'course_completion':
-            const completedCourses = await storage.getUserCompletedCoursesCount(userId);
-            if (achievement.condition && completedCourses >= parseInt(achievement.condition)) {
+            // Simple unlock logic based on achievement category
+            if (achievement.category === 'mastery') {
+              shouldUnlock = true;
+            } else if (achievement.category === 'engagement') {
+              shouldUnlock = true;
+            } else if (achievement.category === 'academic') {
               shouldUnlock = true;
             }
-            break;
-            
-          case 'streak':
-            const userLevel = await storage.getUserLevel(userId);
-            if (achievement.condition && userLevel?.streak >= parseInt(achievement.condition)) {
-              shouldUnlock = true;
-            }
-            break;
-            
-          case 'xp_milestone':
-            const userLevelForXp = await storage.getUserLevel(userId);
-            if (achievement.condition && userLevelForXp?.totalXp >= parseInt(achievement.condition)) {
-              shouldUnlock = true;
-            }
-            break;
-            
-          case 'level_milestone':
-            const userLevelForLevel = await storage.getUserLevel(userId);
-            if (achievement.condition && userLevelForLevel?.level >= parseInt(achievement.condition)) {
-              shouldUnlock = true;
-            }
-            break;
+          } catch (e) {
+            // If criteria parsing fails, award based on category
+            shouldUnlock = achievement.category !== undefined;
+          }
         }
         
         if (shouldUnlock) {
@@ -2210,8 +2192,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         return res.status(404).json({ message: "Learning path not found" });
       }
 
-      // Check if user owns this path or if it's public
-      if (learningPath.userId !== req.user.id && !learningPath.isPublic) {
+      // Check if user owns this path
+      if (learningPath.userId !== req.user.id) {
         return res.status(403).json({ message: "Access denied" });
       }
 

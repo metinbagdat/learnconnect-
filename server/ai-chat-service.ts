@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "./storage";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -139,7 +138,7 @@ export async function processStudyCompanionChat(
 
     // Get AI response  
     const completion = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      model: "gpt-4o-mini",
       messages: aiMessages.map(msg => ({
         role: msg.role as 'system' | 'user' | 'assistant',
         content: msg.content
@@ -224,7 +223,7 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
     Return as a JSON array of strings.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-5", // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
         { role: "user", content: prompt }

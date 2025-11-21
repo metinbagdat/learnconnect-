@@ -869,6 +869,48 @@ export const aiDailyPlans = pgTable("ai_daily_plans", {
   uniqueUserDate: sql`UNIQUE (user_id, date)`,
 }));
 
+// Forum System - Posts and Comments
+export const forumPosts = pgTable("forum_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  authorId: integer("author_id").notNull().references(() => users.id),
+  viewCount: integer("view_count").default(0),
+  likeCount: integer("like_count").default(0),
+  isPinned: boolean("is_pinned").default(false),
+  isClosed: boolean("is_closed").default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const forumComments = pgTable("forum_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => forumPosts.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  authorId: integer("author_id").notNull().references(() => users.id),
+  likeCount: integer("like_count").default(0),
+  isAnswer: boolean("is_answer").default(false), // For marking as accepted answer
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Certificate System
+export const certificates = pgTable("certificates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  certificateNumber: text("certificate_number").notNull().unique(),
+  issueDate: timestamp("issue_date").notNull().defaultNow(),
+  url: text("url"), // URL to certificate PDF/image
+  verificationCode: text("verification_code").notNull().unique(),
+  isActive: boolean("is_active").default(true),
+  revokedAt: timestamp("revoked_at"), // Track when certificate was revoked
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueUserCourse: sql`UNIQUE (user_id, course_id)`,
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -1710,3 +1752,20 @@ export type InsertStudyHabit = z.infer<typeof insertStudyHabitSchema>;
 export type InsertTytResource = z.infer<typeof insertTytResourceSchema>;
 export type InsertAiDailyPlan = z.infer<typeof insertAiDailyPlanSchema>;
 export type InsertDailyStudySession = z.infer<typeof insertDailyStudySessionSchema>;
+
+// Forum System insert schemas and type exports
+export const insertForumPostSchema = createInsertSchema(forumPosts).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertForumCommentSchema = createInsertSchema(forumComments).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type ForumPost = typeof forumPosts.$inferSelect;
+export type ForumComment = typeof forumComments.$inferSelect;
+export type InsertForumPost = z.infer<typeof insertForumPostSchema>;
+export type InsertForumComment = z.infer<typeof insertForumCommentSchema>;
+
+// Certificate System insert schemas and type exports
+export const insertCertificateSchema = createInsertSchema(certificates, {
+  issueDate: z.coerce.date().optional(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type Certificate = typeof certificates.$inferSelect;
+export type InsertCertificate = z.infer<typeof insertCertificateSchema>;

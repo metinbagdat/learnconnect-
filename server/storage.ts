@@ -254,7 +254,26 @@ import {
   weeklyStudyPlans,
   insertUploadSchema,
   insertEssaySchema,
-  insertWeeklyStudyPlanSchema
+  insertWeeklyStudyPlanSchema,
+  // Daily Study Sessions
+  type DailyStudySession,
+  type InsertDailyStudySession,
+  dailyStudySessions,
+  insertDailyStudySessionSchema,
+  // Forum System types
+  type ForumPost,
+  type InsertForumPost,
+  type ForumComment,
+  type InsertForumComment,
+  forumPosts,
+  forumComments,
+  insertForumPostSchema,
+  insertForumCommentSchema,
+  // Certificate System types
+  type Certificate,
+  type InsertCertificate,
+  certificates,
+  insertCertificateSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -578,6 +597,30 @@ export interface IStorage {
   getAiDailyPlans(userId: number, startDate?: string, endDate?: string): Promise<AiDailyPlan[]>;
   createAiDailyPlan(plan: InsertAiDailyPlan): Promise<AiDailyPlan>;
   updateAiDailyPlanProgress(userId: number, date: string, completionRate: number): Promise<AiDailyPlan | undefined>;
+
+  // Forum System operations
+  getForumPosts(limit?: number, offset?: number): Promise<ForumPost[]>;
+  getForumPost(id: number): Promise<ForumPost | undefined>;
+  getUserForumPosts(userId: number): Promise<ForumPost[]>;
+  createForumPost(post: InsertForumPost): Promise<ForumPost>;
+  updateForumPost(id: number, data: Partial<ForumPost>): Promise<ForumPost | undefined>;
+  deleteForumPost(id: number): Promise<boolean>;
+  incrementPostViews(id: number): Promise<void>;
+  
+  // Forum Comments operations
+  getPostComments(postId: number): Promise<ForumComment[]>;
+  getForumComment(id: number): Promise<ForumComment | undefined>;
+  createForumComment(comment: InsertForumComment): Promise<ForumComment>;
+  updateForumComment(id: number, data: Partial<ForumComment>): Promise<ForumComment | undefined>;
+  deleteForumComment(id: number): Promise<boolean>;
+  
+  // Certificate System operations
+  getUserCertificates(userId: number): Promise<Certificate[]>;
+  getCertificate(id: number): Promise<Certificate | undefined>;
+  getCertificateByNumber(certificateNumber: string): Promise<Certificate | undefined>;
+  createCertificate(certificate: InsertCertificate): Promise<Certificate>;
+  verifyCertificate(verificationCode: string): Promise<Certificate | undefined>;
+  revokeCertificate(id: number): Promise<Certificate | undefined>;
 
   // AI Curriculum System operations
   // Course Curriculum operations
@@ -3414,6 +3457,139 @@ export class DatabaseStorage implements IStorage {
       .update(aiDailyPlans)
       .set({ completionRate, completed })
       .where(and(eq(aiDailyPlans.userId, userId), eq(aiDailyPlans.date, date)))
+      .returning();
+    return updated;
+  }
+
+  // ==================== Forum System Implementations ====================
+  
+  // Forum Posts operations
+  async getForumPosts(limit: number = 20, offset: number = 0): Promise<ForumPost[]> {
+    return await db
+      .select()
+      .from(forumPosts)
+      .orderBy(desc(forumPosts.isPinned), desc(forumPosts.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getForumPost(id: number): Promise<ForumPost | undefined> {
+    const [post] = await db.select().from(forumPosts).where(eq(forumPosts.id, id)).limit(1);
+    return post;
+  }
+
+  async getUserForumPosts(userId: number): Promise<ForumPost[]> {
+    return await db
+      .select()
+      .from(forumPosts)
+      .where(eq(forumPosts.authorId, userId))
+      .orderBy(desc(forumPosts.createdAt));
+  }
+
+  async createForumPost(post: InsertForumPost): Promise<ForumPost> {
+    const [newPost] = await db.insert(forumPosts).values(post).returning();
+    return newPost;
+  }
+
+  async updateForumPost(id: number, data: Partial<ForumPost>): Promise<ForumPost | undefined> {
+    const [updated] = await db
+      .update(forumPosts)
+      .set(data)
+      .where(eq(forumPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteForumPost(id: number): Promise<boolean> {
+    const result = await db.delete(forumPosts).where(eq(forumPosts.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementPostViews(id: number): Promise<void> {
+    await db
+      .update(forumPosts)
+      .set({ viewCount: sql`${forumPosts.viewCount} + 1` })
+      .where(eq(forumPosts.id, id));
+  }
+
+  // Forum Comments operations
+  async getPostComments(postId: number): Promise<ForumComment[]> {
+    return await db
+      .select()
+      .from(forumComments)
+      .where(eq(forumComments.postId, postId))
+      .orderBy(desc(forumComments.isAnswer), asc(forumComments.createdAt));
+  }
+
+  async getForumComment(id: number): Promise<ForumComment | undefined> {
+    const [comment] = await db.select().from(forumComments).where(eq(forumComments.id, id)).limit(1);
+    return comment;
+  }
+
+  async createForumComment(comment: InsertForumComment): Promise<ForumComment> {
+    const [newComment] = await db.insert(forumComments).values(comment).returning();
+    return newComment;
+  }
+
+  async updateForumComment(id: number, data: Partial<ForumComment>): Promise<ForumComment | undefined> {
+    const [updated] = await db
+      .update(forumComments)
+      .set(data)
+      .where(eq(forumComments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteForumComment(id: number): Promise<boolean> {
+    const result = await db.delete(forumComments).where(eq(forumComments.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // ==================== Certificate System Implementations ====================
+  
+  async getUserCertificates(userId: number): Promise<Certificate[]> {
+    return await db
+      .select()
+      .from(certificates)
+      .where(eq(certificates.userId, userId))
+      .orderBy(desc(certificates.issueDate));
+  }
+
+  async getCertificate(id: number): Promise<Certificate | undefined> {
+    const [cert] = await db.select().from(certificates).where(eq(certificates.id, id)).limit(1);
+    return cert;
+  }
+
+  async getCertificateByNumber(certificateNumber: string): Promise<Certificate | undefined> {
+    const [cert] = await db.select().from(certificates).where(eq(certificates.certificateNumber, certificateNumber)).limit(1);
+    return cert;
+  }
+
+  async createCertificate(certificate: InsertCertificate): Promise<Certificate> {
+    const [newCert] = await db.insert(certificates).values(certificate).returning();
+    return newCert;
+  }
+
+  async verifyCertificate(verificationCode: string): Promise<Certificate | undefined> {
+    const [cert] = await db
+      .select()
+      .from(certificates)
+      .where(and(eq(certificates.verificationCode, verificationCode), eq(certificates.isActive, true)))
+      .limit(1);
+    return cert;
+  }
+
+  async revokeCertificate(id: number): Promise<Certificate | undefined> {
+    // Fetch certificate first for idempotent guard
+    const cert = await this.getCertificate(id);
+    if (!cert) return undefined;
+    if (!cert.isActive) return cert; // Already revoked, return as-is
+    
+    // Revoke certificate
+    const [updated] = await db
+      .update(certificates)
+      .set({ isActive: false, revokedAt: new Date() })
+      .where(eq(certificates.id, id))
       .returning();
     return updated;
   }

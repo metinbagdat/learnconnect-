@@ -56,8 +56,42 @@ export default function Courses() {
     }, []);
   };
   
+  // Helper function to remove already-enrolled courses from available courses
+  const removeEnrolledCourses = (courses: any[], enrolledTree: any[]): any[] => {
+    // Create set of all enrolled course IDs
+    const enrolledIds = new Set<number>();
+    const collectEnrolledIds = (courses: any[]) => {
+      courses.forEach(course => {
+        if (course.isEnrolled) {
+          enrolledIds.add(course.id);
+        }
+        if (course.children) {
+          collectEnrolledIds(course.children);
+        }
+      });
+    };
+    collectEnrolledIds(enrolledTree);
+    
+    // Filter out enrolled courses, keeping structure
+    return courses.reduce((acc: any[], course: any) => {
+      if (enrolledIds.has(course.id)) {
+        return acc; // Skip already enrolled courses
+      }
+      
+      const filteredChildren = course.children ? removeEnrolledCourses(course.children, enrolledTree) : [];
+      
+      acc.push({
+        ...course,
+        children: filteredChildren
+      });
+      
+      return acc;
+    }, []);
+  };
+  
   const filteredUserCourses = filterCourseTree(userCoursesTree, searchQuery);
-  const filteredAvailableCourses = filterCourseTree(allCoursesTree, searchQuery);
+  const availableCoursesFiltered = removeEnrolledCourses(allCoursesTree, userCoursesTree);
+  const filteredAvailableCourses = filterCourseTree(availableCoursesFiltered, searchQuery);
   
   // Handle course enrollment
   const enrollInCourse = async (courseId: number) => {

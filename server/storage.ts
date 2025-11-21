@@ -1367,7 +1367,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userActivityLogs)
       .where(eq(userActivityLogs.userId, userId))
-      .orderBy(desc(userActivityLogs.timestamp))
+      .orderBy(desc(userActivityLogs.createdAt))
       .limit(limit);
   }
   
@@ -1378,11 +1378,11 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(userActivityLogs.userId, userId),
-          sql`${userActivityLogs.timestamp} >= ${startDate}`,
-          sql`${userActivityLogs.timestamp} <= ${endDate}`
+          sql`${userActivityLogs.createdAt} >= ${startDate}`,
+          sql`${userActivityLogs.createdAt} <= ${endDate}`
         )
       )
-      .orderBy(desc(userActivityLogs.timestamp));
+      .orderBy(desc(userActivityLogs.createdAt));
   }
   
   // Course Analytics operations
@@ -1413,12 +1413,11 @@ export class DatabaseStorage implements IStorage {
         .insert(courseAnalytics)
         .values({
           courseId,
-          ...data,
-          views: data.views || 0,
-          enrollments: data.enrollments || 0,
-          completions: data.completions || 0,
-          averageRating: data.averageRating || 0,
-          totalReviews: data.totalReviews || 0
+          totalEnrollments: data.totalEnrollments || 0,
+          completionRate: data.completionRate || 0,
+          averageRating: data.averageRating,
+          averageCompletionTime: data.averageCompletionTime,
+          dropoffRate: data.dropoffRate || 0
         })
         .returning();
       
@@ -1434,7 +1433,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(courseAnalytics)
       .leftJoin(courses, eq(courseAnalytics.courseId, courses.id))
-      .orderBy(desc(courseAnalytics.enrollments))
+      .orderBy(desc(courseAnalytics.totalEnrollments))
       .limit(limit);
     
     return popularCoursesResult.map(({ analytics, course }) => ({
@@ -1449,11 +1448,11 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userProgressSnapshots)
       .where(eq(userProgressSnapshots.userId, userId))
-      .orderBy(desc(userProgressSnapshots.createdAt));
+      .orderBy(desc(userProgressSnapshots.snapshotDate));
     
     if (date) {
       query = query.where(
-        sql`DATE(${userProgressSnapshots.createdAt}) = DATE(${date})`
+        sql`DATE(${userProgressSnapshots.snapshotDate}) = DATE(${date})`
       );
     }
     
@@ -1479,11 +1478,11 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(userProgressSnapshots.userId, userId),
-          sql`${userProgressSnapshots.createdAt} >= ${startDate}`,
-          sql`${userProgressSnapshots.createdAt} <= ${endDate}`
+          sql`${userProgressSnapshots.snapshotDate} >= ${startDate}`,
+          sql`${userProgressSnapshots.snapshotDate} <= ${endDate}`
         )
       )
-      .orderBy(asc(userProgressSnapshots.createdAt));
+      .orderBy(asc(userProgressSnapshots.snapshotDate));
   }
   
   async getPlatformStats(): Promise<{
@@ -1514,18 +1513,13 @@ export class DatabaseStorage implements IStorage {
       const [assignmentCount] = await db
         .select({ count: sql`count(*)` })
         .from(userAssignments)
-        .where(eq(userAssignments.submitted, true));
+        .where(eq(userAssignments.status, 'submitted'));
       
       // Calculate average grade from assignments
       const [averageGradeResult] = await db
-        .select({ average: sql`avg(grade)` })
+        .select({ average: sql`avg(${userAssignments.grade})` })
         .from(userAssignments)
-        .where(
-          and(
-            eq(userAssignments.submitted, true),
-            eq(userAssignments.graded, true)
-          )
-        );
+        .where(eq(userAssignments.status, 'graded'));
       
       return {
         totalUsers: Number(userCount.count) || 0,

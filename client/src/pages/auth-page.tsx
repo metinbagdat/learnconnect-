@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,6 +15,8 @@ import { useLanguage } from "@/contexts/consolidated-language-context";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SocialLogin } from "@/components/social/social-login";
 import { StudentTestimonials } from "@/components/ui/student-testimonials";
+import { useSEO } from "@/hooks/use-seo";
+import { injectSchemaMarkup, generateOrganizationSchema } from "@/lib/schema-markup";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -33,6 +36,25 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const { t } = useLanguage();
+  
+  useSEO({
+    title: "EduLearn - TYT & AYT Sınav Hazırlığı | Online Eğitim Platformu",
+    description: "TYT hazırlık ve AYT dersleri için AI destekli e-learning platformu. Kişiselleştirilmiş öğrenme yolları, uzman rehberlik ve 92% başarı oranı ile üniversite sınavlarına hazırlanın.",
+    keywords: "TYT hazırlık, AYT dersleri, online üniversite hazırlık, sınav hazırlığı, e-learning, AI öğrenme, STEM eğitimi",
+    ogTitle: "EduLearn - TYT & AYT Hazırlık Platformu",
+    ogDescription: "50,000+ öğrenci tarafından güvenilen, AI destekli kişiselleştirilmiş öğrenme yolları ile sınavlara hazırlanın.",
+    ogType: "website"
+  });
+
+  // Inject organization schema on mount
+  useEffect(() => {
+    const schema = generateOrganizationSchema({
+      name: 'EduLearn',
+      url: 'https://learnconnect.net',
+      description: 'AI-powered comprehensive e-learning platform for TYT, AYT and professional development'
+    });
+    injectSchemaMarkup(schema);
+  }, []);
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

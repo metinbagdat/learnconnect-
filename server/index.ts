@@ -6,10 +6,14 @@ import { seedAchievements } from "./seed-achievements";
 import { seedSkillChallenges } from "./seed-skill-challenges";
 import { seedModulesAndLessons } from "./seed-modules-and-lessons";
 import { seedTytAytCurriculum } from "./seed-tyt-ayt-curriculum";
+import sitemapRoutes from "./routes-sitemap";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// SEO routes (sitemap, robots.txt)
+app.use(sitemapRoutes);
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -39,7 +39,12 @@ import {
   insertUploadSchema,
   insertEssaySchema,
   insertWeeklyStudyPlanSchema,
-  insertCourseCategorySchema
+  insertCourseCategorySchema,
+  insertDailyStudySessionSchema,
+  // Forum and Certificate schemas
+  insertForumPostSchema,
+  insertForumCommentSchema,
+  insertCertificateSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
@@ -6293,6 +6298,356 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       res.json(completed);
     } catch (error) {
       res.status(500).json({ message: "Failed to complete weekly study plan" });
+    }
+  });
+
+  // ==================== Forum System Endpoints ====================
+  
+  // Get all forum posts with pagination
+  app.get("/api/forum/posts", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const posts = await storage.getForumPosts(limit, offset);
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch forum posts" });
+    }
+  });
+
+  // Get single forum post
+  app.get("/api/forum/posts/:id", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getForumPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Increment view count
+      await storage.incrementPostViews(postId);
+      
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch forum post" });
+    }
+  });
+
+  // Create new forum post
+  app.post("/api/forum/posts", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const validatedData = insertForumPostSchema.parse({
+        ...req.body,
+        authorId: req.user.id
+      });
+      
+      const post = await storage.createForumPost(validatedData);
+      res.status(201).json(post);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid post data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create forum post" });
+    }
+  });
+
+  // Update forum post
+  app.patch("/api/forum/posts/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getForumPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Verify ownership or admin
+      if (post.authorId !== req.user.id && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Whitelist allowed update fields
+      const allowedFields = z.object({
+        title: z.string().optional(),
+        content: z.string().optional(),
+        isPinned: z.boolean().optional(),
+        isClosed: z.boolean().optional(),
+      });
+      
+      const validatedData = allowedFields.parse(req.body);
+      
+      // Reject empty update payloads
+      if (Object.keys(validatedData).length === 0) {
+        return res.status(400).json({ message: "At least one field must be provided for update" });
+      }
+      
+      const updated = await storage.updateForumPost(postId, validatedData);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update forum post" });
+    }
+  });
+
+  // Delete forum post
+  app.delete("/api/forum/posts/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getForumPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Verify ownership or admin
+      if (post.authorId !== req.user.id && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const deleted = await storage.deleteForumPost(postId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Post not found or already deleted" });
+      }
+      
+      res.json({ message: "Post deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete forum post" });
+    }
+  });
+
+  // Get comments for a post
+  app.get("/api/forum/posts/:postId/comments", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.postId);
+      const comments = await storage.getPostComments(postId);
+      res.json(comments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // Create new comment
+  app.post("/api/forum/posts/:postId/comments", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const postId = parseInt(req.params.postId);
+      const validatedData = insertForumCommentSchema.parse({
+        ...req.body,
+        postId,
+        authorId: req.user.id
+      });
+      
+      const comment = await storage.createForumComment(validatedData);
+      res.status(201).json(comment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid comment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Update comment
+  app.patch("/api/forum/comments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const commentId = parseInt(req.params.id);
+      const comment = await storage.getForumComment(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      // Verify ownership or admin
+      if (comment.authorId !== req.user.id && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Whitelist allowed update fields
+      const allowedFields = z.object({
+        content: z.string().optional(),
+        isAnswer: z.boolean().optional(),
+      });
+      
+      const validatedData = allowedFields.parse(req.body);
+      
+      // Reject empty update payloads
+      if (Object.keys(validatedData).length === 0) {
+        return res.status(400).json({ message: "At least one field must be provided for update" });
+      }
+      
+      const updated = await storage.updateForumComment(commentId, validatedData);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update comment" });
+    }
+  });
+
+  // Delete comment
+  app.delete("/api/forum/comments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const commentId = parseInt(req.params.id);
+      const comment = await storage.getForumComment(commentId);
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      // Verify ownership or admin
+      if (comment.authorId !== req.user.id && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const deleted = await storage.deleteForumComment(commentId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Comment not found or already deleted" });
+      }
+      
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // ==================== Certificate System Endpoints ====================
+  
+  // Get user certificates
+  app.get("/api/certificates/user/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Users can only view their own certificates unless admin
+      if (req.user.id !== userId && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      const certificates = await storage.getUserCertificates(userId);
+      res.json(certificates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch certificates" });
+    }
+  });
+
+  // Get single certificate
+  app.get("/api/certificates/:id", async (req, res) => {
+    try {
+      const certId = parseInt(req.params.id);
+      const certificate = await storage.getCertificate(certId);
+      
+      if (!certificate) {
+        return res.status(404).json({ message: "Certificate not found" });
+      }
+      
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch certificate" });
+    }
+  });
+
+  // Verify certificate by verification code
+  app.get("/api/certificates/verify/:verificationCode", async (req, res) => {
+    try {
+      const verificationCode = req.params.verificationCode;
+      const certificate = await storage.verifyCertificate(verificationCode);
+      
+      if (!certificate) {
+        return res.status(404).json({ message: "Certificate not found or has been revoked" });
+      }
+      
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to verify certificate" });
+    }
+  });
+
+  // Create certificate (admin only)
+  app.post("/api/certificates", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const validatedData = insertCertificateSchema.parse(req.body);
+      
+      // Check for duplicate active certificate for same user/course
+      const userCertificates = await storage.getUserCertificates(validatedData.userId);
+      const existingCert = userCertificates.find(
+        cert => cert.courseId === validatedData.courseId && cert.isActive
+      );
+      
+      if (existingCert) {
+        return res.status(409).json({ 
+          message: "Active certificate already exists for this user and course" 
+        });
+      }
+      
+      const certificate = await storage.createCertificate(validatedData);
+      res.status(201).json(certificate);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid certificate data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create certificate" });
+    }
+  });
+
+  // Revoke certificate (admin only)
+  app.post("/api/certificates/:id/revoke", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const certId = parseInt(req.params.id);
+      const revoked = await storage.revokeCertificate(certId);
+      
+      if (!revoked) {
+        return res.status(404).json({ message: "Certificate not found" });
+      }
+      
+      res.json(revoked);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to revoke certificate" });
     }
   });
 

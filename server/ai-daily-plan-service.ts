@@ -110,10 +110,32 @@ export async function generateDailyStudyPlan(
   const { userId, date, language = "tr", targetStudyTime = 240, focusSubjects } = options;
 
   try {
-    // Gather student context
-    const profile = await storage.getTytStudentProfile(userId);
-    const subjects = await storage.getTytSubjects();
-    const userProgress = await getUserProgressSummary(userId);
+    // Gather student context (optional - gracefully handle missing data)
+    let fetchedProfile = undefined;
+    let fetchedSubjects = undefined;
+    let fetchedProgress = undefined;
+    
+    try {
+      fetchedProfile = await storage.getTytStudentProfile(userId);
+    } catch (error) {
+      console.warn('No TYT profile found for user, using generic plan');
+    }
+    
+    try {
+      fetchedSubjects = await storage.getTytSubjects();
+    } catch (error) {
+      console.warn('No TYT subjects found, using generic plan');
+    }
+    
+    try {
+      fetchedProgress = await getUserProgressSummary(userId);
+    } catch (error) {
+      console.warn('No progress summary found, using generic plan');
+    }
+    
+    // Use typed defaults for missing context
+    const subjects: TytSubject[] = fetchedSubjects ?? [];
+    const userProgress = fetchedProgress ?? new Map();
     
     // Build context-rich prompt
     const prompt = buildDailyPlanPrompt({
@@ -121,7 +143,7 @@ export async function generateDailyStudyPlan(
       language,
       targetStudyTime,
       focusSubjects,
-      profile,
+      profile: fetchedProfile,
       subjects,
       userProgress,
     });
@@ -173,16 +195,39 @@ async function generateDailyPlanWithOpenAI(
 ): Promise<GeneratedDailyPlan> {
   const { userId, date, language = "tr", targetStudyTime = 240, focusSubjects } = options;
 
-  const profile = await storage.getTytStudentProfile(userId);
-  const subjects = await storage.getTytSubjects();
-  const userProgress = await getUserProgressSummary(userId);
+  // Gather student context (optional - gracefully handle missing data)
+  let fetchedProfile = undefined;
+  let fetchedSubjects = undefined;
+  let fetchedProgress = undefined;
+  
+  try {
+    fetchedProfile = await storage.getTytStudentProfile(userId);
+  } catch (error) {
+    console.warn('No TYT profile found for user, using generic plan');
+  }
+  
+  try {
+    fetchedSubjects = await storage.getTytSubjects();
+  } catch (error) {
+    console.warn('No TYT subjects found, using generic plan');
+  }
+  
+  try {
+    fetchedProgress = await getUserProgressSummary(userId);
+  } catch (error) {
+    console.warn('No progress summary found, using generic plan');
+  }
+
+  // Use typed defaults for missing context
+  const subjects: TytSubject[] = fetchedSubjects ?? [];
+  const userProgress = fetchedProgress ?? new Map();
 
   const prompt = buildDailyPlanPrompt({
     date,
     language,
     targetStudyTime,
     focusSubjects,
-    profile,
+    profile: fetchedProfile,
     subjects,
     userProgress,
   });
@@ -217,8 +262,8 @@ function buildDailyPlanPrompt(params: {
   targetStudyTime: number;
   focusSubjects?: string[];
   profile?: TytStudentProfile;
-  subjects: TytSubject[];
-  userProgress: Map<string, { progress: number; mastery: number; lastStudied?: Date }>;
+  subjects?: TytSubject[];
+  userProgress?: Map<string, { progress: number; mastery: number; lastStudied?: Date }>;
 }): string {
   const { date, language, targetStudyTime, focusSubjects, profile, subjects, userProgress } = params;
 
@@ -249,7 +294,7 @@ function buildDailyPlanPrompt(params: {
   }
 
   // Progress summary
-  if (userProgress.size > 0) {
+  if (userProgress && userProgress.size > 0) {
     prompt += "Current Progress:\n";
     userProgress.forEach((data, subject) => {
       const lastStudiedText = data.lastStudied 
@@ -260,11 +305,17 @@ function buildDailyPlanPrompt(params: {
     prompt += "\n";
   }
 
-  // Available subjects
-  prompt += "Available TYT Subjects:\n";
-  subjects.forEach((subject) => {
-    prompt += `- ${subject.displayName} (${subject.name}): ${subject.totalQuestions} questions in exam\n`;
-  });
+  // Available subjects (only if TYT context is available)
+  if (subjects && subjects.length > 0) {
+    prompt += "Available TYT Subjects:\n";
+    subjects.forEach((subject) => {
+      prompt += `- ${subject.displayName} (${subject.name}): ${subject.totalQuestions} questions in exam\n`;
+    });
+    prompt += "\n";
+  } else {
+    // Generic subjects for non-TYT students
+    prompt += "Generate a balanced study plan covering general academic subjects.\n\n";
+  }
 
   prompt += "\nCreate a balanced, realistic study plan that helps the student make steady progress toward their goals.";
 

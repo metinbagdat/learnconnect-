@@ -130,6 +130,24 @@ EduLearn Platform is a sophisticated e-learning and educational platform built w
 
 ```
 Changelog:
+- November 21, 2025. Implemented Time Tracking, Forum System, Certificate Management, and AI Daily Planner
+  * Created comprehensive Time Tracking system with Pomodoro timer (25-min focus/5-min breaks)
+  * Added mood tracking, notes, and multiple daily study sessions support
+  * Implemented daily study goals with progress tracking and target completion metrics
+  * Built complete Forum System with posts, comments, view tracking, and pinned/closed status
+  * Added forum ownership controls (post authors and admins can edit/delete)
+  * Implemented database-level timestamp triggers for audit trails (created_at, updated_at)
+  * Created Certificate Management system with issuance, verification, and revocation
+  * Added unique certificate numbers, verification codes, and QR code support
+  * Implemented duplicate certificate prevention with database constraints
+  * Built AI Daily Plan generator with personalized study tasks, time blocks, and focus areas
+  * Created AI-powered plan generation using Anthropic API with language-aware content
+  * Added comprehensive security: field whitelisting, empty payload rejection, ownership verification
+  * Implemented proper delete operation verification and cascade handling
+  * Added 24 new translation keys (English + Turkish) for daily plan features
+  * Created dedicated UI pages: /time-tracking and /ai-daily-plan
+  * All features include comprehensive data-testid attributes for E2E testing
+  * Backend API endpoints secured with authentication, authorization, and input validation
 - October 14, 2025. Implemented Personalized Curriculum Page with AI Auto-Sync
   * Created comprehensive Personalized Curriculum page (/my-curriculum) with progress visualization
   * Built tabbed interface: Overview, Tasks, Skills, and Checkpoints

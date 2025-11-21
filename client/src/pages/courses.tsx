@@ -254,7 +254,6 @@ export default function Courses() {
       <div className="md:hidden">
         <MobileNav />
       </div>
-    </div>
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import {
   CheckCircle, Star, Users, Globe, GraduationCap, Trophy,
   ChevronRight, Plus, Zap
 } from "lucide-react";
+import ModernNavigation from "@/components/layout/modern-navigation";
 
 interface ExamType {
   id: string;
@@ -162,11 +163,14 @@ export default function EntranceExamPrep() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Entrance Exam Preparation
-        </h1>
+    <div className="min-h-screen flex flex-col">
+      <ModernNavigation pageTitle="Entrance Exam Preparation" currentPage="entranceExams" />
+      
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Entrance Exam Preparation
+          </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
           Get ready for success! AI-powered personalized learning paths for lycée, college, and university entrance exams. 
           Create your custom study plan and achieve your academic goals with expert guidance.
@@ -505,6 +509,7 @@ export default function EntranceExamPrep() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

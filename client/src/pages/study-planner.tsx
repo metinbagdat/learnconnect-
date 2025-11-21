@@ -15,6 +15,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PageWrapper from "@/components/layout/page-wrapper";
 import LevelAssessment from "@/components/assessment/level-assessment";
+import ModernNavigation from "@/components/layout/modern-navigation";
 
 interface StudyGoal {
   id?: number;
@@ -164,12 +165,14 @@ export default function StudyPlannerPage() {
   };
 
   return (
-    <PageWrapper 
-      currentPage={language === 'tr' ? 'Öğrenme Planlayıcısı' : 'Study Planner'}
-      pageTitle={language === 'tr' ? 'Kişisel Öğrenme Planlayıcısı' : 'Personal Learning Planner'}
-      showBackButton={true}
-      backUrl="/"
-    >
+    <div className="min-h-screen flex flex-col">
+      <ModernNavigation pageTitle={language === 'tr' ? 'Kişisel Öğrenme Planlayıcısı' : 'Personal Learning Planner'} currentPage="study-planner" />
+      <PageWrapper 
+        currentPage={language === 'tr' ? 'Öğrenme Planlayıcısı' : 'Study Planner'}
+        pageTitle={language === 'tr' ? 'Kişisel Öğrenme Planlayıcısı' : 'Personal Learning Planner'}
+        showBackButton={false}
+        backUrl="/"
+      >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -675,6 +678,7 @@ export default function StudyPlannerPage() {
           </motion.div>
         )}
       </div>
-    </PageWrapper>
+      </PageWrapper>
+    </div>
   );
 }

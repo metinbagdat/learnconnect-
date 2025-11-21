@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { LearningPath, LearningPathStep, Course } from "@shared/schema";
 import { SuggestionSelect, SuggestionAutocomplete } from "@/components/suggestions/suggestion-select";
+import ModernNavigation from "@/components/layout/modern-navigation";
 
 export default function LearningPathPage() {
   const { id } = useParams();
@@ -122,7 +123,9 @@ export default function LearningPathPage() {
   // If we're on /learning-paths (index) show the list of paths
   if (!id) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen flex flex-col">
+        <ModernNavigation pageTitle="Learning Paths" currentPage="learningPaths" />
+        <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Learning Paths</h1>
           <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
@@ -366,6 +369,7 @@ export default function LearningPathPage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       )}
     </div>

@@ -69,7 +69,9 @@ export default function Courses() {
         title: t('enrollmentSuccessful'),
         description: t('enrollmentSuccessDescription'),
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/courses"] });
+      // Invalidate both hierarchical cache keys to update UI
+      queryClient.invalidateQueries({ queryKey: ["/api/user/courses/tree"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses/tree"] });
     } catch (error) {
       toast({
         title: t('enrollmentFailed'),

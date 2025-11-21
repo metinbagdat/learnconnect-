@@ -244,13 +244,16 @@ export default function LearningPathPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
     );
   }
 
   // If we're on a specific learning path page (/learning-paths/:id)
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen flex flex-col">
+      <ModernNavigation pageTitle="Learning Path" currentPage="learningPaths" />
+      <div className="container mx-auto px-4 py-8">
       {pathLoading ? (
         <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -371,6 +374,7 @@ export default function LearningPathPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

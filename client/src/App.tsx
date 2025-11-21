@@ -99,21 +99,24 @@ import { SkillChallengeProvider } from "./hooks/use-skill-challenge";
 import { GamificationProvider } from "./hooks/use-gamification-tracker";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
+import { ErrorBoundary } from "./components/error-states/error-boundary";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LanguageProvider>
-          <GamificationProvider>
-            <SkillChallengeProvider>
-              <Router />
-              <Toaster />
-            </SkillChallengeProvider>
-          </GamificationProvider>
-        </LanguageProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <LanguageProvider>
+            <GamificationProvider>
+              <SkillChallengeProvider>
+                <Router />
+                <Toaster />
+              </SkillChallengeProvider>
+            </GamificationProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

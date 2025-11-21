@@ -1,0 +1,53 @@
+src/
+├─ components/
+│  ├─ Admin/
+│  │  ├─ AdminDashboard.jsx
+│  │  ├─ CategoryManager.jsx
+│  │  ├─ CourseManager.jsx
+│  │  ├─ UserManagement.jsx
+│  │  └─ AnalyticsDashboard.jsx
+│  ├─ Course/
+│  │  ├─ CourseCatalog.jsx
+│  │  ├─ CourseCard.jsx
+│  │  ├─ CoursePlayer.jsx
+│  │  ├─ CourseTree.jsx
+│  │  ├─ LessonViewer.jsx
+│  │  └─ CourseProgress.jsx
+│  ├─ Exam/
+│  │  ├─ ExamComponent.jsx
+│  │  ├─ ExamTimer.jsx
+│  │  ├─ QuestionRenderer.jsx
+│  │  └─ ExamResults.jsx
+│  ├─ Planner/
+│  │  ├─ StudyPlanner.jsx
+│  │  ├─ EnhancedTaskList.jsx
+│  │  └─ ProgressOverview.jsx
+│  ├─ Dashboard/
+│  │  ├─ StudentDashboard.jsx
+│  │  ├─ CourseProgressGrid.jsx
+│  │  ├─ UpcomingExams.jsx
+│  │  └─ StudyStats.jsx
+│  └─ Common/
+│     ├─ LoadingSpinner.jsx
+│     ├─ ErrorBoundary.jsx
+│     └─ NotificationSystem.jsx
+├─ hooks/
+│  ├─ useUser.js
+│  ├─ useCourses.js
+│  ├─ useEnrollment.js
+│  ├─ useStudyPlan.js
+│  ├─ useExams.js
+│  └─ useAdmin.js
+├─ services/
+│  ├─ firebase.js
+│  ├─ openai.js
+│  ├─ courseService.js
+│  └─ examService.js
+├─ contexts/
+│  ├─ AuthContext.jsx
+│  ├─ ThemeContext.jsx
+│  └─ CourseContext.jsx
+└─ utils/
+   ├─ constants.js
+   ├─ helpers.js
+   └─ validators.js

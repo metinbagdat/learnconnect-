@@ -823,6 +823,22 @@ export const studyHabits = pgTable("study_habits", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Daily Study Sessions - Individual session tracking for Time Tracking feature
+// Multiple sessions can be logged per day (no unique constraint)
+export const dailyStudySessions = pgTable("daily_study_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  date: date("date").notNull(),
+  totalStudyMinutes: integer("total_study_minutes").notNull(),
+  subjectsStudied: text("subjects_studied").array().default([]),
+  pomodoroCount: integer("pomodoro_count").default(0),
+  breaksTaken: integer("breaks_taken").default(0),
+  mood: text("mood"), // happy, neutral, tired
+  productivityRating: integer("productivity_rating"), // 1-5
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // TYT Resources table (new addition to existing TYT system)
 export const tytResources = pgTable("tyt_resources", {
   id: serial("id").primaryKey(),
@@ -1682,12 +1698,15 @@ export const insertDailyStudyGoalSchema = createInsertSchema(dailyStudyGoals).om
 export const insertStudyHabitSchema = createInsertSchema(studyHabits).omit({ id: true, createdAt: true });
 export const insertTytResourceSchema = createInsertSchema(tytResources).omit({ id: true, createdAt: true });
 export const insertAiDailyPlanSchema = createInsertSchema(aiDailyPlans).omit({ id: true, createdAt: true, generatedAt: true });
+export const insertDailyStudySessionSchema = createInsertSchema(dailyStudySessions).omit({ id: true, createdAt: true });
 
 export type DailyStudyGoal = typeof dailyStudyGoals.$inferSelect;
 export type StudyHabit = typeof studyHabits.$inferSelect;
 export type TytResource = typeof tytResources.$inferSelect;
 export type AiDailyPlan = typeof aiDailyPlans.$inferSelect;
+export type DailyStudySession = typeof dailyStudySessions.$inferSelect;
 export type InsertDailyStudyGoal = z.infer<typeof insertDailyStudyGoalSchema>;
 export type InsertStudyHabit = z.infer<typeof insertStudyHabitSchema>;
 export type InsertTytResource = z.infer<typeof insertTytResourceSchema>;
 export type InsertAiDailyPlan = z.infer<typeof insertAiDailyPlanSchema>;
+export type InsertDailyStudySession = z.infer<typeof insertDailyStudySessionSchema>;

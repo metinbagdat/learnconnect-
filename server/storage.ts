@@ -561,6 +561,11 @@ export interface IStorage {
   getStudyHabit(id: number): Promise<StudyHabit | undefined>;
   createStudyHabit(habit: InsertStudyHabit): Promise<StudyHabit>;
   
+  // Daily Study Sessions operations (Time Tracking)
+  getDailyStudySessions(userId: number, date?: string): Promise<DailyStudySession[]>;
+  getDailyStudySession(userId: number, date: string): Promise<DailyStudySession | undefined>;
+  createDailyStudySession(session: InsertDailyStudySession): Promise<DailyStudySession>;
+  
   // TYT Resources operations
   getTytResources(topicId: number): Promise<TytResource[]>;
   getTytResource(id: number): Promise<TytResource | undefined>;
@@ -3309,6 +3314,31 @@ export class DatabaseStorage implements IStorage {
   async createStudyHabit(habit: InsertStudyHabit): Promise<StudyHabit> {
     const [newHabit] = await db.insert(studyHabits).values(habit).returning();
     return newHabit;
+  }
+
+  // Daily Study Sessions operations (Time Tracking)
+  async getDailyStudySessions(userId: number, date?: string): Promise<DailyStudySession[]> {
+    let query = db.select().from(dailyStudySessions).where(eq(dailyStudySessions.userId, userId));
+    
+    if (date) {
+      query = query.where(and(eq(dailyStudySessions.userId, userId), eq(dailyStudySessions.date, date)));
+    }
+    
+    return await query.orderBy(desc(dailyStudySessions.date));
+  }
+
+  async getDailyStudySession(userId: number, date: string): Promise<DailyStudySession | undefined> {
+    const [session] = await db
+      .select()
+      .from(dailyStudySessions)
+      .where(and(eq(dailyStudySessions.userId, userId), eq(dailyStudySessions.date, date)))
+      .limit(1);
+    return session;
+  }
+
+  async createDailyStudySession(session: InsertDailyStudySession): Promise<DailyStudySession> {
+    const [newSession] = await db.insert(dailyStudySessions).values(session).returning();
+    return newSession;
   }
 
   // TYT Resources operations

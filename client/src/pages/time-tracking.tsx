@@ -34,6 +34,7 @@ export default function TimeTracking() {
   const [isBreak, setIsBreak] = useState(false);
   const [seconds, setSeconds] = useState(POMODORO_DURATION);
   const [pomodoroCount, setPomodoroCount] = useState(0);
+  const [totalStudyMinutes, setTotalStudyMinutes] = useState(0); // Track actual study time
   const [selectedSubject, setSelectedSubject] = useState("");
   const [mood, setMood] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
@@ -64,6 +65,7 @@ export default function TimeTracking() {
   const handleTimerComplete = () => {
     setIsActive(false);
     if (isBreak) {
+      // Break completed - ready for next focus session
       toast({
         title: t("dashboard.breakComplete") || "Break complete!",
         description: t("dashboard.readyForNextSession") || "Ready for your next session",
@@ -71,7 +73,9 @@ export default function TimeTracking() {
       setSeconds(POMODORO_DURATION);
       setIsBreak(false);
     } else {
+      // Pomodoro completed - count it and add to study time
       setPomodoroCount(c => c + 1);
+      setTotalStudyMinutes(m => m + 25); // Add 25 minutes of actual study time
       toast({
         title: t("dashboard.pomodoroComplete") || "Pomodoro completed!",
         description: t("dashboard.timeForBreak") || "Time for a break",
@@ -97,31 +101,40 @@ export default function TimeTracking() {
 
   const stopTimer = () => {
     setIsActive(false);
-    setSeconds(POMODORO_DURATION);
-    setIsBreak(false);
+    // Reset to appropriate duration based on current mode
+    if (isBreak) {
+      setSeconds(BREAK_DURATION);
+    } else {
+      setSeconds(POMODORO_DURATION);
+    }
   };
 
   // Save study session mutation
   const saveSessionMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("POST", "/api/study-habits", data);
+      return apiRequest("POST", "/api/daily-study-sessions", data);
     },
     onSuccess: () => {
       toast({
         title: t("dashboard.sessionSaved") || "Session saved!",
         description: t("dashboard.sessionRecorded") || "Your study session has been recorded",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/study-habits"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/daily-study-sessions"] });
+      
+      // Reset all state to initial values
       setNotes("");
       setMood(null);
       setSelectedSubject("");
       setPomodoroCount(0);
-      stopTimer();
+      setTotalStudyMinutes(0);
+      setIsActive(false);
+      setIsBreak(false); // Must set break to false BEFORE setting seconds
+      setSeconds(POMODORO_DURATION); // Now this will correctly use POMODORO duration
     },
   });
 
   const saveSession = () => {
-    if (!selectedSubject || pomodoroCount === 0) {
+    if (!selectedSubject || totalStudyMinutes === 0) {
       toast({
         title: t("dashboard.completeSession") || "Complete a session",
         description: t("dashboard.completeSessionFirst") || "Complete at least one Pomodoro session before saving",
@@ -132,9 +145,10 @@ export default function TimeTracking() {
 
     saveSessionMutation.mutate({
       date: today,
-      totalStudyMinutes: pomodoroCount * 25,
+      totalStudyMinutes, // Use actual elapsed study minutes
       subjectsStudied: [selectedSubject],
       pomodoroCount,
+      breaksTaken: Math.max(0, pomodoroCount - 1), // One less break than Pomodoros
       mood,
       productivityRating: mood === "happy" ? 5 : mood === "neutral" ? 3 : 2,
       notes,

@@ -5399,6 +5399,36 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Daily Study Sessions routes (Time Tracking feature)
+  app.get("/api/daily-study-sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const { date } = req.query;
+      const sessions = await storage.getDailyStudySessions(req.user.id, date as string | undefined);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch daily study sessions" });
+    }
+  });
+
+  app.post("/api/daily-study-sessions", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const sessionData = { ...req.body, userId: req.user.id };
+      const newSession = await storage.createDailyStudySession(sessionData);
+      res.status(201).json(newSession);
+    } catch (error) {
+      console.error('Failed to create daily study session:', error);
+      res.status(500).json({ message: "Failed to create daily study session" });
+    }
+  });
+
   // TYT Resources routes
   app.get("/api/tyt/resources/:topicId", async (req, res) => {
     if (!req.isAuthenticated()) {

@@ -5,6 +5,7 @@ import { seedChallenges } from "./seed-challenges";
 import { seedAchievements } from "./seed-achievements";
 import { seedSkillChallenges } from "./seed-skill-challenges";
 import { seedModulesAndLessons } from "./seed-modules-and-lessons";
+import { seedTytAytCurriculum } from "./seed-tyt-ayt-curriculum";
 
 const app = express();
 app.use(express.json());
@@ -67,7 +68,15 @@ app.use((req, res, next) => {
   server.listen(port, "0.0.0.0", async () => {
     log(`serving on port ${port}`);
     
-    // Seed modules and lessons first
+    // Seed TYT/AYT curriculum first (most important for the platform)
+    try {
+      await seedTytAytCurriculum();
+      log("TYT/AYT curriculum seeded successfully");
+    } catch (error) {
+      log(`Failed to seed TYT/AYT curriculum: ${error}`);
+    }
+    
+    // Seed modules and lessons as fallback
     try {
       await seedModulesAndLessons();
       log("Modules and lessons seeded successfully");

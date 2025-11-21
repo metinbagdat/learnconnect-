@@ -1,0 +1,211 @@
+a full TYT and AYT curriculum based on meb.gov.tr. This is a structured request requiring accurate, up-to-date information from Turkey's official education authority. The response needs to be comprehensive but clear, covering both exam structures and subject breakdowns.
+
+the TYT-AYT system briefly, then provide the curriculum in a tabular format for clarity. The tables must include subjects, topics, and key details like question counts or emphasis areas. Since the curriculum is extensive, focus on high-level organization without overwhelming the user.
+
+add strategic advice at the end—study methods, resource recommendations, and timing tips—to make the response actionable. The tone should be authoritative yet helpful, ensuring the user feels guided rather than just informed.
+
+Based on the official curriculum and exam information available on the Turkish Ministry of National Education (MEB) website (meb.gov.tr), specifically from the "Öğretim Programları" (Curriculum) section and ÖSYM's TYT-AYT guides, here is a comprehensive breakdown of the full curriculum for the TYT (Basic Proficiency Test) and AYT (Field Proficiency Test).
+
+Important Preliminary Notes:
+Source: This curriculum is synthesized from the MEB's high school course curricula (9th-12th grades) which form the basis of the YKS (Higher Education Institutions Exam) questions.
+
+Exam Structure: The YKS is a three-stage exam:
+
+TYT (Day 1): 120 questions, 165 minutes. Tests fundamental skills across core subjects.
+
+AYT (Day 2): 160 questions, 180 minutes. Tests in-depth knowledge in your chosen field (Turkish-Math, Science, or Social Sciences).
+
+YDT (Foreign Language Test): A separate test for language programs.
+
+Focus of this Guide: This document covers only TYT and AYT.
+
+Part 1: TYT (Basic Proficiency Test) Curriculum
+The TYT curriculum covers the core knowledge from 9th and 10th grades, with an emphasis on reasoning and fundamental concepts.
+
+Subject	Key Topics & Curriculum Details
+TYT Turkish (40 Questions)	1. Language Knowledge (Grammar - ~8-12 Questions)
+- Phonetics (Sounds)
+- Morphology (Word Structure: Root, Suffix, Verb Forms)
+- Syntax (Sentence Structure: Subject, Predicate, Phrases)
+- Written Expression (Spelling Rules, Punctuation)
+- Oral Expression (Diction, Presentation)
+
+2. Reading Comprehension (~28-32 Questions)
+- Main Idea and Theme
+- Supporting Ideas
+- Context and Meaning of Words
+- Narrative Techniques (Perspective, Unreliable Narrator)
+- Logic and Reasoning in Text (Cause-Effect, etc.)
+- Visual Interpretation and Graphic Reading
+- Poetry Knowledge (Rhyme, Redif, Verse)
+TYT Mathematics (40 Questions)	1. Numbers and Algebra
+- Number Sets (Natural, Integer, Rational, Irrational, Real)
+- Divisibility and Prime Factorization
+- EBOB (GCD) and EKOK (LCM)
+- Basic Algebra, Equations, and Inequalities
+- Ratio, Proportion, and Percentages
+- Problem Solving (Mixture, Work, Speed, etc.)
+
+2. Geometry
+- Basic Geometric Concepts (Point, Line, Plane)
+- Angles and Triangles
+- Quadrilaterals (Square, Rectangle, Parallelogram)
+- Circles and Disks
+- Geometric Solids (Cube, Prism, Cylinder, etc.)
+- Analytical Geometry (Basics: Distance, Midpoint)
+
+3. Data, Counting, and Probability
+- Data Analysis (Mean, Median, Mode, Range)
+- Counting Principles (Permutation, Combination)
+- Basic Probability
+TYT Geometry	*(Integrated within the 40 Mathematics questions, typically ~10-11 are pure geometry)*
+- The topics listed under "Geometry" in the Mathematics section are the core of TYT Geometry.
+TYT History (5 Questions)	- History of Science
+- The First Turkish States (Huns, Göktürks, Uighurs)
+- First Muslim Turkish States (Karahanids, Ghaznavids, Great Seljuk Empire)
+- Turkish-Islamic Civilization
+- Ottoman Empire: Rise and Classical Age (up to 17th century)
+- The New and Recent Era in Europe (Enlightenment, Revolutions)
+TYT Geography (5 Questions)	- Natural Systems (Earth's Shape, Movements, Map Knowledge, Climate)
+- Human Systems (Population, Settlements)
+- Global Environments: Regions and Countries
+- Turkey's Physical and Human Geography (Location, Relief, Climate, Economic Activities)
+TYT Philosophy (5 Questions)	- Introduction to Philosophy
+- Philosophy of Knowledge (Epistemology)
+- Philosophy of Science
+- Philosophy of Language
+- Political Philosophy
+- Philosophy of Art (Aesthetics)
+TYT Religion (5 Questions)	- Basic Religious Concepts (Faith, Worship, Ethics)
+- Knowledge of the Quran and its Interpretation
+- The Life of Prophet Muhammad
+- Reason and Revelation in Islam
+- Islam and Worship (Prayer, Fasting, etc.)
+- Morality and Society in Islam
+- Major World Religions and Belief Systems
+TYT Physics (7 Questions)	- Physics and its Basic Concepts
+- Vectors and Force
+- Motion (Linear, Circular)
+- Energy, Work, and Power
+- Heat and Temperature
+- Waves (Sound and Light Waves)
+- Optics (Reflection, Refraction)
+- Electricity and Magnetism (Static, Current, Circuits)
+TYT Chemistry (7 Questions)	- Chemistry and its Importance
+- Structure of Matter (Atom, Periodic Table)
+- Chemical Bonds
+- States of Matter (Gas, Liquid, Solid)
+- Mixtures and Separation Techniques
+- Acids, Bases, and Salts
+- Chemistry in Everyday Life
+TYT Biology (6 Questions)	- Biology and the Characteristics of Living Things
+- Chemical Basis of Life
+- Cell Structure and Function
+- Cell Division (Mitosis and Meiosis)
+- Metabolism (Photosynthesis, Cellular Respiration)
+- Heredity (Basic Genetics)
+- Ecosystems and Ecology
+- Biodiversity and Classification
+Part 2: AYT (Field Proficiency Test) Curriculum
+The AYT curriculum is much more advanced, covering the detailed content of 11th and 12th grades. Students choose one of four test booklets.
+
+AYT - Turkish Language and Literature & Social Sciences Test 1 (40 Questions Each)
+Subject	Key Topics & Curriculum Details
+AYT Turkish Language and Literature (24 Questions)	1. Advanced Language Knowledge
+- Detailed Word Structure and Semantics
+- Sentence Types and Analysis
+
+2. Turkish Literature (Historical Periods)
+- Old Turkish Literature (Orkhon Inscriptions, etc.)
+- Old Anatolian Turkish and Divan Literature
+- Turkish Folk Literature
+- The New Era: Tanzimat, Servet-i Fünun, National Literature
+- Republican Era Literature (1940-present)
+- World Literature
+AYT History-1 (10 Questions)	- The Turks' Introduction to Islam and First Muslim States
+- Turkish History in Anatolia (Seljuks, Beyliks)
+- The Ottoman Empire: Rise, Zenith, and Stagnation
+- The Ottoman Empire: Decline and Reform (17th-20th centuries)
+- The 20th Century: WWI and the Fall of the Empire
+- The Turkish War of Independence
+- Atatürk's Reforms and Principles
+AYT Geography-1 (6 Questions)	- Natural Systems (Geomorphology, Tectonics, Geomorphological Processes)
+- Human Systems (Migration, Urbanization, Economic Geography)
+- Global Environments and Regional Geography
+- Turkey's Comprehensive Geography (Regions, Environment, Resources)
+AYT History-2 (11 Questions)	- The Beginning of the 20th Century
+- World War II
+- The Cold War Era
+- The End of the Cold War and Globalization
+- Turkish Republic in the 21st Century
+- Turkic Republics and Turkish Communities
+AYT Geography-2 (11 Questions)	- Global Economic, Political, and Cultural Organizations
+- Geopolitics and Strategic Regions
+- Turkey's Geopolitical Position and Regional Relations
+- Natural Resources and Environmental Politics
+- Regional Development Projects in Turkey
+AYT Philosophy (12 Questions)	- Philosophy of Religion
+- Moral Philosophy (Ethics)
+- History of Philosophy (Ancient Greek, Medieval, Modern)
+- Contemporary Philosophical Movements
+AYT Religion (6 Questions)	- Information on Hadith
+- Islamic Law (Fiqh)
+- Sufism (Tasawwuf)
+- Contemporary Religious Discussions
+AYT - Mathematics & Science Test (40 Questions Each)
+Subject	Key Topics & Curriculum Details
+AYT Mathematics (30 Questions)	- Algebra:
+- Polynomials
+- Second-Degree Equations and Inequalities
+- Parabol
+- Logarithms
+- Sequences and Series (Arithmetic, Geometric)
+- Trigonometry (Identities, Equations, Triangle Trig)
+- Calculus:
+- Limits and Continuity
+- Derivatives (Rules, Applications)
+- Integrals (Basic Integration, Area Calculation)
+AYT Geometry (10 Questions)	- Vectors and Analytical Geometry in Detail
+- Conic Sections (Circle, Ellipse, Parabola, Hyperbola)
+- Transformation Geometry (Translation, Reflection, Rotation)
+- Solid Geometry (Volume and Area of 3D objects)
+AYT Physics (14 Questions)	- Mechanics:
+- Vectors, Force, Equilibrium
+- Momentum and Impulse
+- Circular Motion and Gravitation
+- Waves and Optics:
+- Wave Characteristics, Sound, Light, Optics
+- Electricity and Magnetism:
+- Electric Fields and Potential
+- Capacitors
+- Magnetic Fields and Electromagnetic Induction
+- Modern Physics:
+- Modern Physics (Relativity, Quantum, Atomic Physics)
+AYT Chemistry (13 Questions)	- Modern Atomic Theory
+- Periodic Table and Properties
+- Chemical Bonds and Molecular Geometry
+- Chemical Reactions and Stoichiometry
+- States of Matter and Gases
+- Solutions and Colligative Properties
+- Chemical Kinetics and Equilibrium
+- Acids and Bases
+- Thermodynamics
+- Electrochemistry
+- Organic Chemistry (Hydrocarbons, Functional Groups)
+AYT Biology (13 Questions)	- Cell Biology (Energy Transformations, Photosynthesis, Respiration)
+- Plant Biology
+- Human Body Systems (Digestive, Circulatory, Respiratory, Nervous, Endocrine, etc.)
+- Genetics (Mendelian, Molecular Genetics, DNA, Protein Synthesis)
+- Evolution and Biodiversity
+- Ecology and Ecosystems
+Strategic Advice for Students:
+TYT is the Gatekeeper: A minimum TYT score is required for AYT scores to be valid. Do not neglect TY.
+
+Balance is Key: While focusing on your target field (e.g., Science students on AYT Math-Science), a strong performance in all sections of TYT is crucial for a high overall score.
+
+Use Official MEB Textbooks: The most accurate reflection of the curriculum is found in the official 9th-12th grade MEB textbooks. Use them as your primary reference.
+
+Practice Consistently: Solving previous years' YKS questions from ÖSYM is the best way to understand the exam's style and difficulty.
+
+This curriculum provides a robust framework for your TYT and AYT preparation. Always cross-reference with the latest announcements on the official meb.gov.tr and osym.gov.tr websites.
+

@@ -125,125 +125,125 @@ export default function LearningPathPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <ModernNavigation pageTitle="Learning Paths" currentPage="learningPaths" />
-        <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Learning Paths</h1>
-          <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create New Path
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create a Career-Focused Learning Path</DialogTitle>
-                <DialogDescription>
-                  Enter your learning goal, target career field, and timeframe to have our AI generate a personalized curriculum that prepares you for your desired profession.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="flex items-center mb-2 text-primary">
-                  <Lightbulb className="w-4 h-4 mr-1" />
-                  <span className="text-sm font-medium">Smart suggestions enabled</span>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="goal">Learning Goal</Label>
-                  <SuggestionAutocomplete
-                    type="goals"
-                    label="What do you want to achieve?"
-                    placeholder="e.g., Become a full-stack web developer"
-                    value={goalInput}
-                    onChange={setGoalInput}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="careerField">Target Career Field</Label>
-                  <SuggestionAutocomplete
-                    type="fields"
-                    label="Your field of interest"
-                    placeholder="e.g., Software Engineering, Data Science"
-                    value={careerField}
-                    onChange={setCareerField}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">Specify your target profession or career path</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="timeframe">Learning Timeframe</Label>
-                  <SuggestionSelect
-                    type="timeframes"
-                    label="Duration"
-                    placeholder="Select a timeframe"
-                    value={timeframe}
-                    onChange={setTimeframe}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">How much time you plan to dedicate to this learning path</p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  type="submit" 
-                  onClick={handleCreatePath} 
-                  disabled={generatePathMutation.isPending}
-                >
-                  {generatePathMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Generate Learning Path
+        <div className="container mx-auto px-4 py-8 space-y-6">
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold">Learning Paths</h1>
+            <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create New Path
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create a Career-Focused Learning Path</DialogTitle>
+                  <DialogDescription>
+                    Enter your learning goal, target career field, and timeframe to have our AI generate a personalized curriculum that prepares you for your desired profession.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="flex items-center mb-2 text-primary">
+                    <Lightbulb className="w-4 h-4 mr-1" />
+                    <span className="text-sm font-medium">Smart suggestions enabled</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="goal">Learning Goal</Label>
+                    <SuggestionAutocomplete
+                      type="goals"
+                      label="What do you want to achieve?"
+                      placeholder="e.g., Become a full-stack web developer"
+                      value={goalInput}
+                      onChange={setGoalInput}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="careerField">Target Career Field</Label>
+                    <SuggestionAutocomplete
+                      type="fields"
+                      label="Your field of interest"
+                      placeholder="e.g., Software Engineering, Data Science"
+                      value={careerField}
+                      onChange={setCareerField}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">Specify your target profession or career path</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="timeframe">Learning Timeframe</Label>
+                    <SuggestionSelect
+                      type="timeframes"
+                      label="Duration"
+                      placeholder="Select a timeframe"
+                      value={timeframe}
+                      onChange={setTimeframe}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">How much time you plan to dedicate to this learning path</p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    type="submit" 
+                    onClick={handleCreatePath} 
+                    disabled={generatePathMutation.isPending}
+                  >
+                    {generatePathMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Generate Learning Path
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-        {pathsLoading ? (
-          <div className="flex items-center justify-center p-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : learningPaths.length === 0 ? (
-          <div className="text-center p-12 bg-muted rounded-lg">
-            <h3 className="text-xl font-medium mb-2">No Learning Paths Yet</h3>
-            <p className="text-muted-foreground mb-6">Create your first personalized learning journey</p>
-            <Button onClick={() => setIsGenerateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Learning Path
-            </Button>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {learningPaths.map((path: LearningPath) => (
-              <Link key={path.id} href={`/learning-paths/${path.id}`}>
-                <a className="block transition-all hover:scale-105">
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle>{path.title}</CardTitle>
-                      <CardDescription>Goal: {path.goal}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Progress</span>
-                          <span>{path.progress}%</span>
+          {pathsLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : learningPaths.length === 0 ? (
+            <div className="text-center p-12 bg-muted rounded-lg">
+              <h3 className="text-xl font-medium mb-2">No Learning Paths Yet</h3>
+              <p className="text-muted-foreground mb-6">Create your first personalized learning journey</p>
+              <Button onClick={() => setIsGenerateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Learning Path
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {learningPaths.map((path: LearningPath) => (
+                <Link key={path.id} href={`/learning-paths/${path.id}`}>
+                  <a className="block transition-all hover:scale-105">
+                    <Card className="h-full">
+                      <CardHeader>
+                        <CardTitle>{path.title}</CardTitle>
+                        <CardDescription>Goal: {path.goal}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Progress</span>
+                            <span>{path.progress}%</span>
+                          </div>
+                          <Progress value={path.progress} className="h-2" />
                         </div>
-                        <Progress value={path.progress} className="h-2" />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <FileText className="mr-1 h-4 w-4" />
-                        {path.estimatedDuration || 12} weeks estimated
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </a>
-              </Link>
-            ))}
-          </div>
-        )}
+                      </CardContent>
+                      <CardFooter>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <FileText className="mr-1 h-4 w-4" />
+                          {path.estimatedDuration || 12} weeks estimated
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </a>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -251,9 +251,7 @@ export default function LearningPathPage() {
 
   // If we're on a specific learning path page (/learning-paths/:id)
   return (
-    <div className="min-h-screen flex flex-col">
-      <ModernNavigation pageTitle="Learning Path" currentPage="learningPaths" />
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
       {pathLoading ? (
         <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -374,7 +372,6 @@ export default function LearningPathPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }

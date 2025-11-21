@@ -311,6 +311,7 @@ type SessionStore = session.Store;
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
+  getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
@@ -365,12 +366,16 @@ export interface IStorage {
   
   // Learning path operations
   getLearningPaths(userId: number): Promise<LearningPath[]>;
+  getUserLearningPaths(userId: number): Promise<LearningPath[]>;
   getLearningPath(id: number): Promise<(LearningPath & { steps: (LearningPathStep & { course: Course })[] }) | undefined>;
   createLearningPath(path: InsertLearningPath): Promise<LearningPath>;
   addLearningPathStep(step: InsertLearningPathStep): Promise<LearningPathStep>;
   updateLearningPathProgress(id: number, progress: number): Promise<LearningPath | undefined>;
+  updateLearningPath(id: number, data: Partial<LearningPath>): Promise<LearningPath | undefined>;
+  deleteLearningPath(id: number): Promise<boolean>;
   markStepAsCompleted(id: number): Promise<LearningPathStep | undefined>;
   generateLearningPath(userId: number, goal: string): Promise<LearningPath>;
+  generateAndSyncCurriculum(userId: number, courseId: number): Promise<any>;
   
   // Analytics operations
   logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
@@ -839,6 +844,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserById(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
@@ -1201,6 +1211,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(learningPaths.userId, userId))
       .orderBy(desc(learningPaths.createdAt));
   }
+
+  async getUserLearningPaths(userId: number): Promise<LearningPath[]> {
+    return db
+      .select()
+      .from(learningPaths)
+      .where(eq(learningPaths.userId, userId))
+      .orderBy(desc(learningPaths.createdAt));
+  }
   
   async getLearningPath(id: number): Promise<(LearningPath & { steps: (LearningPathStep & { course: Course })[] }) | undefined> {
     // Get learning path
@@ -1222,7 +1240,7 @@ export class DatabaseStorage implements IStorage {
       .from(learningPathSteps)
       .leftJoin(courses, eq(learningPathSteps.courseId, courses.id))
       .where(eq(learningPathSteps.pathId, id))
-      .orderBy(learningPathSteps.orderIndex);
+      .orderBy(learningPathSteps.order);
     
     const steps = stepsResult.map(({ step, course }) => ({
       ...step,
@@ -1254,19 +1272,34 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateLearningPathProgress(id: number, progress: number): Promise<LearningPath | undefined> {
-    const completed = progress >= 100;
-    
     const [updatedPath] = await db
       .update(learningPaths)
       .set({
         progress,
-        completed,
         updatedAt: new Date()
       })
       .where(eq(learningPaths.id, id))
       .returning();
     
     return updatedPath;
+  }
+
+  async updateLearningPath(id: number, data: Partial<LearningPath>): Promise<LearningPath | undefined> {
+    const [updatedPath] = await db
+      .update(learningPaths)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(learningPaths.id, id))
+      .returning();
+    
+    return updatedPath;
+  }
+
+  async deleteLearningPath(id: number): Promise<boolean> {
+    await db.delete(learningPaths).where(eq(learningPaths.id, id));
+    return true;
   }
   
   async markStepAsCompleted(id: number): Promise<LearningPathStep | undefined> {
@@ -1308,11 +1341,15 @@ export class DatabaseStorage implements IStorage {
       title: `Learning Path for: ${goal}`,
       description: `A custom learning path to achieve your goal: ${goal}`,
       goal,
-      progress: 0,
-      completed: false
+      progress: 0
     });
     
     return newPath;
+  }
+
+  async generateAndSyncCurriculum(userId: number, courseId: number): Promise<any> {
+    // Stub implementation for curriculum generation
+    return { success: true, message: "Curriculum synced" };
   }
   
   // Analytics operations

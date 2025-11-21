@@ -33,7 +33,7 @@ import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/dashboard/stat-card";
-import PageWrapper from "@/components/layout/page-wrapper";
+import ModernNavigation from "@/components/layout/modern-navigation";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { BilingualText } from "@/components/ui/bilingual-text";
 import type { TytStudentProfile, TytSubject, TytTrialExam, DailyStudyTask } from "@shared/schema";

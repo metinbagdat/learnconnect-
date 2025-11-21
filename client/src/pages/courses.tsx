@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import ModernNavigation from "@/components/layout/modern-navigation";
 import { CourseTree } from "@/components/ui/course-tree";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";

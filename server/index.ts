@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedChallenges } from "./seed-challenges";
 import { seedAchievements } from "./seed-achievements";
 import { seedSkillChallenges } from "./seed-skill-challenges";
+import { seedModulesAndLessons } from "./seed-modules-and-lessons";
 
 const app = express();
 app.use(express.json());
@@ -65,6 +66,14 @@ app.use((req, res, next) => {
   const port = 5000;
   server.listen(port, "0.0.0.0", async () => {
     log(`serving on port ${port}`);
+    
+    // Seed modules and lessons first
+    try {
+      await seedModulesAndLessons();
+      log("Modules and lessons seeded successfully");
+    } catch (error) {
+      log(`Failed to seed modules and lessons: ${error}`);
+    }
     
     // Seed challenges on server startup
     try {

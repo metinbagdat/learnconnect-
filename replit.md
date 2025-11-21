@@ -1,231 +1,52 @@
 # EduLearn Platform - Comprehensive E-Learning Solution
 
 ## Overview
+EduLearn Platform is a sophisticated e-learning solution designed to deliver dynamic and interactive STEM and business development courses. It targets diverse learners, from early education to professional reskilling, by integrating AI-powered learning assistance, gamification features, and comprehensive learning management capabilities. The platform aims to provide a personalized and engaging educational experience, fostering continuous learning and skill development.
 
-EduLearn Platform is a sophisticated e-learning and educational platform built with modern web technologies. It's designed to deliver dynamic and interactive STEM and business development courses, catering to diverse learners from early education to professional reskilling. The platform integrates cutting-edge technologies including AI-powered learning assistance, gamification features, and comprehensive learning management capabilities.
+## User Preferences
+Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
-- **Framework**: React with TypeScript
-- **Build Tool**: Vite for fast development and optimized builds
-- **Styling**: Tailwind CSS with custom theme configuration
-- **UI Components**: Radix UI primitives with shadcn/ui component library
-- **State Management**: TanStack Query for server state and React hooks for local state
-- **Routing**: Wouter for lightweight client-side routing
-- **Authentication**: Custom authentication with session management
+### UI/UX Decisions
+The platform utilizes a modern and responsive design with Tailwind CSS for styling, complemented by Radix UI primitives and shadcn/ui for components. Framer Motion is integrated for enhanced user experience through smooth animations and transitions, such as seamless next/previous lesson navigation. The design incorporates a glass morphism UI aesthetic. Bilingual support (Turkish/English) is implemented throughout the platform, including AI-generated content.
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js framework
-- **Language**: TypeScript for type safety
-- **Database**: PostgreSQL with Drizzle ORM
-- **Cloud Database**: Neon serverless PostgreSQL
-- **Session Management**: In-memory session store with passport.js
-- **API Structure**: RESTful API with protected routes
+### Technical Implementations
+- **Frontend**: React with TypeScript, Vite for bundling, Wouter for routing, and TanStack Query for server state management.
+- **Backend**: Node.js with Express.js and TypeScript.
+- **Database**: PostgreSQL with Drizzle ORM, utilizing Neon serverless PostgreSQL for cloud deployment.
+- **Authentication**: Custom authentication with session management using Passport.js.
+- **API**: RESTful API with protected routes and Zod schemas for input validation.
+- **AI Integration**: AI modules generate personalized content, course recommendations, daily study plans, and interactive skill challenges, adapting to user language preferences.
+- **Learning Management**: Comprehensive course management, progress tracking, assignment system, and resource sharing.
+- **Gamification**: Achievement system, challenge system with XP and points, leaderboards, user leveling, and streak tracking.
+- **Analytics**: Detailed learning analytics, progress snapshots, course performance metrics, and user activity logs.
+- **Social Features**: Social feed, user profiles with achievements, and social sharing capabilities.
+- **Time Tracking**: Pomodoro timer, mood tracking, and daily goal management.
+- **Forum System**: Posts, comments, view tracking, and admin controls.
+- **Certificate Management**: Issuance, verification, and revocation of certificates with unique identifiers.
+- **Hierarchical Course System**: Supports tree-based curriculum organization with parent-child relationships for courses.
+- **Personalized Curriculum Page**: Visualizes progress, skills, tasks, and checkpoints, with AI-driven auto-sync for course enrollment.
 
-### Database Design
-- **ORM**: Drizzle ORM with full TypeScript support
-- **Database Provider**: Neon serverless PostgreSQL
-- **Schema**: Comprehensive educational platform schema including:
-  - Users with role-based access (student, instructor, admin)
-  - Courses with modules and lessons
-  - Gamification system (achievements, challenges, levels)
-  - Learning analytics and progress tracking
-  - Social features and leaderboards
-
-## Key Components
-
-### 1. Learning Management System
-- **Course Management**: Create, organize, and manage courses with modules and lessons
-- **Progress Tracking**: Comprehensive tracking of user progress through courses
-- **Assignment System**: Create and submit assignments with grading capabilities
-- **Resource Management**: File and resource sharing within courses
-
-### 2. AI-Powered Features
-- **Course Generation**: AI-powered course creation using OpenAI and Anthropic APIs
-- **Personalized Learning**: AI-driven content recommendations and adaptive learning paths
-- **Adaptive Learning Path Visualization**: Interactive visualization of personalized learning journeys with AI-powered recommendations, progress tracking, and skill gap analysis
-- **Language-Aware AI Modules**: AI modules automatically generate content in Turkish or English based on user language selection
-- **Individual Lesson Pages**: Comprehensive lesson pages with AI-enhanced content including personalized introductions, learning objectives, adapted content, practice exercises, and next steps
-- **Learning Assistant**: Interactive AI assistant for student support
-- **Skill Challenges**: Dynamic skill-based challenges generated by AI
-
-### 3. Gamification System
-- **Achievement System**: Comprehensive achievement and badge system
-- **Challenge System**: Interactive challenges with XP and point rewards
-- **Leaderboards**: Competitive ranking system
-- **User Levels**: Progressive leveling system based on learning activities
-- **Streaks**: Learning streak tracking and rewards
-
-### 4. Analytics & Reporting
-- **Learning Analytics**: Detailed tracking of user learning behavior
-- **Progress Snapshots**: Regular snapshots of user progress
-- **Course Analytics**: Comprehensive course performance metrics
-- **User Activity Logs**: Detailed activity tracking for insights
-
-### 5. Social Features
-- **Social Feed**: Activity sharing and social interactions
-- **User Profiles**: Comprehensive user profiles with achievements
-- **Social Sharing**: Share achievements and progress with others
-
-## Data Flow
-
-### Authentication Flow
-1. User authentication via username/password
-2. Session creation and management with passport.js
-3. Protected routes with role-based access control
-4. Client-side auth state management with React Context
-
-### Learning Flow
-1. Course enrollment and progress tracking
-2. Module and lesson progression with prerequisites
-3. Assignment submission and grading
-4. Achievement unlocking and gamification rewards
-
-### AI Integration Flow
-1. Course generation requests to AI services
-2. Personalized recommendation generation
-3. Adaptive learning path creation
-4. Real-time skill challenge generation
+### System Design Choices
+The architecture emphasizes modularity, scalability, and maintainability. It leverages modern TypeScript for type safety across the stack. Asynchronous operations are managed to ensure a smooth user experience, particularly for AI-driven content generation. Role-based access control secures routes, and database-level timestamps support audit trails.
 
 ## External Dependencies
 
 ### AI Services
-- **OpenAI API**: GPT models for course generation and assistance
-- **Anthropic API**: Claude models for advanced content generation
+- **OpenAI API**: Utilized for GPT models in course generation and learning assistance.
+- **Anthropic API**: Used for Claude models for advanced content generation, personalized learning paths, AI daily plan generation, and AI-powered emoji reactions.
 
 ### Database & Infrastructure
-- **Neon Database**: Serverless PostgreSQL database
-- **WebSocket Support**: Real-time features with ws library
+- **Neon Database**: Serverless PostgreSQL database for persistent data storage.
+- **ws library**: For WebSocket support to enable real-time features.
 
 ### UI & Styling
-- **Radix UI**: Headless UI components
-- **Tailwind CSS**: Utility-first CSS framework
-- **Framer Motion**: Animation library for enhanced UX
+- **Radix UI**: Headless UI components for building accessible design systems.
+- **Tailwind CSS**: Utility-first CSS framework for rapid and consistent styling.
+- **Framer Motion**: Animation library for creating smooth UI transitions and animations.
 
 ### Development Tools
-- **TypeScript**: Type safety across the entire stack
-- **ESBuild**: Fast bundling for production
-- **Drizzle Kit**: Database schema management and migrations
-
-## Deployment Strategy
-
-### Development Environment
-- **Local Development**: Vite dev server with hot module replacement
-- **Database**: Local or cloud Neon database connection
-- **Environment Variables**: Database URL, API keys, and session secrets
-
-### Production Build
-- **Frontend**: Vite build generating optimized static assets
-- **Backend**: ESBuild bundling Node.js application
-- **Database**: Neon serverless PostgreSQL in production
-- **Deployment**: Single-server deployment with built assets
-
-### Environment Configuration
-- **Database**: PostgreSQL connection via DATABASE_URL
-- **API Keys**: OpenAI and Anthropic API keys for AI features
-- **Session**: Secure session management with custom secrets
-
-## Changelog
-
-```
-Changelog:
-- November 21, 2025. Implemented Time Tracking, Forum System, Certificate Management, and AI Daily Planner
-  * Created comprehensive Time Tracking system with Pomodoro timer (25-min focus/5-min breaks)
-  * Added mood tracking, notes, and multiple daily study sessions support
-  * Implemented daily study goals with progress tracking and target completion metrics
-  * Built complete Forum System with posts, comments, view tracking, and pinned/closed status
-  * Added forum ownership controls (post authors and admins can edit/delete)
-  * Implemented database-level timestamp triggers for audit trails (created_at, updated_at)
-  * Created Certificate Management system with issuance, verification, and revocation
-  * Added unique certificate numbers, verification codes, and QR code support
-  * Implemented duplicate certificate prevention with database constraints
-  * Built AI Daily Plan generator with personalized study tasks, time blocks, and focus areas
-  * Created AI-powered plan generation using Anthropic API with language-aware content
-  * Added comprehensive security: field whitelisting, empty payload rejection, ownership verification
-  * Implemented proper delete operation verification and cascade handling
-  * Added 24 new translation keys (English + Turkish) for daily plan features
-  * Created dedicated UI pages: /time-tracking and /ai-daily-plan
-  * All features include comprehensive data-testid attributes for E2E testing
-  * Backend API endpoints secured with authentication, authorization, and input validation
-- October 14, 2025. Implemented Personalized Curriculum Page with AI Auto-Sync
-  * Created comprehensive Personalized Curriculum page (/my-curriculum) with progress visualization
-  * Built tabbed interface: Overview, Tasks, Skills, and Checkpoints
-  * Implemented curriculum list with progress tracking and status indicators
-  * Added skill tree visualization with mastery scores and level tracking
-  * Created checkpoint timeline with visual progression indicators
-  * Integrated success metrics including overall progress and success rates
-  * Added auto-sync mechanism: course enrollment triggers AI curriculum generation in background
-  * Implemented fire-and-forget async pattern with setImmediate for safe request lifecycle
-  * Added bilingual support (Turkish/English) for all curriculum content and UI
-  * Created 37 new translation keys for curriculum features in both languages
-  * Integrated secure curriculum API endpoints with proper ownership validation
-  * Added data-testid attributes for comprehensive end-to-end testing support
-  * Used existing UI components: Cards, Progress, Badges, Tabs, ScrollArea, Skeleton
-- October 14, 2025. Implemented Hierarchical Course System
-  * Restructured courses to support tree-based curriculum organization
-  * Added parent-child relationships: parentCourseId, depth, order fields to courses schema
-  * Created hierarchical API endpoints: /api/courses/tree and /api/user/courses/tree
-  * Implemented CourseTree component with expand/collapse functionality and depth-based styling
-  * Updated My Courses page to display courses in tree structure (AYT → Mathematics → Topics)
-  * Removed duplicate course listings through hierarchical parent-child relationships
-  * Added ID-based Set handling for efficient ancestor/descendant collection
-  * Implemented recursive tree building with complete hierarchy support (root to leaf nodes)
-  * Enhanced course navigation with visual hierarchy and enrollment status indicators
-  * Integrated enrollment and progress tracking in tree view with Continue/Enroll buttons
-- August 28, 2025. Implemented Comprehensive Study Planning & Scheduling System
-  * Created complete Study Planning & Scheduling System as core platform feature
-  * Added modern navigation system with back buttons and page titles
-  * Implemented AI-powered personalized learning schedule generation
-  * Created comprehensive database schema for study goals, schedules, and recommendations
-  * Added real-time progress tracking and achievement level monitoring
-  * Built smart scheduling recommendations with adaptive optimization
-  * Integrated seamless navigation across all pages with consistent modern design
-  * Added Turkish language support for all study planning features
-  * Enhanced user experience with glass morphism UI and responsive design
-- August 28, 2025. Implemented Seamless Next/Previous Lesson Navigation Animations
-  * Added Framer Motion integration for smooth lesson transitions
-  * Implemented directional slide animations (left/right) for next/previous navigation
-  * Created staggered entry animations for lesson content elements
-  * Added loading spinners and disabled states during navigation
-  * Implemented button hover effects with scale transformations
-  * Added AnimatePresence for smooth exit/enter transitions between lessons
-  * Created animated progress bar with smooth fill effect
-  * Enhanced user experience with professional motion design patterns
-- August 28, 2025. Resolved Critical Dashboard Performance Issues
-  * Fixed persistent infinite loop warnings in Dashboard component
-  * Eliminated "Maximum update depth exceeded" errors by optimizing useEffect dependencies
-  * Replaced problematic state-based progress bubbles with computed progressBubblesData
-  * Optimized component re-rendering with proper useMemo implementation
-  * Maintained full Turkish/English language support and glassmorphism design
-  * Application now runs stably without console errors or performance warnings
-- July 27, 2025. Implemented AI-Powered Emoji Reaction System and Animated Learning Progress Bubbles
-  * Created comprehensive AI-powered emoji reaction system for learning milestones
-  * Built animated progress bubbles with interactive visualizations and smooth animations
-  * Implemented milestone tracking database schema with learning milestones and emoji reactions
-  * Added personalized AI-generated emoji celebrations using Anthropic API
-  * Developed demo pages for both emoji reactions (/emoji-milestones) and animated progress (/animated-progress)
-  * Integrated real-time progress simulation and interactive bubble controls
-  * Added comprehensive milestone categories (courses, skills, achievements, streaks, levels)
-- July 27, 2025. Implemented Adaptive Learning Path Visualization Feature
-  * Created comprehensive adaptive learning path visualization component
-  * Developed AI-powered adaptive learning service with Anthropic integration
-  * Added interactive path visualization with progress tracking and analytics
-  * Implemented personalized recommendations and skill gap analysis
-  * Created dedicated demo page showcasing adaptive learning capabilities
-  * Added Turkish/English translations for all adaptive learning features
-  * Integrated API endpoints for adaptive path data and progress updates
-- July 09, 2025. Implemented comprehensive language support
-  * Language-aware AI module generation working for Turkish/English
-  * Complete lesson page functionality with AI-enhanced content
-  * Lesson routing and navigation from module tree
-  * Extended translation keys for lesson pages
-  * API endpoint for individual lesson data with language support
-- July 03, 2025. Initial setup
-```
-
-## User Preferences
-
-```
-Preferred communication style: Simple, everyday language.
-```
+- **TypeScript**: Ensures type safety across both frontend and backend.
+- **Vite**: Fast build tool for frontend development and optimized production builds.
+- **Drizzle Kit**: Used for database schema management and migrations.

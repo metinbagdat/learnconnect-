@@ -4,9 +4,10 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { AddTurkishCourses } from "@/components/ui/add-turkish-courses";
 import { CategoryManager } from "@/components/admin/category-manager";
 import { CourseManager } from "@/components/admin/course-manager";
+import { UserManager } from "@/components/admin/user-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Shield, Settings, Database, Book, FolderTree } from "lucide-react";
+import { Loader2, Shield, Settings, Database, Book, FolderTree, Users } from "lucide-react";
 import { Redirect } from "wouter";
 
 export default function AdminPanel() {
@@ -49,15 +50,19 @@ export default function AdminPanel() {
             </div>
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-6">
-              <Tabs defaultValue="categories">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="categories">
-                    <FolderTree className="h-4 w-4 mr-2" />
-                    Categories
+              <Tabs defaultValue="courses">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="users">
+                    <Users className="h-4 w-4 mr-2" />
+                    Users
                   </TabsTrigger>
                   <TabsTrigger value="courses">
                     <Book className="h-4 w-4 mr-2" />
                     Courses
+                  </TabsTrigger>
+                  <TabsTrigger value="categories">
+                    <FolderTree className="h-4 w-4 mr-2" />
+                    Categories
                   </TabsTrigger>
                   <TabsTrigger value="database">
                     <Database className="h-4 w-4 mr-2" />
@@ -68,10 +73,11 @@ export default function AdminPanel() {
                     Settings
                   </TabsTrigger>
                 </TabsList>
-                
-                <TabsContent value="categories" className="mt-6">
-                  <CategoryManager />
+
+                <TabsContent value="users" className="mt-6">
+                  <UserManager />
                 </TabsContent>
+                
                 
                 <TabsContent value="courses" className="mt-6 space-y-6">
                   {/* Course Management */}
@@ -79,6 +85,10 @@ export default function AdminPanel() {
                   
                   {/* Add Turkish University Entrance Exam Courses */}
                   <AddTurkishCourses />
+                </TabsContent>
+
+                <TabsContent value="categories" className="mt-6">
+                  <CategoryManager />
                 </TabsContent>
                 
                 <TabsContent value="database" className="mt-6">

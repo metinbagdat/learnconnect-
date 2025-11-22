@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Redirect admin users to admin panel, others to dashboard
-      window.location.href = user.role === 'admin' ? '/admin-panel' : '/';
+      window.location.href = user.role === 'admin' ? '/admin' : '/';
     },
     onError: (error: Error) => {
       toast({
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Redirect admin users to admin panel, others to dashboard
-      window.location.href = user.role === 'admin' ? '/admin-panel' : '/';
+      window.location.href = user.role === 'admin' ? '/admin' : '/';
     },
     onError: (error: Error) => {
       toast({

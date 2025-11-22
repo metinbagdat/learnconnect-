@@ -228,7 +228,7 @@ export function Sidebar() {
           {/* Only show for admins */}
           {user?.role === "admin" && (
             <SidebarLink 
-              href="/admin-panel" 
+              href="/admin" 
               icon={<Shield className="h-5 w-5" />}
               isActive={location === '/admin-panel'}
             >

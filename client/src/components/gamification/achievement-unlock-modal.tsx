@@ -29,18 +29,7 @@ interface AchievementUnlockModalProps {
 }
 
 export function AchievementUnlockModal({ achievement, isOpen, onClose }: AchievementUnlockModalProps) {
-  // Use language context with fallback to prevent cascading failures
-  let language = 'en';
-  let t = (key: string) => key;
-  
-  try {
-    const languageContext = useLanguage();
-    language = languageContext.language;
-    t = languageContext.t;
-  } catch (error) {
-    console.warn('Language context not available in AchievementUnlockModal, using fallbacks');
-  }
-  
+  const { language, t } = useLanguage();
   const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {

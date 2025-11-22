@@ -167,6 +167,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create course" });
     }
   });
+
+  // Update course (admin/instructor only)
+  app.patch("/api/courses/:id", async (req, res) => {
+    if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const courseId = parseInt(req.params.id);
+      if (!Number.isInteger(courseId) || courseId < 1) {
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+
+      const { price, isPremium, level } = req.body;
+      
+      const updatedCourse = await storage.updateCourse(courseId, {
+        price: price !== undefined ? price : undefined,
+        isPremium: isPremium !== undefined ? isPremium : undefined,
+        level: level || undefined,
+      });
+
+      if (!updatedCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error("Error updating course:", error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
   
   // Course Category Routes
   app.get("/api/categories", async (req, res) => {

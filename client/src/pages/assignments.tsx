@@ -24,12 +24,15 @@ export default function Assignments() {
     queryKey: ["/api/assignments"],
   });
   
+  // Check if error is 401 Unauthorized
+  const isUnauthorized = error && (error as any).status === 401 || (error as any).message?.includes('401');
+  
   // Filter assignments based on search
-  const filteredAssignments = assignments.filter(
+  const filteredAssignments = !error ? assignments.filter(
     assignment => 
       assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       assignment.course.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
   
   // Group assignments by due date
   const today = new Date();

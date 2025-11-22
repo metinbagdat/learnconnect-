@@ -6734,6 +6734,21 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Get all users for admin dashboard
+  app.get("/api/admin/users", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const users = await storage.getAllUsersWithLevels();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   // Delete course (admin only)
   app.delete("/api/courses/:id", async (req, res) => {
     if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
@@ -6755,6 +6770,3 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   return httpServer;
 }
-
-
-  // Delete course (admin only)

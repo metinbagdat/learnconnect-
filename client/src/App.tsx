@@ -42,10 +42,12 @@ import MyCurriculumPage from "@/pages/my-curriculum";
 import EssaysPage from "@/pages/essays";
 import TimeTracking from "@/pages/time-tracking";
 import AIDailyPlan from "@/pages/ai-daily-plan";
+import LandingPage from "@/pages/landing-page";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />
       <ProtectedRoute path="/courses" component={Courses} />
@@ -89,6 +91,7 @@ function Router() {
       <ProtectedRoute path="/checkout/:courseId" component={Checkout} />
       <ProtectedRoute path="/essays" component={EssaysPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>
   );

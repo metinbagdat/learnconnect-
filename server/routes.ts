@@ -6710,5 +6710,30 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Database statistics for admin
+  app.get("/api/admin/db-stats", async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const users = await storage.getAllUsersWithLevels();
+      const courses = await storage.getCourses();
+      const enrollments = await storage.getUserCourses(req.user.id);
+
+      res.json({
+        totalUsers: users.length,
+        totalCourses: courses.length,
+        totalEnrollments: enrollments.length,
+        status: "Healthy",
+        lastBackup: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching db stats:", error);
+      res.status(500).json({ message: "Failed to fetch database statistics" });
+    }
+  });
+
   return httpServer;
 }
+

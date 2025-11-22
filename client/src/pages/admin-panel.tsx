@@ -5,6 +5,7 @@ import { AddTurkishCourses } from "@/components/ui/add-turkish-courses";
 import { CategoryManager } from "@/components/admin/category-manager";
 import { CourseManager } from "@/components/admin/course-manager";
 import { UserManager } from "@/components/admin/user-manager";
+import { DatabaseManager } from "@/components/admin/database-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Shield, Settings, Database, Book, FolderTree, Users } from "lucide-react";
@@ -92,19 +93,7 @@ export default function AdminPanel() {
                 </TabsContent>
                 
                 <TabsContent value="database" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Database Management</CardTitle>
-                      <CardDescription>
-                        Advanced database operations and maintenance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Database administration features coming soon.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <DatabaseManager />
                 </TabsContent>
                 
                 <TabsContent value="settings" className="mt-6">

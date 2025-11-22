@@ -17,11 +17,12 @@ import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Courses() {
-  const { user } = useAuth();
-  const { t } = useLanguage();
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState("");
+  try {
+    const { user } = useAuth();
+    const { t } = useLanguage();
+    const [, navigate] = useLocation();
+    const { toast } = useToast();
+    const [searchQuery, setSearchQuery] = useState("");
   
   const { data: userCoursesTree = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<any[]>({
     queryKey: ["/api/user/courses/tree"],
@@ -247,4 +248,21 @@ export default function Courses() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('Error in Courses page:', error);
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-neutral-900 mb-4">Something went wrong</h1>
+          <p className="text-neutral-600">Unable to load courses. Please refresh the page.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 }

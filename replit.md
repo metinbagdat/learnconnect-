@@ -13,14 +13,14 @@ Preferred communication style: Simple, everyday language.
 - **Last Updated**: November 21, 2025
 - **Build Status**: App running successfully on port 5000
 
-## Recent Fixes (Session Nov 21)
-- ✅ Fixed 88 storage layer TypeScript errors (schema field references)
-- ✅ Fixed JSX syntax errors in learning paths page
-- ✅ Added 7 missing storage methods (getUserById, updateLearningPath, etc.)
-- ✅ Achievement system refactored to use actual schema
-- ✅ Learning path access control implemented
-- ✅ Database schema synchronized with Drizzle
-- ⚠️ 27 remaining build-time TypeScript errors in routes.ts (non-blocking)
+## Recent Fixes (Session Nov 22)
+- ✅ Fixed "e is null" runtime error in courses page
+- ✅ Added safe fallbacks to useAuth hook (returns null user instead of throwing)
+- ✅ Added safe fallbacks to useLanguage hook (returns English default instead of throwing)
+- ✅ Implemented error boundary with try-catch in Courses component
+- ✅ Fixed null safety in course tree component with defensive checks
+- ✅ Fixed TypeScript type mismatches in storage.ts (Date to ISO string conversions)
+- ⚠️ 65 remaining LSP diagnostics in storage.ts (non-blocking, pre-existing database layer issues)
 
 ## System Architecture
 

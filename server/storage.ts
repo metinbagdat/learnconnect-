@@ -1444,21 +1444,19 @@ export class DatabaseStorage implements IStorage {
   
   // User Progress Snapshot operations
   async getUserProgressSnapshot(userId: number, date?: Date): Promise<UserProgressSnapshot | undefined> {
-    let query = db
-      .select()
-      .from(userProgressSnapshots)
-      .where(eq(userProgressSnapshots.userId, userId))
-      .orderBy(desc(userProgressSnapshots.snapshotDate));
+    const conditions = [eq(userProgressSnapshots.userId, userId)];
     
     if (date) {
-      query = query.where(
-        sql`DATE(${userProgressSnapshots.snapshotDate}) = DATE(${date})`
-      );
+      conditions.push(sql`DATE(${userProgressSnapshots.snapshotDate}) = DATE(${date.toISOString()})`);
     }
     
-    query = query.limit(1);
+    const [snapshot] = await db
+      .select()
+      .from(userProgressSnapshots)
+      .where(and(...conditions))
+      .orderBy(desc(userProgressSnapshots.snapshotDate))
+      .limit(1);
     
-    const [snapshot] = await query;
     return snapshot;
   }
   
@@ -1741,7 +1739,7 @@ export class DatabaseStorage implements IStorage {
         nextLevelXp: 100,
         streak: 0,
         totalPoints: 0,
-        lastActivityDate: new Date()
+        lastActivityDate: new Date().toISOString()
       })
       .returning();
     
@@ -1778,7 +1776,7 @@ export class DatabaseStorage implements IStorage {
         currentXp: remainingXp,
         totalXp: newTotalXp,
         nextLevelXp,
-        lastActivityDate: new Date()
+        lastActivityDate: new Date().toISOString()
       })
       .where(eq(userLevels.userId, userId))
       .returning();
@@ -1800,7 +1798,7 @@ export class DatabaseStorage implements IStorage {
       .update(userLevels)
       .set({
         totalPoints: newTotalPoints,
-        lastActivityDate: new Date()
+        lastActivityDate: new Date().toISOString()
       })
       .where(eq(userLevels.userId, userId))
       .returning();

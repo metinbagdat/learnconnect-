@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { AddTurkishCourses } from "@/components/ui/add-turkish-courses";
 import { CategoryManager } from "@/components/admin/category-manager";
+import { CourseManager } from "@/components/admin/course-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Shield, Settings, Database, Book, FolderTree } from "lucide-react";
@@ -73,11 +74,11 @@ export default function AdminPanel() {
                 </TabsContent>
                 
                 <TabsContent value="courses" className="mt-6 space-y-6">
-                  {/* Course Administration */}
-                  <div className="grid grid-cols-1 gap-6">
-                    {/* Add Turkish University Entrance Exam Courses */}
-                    <AddTurkishCourses />
-                  </div>
+                  {/* Course Management */}
+                  <CourseManager />
+                  
+                  {/* Add Turkish University Entrance Exam Courses */}
+                  <AddTurkishCourses />
                 </TabsContent>
                 
                 <TabsContent value="database" className="mt-6">

@@ -40,15 +40,31 @@ interface CourseNodeProps {
 }
 
 function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodeProps) {
-  if (!course) return null;
+  if (!course || typeof course !== 'object') return null;
   
-  const [isExpanded, setIsExpanded] = useState(course.depth === 0); // Root courses expanded by default
+  const [isExpanded, setIsExpanded] = useState((course.depth ?? 0) === 0);
   const [, navigate] = useLocation();
-  const { language } = useLanguage();
-  const hasChildren = course.children && course.children.length > 0;
+  const languageContext = useLanguage();
+  const language = languageContext?.language ?? 'en';
+  const hasChildren = course.children && Array.isArray(course.children) && course.children.length > 0;
 
-  const localizedTitle = course.title || getLocalizedField(course, 'title', language) || 'Untitled Course';
-  const localizedDescription = getLocalizedField(course, 'description', language) || '';
+  let localizedTitle = 'Untitled Course';
+  if (course.title && typeof course.title === 'string') {
+    localizedTitle = course.title;
+  } else if (language === 'tr' && course.titleTr && typeof course.titleTr === 'string') {
+    localizedTitle = course.titleTr;
+  } else if (course.titleEn && typeof course.titleEn === 'string') {
+    localizedTitle = course.titleEn;
+  }
+
+  let localizedDescription = '';
+  if (language === 'tr' && course.descriptionTr && typeof course.descriptionTr === 'string') {
+    localizedDescription = course.descriptionTr;
+  } else if (course.descriptionEn && typeof course.descriptionEn === 'string') {
+    localizedDescription = course.descriptionEn;
+  } else if (course.description && typeof course.description === 'string') {
+    localizedDescription = course.description;
+  }
 
   const getDepthColor = (depth: number) => {
     const colors = [

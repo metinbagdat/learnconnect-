@@ -43,6 +43,10 @@ import EssaysPage from "@/pages/essays";
 import TimeTracking from "@/pages/time-tracking";
 import AIDailyPlan from "@/pages/ai-daily-plan";
 import LandingPage from "@/pages/landing-page";
+import MarketingDashboard from "@/pages/marketing-dashboard";
+import AffiliateDashboard from "@/pages/affiliate-dashboard";
+import WaitlistManagement from "@/pages/waitlist-management";
+import AnalyticsCharts from "@/pages/analytics-charts";
 
 function Router() {
   return (
@@ -90,6 +94,10 @@ function Router() {
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/checkout/:courseId" component={Checkout} />
       <ProtectedRoute path="/essays" component={EssaysPage} />
+      <ProtectedRoute path="/marketing" component={MarketingDashboard} />
+      <ProtectedRoute path="/affiliate" component={AffiliateDashboard} />
+      <ProtectedRoute path="/waitlist" component={WaitlistManagement} />
+      <ProtectedRoute path="/analytics-charts" component={AnalyticsCharts} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/" component={LandingPage} />
       <Route component={NotFound} />

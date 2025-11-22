@@ -6,6 +6,7 @@ import { CategoryManager } from "@/components/admin/category-manager";
 import { CourseManager } from "@/components/admin/course-manager";
 import { UserManager } from "@/components/admin/user-manager";
 import { DatabaseManager } from "@/components/admin/database-manager";
+import { CourseCategoryTree } from "@/components/admin/course-category-tree";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Shield, Settings, Database, Book, FolderTree, Users } from "lucide-react";
@@ -81,6 +82,9 @@ export default function AdminPanel() {
                 
                 
                 <TabsContent value="courses" className="mt-6 space-y-6">
+                  {/* Course & Category Tree */}
+                  <CourseCategoryTree />
+                  
                   {/* Course Management */}
                   <CourseManager />
                   

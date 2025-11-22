@@ -102,7 +102,6 @@ export default function Checkout() {
             <span className="ml-2">Loading course information...</span>
           </CardContent>
         </Card>
-        </div>
       </div>
     );
   }

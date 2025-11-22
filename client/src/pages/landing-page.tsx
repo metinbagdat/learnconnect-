@@ -320,10 +320,10 @@ export default function LandingPage() {
       </section>
 
       {/* AI News Portal */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-gradient-to-b from-slate-800/30 to-slate-900/50 border-y border-slate-700">
         <div className="max-w-7xl mx-auto">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="text-4xl font-bold text-white">{isTr ? "Eğitim Haberleri" : "Education News"}</h2>
+            <h2 className="text-4xl font-bold text-white">{isTr ? "🎓 Eğitim Haberleri" : "🎓 Education News"}</h2>
             <p className="text-xl text-slate-400">{isTr ? "AI tarafından seçilen en son eğitim haberleri" : "AI-curated latest education news"}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

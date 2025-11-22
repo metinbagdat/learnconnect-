@@ -95,14 +95,13 @@ export default function Checkout() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="ml-2">Loading course information...</span>
-            </CardContent>
-          </Card>
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Loading course information...</span>
+          </CardContent>
+        </Card>
         </div>
       </div>
     );

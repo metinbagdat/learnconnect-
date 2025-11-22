@@ -140,8 +140,13 @@ function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodePr
                   )}
                 </div>
 
-                {/* Action Buttons */}
+                {/* Price and Action Buttons */}
                 <div className="flex items-center gap-2">
+                  {course.price && Number(course.price) > 0 && (
+                    <div className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">
+                      ${Number(course.price).toFixed(2)}
+                    </div>
+                  )}
                   {course.isEnrolled ? (
                     <Button
                       onClick={() => navigate(`/courses/${course.id}`)}
@@ -153,13 +158,19 @@ function CourseNode({ course, showEnrollButton = false, onEnroll }: CourseNodePr
                     </Button>
                   ) : showEnrollButton ? (
                     <Button
-                      onClick={() => onEnroll?.(course.id)}
+                      onClick={() => {
+                        if (course.price && Number(course.price) > 0) {
+                          navigate(`/checkout/${course.id}`);
+                        } else {
+                          onEnroll?.(course.id);
+                        }
+                      }}
                       size="sm"
-                      variant="outline"
+                      variant={Number(course.price) > 0 ? "default" : "outline"}
                       className="whitespace-nowrap"
                       data-testid={`enroll-${course.id}`}
                     >
-                      Enroll
+                      {Number(course.price) > 0 ? 'Buy' : 'Enroll'}
                     </Button>
                   ) : null}
                 </div>

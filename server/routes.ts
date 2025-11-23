@@ -5007,6 +5007,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       
       res.json(tasksWithContext);
     } catch (error) {
+      console.error("Error fetching daily tasks:", error);
       res.status(500).json({ message: "Failed to fetch daily tasks" });
     }
   });

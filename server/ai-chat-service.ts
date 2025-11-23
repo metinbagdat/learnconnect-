@@ -210,8 +210,8 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
       ];
     }
 
-    // Analyze courses for personalized tips
-    const courseTitles = userCourses.map(uc => uc.course.title).join(', ');
+    // Analyze courses for personalized tips - filter out null courses
+    const courseTitles = userCourses.filter(uc => uc.course).map(uc => uc.course.title).join(', ') || "various courses";
     const avgProgress = userCourses.reduce((sum, uc) => sum + uc.progress, 0) / userCourses.length;
 
     const prompt = `Generate 3-4 personalized study tips for a student who is:

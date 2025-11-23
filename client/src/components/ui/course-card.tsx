@@ -28,6 +28,12 @@ export function CourseCard({
 }: CourseCardProps) {
   const [, navigate] = useLocation();
   const { t, language } = useLanguage();
+  
+  // Safety check - don't render if course is null
+  if (!course) {
+    return null;
+  }
+  
   const {
     title,
     description,

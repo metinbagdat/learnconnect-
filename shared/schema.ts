@@ -911,6 +911,53 @@ export const certificates = pgTable("certificates", {
   uniqueUserCourse: sql`UNIQUE (user_id, course_id)`,
 }));
 
+// AI Logging Tables for Adaptive Learning System
+export const aiConceptLogs = pgTable("ai_concept_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  topicId: integer("topic_id").references(() => tytTopics.id),
+  courseId: integer("course_id").references(() => courses.id),
+  conceptName: text("concept_name").notNull(),
+  aiModel: text("ai_model").notNull(), // gpt-4, claude-3, etc.
+  explanation: text("explanation").notNull(),
+  language: text("language").notNull(), // en, tr
+  complexity: text("complexity").notNull(), // beginner, intermediate, advanced
+  userRating: integer("user_rating"), // 1-5 rating of explanation quality
+  helpful: boolean("helpful").default(false),
+  usedInReview: boolean("used_in_review").default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const aiStudyTipsLogs = pgTable("ai_study_tips_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  topicId: integer("topic_id").references(() => tytTopics.id),
+  subjectId: integer("subject_id").references(() => tytSubjects.id),
+  aiModel: text("ai_model").notNull(), // gpt-4, claude-3, etc.
+  tips: text("tips").array().notNull(), // Array of study tips
+  language: text("language").notNull(), // en, tr
+  context: text("context").notNull(), // why these tips were generated
+  appliedAt: timestamp("applied_at"), // when student started using these tips
+  effectiveness: integer("effectiveness"), // 1-5 rating after use
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const aiReviewLogs = pgTable("ai_review_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  topicId: integer("topic_id").references(() => tytTopics.id),
+  courseId: integer("course_id").references(() => courses.id),
+  aiModel: text("ai_model").notNull(), // gpt-4, claude-3, etc.
+  reviewContent: text("review_content").notNull(),
+  language: text("language").notNull(), // en, tr
+  focusAreas: text("focus_areas").array().notNull(), // areas reviewed
+  difficultyLevel: text("difficulty_level"), // easy, medium, hard
+  conceptsReviewed: text("concepts_reviewed").array().notNull(),
+  estimatedRetention: numeric("estimated_retention", { precision: 3, scale: 2 }), // 0.00-1.00
+  studentFeedback: text("student_feedback"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["admin", "instructor", "student"]).default("student"),
@@ -1769,3 +1816,15 @@ export const insertCertificateSchema = createInsertSchema(certificates, {
 
 export type Certificate = typeof certificates.$inferSelect;
 export type InsertCertificate = z.infer<typeof insertCertificateSchema>;
+
+// AI Logging insert schemas and type exports
+export const insertAiConceptLogSchema = createInsertSchema(aiConceptLogs).omit({ id: true, createdAt: true });
+export const insertAiStudyTipsLogSchema = createInsertSchema(aiStudyTipsLogs).omit({ id: true, createdAt: true });
+export const insertAiReviewLogSchema = createInsertSchema(aiReviewLogs).omit({ id: true, createdAt: true });
+
+export type AiConceptLog = typeof aiConceptLogs.$inferSelect;
+export type InsertAiConceptLog = z.infer<typeof insertAiConceptLogSchema>;
+export type AiStudyTipsLog = typeof aiStudyTipsLogs.$inferSelect;
+export type InsertAiStudyTipsLog = z.infer<typeof insertAiStudyTipsLogSchema>;
+export type AiReviewLog = typeof aiReviewLogs.$inferSelect;
+export type InsertAiReviewLog = z.infer<typeof insertAiReviewLogSchema>;

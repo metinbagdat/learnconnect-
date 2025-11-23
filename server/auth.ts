@@ -48,7 +48,7 @@ export function setupAuth(app: Express) {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Secure cookies in production
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'lax' in dev, 'none' in production
       path: '/'
     },
     name: 'edulearn.sid' // Custom session ID name

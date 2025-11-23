@@ -6876,6 +6876,120 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // AI Concept Logs endpoints
+  app.post("/api/ai-logs/concept", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const validated = insertAiConceptLogSchema.parse(req.body);
+      const log = await storage.createAiConceptLog({ ...validated, userId: req.user.id });
+      res.status(201).json(log);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid concept log data", errors: error.errors });
+      }
+      console.error("Error creating concept log:", error);
+      res.status(500).json({ message: "Failed to create concept log" });
+    }
+  });
+
+  app.get("/api/ai-logs/concept", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getAiConceptLogs(req.user.id, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching concept logs:", error);
+      res.status(500).json({ message: "Failed to fetch concept logs" });
+    }
+  });
+
+  app.patch("/api/ai-logs/concept/:id", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateAiConceptLog(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Concept log not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating concept log:", error);
+      res.status(500).json({ message: "Failed to update concept log" });
+    }
+  });
+
+  // AI Study Tips Logs endpoints
+  app.post("/api/ai-logs/tips", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const validated = insertAiStudyTipsLogSchema.parse(req.body);
+      const log = await storage.createAiStudyTipsLog({ ...validated, userId: req.user.id });
+      res.status(201).json(log);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid study tips log data", errors: error.errors });
+      }
+      console.error("Error creating study tips log:", error);
+      res.status(500).json({ message: "Failed to create study tips log" });
+    }
+  });
+
+  app.get("/api/ai-logs/tips", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getAiStudyTipsLogs(req.user.id, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching study tips logs:", error);
+      res.status(500).json({ message: "Failed to fetch study tips logs" });
+    }
+  });
+
+  app.patch("/api/ai-logs/tips/:id", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateAiStudyTipsLog(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Study tips log not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating study tips log:", error);
+      res.status(500).json({ message: "Failed to update study tips log" });
+    }
+  });
+
+  // AI Review Logs endpoints
+  app.post("/api/ai-logs/review", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const validated = insertAiReviewLogSchema.parse(req.body);
+      const log = await storage.createAiReviewLog({ ...validated, userId: req.user.id });
+      res.status(201).json(log);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review log data", errors: error.errors });
+      }
+      console.error("Error creating review log:", error);
+      res.status(500).json({ message: "Failed to create review log" });
+    }
+  });
+
+  app.get("/api/ai-logs/review", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getAiReviewLogs(req.user.id, limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching review logs:", error);
+      res.status(500).json({ message: "Failed to fetch review logs" });
+    }
+  });
+
+  app.patch("/api/ai-logs/review/:id", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updated = await storage.updateAiReviewLog(id, req.body);
+      if (!updated) return res.status(404).json({ message: "Review log not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating review log:", error);
+      res.status(500).json({ message: "Failed to update review log" });
+    }
+  });
+
   // Logout endpoint
   app.post("/api/logout", (req, res) => {
     req.logout((err) => {

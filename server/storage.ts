@@ -4298,6 +4298,78 @@ export class DatabaseStorage implements IStorage {
   async generateWeeklyAiRecommendations(userId: number, planId: number): Promise<string> {
     return "AI recommendations feature requires OpenAI API key configuration. Placeholder recommendations returned.";
   }
+
+  // AI Concept Logs implementation
+  async createAiConceptLog(log: InsertAiConceptLog): Promise<AiConceptLog> {
+    const [newLog] = await db.insert(aiConceptLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getAiConceptLogs(userId: number, limit: number = 50): Promise<AiConceptLog[]> {
+    return await db
+      .select()
+      .from(aiConceptLogs)
+      .where(eq(aiConceptLogs.userId, userId))
+      .orderBy(desc(aiConceptLogs.createdAt))
+      .limit(limit);
+  }
+
+  async updateAiConceptLog(id: number, data: Partial<AiConceptLog>): Promise<AiConceptLog | undefined> {
+    const [updated] = await db
+      .update(aiConceptLogs)
+      .set(data)
+      .where(eq(aiConceptLogs.id, id))
+      .returning();
+    return updated;
+  }
+
+  // AI Study Tips Logs implementation
+  async createAiStudyTipsLog(log: InsertAiStudyTipsLog): Promise<AiStudyTipsLog> {
+    const [newLog] = await db.insert(aiStudyTipsLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getAiStudyTipsLogs(userId: number, limit: number = 50): Promise<AiStudyTipsLog[]> {
+    return await db
+      .select()
+      .from(aiStudyTipsLogs)
+      .where(eq(aiStudyTipsLogs.userId, userId))
+      .orderBy(desc(aiStudyTipsLogs.createdAt))
+      .limit(limit);
+  }
+
+  async updateAiStudyTipsLog(id: number, data: Partial<AiStudyTipsLog>): Promise<AiStudyTipsLog | undefined> {
+    const [updated] = await db
+      .update(aiStudyTipsLogs)
+      .set(data)
+      .where(eq(aiStudyTipsLogs.id, id))
+      .returning();
+    return updated;
+  }
+
+  // AI Review Logs implementation
+  async createAiReviewLog(log: InsertAiReviewLog): Promise<AiReviewLog> {
+    const [newLog] = await db.insert(aiReviewLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getAiReviewLogs(userId: number, limit: number = 50): Promise<AiReviewLog[]> {
+    return await db
+      .select()
+      .from(aiReviewLogs)
+      .where(eq(aiReviewLogs.userId, userId))
+      .orderBy(desc(aiReviewLogs.createdAt))
+      .limit(limit);
+  }
+
+  async updateAiReviewLog(id: number, data: Partial<AiReviewLog>): Promise<AiReviewLog | undefined> {
+    const [updated] = await db
+      .update(aiReviewLogs)
+      .set(data)
+      .where(eq(aiReviewLogs.id, id))
+      .returning();
+    return updated;
+  }
 }
 
 export const storage = new DatabaseStorage();

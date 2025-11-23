@@ -44,7 +44,11 @@ import {
   // Forum and Certificate schemas
   insertForumPostSchema,
   insertForumCommentSchema,
-  insertCertificateSchema
+  insertCertificateSchema,
+  // AI Logging schemas
+  insertAiConceptLogSchema,
+  insertAiStudyTipsLogSchema,
+  insertAiReviewLogSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";

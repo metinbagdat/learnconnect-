@@ -545,11 +545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Assignments API
-  app.get("/api/assignments", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
+  app.get("/api/assignments", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const assignments = await storage.getUserAssignments(req.user.id);
       return res.json(assignments);
@@ -2090,11 +2086,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // User Level API
-  app.get("/api/user/level", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
+  app.get("/api/user/level", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const userLevel = await storage.getUserLevel(req.user.id);
       
@@ -5027,11 +5019,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // User-facing daily tasks API (used by TodoList component)
-  app.get("/api/user/daily-tasks", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
+  app.get("/api/user/daily-tasks", (app as any).ensureAuthenticated, async (req, res) => {
     const date = req.query.date as string;
     
     try {
@@ -6832,12 +6820,60 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  // Get current user (CRITICAL - fixes 401 auth issues)
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json(null);
+  // Adaptive Learning Endpoints
+  app.post("/api/adaptive/track-performance", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const { taskId, score, timeSpent, difficulty, satisfaction, topicId, subjectId, notes } = req.body;
+      const { trackTaskPerformance } = await import('./adaptive-learning-service');
+      const feedback = await trackTaskPerformance(req.user.id, {
+        taskId,
+        score,
+        timeSpent,
+        difficulty,
+        satisfaction,
+        topicId,
+        subjectId,
+        notes
+      });
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error tracking performance:", error);
+      res.status(500).json({ message: "Failed to track performance" });
     }
-    res.json(req.user);
+  });
+
+  app.get("/api/adaptive/analytics", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const { generateLearningAnalyticsReport } = await import('./adaptive-learning-service');
+      const report = await generateLearningAnalyticsReport(req.user.id);
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating analytics:", error);
+      res.status(500).json({ message: "Failed to generate analytics" });
+    }
+  });
+
+  app.post("/api/adaptive/predict-performance", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const { examDate } = req.body;
+      const { predictExamPerformance } = await import('./adaptive-learning-service');
+      const prediction = await predictExamPerformance(req.user.id, examDate);
+      res.json(prediction);
+    } catch (error) {
+      console.error("Error predicting performance:", error);
+      res.status(500).json({ message: "Failed to predict performance" });
+    }
+  });
+
+  app.get("/api/adaptive/learning-patterns", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const { analyzeLearningPatterns } = await import('./adaptive-learning-service');
+      const patterns = await analyzeLearningPatterns(req.user.id);
+      res.json(patterns);
+    } catch (error) {
+      console.error("Error analyzing patterns:", error);
+      res.status(500).json({ message: "Failed to analyze learning patterns" });
+    }
   });
 
   // Logout endpoint

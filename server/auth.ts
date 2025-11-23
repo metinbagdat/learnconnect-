@@ -156,7 +156,7 @@ export function setupAuth(app: Express) {
   });
 
   // Global authentication middleware with header fallback
-  export const ensureAuthenticated = async (req: any, res: any, next: any) => {
+  const ensureAuthenticated = async (req: any, res: any, next: any) => {
     // First try standard session-based authentication
     if (req.isAuthenticated()) {
       return next();
@@ -188,4 +188,7 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: "Error retrieving user" });
     }
   });
+
+  // Export middleware for use in routes
+  (app as any).ensureAuthenticated = ensureAuthenticated;
 }

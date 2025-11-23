@@ -720,6 +720,19 @@ export interface IStorage {
   completeWeeklyPlan(id: number): Promise<WeeklyStudyPlan | undefined>;
   generateWeeklyAiRecommendations(userId: number, planId: number): Promise<string>;
 
+  // AI Logging operations
+  createAiConceptLog(log: InsertAiConceptLog): Promise<AiConceptLog>;
+  getAiConceptLogs(userId: number, limit?: number): Promise<AiConceptLog[]>;
+  updateAiConceptLog(id: number, data: Partial<AiConceptLog>): Promise<AiConceptLog | undefined>;
+  
+  createAiStudyTipsLog(log: InsertAiStudyTipsLog): Promise<AiStudyTipsLog>;
+  getAiStudyTipsLogs(userId: number, limit?: number): Promise<AiStudyTipsLog[]>;
+  updateAiStudyTipsLog(id: number, data: Partial<AiStudyTipsLog>): Promise<AiStudyTipsLog | undefined>;
+  
+  createAiReviewLog(log: InsertAiReviewLog): Promise<AiReviewLog>;
+  getAiReviewLogs(userId: number, limit?: number): Promise<AiReviewLog[]>;
+  updateAiReviewLog(id: number, data: Partial<AiReviewLog>): Promise<AiReviewLog | undefined>;
+
   // Session store
   sessionStore: SessionStore;
 }

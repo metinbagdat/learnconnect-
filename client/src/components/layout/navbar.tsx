@@ -8,7 +8,6 @@ import { useAuth } from "@/hooks/use-auth";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [, navigate] = useLocation();
-
   const { language } = useLanguage();
   const { user } = useAuth();
   const isTr = language === "tr";

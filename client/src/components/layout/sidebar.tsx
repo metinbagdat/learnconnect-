@@ -51,7 +51,8 @@ const SidebarLink = ({ href, icon, children, isActive }: SidebarLinkProps) => (
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isTr = language === "tr";
   const [integrationsOpen, setIntegrationsOpen] = useState(true);
   
   const handleLogout = () => {

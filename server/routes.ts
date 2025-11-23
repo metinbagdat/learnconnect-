@@ -347,11 +347,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userCourses = await storage.getUserCourses(req.user.id);
       const allCourses = await storage.getCourses();
       
+      console.log('[Courses Tree] User ID:', req.user.id);
+      console.log('[Courses Tree] User courses count:', userCourses.length);
+      console.log('[Courses Tree] User courses:', userCourses.map(uc => ({ id: uc.id, courseId: uc.courseId })));
+      console.log('[Courses Tree] All courses count:', allCourses.length);
+      
       // Create a map for fast course lookup
       const courseMap = new Map(allCourses.map(c => [c.id, c]));
       
       // Get enrolled course IDs
       const enrolledCourseIds = new Set(userCourses.map(uc => uc.courseId));
+      console.log('[Courses Tree] Enrolled course IDs:', Array.from(enrolledCourseIds));
       
       // Helper function to get all descendants of a course ID
       const getAllDescendants = (courseId: number): number[] => {
@@ -405,10 +411,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
       
+      console.log('[Courses Tree] Relevant course IDs count:', relevantCourseIds.size);
+      console.log('[Courses Tree] Courses with enrollment:', coursesWithEnrollment.length);
+      
       const courseTree = buildCourseTree(coursesWithEnrollment, null);
+      console.log('[Courses Tree] Final tree result:', courseTree.length, 'root courses');
+      
       return res.json(courseTree);
     } catch (error) {
-      return res.status(500).json({ message: "Failed to fetch user course tree" });
+      console.error('[Courses Tree] Error:', error);
+      return res.status(500).json({ message: "Failed to fetch user course tree", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
   

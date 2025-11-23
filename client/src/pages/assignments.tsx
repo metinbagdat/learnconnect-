@@ -25,7 +25,7 @@ export default function Assignments() {
   });
   
   // Check if error is 401 Unauthorized
-  const isUnauthorized = error && (error as any).status === 401 || (error as any).message?.includes('401');
+  const isUnauthorized = error && ((error as any).status === 401 || (error as any).message?.includes('401'));
   
   // Filter assignments based on search
   const filteredAssignments = !error ? assignments.filter(

@@ -425,7 +425,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.post("/api/user/courses", async (req, res) => {
+    console.log('[POST /api/user/courses] Session check:', {
+      isAuthenticated: req.isAuthenticated(),
+      sessionId: req.session?.id,
+      userId: req.user?.id,
+      cookies: req.headers.cookie?.substring(0, 50)
+    });
+    
     if (!req.isAuthenticated()) {
+      console.log('[POST /api/user/courses] Authentication failed');
       return res.status(401).json({ message: "Unauthorized" });
     }
     

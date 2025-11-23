@@ -5018,17 +5018,38 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
     
     try {
+      console.log('Task creation request received:', {
+        userId: req.user.id,
+        body: req.body
+      });
+      
       const validatedData = insertDailyStudyTaskSchema.parse({
         ...req.body,
         userId: req.user.id
       });
+      
+      console.log('Validated task data:', validatedData);
+      
       const task = await storage.createDailyStudyTask(validatedData);
+      console.log('Task created successfully:', task);
+      
       res.status(201).json(task);
     } catch (error) {
+      console.error('Task creation error:', error);
+      
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid task data", errors: error.errors });
+        const formattedErrors = error.errors.map(err => ({
+          path: err.path.join('.'),
+          message: err.message,
+          code: err.code
+        }));
+        console.error('Validation errors:', formattedErrors);
+        return res.status(400).json({ 
+          message: "Invalid task data", 
+          errors: formattedErrors 
+        });
       }
-      res.status(500).json({ message: "Failed to create daily task" });
+      res.status(500).json({ message: "Failed to create daily task", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

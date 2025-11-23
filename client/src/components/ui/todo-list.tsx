@@ -151,8 +151,17 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
 
   const createMutation = useMutation({
     mutationFn: async (taskData: any) => {
-      const response = await apiRequest('POST', '/api/user/daily-tasks', taskData);
-      return response.json();
+      console.log('Creating task with data:', taskData);
+      
+      try {
+        const response = await apiRequest('POST', '/api/user/daily-tasks', taskData);
+        const jsonData = await response.json();
+        console.log('Task creation response:', jsonData);
+        return jsonData;
+      } catch (error) {
+        console.error('Task creation error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/daily-tasks', { date: selectedDate }] });
@@ -161,6 +170,41 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
       toast({
         title: language === 'tr' ? 'Başarılı!' : 'Success!',
         description: language === 'tr' ? 'Görev oluşturuldu' : 'Task created',
+      });
+    },
+    onError: (error: any) => {
+      console.error('Mutation error details:', error);
+      
+      // Try to extract error message from response
+      let errorMessage = language === 'tr' 
+        ? 'Görev oluşturulamadı' 
+        : 'Failed to create task';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response) {
+        try {
+          const errorData = typeof error.response === 'string' 
+            ? JSON.parse(error.response) 
+            : error.response;
+          if (errorData?.errors) {
+            // Show first field error
+            const firstError = errorData.errors[0];
+            if (firstError?.message) {
+              errorMessage = `${firstError.path || 'Field'}: ${firstError.message}`;
+            }
+          } else if (errorData?.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+      }
+      
+      toast({
+        title: language === 'tr' ? 'Hata!' : 'Error!',
+        description: errorMessage,
+        variant: "destructive",
       });
     },
   });
@@ -172,10 +216,23 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
   };
 
   const handleCreateTask = (values: TaskFormValues) => {
+    // Ensure scheduledDate is properly formatted as YYYY-MM-DD
+    const dateObj = new Date(selectedDate);
+    const formattedDate = isNaN(dateObj.getTime()) 
+      ? selectedDate 
+      : dateObj.toISOString().split('T')[0];
+    
     const taskData = {
-      ...values,
-      scheduledDate: selectedDate,
+      title: values.title,
+      description: values.description || null,
+      taskType: values.taskType,
+      priority: values.priority,
+      estimatedDuration: values.estimatedDuration,
+      scheduledTime: values.scheduledTime || null,
+      scheduledDate: formattedDate,
     };
+    
+    console.log('Task data being sent:', taskData);
     createMutation.mutate(taskData);
   };
 
@@ -330,8 +387,15 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
                       <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                         {translations.cancel}
                       </Button>
-                      <Button type="submit" data-testid="create-task-submit">
-                        {translations.createTask}
+                      <Button 
+                        type="submit" 
+                        data-testid="create-task-submit"
+                        disabled={createMutation.isPending}
+                      >
+                        {createMutation.isPending 
+                          ? (language === 'tr' ? 'Oluşturuluyor...' : 'Creating...')
+                          : translations.createTask
+                        }
                       </Button>
                     </DialogFooter>
                   </form>

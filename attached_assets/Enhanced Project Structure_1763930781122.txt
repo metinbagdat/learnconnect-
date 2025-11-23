@@ -1,0 +1,42 @@
+src/
+├─ components/
+│  ├─ StudyMate/           # From StudyMate repo
+│  │  ├─ TaskManager.tsx
+│  │  ├─ StudyTracker.tsx
+│  │  └─ TopicProgress.tsx
+│  ├─ AI/
+│  │  ├─ MultiModelAI.tsx  # From AI Study Planner
+│  │  ├─ PaLMIntegration.tsx
+│  │  └─ AIPlanningEngine.tsx
+│  ├─ Scheduling/          # From multiple repos
+│  │  ├─ SmartScheduler.tsx
+│  │  ├─ TimeBlockPlanner.tsx
+│  │  ├─ ConflictDetector.tsx
+│  │  └─ RoutineOptimizer.tsx
+│  ├─ Exams/
+│  │  ├─ ExamPortal.tsx    # From React Online Exam Portal
+│  │  ├─ NetCalculator.tsx
+│  │  ├─ RealTimeResults.tsx
+│  │  └─ QuestionBank.tsx
+│  ├─ Mobile/
+│  │  ├─ MobileLayout.tsx  # From Android app
+│  │  ├─ OfflineSync.tsx
+│  │  └─ PWAInstaller.tsx
+│  └─ Common/
+│     ├─ RichUIComponents.tsx # From Student Planner
+│     ├─ DesktopLayout.tsx
+│     └─ EnhancedCharts.tsx
+├─ hooks/
+│  ├─ useMultiAI.ts
+│  ├─ useOfflineSync.ts
+│  ├─ useSmartScheduling.ts
+│  └─ useExamAnalysis.ts
+├─ services/
+│  ├─ palmAI.js           # Google PaLM integration
+│  ├─ schedulingAlgorithms.js
+│  ├─ offlineManager.js
+│  └─ examEngine.js
+└─ utils/
+   ├─ conflictDetection.js
+   ├─ routineOptimizer.js
+   └─ netCalculator.js

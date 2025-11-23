@@ -1,10 +1,49 @@
 import { storage } from "./storage";
 import { User } from "@shared/schema";
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Performance tracking types
+export interface PerformanceData {
+  taskId: number;
+  score: number; // 0-100
+  timeSpent: number; // minutes
+  difficulty: number; // 1-5
+  satisfaction: number; // 1-5
+  topicId?: number;
+  subjectId?: number;
+  notes?: string;
+}
+
+// Learning patterns
+export interface LearningPatterns {
+  optimalStudyTimes: string[];
+  strongSubjects: string[];
+  weakSubjects: string[];
+  preferredActivityTypes: string[];
+  averageSessionDuration: number;
+  consistencyScore: number; // 0-100
+  learningVelocity: number; // topics per day
+  retentionRate: number; // 0-100
+}
+
+// Performance prediction
+export interface PerformancePrediction {
+  predictedExamScore: number;
+  confidence: number;
+  requiredDailyStudyHours: number;
+  areasNeedingFocus: string[];
+  estimatedReadinessDate: string;
+  improvementTrend: 'improving' | 'stable' | 'declining';
+}
 
 interface AdaptiveLearningAnalytics {
   timeSpent: number;
@@ -296,4 +335,301 @@ export async function generateNewRecommendations(pathId: number, userId: number)
     console.error('Error generating new recommendations:', error);
     throw error;
   }
+}
+
+// ==================== PERFORMANCE TRACKING ====================
+
+export async function trackTaskPerformance(
+  userId: number,
+  performance: PerformanceData,
+  language: 'tr' | 'en' = 'tr'
+): Promise<{ feedback: string; recommendations: string[] }> {
+  try {
+    const feedback = await generatePerformanceFeedback(userId, performance, language);
+    
+    const needsAdjustment = performance.score < 50 || performance.satisfaction < 3;
+    if (needsAdjustment) {
+      await adjustNextPlanBasedOnPerformance(userId, performance, language);
+    }
+    
+    return feedback;
+  } catch (error) {
+    console.error('Error tracking task performance:', error);
+    throw error;
+  }
+}
+
+async function generatePerformanceFeedback(
+  userId: number,
+  performance: PerformanceData,
+  language: 'tr' | 'en'
+): Promise<{ feedback: string; recommendations: string[] }> {
+  const systemPrompt = language === 'tr'
+    ? 'Sen bir öğrenci koçusun. Öğrencinin performansını analiz et ve yapıcı, teşvik edici geri bildirim ve somut öneriler sun.'
+    : 'You are a supportive learning coach. Analyze performance and provide encouraging, constructive feedback with actionable recommendations.';
+
+  const userPrompt = `
+    Performance: ${performance.score}/100, Time: ${performance.timeSpent}min, Difficulty: ${performance.difficulty}/5, Satisfaction: ${performance.satisfaction}/5
+    Provide brief analysis, 2-3 recommendations, and encouragement.
+    Return JSON: { "feedback": "string", "recommendations": ["string"] }
+  `;
+
+  try {
+    const message = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 800,
+      messages: [{ role: 'user', content: userPrompt }],
+      system: systemPrompt,
+    });
+
+    const content = message.content[0];
+    if (content.type === 'text') {
+      return JSON.parse(content.text);
+    }
+  } catch (error) {
+    console.warn('Anthropic failed, using OpenAI:', error);
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7,
+    });
+
+    const responseText = completion.choices[0].message.content;
+    if (responseText) return JSON.parse(responseText);
+  }
+
+  return { feedback: 'Keep practicing!', recommendations: ['Review weak areas', 'Increase practice time'] };
+}
+
+async function adjustNextPlanBasedOnPerformance(
+  userId: number,
+  performance: PerformanceData,
+  language: 'tr' | 'en'
+): Promise<void> {
+  try {
+    const prompt = `Score: ${performance.score}, Satisfaction: ${performance.satisfaction}. 
+    Suggest adjustments: if score < 50 reduce difficulty, if 50-70 add practice, if satisfaction < 3 change activity.
+    Return JSON: { "adjustments": ["string"], "suggestedFocus": ["string"] }`;
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 500,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = message.content[0];
+    if (content.type === 'text') {
+      console.log('Plan adjustments:', content.text);
+    }
+  } catch (error) {
+    console.error('Error adjusting plan:', error);
+  }
+}
+
+// ==================== LEARNING ANALYTICS ====================
+
+export async function analyzeLearningPatterns(
+  userId: number,
+  daysOfData: number = 7,
+  language: 'tr' | 'en' = 'tr'
+): Promise<LearningPatterns> {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysOfData);
+
+    const recentTasks = await storage.getUserDailyStudyTasks(userId, startDate.toISOString().split('T')[0]);
+    const recentSessions = await storage.getUserStudySessions(userId, startDate.toISOString().split('T')[0]);
+
+    return {
+      optimalStudyTimes: extractOptimalTimes(recentSessions),
+      strongSubjects: extractStrongSubjects(recentTasks),
+      weakSubjects: extractWeakSubjects(recentTasks),
+      preferredActivityTypes: extractPreferredActivities(recentTasks),
+      averageSessionDuration: calculateAverageSessionDuration(recentSessions),
+      consistencyScore: calculateConsistencyScore(recentSessions),
+      learningVelocity: calculateLearningVelocity(recentTasks, daysOfData),
+      retentionRate: calculateRetentionRate(recentTasks),
+    };
+  } catch (error) {
+    console.error('Error analyzing patterns:', error);
+    throw error;
+  }
+}
+
+// ==================== PERFORMANCE PREDICTION ====================
+
+export async function predictExamPerformance(
+  userId: number,
+  targetExamDate: string,
+  language: 'tr' | 'en' = 'tr'
+): Promise<PerformancePrediction> {
+  try {
+    const patterns = await analyzeLearningPatterns(userId, 30, language);
+    
+    const daysUntilExam = Math.ceil((new Date(targetExamDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    
+    const predictionPrompt = `Predict exam performance based on:
+    Consistency: ${patterns.consistencyScore}/100, Retention: ${patterns.retentionRate}%, 
+    Velocity: ${patterns.learningVelocity} topics/day, Weak subjects: ${patterns.weakSubjects.join(', ')},
+    Days until exam: ${daysUntilExam}
+    
+    Return JSON with: predictedExamScore (0-100), confidence (0-100), requiredDailyStudyHours, areasNeedingFocus (array), improvementTrend (improving|stable|declining)`;
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: predictionPrompt }],
+    });
+
+    const content = message.content[0];
+    if (content.type === 'text') {
+      const prediction = JSON.parse(content.text);
+      return {
+        ...prediction,
+        estimatedReadinessDate: calculateReadinessDate(patterns.consistencyScore, targetExamDate),
+      };
+    }
+  } catch (error) {
+    console.error('Error predicting performance:', error);
+  }
+
+  return {
+    predictedExamScore: 0,
+    confidence: 0,
+    requiredDailyStudyHours: 4,
+    areasNeedingFocus: [],
+    estimatedReadinessDate: new Date().toISOString().split('T')[0],
+    improvementTrend: 'stable',
+  };
+}
+
+// ==================== ANALYTICS REPORT ====================
+
+export async function generateLearningAnalyticsReport(
+  userId: number,
+  language: 'tr' | 'en' = 'tr'
+): Promise<{
+  summary: string;
+  patterns: LearningPatterns;
+  recommendations: string[];
+  metrics: Record<string, number>;
+}> {
+  try {
+    const patterns = await analyzeLearningPatterns(userId, 30, language);
+
+    const prompt = `Based on consistency ${patterns.consistencyScore}/100, weak subjects ${patterns.weakSubjects.join(', ')}, 
+    optimal times ${patterns.optimalStudyTimes.join(', ')}, session length ${patterns.averageSessionDuration}min.
+    Provide 5 specific recommendations to improve learning.
+    Return JSON: { "recommendations": ["string"], "summary": "string" }`;
+
+    const message = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 800,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = message.content[0];
+    let reportData = { recommendations: [], summary: '' };
+    if (content.type === 'text') {
+      reportData = JSON.parse(content.text);
+    }
+
+    return {
+      summary: reportData.summary,
+      patterns,
+      recommendations: reportData.recommendations,
+      metrics: {
+        consistencyScore: patterns.consistencyScore,
+        retentionRate: patterns.retentionRate,
+        learningVelocity: patterns.learningVelocity,
+        averageSessionDuration: patterns.averageSessionDuration,
+      },
+    };
+  } catch (error) {
+    console.error('Error generating report:', error);
+    throw error;
+  }
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+function extractOptimalTimes(sessions: any[]): string[] {
+  const timeMap = new Map<string, number>();
+  sessions.forEach((s) => {
+    const hour = new Date(s.startTime).getHours();
+    const period = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
+    timeMap.set(period, (timeMap.get(period) || 0) + 1);
+  });
+  return Array.from(timeMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([t]) => t);
+}
+
+function extractStrongSubjects(tasks: any[]): string[] {
+  const scores = new Map<string, number[]>();
+  tasks.forEach((t) => {
+    if (t.difficulty && t.satisfaction) {
+      const s = `Subject_${t.subjectId}`;
+      const score = t.difficulty * t.satisfaction;
+      scores.set(s, [...(scores.get(s) || []), score]);
+    }
+  });
+  return Array.from(scores.entries()).map(([s, ss]) => ({ s, avg: ss.reduce((a, b) => a + b) / ss.length }))
+    .filter((x) => x.avg > 3.5).map((x) => x.s);
+}
+
+function extractWeakSubjects(tasks: any[]): string[] {
+  const scores = new Map<string, number[]>();
+  tasks.forEach((t) => {
+    if (t.difficulty && t.satisfaction) {
+      const s = `Subject_${t.subjectId}`;
+      const score = t.difficulty * t.satisfaction;
+      scores.set(s, [...(scores.get(s) || []), score]);
+    }
+  });
+  return Array.from(scores.entries()).map(([s, ss]) => ({ s, avg: ss.reduce((a, b) => a + b) / ss.length }))
+    .filter((x) => x.avg < 2.5).map((x) => x.s);
+}
+
+function extractPreferredActivities(tasks: any[]): string[] {
+  const map = new Map<string, number>();
+  tasks.forEach((t) => {
+    if (t.satisfaction > 3) {
+      map.set(t.taskType, (map.get(t.taskType) || 0) + 1);
+    }
+  });
+  return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([a]) => a);
+}
+
+function calculateAverageSessionDuration(sessions: any[]): number {
+  if (!sessions.length) return 0;
+  return Math.round(sessions.reduce((s, t) => s + (t.duration || 0), 0) / sessions.length);
+}
+
+function calculateConsistencyScore(sessions: any[]): number {
+  if (!sessions.length) return 0;
+  const dates = new Set(sessions.map((s: any) => new Date(s.startTime).toISOString().split('T')[0]));
+  return Math.min(100, Math.round((dates.size / 7) * 100));
+}
+
+function calculateLearningVelocity(tasks: any[], days: number): number {
+  if (!days || !tasks.length) return 0;
+  const topics = new Set(tasks.map((t: any) => t.topicId));
+  return Math.round((topics.size / days) * 100) / 100;
+}
+
+function calculateRetentionRate(tasks: any[]): number {
+  if (!tasks.length) return 0;
+  const completed = tasks.filter((t: any) => t.isCompleted && t.satisfaction > 3);
+  return Math.round((completed.length / tasks.length) * 100);
+}
+
+function calculateReadinessDate(consistency: number, examDate: string): string {
+  const days = Math.ceil((new Date(examDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const needed = Math.max(7, Math.round(days * (1 - consistency / 100)));
+  const date = new Date();
+  date.setDate(date.getDate() + needed);
+  return date.toISOString().split('T')[0];
 }

@@ -12,6 +12,7 @@ interface UserLevelCardProps {
 
 export function UserLevelCard({ hideTitle = false }: UserLevelCardProps) {
   const { toast } = useToast();
+  const [errorShown, setErrorShown] = React.useState(false);
   
   const { data: userLevel, isLoading, error } = useQuery({
     queryKey: ["/api/user/level"],
@@ -22,6 +23,17 @@ export function UserLevelCard({ hideTitle = false }: UserLevelCardProps) {
     },
   });
 
+  React.useEffect(() => {
+    if (error && !errorShown) {
+      toast({
+        title: "Error loading user level",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+      setErrorShown(true);
+    }
+  }, [error, errorShown, toast]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-4">
@@ -31,11 +43,6 @@ export function UserLevelCard({ hideTitle = false }: UserLevelCardProps) {
   }
 
   if (error) {
-    toast({
-      title: "Error loading user level",
-      description: (error as Error).message,
-      variant: "destructive",
-    });
     return null;
   }
 

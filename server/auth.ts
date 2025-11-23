@@ -155,35 +155,21 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", async (req, res) => {
-    console.log("GET /api/user - isAuthenticated:", req.isAuthenticated(), "session:", req.session.id);
-    
+  // Global authentication middleware with header fallback
+  export const ensureAuthenticated = async (req: any, res: any, next: any) => {
     // First try standard session-based authentication
     if (req.isAuthenticated()) {
-      // Return user without password
-      const { password, ...userWithoutPassword } = req.user;
-      console.log("Returning authenticated user:", userWithoutPassword);
-      return res.json(userWithoutPassword);
+      return next();
     }
     
     // If session auth fails, check for user ID in custom header
     const userId = req.headers['x-user-id'];
     if (userId) {
-      console.log("Attempting to authenticate via header. User ID:", userId);
       try {
         const user = await storage.getUser(Number(userId));
         if (user) {
-          // Manually set the authenticated session
-          req.login(user, (err) => {
-            if (err) {
-              console.log("Header auth login error:", err);
-              return res.sendStatus(401);
-            }
-            const { password, ...userWithoutPassword } = user;
-            console.log("Returning header-authenticated user:", userWithoutPassword);
-            return res.json(userWithoutPassword);
-          });
-          return; // This return is important to prevent the next line from executing
+          req.user = user;
+          return next();
         }
       } catch (error) {
         console.log("Error retrieving user from header ID:", error);
@@ -191,7 +177,15 @@ export function setupAuth(app: Express) {
     }
     
     // No authentication succeeded
-    console.log("User not authenticated");
-    return res.sendStatus(401);
+    return res.status(401).json({ message: "Unauthorized" });
+  };
+
+  app.get("/api/user", ensureAuthenticated, async (req, res) => {
+    try {
+      const { password, ...userWithoutPassword } = req.user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving user" });
+    }
   });
 }

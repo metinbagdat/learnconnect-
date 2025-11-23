@@ -15,6 +15,7 @@ import { useLanguage } from "@/contexts/consolidated-language-context";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SocialLogin } from "@/components/social/social-login";
 import { StudentTestimonials } from "@/components/ui/student-testimonials";
+import { NewsPortal } from "@/components/ui/news-portal";
 import { useSEO } from "@/hooks/use-seo";
 import { injectSchemaMarkup, generateOrganizationSchema } from "@/lib/schema-markup";
 
@@ -281,6 +282,9 @@ export default function AuthPage() {
         </div>
       </div>
       </div>
+
+      {/* News Portal Section */}
+      <NewsPortal />
 
       {/* Testimonials Section - Mobile & Desktop */}
       <StudentTestimonials />

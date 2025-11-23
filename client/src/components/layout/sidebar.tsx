@@ -18,7 +18,11 @@ import {
   Lightbulb,
   Trophy,
   Brain,
-  Target
+  Target,
+  BarChart3,
+  Users,
+  TrendingUp,
+  Mail
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/contexts/consolidated-language-context";
@@ -237,6 +241,41 @@ export function Sidebar() {
               </span>
             </SidebarLink>
           )}
+
+          {/* MARKETING SECTION */}
+          <Separator className="my-4" />
+          
+          <SidebarLink 
+            href="/marketing" 
+            icon={<TrendingUp className="h-5 w-5" />}
+            isActive={location === '/marketing'}
+          >
+            {isTr ? '📊 Pazarlama' : '📊 Marketing'}
+          </SidebarLink>
+
+          <SidebarLink 
+            href="/affiliate" 
+            icon={<Users className="h-5 w-5" />}
+            isActive={location === '/affiliate'}
+          >
+            {isTr ? '🤝 Afiliasyon' : '🤝 Affiliate'}
+          </SidebarLink>
+
+          <SidebarLink 
+            href="/waitlist" 
+            icon={<Mail className="h-5 w-5" />}
+            isActive={location === '/waitlist'}
+          >
+            {isTr ? '📧 Bekleme Listesi' : '📧 Waitlist'}
+          </SidebarLink>
+
+          <SidebarLink 
+            href="/analytics-charts" 
+            icon={<BarChart3 className="h-5 w-5" />}
+            isActive={location === '/analytics-charts'}
+          >
+            {isTr ? '📈 Analitiği' : '📈 Analytics'}
+          </SidebarLink>
         </div>
         
         {/* Integrations */}

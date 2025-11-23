@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { ArrowRight, CheckCircle, Users, Zap, Award, TrendingUp, BookOpen, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/consolidated-language-context";
+import { Navbar } from "@/components/layout/navbar";
 
 interface Testimonial {
   name: string;

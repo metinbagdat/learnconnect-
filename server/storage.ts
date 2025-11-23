@@ -273,7 +273,20 @@ import {
   type Certificate,
   type InsertCertificate,
   certificates,
-  insertCertificateSchema
+  insertCertificateSchema,
+  // AI Logging types
+  type AiConceptLog,
+  type InsertAiConceptLog,
+  type AiStudyTipsLog,
+  type InsertAiStudyTipsLog,
+  type AiReviewLog,
+  type InsertAiReviewLog,
+  aiConceptLogs,
+  aiStudyTipsLogs,
+  aiReviewLogs,
+  insertAiConceptLogSchema,
+  insertAiStudyTipsLogSchema,
+  insertAiReviewLogSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

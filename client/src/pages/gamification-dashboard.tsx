@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useGamificationTracker } from "@/hooks/use-gamification-tracker";
 import { LeaderboardTable } from "@/components/gamification/leaderboard-table";
 import { AchievementCard } from "@/components/gamification/achievement-card";
+import { AchievementUnlockModal } from "@/components/gamification/achievement-unlock-modal";
 import { UserLevelCard } from "@/components/challenges/user-level-card";
 import { InteractiveProgressBar } from "@/components/gamification/interactive-progress-bar";
 import { formatDistanceToNow } from "date-fns";

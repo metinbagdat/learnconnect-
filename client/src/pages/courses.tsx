@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/contexts/consolidated-language-context";
@@ -8,11 +8,12 @@ import ModernNavigation from "@/components/layout/modern-navigation";
 import { CourseTree } from "@/components/ui/course-tree";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ApiError } from "@/components/error-states/api-error";
 import { EmptyState } from "@/components/error-states/empty-state";
 import { CourseCardSkeleton } from "@/components/loading-states/enhanced-skeleton";
-import { Search } from "lucide-react";
+import { Search, Compass } from "lucide-react";
 import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -23,6 +24,7 @@ export default function Courses() {
     const [, navigate] = useLocation();
     const { toast } = useToast();
     const [searchQuery, setSearchQuery] = useState("");
+    const tabsRef = useRef<any>(null);
   
   const { data: userCoursesTree = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<any[]>({
     queryKey: ["/api/user/courses/tree"],
@@ -148,7 +150,15 @@ export default function Courses() {
                     </p>
                   </div>
                   
-                  <div className="mt-4 md:mt-0 md:ml-4">
+                  <div className="mt-4 md:mt-0 md:ml-4 flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      onClick={() => tabsRef.current?.click?.()}
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg px-4 py-2 flex items-center gap-2 whitespace-nowrap"
+                      data-testid="button-explore-courses"
+                    >
+                      <Compass className="h-4 w-4" />
+                      {t('exploreCourses')}
+                    </Button>
                     <div className="flex items-center relative">
                       <Input 
                         className="md:w-64 pl-10" 
@@ -165,10 +175,22 @@ export default function Courses() {
               </div>
               
               <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
-                <Tabs defaultValue="enrolled">
+                <Tabs defaultValue="enrolled" onValueChange={(value) => {
+                  if (value === "available" && tabsRef.current) {
+                    // Trigger available courses tab
+                  }
+                }}>
                   <TabsList>
                     <TabsTrigger value="enrolled">{t('myCourses')}</TabsTrigger>
-                    <TabsTrigger value="available">{t('availableCourses')}</TabsTrigger>
+                    <TabsTrigger 
+                      value="available" 
+                      ref={tabsRef}
+                      onClick={() => {
+                        // Ensure available tab is clicked
+                      }}
+                    >
+                      {t('availableCourses')}
+                    </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="enrolled" className="mt-6">

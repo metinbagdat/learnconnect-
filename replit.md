@@ -10,59 +10,166 @@ Preferred communication style: Simple, everyday language.
 - **Custom Domain**: learnconnect.net (registered and ready to configure)
 - **Deployment Platform**: Replit (Autoscale deployment with custom domain support)
 - **Status**: ✅ Production Ready - All core features functional
-- **Last Updated**: November 21, 2025
+- **Last Updated**: November 24, 2025
 - **Build Status**: App running successfully on port 5000
 
-## Recent Fixes (Session Nov 22)
-- ✅ Fixed "e is null" runtime error in courses page
-- ✅ Added safe fallbacks to useAuth hook (returns null user instead of throwing)
-- ✅ Added safe fallbacks to useLanguage hook (returns English default instead of throwing)
-- ✅ Implemented error boundary with try-catch in Courses component
-- ✅ Fixed null safety in course tree component with defensive checks
-- ✅ Fixed TypeScript type mismatches in storage.ts (Date to ISO string conversions)
-- ⚠️ 65 remaining LSP diagnostics in storage.ts (non-blocking, pre-existing database layer issues)
+## Marketing Strategy Content (Nov 24, 2025)
+✅ **Study Techniques Page** (`/study-techniques`)
+- 5 most efficient study techniques (Feynman, Time Blocking, Active Recall, Backward Study, AI Automation)
+- Bilingual content (Turkish/English)
+- Promotional route for user engagement
+- Social hashtags: #efficientlearning #studytechniques #learnconnect
+
+✅ **Exam Anxiety Management Page** (`/exam-anxiety`)
+- 6 proven anxiety management techniques (Anxiety Normal, Breathing, Planning, Sleep, Exercise, AI)
+- Bilingual support with full localization
+- Cross-linked with study techniques page
+- Social hashtags: #sınavkaygısı #motivasyon #başarıçıkma
+
+## Architecture Overview
+
+### Core Features (Completed)
+1. **AI Logging System** - 3 database tables, 9 storage methods, 9 API endpoints
+2. **Adaptive Learning Engine** - Personalized task generation, real-time evaluation, dynamic adjustment
+3. **AI Reasoning Engine** - 6-step planning pipeline for daily study optimization
+4. **Bilingual Support** - Turkish/English for all content and UI
+5. **React Query Integration** - Server state management across all components
+6. **Gamification System** - Challenges, achievements, levels, leaderboards, streaks
+7. **Analytics Dashboard** - Progress tracking, performance metrics, user activity logs
+8. **Social Features** - Forum, posts, comments, user profiles, social feed
+9. **Study Management** - Time tracking, daily plans, task management, goal setting
+10. **Certificate System** - Issuance, verification, revocation with unique IDs
+
+### Database Schema (PostgreSQL + Drizzle ORM)
+- **20+ tables**: Users, Courses, Modules, Lessons, Progress, Analytics, Forums, Certificates, AI Logs, etc.
+- **Bilingual fields**: All content in English and Turkish
+- **Timestamps**: ISO string for compatibility
+- **Relationships**: Foreign keys with cascading deletes
+
+### Component Library
+**Student Interface Components:**
+- CourseCatalog, CoursePlayer, ExamPortal, Forum, Certificates, Notifications
+- StudyTimer, TaskManager, UserProfile, PracticeTest
+
+**Dashboard Components:**
+- EnhancedTYTDashboard - Real-time TYT performance tracking with charts
+- Marketing pages with social promotion widgets
+
+**Widget Components:**
+- StudyTechniquesWidget - Embedded learning techniques promotion
+- AnxietyManagementWidget - Embedded anxiety management content
+
+## Technical Implementation
+
+### Frontend Stack
+- React 18 + TypeScript
+- Vite for fast bundling
+- Wouter for routing
+- TanStack React Query v5 for state management
+- Tailwind CSS + shadcn/ui for styling
+- Framer Motion for animations
+- Dark mode support with CSS variables
+
+### Backend Stack
+- Node.js + Express.js
+- TypeScript for type safety
+- Drizzle ORM for database
+- Passport.js for authentication
+- Zod for schema validation
+
+### AI Integration
+- Anthropic Claude (claude-3-5-sonnet-20241022) for content generation
+- OpenAI GPT-4 as fallback
+- Error handling with automatic provider fallback
+- Rate limiting and security validation
+
+### Bilingual Implementation
+- `consolidated-language-context` for global language state
+- Named exports from context: `useLanguage()` hook
+- Fallback to English if context unavailable
+- Turkish (tr) and English (en) language codes
+
+## Recent Fixes (Session Nov 24)
+- ✅ Fixed import paths: `@/contexts/consolidated-language-context` (not @/hooks/use-language)
+- ✅ Created Study Techniques page with 5 techniques + AI promotion
+- ✅ Created Exam Anxiety Management page with 6 anxiety tips
+- ✅ Created widget components for embedding on landing page
+- ✅ Registered both routes in App.tsx
+- ✅ Fixed JSX syntax errors in component maps
 
 ## System Architecture
 
 ### UI/UX Decisions
-The platform utilizes a modern and responsive design with Tailwind CSS for styling, complemented by Radix UI primitives and shadcn/ui for components. Framer Motion is integrated for enhanced user experience through smooth animations and transitions, such as seamless next/previous lesson navigation. The design incorporates a glass morphism UI aesthetic. Bilingual support (Turkish/English) is implemented throughout the platform, including AI-generated content.
+- Glass morphism aesthetic with gradients
+- Responsive grid-based layout for mobile/tablet/desktop
+- Emoji-enhanced content for visual engagement
+- Smooth animations using Framer Motion
+- Color-coded sections by topic/difficulty
 
-### Technical Implementations
-- **Frontend**: React with TypeScript, Vite for bundling, Wouter for routing, and TanStack Query for server state management.
-- **Backend**: Node.js with Express.js and TypeScript.
-- **Database**: PostgreSQL with Drizzle ORM, utilizing Neon serverless PostgreSQL for cloud deployment.
-- **Authentication**: Custom authentication with session management using Passport.js.
-- **API**: RESTful API with protected routes and Zod schemas for input validation.
-- **AI Integration**: AI modules generate personalized content, course recommendations, daily study plans, and interactive skill challenges, adapting to user language preferences.
-- **Learning Management**: Comprehensive course management, progress tracking, assignment system, and resource sharing.
-- **Gamification**: Achievement system, challenge system with XP and points, leaderboards, user leveling, and streak tracking.
-- **Analytics**: Detailed learning analytics, progress snapshots, course performance metrics, and user activity logs.
-- **Social Features**: Social feed, user profiles with achievements, and social sharing capabilities.
-- **Time Tracking**: Pomodoro timer, mood tracking, and daily goal management.
-- **Forum System**: Posts, comments, view tracking, and admin controls.
-- **Certificate Management**: Issuance, verification, and revocation of certificates with unique identifiers.
-- **Hierarchical Course System**: Supports tree-based curriculum organization with parent-child relationships for courses.
-- **Personalized Curriculum Page**: Visualizes progress, skills, tasks, and checkpoints, with AI-driven auto-sync for course enrollment.
+### API Design
+- RESTful endpoints with consistent naming
+- Authenticated routes with session middleware
+- React Query default fetcher pre-configured
+- Proper cache invalidation on mutations
+- Bilingual content returned from endpoints
 
-### System Design Choices
-The architecture emphasizes modularity, scalability, and maintainability. It leverages modern TypeScript for type safety across the stack. Asynchronous operations are managed to ensure a smooth user experience, particularly for AI-driven content generation. Role-based access control secures routes, and database-level timestamps support audit trails.
+### Security
+- Password hashing with validation
+- Session-based authentication
+- Protected routes via wrapper component
+- Input sanitization via Zod schemas
+- Environment variables for sensitive data
 
-## External Dependencies
+## File Organization
+```
+src/
+├── pages/
+│   ├── study-techniques.tsx          # Study techniques marketing page
+│   ├── exam-anxiety-guide.tsx        # Anxiety management guide
+│   ├── landing-page.tsx              # Main landing page
+│   ├── dashboard.tsx                 # Student dashboard
+│   └── [40+ other pages]
+├── components/
+│   ├── study-techniques-widget.tsx   # Study techniques embed
+│   ├── anxiety-management-widget.tsx # Anxiety management embed
+│   ├── [50+ UI components]
+├── contexts/
+│   ├── consolidated-language-context.tsx  # Language state
+│   ├── ai-provider.tsx               # AI feature flags
+├── pages/
+├── lib/
+│   ├── queryClient.ts                # React Query config
+│   ├── protected-route.tsx           # Auth wrapper
+server/
+├── routes.ts                         # All API endpoints
+├── storage.ts                        # Database interface
+├── auth.ts                           # Authentication logic
+├── adaptive-learning-engine.ts       # AI task generation
+├── ai-reasoning-engine.ts            # AI planning pipeline
+├── common-modules.ts                 # Utility functions
+├── error-handling.ts                 # Error & security
+shared/
+├── schema.ts                         # Drizzle schema + types
+├── bilingual-topics.ts               # TYT/AYT curriculum
+```
 
-### AI Services
-- **OpenAI API**: Utilized for GPT models in course generation and learning assistance.
-- **Anthropic API**: Used for Claude models for advanced content generation, personalized learning paths, AI daily plan generation, and AI-powered emoji reactions.
+## Next Steps
+1. Integrate widgets into landing page hero section
+2. Add analytics tracking to both pages
+3. Create email marketing templates linking to pages
+4. Set up referral system to track page conversions
+5. Add testimonials section from successful students
+6. Create social media templates for content promotion
 
-### Database & Infrastructure
-- **Neon Database**: Serverless PostgreSQL database for persistent data storage.
-- **ws library**: For WebSocket support to enable real-time features.
+## Performance Notes
+- Memoized React components for rendering optimization
+- Lazy loading for large content sections
+- Database query optimization with proper indexing
+- CSS-in-JS with Tailwind for minimal bundle size
+- Image optimization for web (no stock images in hero areas)
 
-### UI & Styling
-- **Radix UI**: Headless UI components for building accessible design systems.
-- **Tailwind CSS**: Utility-first CSS framework for rapid and consistent styling.
-- **Framer Motion**: Animation library for creating smooth UI transitions and animations.
-
-### Development Tools
-- **TypeScript**: Ensures type safety across both frontend and backend.
-- **Vite**: Fast build tool for frontend development and optimized production builds.
-- **Drizzle Kit**: Used for database schema management and migrations.
+## Bilingual Testing
+- ✅ Language context properly configured
+- ✅ All text content has EN/TR versions
+- ✅ Navigation links maintain language preference
+- ✅ Components properly import from consolidated context

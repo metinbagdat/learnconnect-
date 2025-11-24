@@ -1,9 +1,8 @@
 import React from 'react';
-import { useLanguage } from '@/hooks/use-language';
+import { useLanguage } from '@/contexts/consolidated-language-context';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
-import { BookOpen, Clock, Brain, TrendingUp, Zap } from 'lucide-react';
 
 const techniques = [
   { id: 1, emoji: '🎧', titleEn: 'Feynman', titleTr: 'Feynman' },

@@ -156,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.post("/api/courses", (app as any).ensureAuthenticated, async (req, res) => {
-    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+    if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
       return res.status(403).json({ message: "Unauthorized" });
     }
     
@@ -173,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update course (admin/instructor only)
-  app.patch("/api/courses/:id", async (req, res) => {
+  app.patch("/api/courses/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
       return res.status(403).json({ message: "Unauthorized" });
     }
@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/categories", async (req, res) => {
+  app.post("/api/categories", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/categories/:id", async (req, res) => {
+  app.patch("/api/categories/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/categories/:id", async (req, res) => {
+  app.delete("/api/categories/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -440,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/user/courses", async (req, res) => {
+  app.post("/api/user/courses", (app as any).ensureAuthenticated, async (req, res) => {
     console.log('[POST /api/user/courses] Session check:', {
       isAuthenticated: req.isAuthenticated(),
       sessionId: req.session?.id,
@@ -506,7 +506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/user/courses/:id/progress", async (req, res) => {
+  app.patch("/api/user/courses/:id/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -558,7 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/assignments", async (req, res) => {
+  app.post("/api/assignments", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
       return res.status(403).json({ message: "Unauthorized" });
     }
@@ -576,7 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // AI Study Companion Chat API
-  app.post("/api/ai/chat", async (req, res) => {
+  app.post("/api/ai/chat", (app as any).ensureAuthenticated, async (req, res) => {
     // Support both session-based and header-based auth
     const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
     
@@ -631,7 +631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Clear chat history for the current user
-  app.delete("/api/ai/chat/history", async (req, res) => {
+  app.delete("/api/ai/chat/history", (app as any).ensureAuthenticated, async (req, res) => {
     // Support both session-based and header-based auth
     const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
     
@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Generate lesson content on demand with enhanced features
-  app.post("/api/ai/generate-lesson-content", async (req, res) => {
+  app.post("/api/ai/generate-lesson-content", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -868,7 +868,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // AI-powered course generation endpoint
-  app.post("/api/ai/generate-course", async (req, res) => {
+  app.post("/api/ai/generate-course", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
       return res.status(403).json({ message: "Only instructors or admins can generate courses" });
     }
@@ -1025,7 +1025,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Update user interests
-  app.patch("/api/user/interests", async (req, res) => {
+  app.patch("/api/user/interests", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1152,7 +1152,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Create admin account (special endpoint for initial setup)
-  app.post("/api/create-admin", async (req, res) => {
+  app.post("/api/create-admin", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       // Import the admin creation function
       const { default: createAdminAccount } = await import("./create-admin");
@@ -1172,7 +1172,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Add Turkish university entrance exam courses
-  app.post("/api/admin/add-turkish-courses", async (req, res) => {
+  app.post("/api/admin/add-turkish-courses", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only admin users can access this endpoint" });
     }
@@ -1224,7 +1224,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.post("/api/learning-paths", async (req, res) => {
+  app.post("/api/learning-paths", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1256,7 +1256,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.patch("/api/learning-paths/:id/progress", async (req, res) => {
+  app.patch("/api/learning-paths/:id/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1281,7 +1281,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.patch("/api/learning-paths/steps/:id/complete", async (req, res) => {
+  app.patch("/api/learning-paths/steps/:id/complete", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1301,7 +1301,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Entrance Exam Learning Paths API
-  app.post("/api/exam-learning-paths/generate", async (req, res) => {
+  app.post("/api/exam-learning-paths/generate", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1439,7 +1439,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // AI-powered emoji reaction generation
-  app.post("/api/ai/generate-milestone-emoji", async (req, res) => {
+  app.post("/api/ai/generate-milestone-emoji", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }
@@ -1481,7 +1481,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create learning milestone
-  app.post("/api/milestones", async (req, res) => {
+  app.post("/api/milestones", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }
@@ -1502,7 +1502,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Save emoji reaction
-  app.post("/api/milestones/reactions", async (req, res) => {
+  app.post("/api/milestones/reactions", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }
@@ -1538,7 +1538,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Initialize predefined exam paths (admin only)
-  app.post("/api/admin/generate-predefined-exam-paths", async (req, res) => {
+  app.post("/api/admin/generate-predefined-exam-paths", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only admin users can access this endpoint" });
     }
@@ -1555,7 +1555,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // Analytics routes
   
   // Log user activity
-  app.post("/api/analytics/activity", async (req, res) => {
+  app.post("/api/analytics/activity", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1640,7 +1640,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Update course analytics
-  app.patch("/api/analytics/courses/:courseId", async (req, res) => {
+  app.patch("/api/analytics/courses/:courseId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1697,7 +1697,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Create user progress snapshot
-  app.post("/api/analytics/user-progress", async (req, res) => {
+  app.post("/api/analytics/user-progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -1927,7 +1927,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.post("/api/challenges", async (req, res) => {
+  app.post("/api/challenges", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only administrators can create challenges" });
     }
@@ -1941,7 +1941,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.put("/api/challenges/:id", async (req, res) => {
+  app.put("/api/challenges/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only administrators can update challenges" });
     }
@@ -1961,7 +1961,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.delete("/api/challenges/:id", async (req, res) => {
+  app.delete("/api/challenges/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only administrators can deactivate challenges" });
     }
@@ -2021,7 +2021,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.post("/api/user/challenges/:challengeId/assign", async (req, res) => {
+  app.post("/api/user/challenges/:challengeId/assign", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2038,7 +2038,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.patch("/api/user/challenges/:challengeId/progress", async (req, res) => {
+  app.patch("/api/user/challenges/:challengeId/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2070,7 +2070,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.post("/api/user/challenges/:challengeId/complete", async (req, res) => {
+  app.post("/api/user/challenges/:challengeId/complete", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;
     
     // Check for session auth
@@ -2119,7 +2119,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.post("/api/user/level/streak/update", async (req, res) => {
+  app.post("/api/user/level/streak/update", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2133,7 +2133,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
   
-  app.post("/api/user/level/xp", async (req, res) => {
+  app.post("/api/user/level/xp", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only administrators can manually award XP" });
     }
@@ -2159,7 +2159,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Check for new achievements after user actions
-  app.post("/api/user/check-achievements", async (req, res) => {
+  app.post("/api/user/check-achievements", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;
     
     // Check for session auth
@@ -2232,7 +2232,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Admin routes
-  app.post("/api/admin/seed-challenges", async (req, res) => {
+  app.post("/api/admin/seed-challenges", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ message: "Only administrators can seed challenges" });
     }
@@ -2286,7 +2286,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/learning-paths", async (req, res) => {
+  app.post("/api/learning-paths", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2331,7 +2331,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/learning-paths/:id", async (req, res) => {
+  app.put("/api/learning-paths/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2352,7 +2352,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.delete("/api/learning-paths/:id", async (req, res) => {
+  app.delete("/api/learning-paths/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2510,7 +2510,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/mentor/students/:studentId/message", async (req, res) => {
+  app.post("/api/mentor/students/:studentId/message", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2742,7 +2742,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Check and unlock achievements based on user progress
-  app.post("/api/user/check-achievements", async (req, res) => {
+  app.post("/api/user/check-achievements", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2780,7 +2780,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create social post (achievement share, progress update, etc.)
-  app.post("/api/social/posts", async (req, res) => {
+  app.post("/api/social/posts", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2802,7 +2802,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Like/unlike a social post
-  app.post("/api/social/posts/:postId/like", async (req, res) => {
+  app.post("/api/social/posts/:postId/like", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2835,7 +2835,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Follow/unfollow a user
-  app.post("/api/users/:userId/follow", async (req, res) => {
+  app.post("/api/users/:userId/follow", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2864,7 +2864,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Social authentication endpoints (OAuth integration would go here)
-  app.post("/api/auth/social/:provider", async (req, res) => {
+  app.post("/api/auth/social/:provider", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const { provider } = req.params;
       const { token, profile } = req.body;
@@ -2922,7 +2922,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Generate new learning trail for a course
-  app.post("/api/learning-trails/generate", async (req, res) => {
+  app.post("/api/learning-trails/generate", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2953,7 +2953,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update trail progress
-  app.post("/api/learning-trails/progress", async (req, res) => {
+  app.post("/api/learning-trails/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -2995,7 +2995,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Accept a personalized recommendation
-  app.post("/api/personalized-recommendations/:id/accept", async (req, res) => {
+  app.post("/api/personalized-recommendations/:id/accept", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3027,7 +3027,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Record detailed learning analytics
-  app.post("/api/learning-analytics", async (req, res) => {
+  app.post("/api/learning-analytics", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3359,7 +3359,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/challenge-learning-paths/:id/start", async (req, res) => {
+  app.post("/api/challenge-learning-paths/:id/start", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const pathId = parseInt(req.params.id);
       const userId = req.user?.id;
@@ -3453,7 +3453,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // Dynamic import handled in separate function
 
   // Advanced Adaptive Learning API routes
-  app.post("/api/adaptive/learning-style/:userId", async (req, res) => {
+  app.post("/api/adaptive/learning-style/:userId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3475,7 +3475,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/adaptive/difficulty-adjustment/:userId", async (req, res) => {
+  app.post("/api/adaptive/difficulty-adjustment/:userId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3496,7 +3496,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/adaptive/predictive-analytics/:userId", async (req, res) => {
+  app.post("/api/adaptive/predictive-analytics/:userId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3517,7 +3517,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/adaptive/insights/:userId", async (req, res) => {
+  app.post("/api/adaptive/insights/:userId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3561,7 +3561,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/learning-paths/:pathId/steps/:stepId/progress", async (req, res) => {
+  app.post("/api/learning-paths/:pathId/steps/:stepId/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3579,7 +3579,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/learning-paths/:pathId/generate-recommendations", async (req, res) => {
+  app.post("/api/learning-paths/:pathId/generate-recommendations", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3647,7 +3647,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Assign mentor to user
-  app.post("/api/user/mentor/assign", async (req, res) => {
+  app.post("/api/user/mentor/assign", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3674,7 +3674,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Create new mentor (admin/instructor only)
-  app.post("/api/mentors", async (req, res) => {
+  app.post("/api/mentors", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || !["admin", "instructor"].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -3749,7 +3749,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Enroll user in study program
-  app.post("/api/study-programs/:id/enroll", async (req, res) => {
+  app.post("/api/study-programs/:id/enroll", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3765,7 +3765,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Update user's program progress
-  app.put("/api/user/study-programs/:id/progress", async (req, res) => {
+  app.put("/api/user/study-programs/:id/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3792,7 +3792,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Create new study program (admin/instructor only)
-  app.post("/api/study-programs", async (req, res) => {
+  app.post("/api/study-programs", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || !["admin", "instructor"].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -3836,7 +3836,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Create study session
-  app.post("/api/user/study-sessions", async (req, res) => {
+  app.post("/api/user/study-sessions", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3856,7 +3856,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Update study session
-  app.put("/api/user/study-sessions/:id", async (req, res) => {
+  app.put("/api/user/study-sessions/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3918,7 +3918,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // Create program schedule (admin/instructor only)
-  app.post("/api/study-programs/:id/schedules", async (req, res) => {
+  app.post("/api/study-programs/:id/schedules", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || !["admin", "instructor"].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -3960,7 +3960,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create a new study goal
-  app.post("/api/study-goals", async (req, res) => {
+  app.post("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -3982,7 +3982,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Generate AI study plan for a goal
-  app.post("/api/study-goals/:goalId/generate-plan", async (req, res) => {
+  app.post("/api/study-goals/:goalId/generate-plan", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;
     
     if (req.isAuthenticated()) {
@@ -4153,7 +4153,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update study session completion
-  app.patch("/api/study-schedule/:scheduleId/complete", async (req, res) => {
+  app.patch("/api/study-schedule/:scheduleId/complete", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;
     
     if (req.isAuthenticated()) {
@@ -4334,7 +4334,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/assessments/:id/complete", async (req, res) => {
+  app.post("/api/assessments/:id/complete", (app as any).ensureAuthenticated, async (req, res) => {
     let userId;
     
     if (req.isAuthenticated()) {
@@ -4827,7 +4827,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/profile", async (req, res) => {
+  app.post("/api/tyt/profile", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -4847,7 +4847,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/tyt/profile", async (req, res) => {
+  app.put("/api/tyt/profile", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -4904,7 +4904,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/tyt/progress/topics/:topicId", async (req, res) => {
+  app.put("/api/tyt/progress/topics/:topicId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -4955,7 +4955,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/trials", async (req, res) => {
+  app.post("/api/tyt/trials", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -4975,7 +4975,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.delete("/api/tyt/trials/:id", async (req, res) => {
+  app.delete("/api/tyt/trials/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5134,7 +5134,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/tasks", async (req, res) => {
+  app.post("/api/tyt/tasks", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5154,7 +5154,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/tyt/tasks/:id", async (req, res) => {
+  app.put("/api/tyt/tasks/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5186,7 +5186,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/tasks/:id/complete", async (req, res) => {
+  app.post("/api/tyt/tasks/:id/complete", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5207,7 +5207,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.delete("/api/tyt/tasks/:id", async (req, res) => {
+  app.delete("/api/tyt/tasks/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5258,7 +5258,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/sessions", async (req, res) => {
+  app.post("/api/tyt/sessions", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5278,7 +5278,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/sessions/:id/end", async (req, res) => {
+  app.post("/api/tyt/sessions/:id/end", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5314,7 +5314,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/goals", async (req, res) => {
+  app.post("/api/tyt/goals", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5334,7 +5334,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/tyt/goals/:id", async (req, res) => {
+  app.put("/api/tyt/goals/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5366,7 +5366,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.delete("/api/tyt/goals/:id", async (req, res) => {
+  app.delete("/api/tyt/goals/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5455,7 +5455,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/study-goals/daily", async (req, res) => {
+  app.post("/api/study-goals/daily", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5470,7 +5470,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/study-goals/daily/:date", async (req, res) => {
+  app.put("/api/study-goals/daily/:date", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5504,7 +5504,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/study-habits", async (req, res) => {
+  app.post("/api/study-habits", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5534,7 +5534,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/daily-study-sessions", async (req, res) => {
+  app.post("/api/daily-study-sessions", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5568,7 +5568,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/tyt/resources", async (req, res) => {
+  app.post("/api/tyt/resources", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -5582,7 +5582,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/tyt/resources/:id", async (req, res) => {
+  app.put("/api/tyt/resources/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -5604,7 +5604,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.delete("/api/tyt/resources/:id", async (req, res) => {
+  app.delete("/api/tyt/resources/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -5651,7 +5651,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/ai-daily-plans", async (req, res) => {
+  app.post("/api/ai-daily-plans", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5666,7 +5666,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.put("/api/ai-daily-plans/:date/progress", async (req, res) => {
+  app.put("/api/ai-daily-plans/:date/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5691,7 +5691,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // AI Daily Plan Generation route
-  app.post("/api/ai-daily-plans/generate", async (req, res) => {
+  app.post("/api/ai-daily-plans/generate", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5727,7 +5727,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // ==================== AI Curriculum System Routes ====================
   
   // Generate curriculum for a course
-  app.post("/api/curriculum/generate", async (req, res) => {
+  app.post("/api/curriculum/generate", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5830,7 +5830,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Complete a curriculum task
-  app.post("/api/user/curriculum/task/:taskId/complete", async (req, res) => {
+  app.post("/api/user/curriculum/task/:taskId/complete", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5862,7 +5862,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update curriculum task
-  app.patch("/api/user/curriculum/task/:taskId", async (req, res) => {
+  app.patch("/api/user/curriculum/task/:taskId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5893,7 +5893,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update curriculum progress
-  app.patch("/api/user/curriculum/:userCurriculumId/progress", async (req, res) => {
+  app.patch("/api/user/curriculum/:userCurriculumId/progress", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -5950,7 +5950,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update skill progress
-  app.patch("/api/user/skill-progress/:progressId", async (req, res) => {
+  app.patch("/api/user/skill-progress/:progressId", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6013,7 +6013,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create skill assessment
-  app.post("/api/user/skill-assessment", async (req, res) => {
+  app.post("/api/user/skill-assessment", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6092,7 +6092,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create upload metadata (actual file upload will be handled by multipart middleware later)
-  app.post("/api/uploads", async (req, res) => {
+  app.post("/api/uploads", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6114,7 +6114,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Delete upload
-  app.delete("/api/uploads/:id", async (req, res) => {
+  app.delete("/api/uploads/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6188,7 +6188,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create essay
-  app.post("/api/essays", async (req, res) => {
+  app.post("/api/essays", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6215,7 +6215,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update essay
-  app.patch("/api/essays/:id", async (req, res) => {
+  app.patch("/api/essays/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6241,7 +6241,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Submit essay
-  app.post("/api/essays/:id/submit", async (req, res) => {
+  app.post("/api/essays/:id/submit", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6335,7 +6335,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create weekly study plan
-  app.post("/api/weekly-study-plans", async (req, res) => {
+  app.post("/api/weekly-study-plans", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6365,7 +6365,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update weekly study plan
-  app.patch("/api/weekly-study-plans/:id", async (req, res) => {
+  app.patch("/api/weekly-study-plans/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6391,7 +6391,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Complete weekly study plan
-  app.post("/api/weekly-study-plans/:id/complete", async (req, res) => {
+  app.post("/api/weekly-study-plans/:id/complete", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6450,7 +6450,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create new forum post
-  app.post("/api/forum/posts", async (req, res) => {
+  app.post("/api/forum/posts", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6472,7 +6472,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update forum post
-  app.patch("/api/forum/posts/:id", async (req, res) => {
+  app.patch("/api/forum/posts/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6516,7 +6516,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Delete forum post
-  app.delete("/api/forum/posts/:id", async (req, res) => {
+  app.delete("/api/forum/posts/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6557,7 +6557,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create new comment
-  app.post("/api/forum/posts/:postId/comments", async (req, res) => {
+  app.post("/api/forum/posts/:postId/comments", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6581,7 +6581,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update comment
-  app.patch("/api/forum/comments/:id", async (req, res) => {
+  app.patch("/api/forum/comments/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6623,7 +6623,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Delete comment
-  app.delete("/api/forum/comments/:id", async (req, res) => {
+  app.delete("/api/forum/comments/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6708,7 +6708,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create certificate (admin only)
-  app.post("/api/certificates", async (req, res) => {
+  app.post("/api/certificates", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6743,7 +6743,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Revoke certificate (admin only)
-  app.post("/api/certificates/:id/revoke", async (req, res) => {
+  app.post("/api/certificates/:id/revoke", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -6806,7 +6806,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Delete course (admin only)
-  app.delete("/api/courses/:id", async (req, res) => {
+  app.delete("/api/courses/:id", (app as any).ensureAuthenticated, async (req, res) => {
     if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
       return res.status(403).json({ message: "Unauthorized" });
     }

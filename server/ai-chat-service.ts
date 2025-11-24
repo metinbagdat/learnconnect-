@@ -20,48 +20,66 @@ export interface ChatHistory {
 // In-memory chat history storage (could be moved to database later)
 const chatHistories = new Map<number, ChatHistory>();
 
-const STUDY_COMPANION_SYSTEM_PROMPT = `You are an advanced AI Study Companion for the EduLearn platform, designed to help students excel in their courses. Your role is to provide personalized, context-aware assistance that enhances learning outcomes.
+const STUDY_COMPANION_SYSTEM_PROMPT = `You are an advanced AI Study Companion for the EduLearn platform, designed to help students master their enrolled courses. Your role is to explain course concepts systematically and hierarchically.
+
+## CRITICAL - COURSE-SPECIFIC LEARNING:
+- **ONLY** discuss concepts from the student's current course and its modules
+- List course concepts in a structured, numbered format
+- Explain each concept with examples and applications
+- Show how concepts relate to other topics in the SAME course
+- When no message is provided, suggest key concepts from the course
+- Help students understand the hierarchical structure: Course → Module → Concepts
 
 ## Your Capabilities:
-1. **Concept Expert**: List and explain key concepts hierarchically:
-   - Always identify and list main concepts when discussing topics
-   - Provide clear explanations with examples for each concept
-   - Show relationships between concepts
-   - When asked, introduce new related concepts proactively
-   - Break down complex topics into fundamental building blocks
+1. **Course Concept Expert**: List and explain concepts FROM THE ENROLLED COURSE:
+   - Extract concepts from course modules and lessons
+   - Present concepts in a numbered list
+   - Provide clear explanations with course-relevant examples
+   - Show concept prerequisites and relationships
+   - Build understanding from fundamentals to advanced topics
 
-2. **Course Content Expert**: Provide detailed explanations on course topics, especially Turkish YKS preparation (TYT/AYT) subjects like Mathematics, Physics, Chemistry, Biology, Turkish Literature, etc.
+2. **Module-Based Learning**: Follow course structure:
+   - Reference specific modules when discussing topics
+   - Explain how concepts connect across modules
+   - Guide through course progression sequentially
 
-3. **Study Strategy Advisor**: Suggest effective study methods, create study schedules, and provide motivation
+3. **Problem Solver**: Help students work through practice problems using course concepts
 
-4. **Problem Solver**: Help students work through practice problems and exercises step-by-step
+4. **Study Strategy Advisor**: Suggest study methods for mastering course concepts
 
-5. **Progress Tracker**: Acknowledge achievements and guide students through challenging areas
+5. **Multilingual Support**: Communicate in Turkish or English based on student preference
 
-6. **Personalized Tutor**: Adapt explanations to the student's learning level and style
+## MANDATORY Response Guidelines:
+- **Response Type 1 (Concept Listing)**: When user asks about topic or sends empty message:
+  1. List main course concepts (numbered)
+  2. Explain each concept (2-3 sentences)
+  3. Show relationships between concepts
+  4. End with: "Which concept would you like to explore deeper?"
 
-7. **Multilingual Support**: Communicate in Turkish or English based on the student's preference
+- **Response Type 2 (Detailed Explanation)**: When user asks about specific concept:
+  1. Define the concept clearly
+  2. Provide step-by-step explanation
+  3. Give real-world applications
+  4. Connect to other course concepts
+  5. Suggest related concepts to learn next
 
-## Key Response Guidelines:
-- **Concept Listing**: When discussing any topic, list the main concepts first with numbers or bullets
-- **Explanations**: Explain each concept clearly with real-world examples relevant to Turkish education/culture
-- **Hierarchical Structure**: Show how concepts relate to each other (prerequisites, dependencies)
-- **Proactive Suggestions**: Suggest new concepts when appropriate without waiting for requests
-- Always be encouraging, patient, and supportive
-- Provide step-by-step solutions for problems
-- Ask clarifying questions to understand the student's specific needs
-- Reference specific course content when available
-- Suggest additional practice and resources
+- **Response Type 3 (Suggestions)**: Always suggest NEW concepts when appropriate:
+  - "Now that you understand [Concept A], you might want to learn about [Concept B]..."
+  - Suggest concepts the student hasn't covered yet
 
 ## Response Format:
-- Start with a numbered/bulleted list of main concepts
-- Follow each concept with a clear, concise explanation
-- Use proper formatting with headers, lists, and code blocks
+- Use numbered lists for concepts
+- Use headers for clarity
 - Include examples and applications
-- Always end with a question or suggestion to continue learning
-- Be conversational but informative
+- Be conversational but precise
+- Always reference the course/module name
+- End with a question or suggestion to continue learning
 
-Remember: Your primary role is to help students deeply understand concepts and how they interconnect. You're not just answering questions - you're building conceptual frameworks that help students succeed in their educational journey.`;
+## RESTRICTIONS:
+- Do NOT discuss topics outside the student's enrolled courses
+- Do NOT use generic examples - use course-specific examples
+- Do NOT suggest unrelated concepts
+- Focus 100% on helping master the CURRENT COURSE content`;
 
 /**
  * Process a chat message with context awareness
@@ -110,29 +128,76 @@ export async function processStudyCompanionChat(
 
     // Add specific course context if provided
     let courseContext = '';
+    let courseModulesConcepts = '';
+    
     if (courseId) {
       try {
         const course = await storage.getCourse(courseId);
         if (course) {
-          courseContext += `\nCurrent Course Context: ${course.title}\n`;
+          courseContext += `\n=== CURRENT COURSE ===\n`;
+          courseContext += `Course: ${course.titleEn || course.title}\n`;
+          courseContext += `Turkish: ${course.titleTr}\n`;
           courseContext += `Category: ${course.category}\n`;
-          courseContext += `Description: ${course.description}\n`;
+          courseContext += `Description: ${course.descriptionEn || course.description}\n`;
+          
+          // Fetch modules and lessons for course structure
+          const modules = await storage.getModules(courseId);
+          if (modules && modules.length > 0) {
+            courseContext += `\n=== COURSE MODULES & CONCEPTS ===\n`;
+            courseModulesConcepts = `COURSE CONCEPTS GUIDE:\n`;
+            
+            for (const module of modules) {
+              const moduleName = module.titleEn || module.title;
+              const moduleTr = module.titleTr;
+              courseContext += `\nModule: ${moduleName} (${moduleTr})\n`;
+              courseModulesConcepts += `- ${moduleName}: ${module.descriptionEn || module.description}\n`;
+              
+              // Get lessons for each module
+              const lessons = await storage.getLessons(module.id);
+              if (lessons && lessons.length > 0) {
+                lessons.forEach((lesson, idx) => {
+                  const lessonName = lesson.titleEn || lesson.title;
+                  courseContext += `  ${idx + 1}. ${lessonName}\n`;
+                  courseModulesConcepts += `  • ${lessonName}\n`;
+                });
+              }
+            }
+          }
         }
         
         if (lessonId) {
-          // Get lesson context if available (would need to implement this in storage)
-          courseContext += `Currently working on Lesson ID: ${lessonId}\n`;
+          courseContext += `\nCurrently working on Lesson ID: ${lessonId}\n`;
         }
       } catch (error) {
         console.error('Error fetching course context:', error);
       }
+    } else if (userCourses.length > 0) {
+      // If no specific courseId, use first enrolled course
+      const firstCourse = userCourses[0].course;
+      if (firstCourse) {
+        courseContext += `\n=== PRIMARY COURSE ===\n`;
+        courseContext += `Course: ${firstCourse.titleEn || firstCourse.title}\n`;
+        courseContext += `Turkish: ${firstCourse.titleTr}\n`;
+        
+        try {
+          const modules = await storage.getModules(firstCourse.id);
+          if (modules && modules.length > 0) {
+            courseContext += `\nMain Topics:\n`;
+            modules.forEach(m => {
+              courseContext += `- ${m.titleEn || m.title}\n`;
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching course modules:', error);
+        }
+      }
     }
 
     // Prepare the conversation context
-    const contextMessage = contextInfo + courseContext;
+    const contextMessage = contextInfo + courseContext + (courseModulesConcepts ? `\n${courseModulesConcepts}` : '');
     
-    // Create user message - if empty, generate suggestion prompt
-    const userMessageContent = message.trim() || `I'm ready to study. Give me a helpful tip or concept review related to my courses: ${courseList}`;
+    // Create user message - if empty, generate suggestion prompt focused on course concepts
+    const userMessageContent = message.trim() || `I'm ready to study. Please list the KEY CONCEPTS from my current course modules and explain each one briefly. Help me understand what topics I should master.`;
     
     // Add user message to history
     chatHistory.messages.push({

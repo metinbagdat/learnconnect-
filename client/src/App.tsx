@@ -49,12 +49,14 @@ import WaitlistManagement from "@/pages/waitlist-management";
 import AnalyticsCharts from "@/pages/analytics-charts";
 import StudyTechniques from "@/pages/study-techniques";
 import ExamAnxietyGuide from "@/pages/exam-anxiety-guide";
+import TestimonialsPage from "@/pages/testimonials";
 
 function Router() {
   return (
     <Switch>
       <Route path="/study-techniques" component={StudyTechniques} />
       <Route path="/exam-anxiety" component={ExamAnxietyGuide} />
+      <Route path="/testimonials" component={TestimonialsPage} />
       <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />

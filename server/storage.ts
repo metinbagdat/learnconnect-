@@ -3039,11 +3039,20 @@ export class DatabaseStorage implements IStorage {
 
   // Daily Study Task operations
   async getDailyStudyTasks(userId: number, date?: string): Promise<DailyStudyTask[]> {
-    let query = db.select().from(dailyStudyTasks).where(eq(dailyStudyTasks.userId, userId));
-    if (date) {
-      query = query.where(eq(dailyStudyTasks.scheduledDate, date));
+    try {
+      let query = db.select().from(dailyStudyTasks).where(eq(dailyStudyTasks.userId, userId));
+      if (date) {
+        query = query.where(eq(dailyStudyTasks.scheduledDate, date));
+      }
+      return await query.orderBy(dailyStudyTasks.scheduledDate, dailyStudyTasks.scheduledTime);
+    } catch (error: any) {
+      // Table may not exist yet - return empty array gracefully
+      if (error?.code === '42P01' || error?.message?.includes('does not exist')) {
+        console.warn('Daily study tasks table does not exist yet');
+        return [];
+      }
+      throw error;
     }
-    return await query.orderBy(dailyStudyTasks.scheduledDate, dailyStudyTasks.scheduledTime);
   }
 
   async getDailyStudyTask(id: number): Promise<DailyStudyTask | undefined> {

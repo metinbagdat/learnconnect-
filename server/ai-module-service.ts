@@ -57,7 +57,8 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
       throw new Error('Course not found');
     }
 
-    console.log(`Course "${course.title}" has ${modules.length} modules`);
+    const courseTitle = language === 'tr' ? (course.titleTr || course.title) : (course.titleEn || course.title);
+    console.log(`Course "${courseTitle}" has ${modules.length} modules`);
 
     // If no modules exist, generate fallback modules immediately
     if (modules.length === 0) {
@@ -78,17 +79,21 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
       
       for (const lesson of lessons) {
         // Find user progress for this lesson
-        const userLesson = userLessons.find(ul => ul.lesson.id === lesson.id);
+        const userLesson = userLessons.find(ul => ul.lesson?.id === lesson.id);
         const progress = userLesson?.progress || 0;
         
         // Generate personalized AI content for each lesson
         const aiContext = await generateLessonAIContext(lesson, module, course, user, userLevel, progress);
         
+        const lessonDescription = language === 'tr' ? (lesson.descriptionTr || lesson.description) : (lesson.descriptionEn || lesson.description);
+        const lessonTitle = language === 'tr' ? (lesson.titleTr || lesson.title) : (lesson.titleEn || lesson.title);
+        const lessonContent = language === 'tr' ? (lesson.contentTr || lesson.content) : (lesson.contentEn || lesson.content);
+        
         enhancedLessons.push({
           id: lesson.id,
-          title: lesson.title,
-          description: lesson.description,
-          content: lesson.content,
+          title: lessonTitle,
+          description: lessonDescription,
+          content: lessonContent,
           difficulty: determineLessonDifficulty(lesson, userLevel),
           estimatedTime: lesson.estimatedTime || 30,
           progress,
@@ -102,10 +107,13 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
         ? Math.round(enhancedLessons.reduce((sum, l) => sum + l.progress, 0) / enhancedLessons.length)
         : 0;
       
+      const moduleDescription = language === 'tr' ? (module.descriptionTr || module.description) : (module.descriptionEn || module.description);
+      const moduleTitle = language === 'tr' ? (module.titleTr || module.title) : (module.titleEn || module.title);
+      
       enhancedModules.push({
         id: module.id,
-        title: module.title,
-        description: module.description,
+        title: moduleTitle,
+        description: moduleDescription,
         progress: moduleProgress,
         lessons: enhancedLessons,
         aiContext: moduleAIContext
@@ -124,12 +132,16 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
 
 async function generateModuleAIContext(module: any, course: any, user: any, userLevel: any) {
   try {
+    const moduleTitle = module.titleEn || module.title;
+    const moduleDesc = module.descriptionEn || module.description;
+    const courseTitle = course.titleEn || course.title;
+    
     const prompt = `
 You are an AI learning assistant. Generate personalized module context for:
 
-Module: "${module.title}"
-Description: "${module.description}"
-Course: "${course.title}"
+Module: "${moduleTitle}"
+Description: "${moduleDesc}"
+Course: "${courseTitle}"
 Student Level: ${userLevel?.level || 1}
 Student XP: ${userLevel?.totalXp || 0}
 
@@ -155,8 +167,9 @@ Make it encouraging and specific to their level.
     
   } catch (error) {
     console.error('Error generating module AI context:', error);
+    const moduleTitle = module.titleEn || module.title;
     return {
-      moduleOverview: `This module covers ${module.title} concepts to build your understanding.`,
+      moduleOverview: `This module covers ${moduleTitle} concepts to build your understanding.`,
       learningPath: "This module is designed to advance your skills step by step.",
       personalizedTips: [
         "Take notes while learning",
@@ -240,7 +253,8 @@ async function generateFallbackModules(courseId: number, userId: number, languag
     
     // If no modules exist at all, create sample modules for the course
     if (modules.length === 0 && course) {
-      console.log(`Creating sample modules for course: ${course.title} in language: ${language}`);
+      const courseTitle = language === 'tr' ? (course.titleTr || course.title) : (course.titleEn || course.title);
+      console.log(`Creating sample modules for course: ${courseTitle} in language: ${language}`);
       return generateSampleModules(course, userId, language);
     }
     
@@ -253,25 +267,29 @@ async function generateFallbackModules(courseId: number, userId: number, languag
       const lessons = await storage.getLessons(module.id);
       
       const enhancedLessons: AIEnhancedLesson[] = lessons.map((lesson, index) => {
-        const userLesson = userLessons.find(ul => ul.lesson.id === lesson.id);
+        const userLesson = userLessons.find(ul => ul.lesson?.id === lesson.id);
         const progress = userLesson?.progress || 0;
+        
+        const lessonTitle = language === 'tr' ? (lesson.titleTr || lesson.title) : (lesson.titleEn || lesson.title);
+        const lessonDesc = language === 'tr' ? (lesson.descriptionTr || lesson.description) : (lesson.descriptionEn || lesson.description);
+        const lessonContent = language === 'tr' ? (lesson.contentTr || lesson.content) : (lesson.contentEn || lesson.content);
         
         return {
           id: lesson.id,
-          title: lesson.title,
-          description: lesson.description,
-          content: lesson.content,
+          title: lessonTitle,
+          description: lessonDesc,
+          content: lessonContent,
           difficulty: 'intermediate',
           estimatedTime: lesson.estimatedTime || 30,
           progress,
           aiContext: {
-            personalizedIntro: `Welcome to ${lesson.title}! This lesson will help you master key concepts.`,
+            personalizedIntro: `Welcome to ${lessonTitle}! This lesson will help you master key concepts.`,
             learningObjectives: [
-              `Understand ${lesson.title} fundamentals`,
+              `Understand ${lessonTitle} fundamentals`,
               "Apply concepts in practical scenarios",
               "Build confidence in the subject"
             ],
-            adaptedContent: `This lesson provides comprehensive coverage of ${lesson.title}.`,
+            adaptedContent: `This lesson provides comprehensive coverage of ${lessonTitle}.`,
             practiceExercises: [
               "Review core concepts",
               "Complete practice exercises",
@@ -291,14 +309,17 @@ async function generateFallbackModules(courseId: number, userId: number, languag
         ? Math.round(enhancedLessons.reduce((sum, l) => sum + l.progress, 0) / enhancedLessons.length)
         : 0;
       
+      const moduleTitle = language === 'tr' ? (module.titleTr || module.title) : (module.titleEn || module.title);
+      const moduleDesc = language === 'tr' ? (module.descriptionTr || module.description) : (module.descriptionEn || module.description);
+      
       fallbackModules.push({
         id: module.id,
-        title: module.title,
-        description: module.description,
+        title: moduleTitle,
+        description: moduleDesc,
         progress: moduleProgress,
         lessons: enhancedLessons,
         aiContext: {
-          moduleOverview: `This module covers ${module.title} to advance your learning.`,
+          moduleOverview: `This module covers ${moduleTitle} to advance your learning.`,
           learningPath: "Each lesson builds upon previous knowledge systematically.",
           personalizedTips: [
             "Take your time with each concept",

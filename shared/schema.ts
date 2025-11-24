@@ -64,8 +64,7 @@ export const lessons = pgTable("lessons", {
   descriptionEn: text("description_en").notNull().default(""),
   descriptionTr: text("description_tr").notNull().default(""),
   order: integer("order").notNull(),
-  estimatedTime: integer("estimated_time").default(30), // duration in minutes
-  tags: text("tags").array().default([]), // Searchable tags
+  durationMinutes: integer("duration_minutes").default(30), // duration in minutes
 });
 
 export const userCourses = pgTable("user_courses", {

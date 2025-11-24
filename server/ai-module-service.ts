@@ -12,7 +12,7 @@ export interface AIEnhancedLesson {
   description: string;
   content: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  estimatedTime: number;
+  durationMinutes: number;
   progress: number;
   aiContext: {
     personalizedIntro: string;
@@ -95,7 +95,7 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
           description: lessonDescription,
           content: lessonContent,
           difficulty: determineLessonDifficulty(lesson, userLevel),
-          estimatedTime: lesson.estimatedTime || 30,
+          durationMinutes: lesson.durationMinutes || 30,
           progress,
           aiContext,
           tags: lesson.tags || []
@@ -280,7 +280,7 @@ async function generateFallbackModules(courseId: number, userId: number, languag
           description: lessonDesc,
           content: lessonContent,
           difficulty: 'intermediate',
-          estimatedTime: lesson.estimatedTime || 30,
+          durationMinutes: lesson.durationMinutes || 30,
           progress,
           aiContext: {
             personalizedIntro: `Welcome to ${lessonTitle}! This lesson will help you master key concepts.`,
@@ -361,7 +361,7 @@ async function generateSampleModules(course: any, userId: number, language: stri
           ? `Bu ders ${lessonTitle} konusunu detaylı açıklamalar ve örneklerle kapsar.`
           : `This lesson covers ${lessonTitle} with detailed explanations and examples.`,
         difficulty: 'intermediate' as const,
-        estimatedTime: 45,
+        durationMinutes: 45,
         progress: Math.floor(Math.random() * 30), // Random progress 0-30%
         aiContext: {
           personalizedIntro: isTurkish 

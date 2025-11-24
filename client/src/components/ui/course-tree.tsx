@@ -24,6 +24,7 @@ interface CourseTreeNode {
   progress?: number;
   completed?: boolean;
   userCourseId?: number;
+  price?: number | string;
   children?: CourseTreeNode[];
 }
 

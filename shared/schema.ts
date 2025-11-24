@@ -45,7 +45,6 @@ export const modules = pgTable("modules", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
   title: text("title").notNull(), // Legacy field - deprecated
-  description: text("description").notNull(), // Legacy field - deprecated
   titleEn: text("title_en").notNull().default(""),
   titleTr: text("title_tr").notNull().default(""),
   descriptionEn: text("description_en").notNull().default(""),
@@ -62,7 +61,6 @@ export const lessons = pgTable("lessons", {
   titleTr: text("title_tr").notNull().default(""),
   contentEn: text("content_en").notNull().default(""),
   contentTr: text("content_tr").notNull().default(""),
-  description: text("description"), // Legacy field - deprecated
   descriptionEn: text("description_en").notNull().default(""),
   descriptionTr: text("description_tr").notNull().default(""),
   order: integer("order").notNull(),

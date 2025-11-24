@@ -155,8 +155,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/courses", async (req, res) => {
-    if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
+  app.post("/api/courses", (app as any).ensureAuthenticated, async (req, res) => {
+    if (req.user.role !== "admin" && req.user.role !== "instructor") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     

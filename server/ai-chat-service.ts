@@ -81,6 +81,7 @@ export async function processStudyCompanionChat(
 
     // Build context about the user
     let contextInfo = '';
+    let courseList = '';
     
     if (user) {
       contextInfo += `Student: ${user.displayName}\n`;
@@ -92,6 +93,7 @@ export async function processStudyCompanionChat(
         contextInfo += `Enrolled Courses:\n`;
         userCourses.forEach(uc => {
           contextInfo += `- ${uc.course.title} (${Math.round(uc.progress)}% complete)\n`;
+          courseList += `${uc.course.title}, `;
         });
       }
     }
@@ -119,10 +121,13 @@ export async function processStudyCompanionChat(
     // Prepare the conversation context
     const contextMessage = contextInfo + courseContext;
     
+    // Create user message - if empty, generate suggestion prompt
+    const userMessageContent = message.trim() || `I'm ready to study. Give me a helpful tip or concept review related to my courses: ${courseList}`;
+    
     // Add user message to history
     chatHistory.messages.push({
       role: 'user',
-      content: message,
+      content: userMessageContent,
       timestamp: new Date()
     });
 

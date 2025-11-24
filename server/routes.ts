@@ -587,8 +587,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { message, courseId, lessonId } = req.body;
       
-      if (!message || typeof message !== 'string' || message.trim().length === 0) {
-        return res.status(400).json({ message: "Valid message is required" });
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Message is required" });
       }
 
       // Import the AI chat service

@@ -577,7 +577,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Study Companion Chat API
   app.post("/api/ai/chat", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    // Support both session-based and header-based auth
+    const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     
@@ -593,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process the chat message with context
       const response = await processStudyCompanionChat(
-        req.user.id,
+        userId,
         message.trim(),
         courseId ? Number(courseId) : undefined,
         lessonId ? Number(lessonId) : undefined
@@ -610,13 +613,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get chat history for the current user
   app.get("/api/ai/chat/history", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    // Support both session-based and header-based auth
+    const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
       const { getChatHistory } = await import('./ai-chat-service');
-      const history = getChatHistory(req.user.id);
+      const history = getChatHistory(userId);
       res.json({ messages: history });
     } catch (error) {
       console.error('Error fetching chat history:', error);
@@ -626,13 +632,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Clear chat history for the current user
   app.delete("/api/ai/chat/history", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    // Support both session-based and header-based auth
+    const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
       const { clearChatHistory } = await import('./ai-chat-service');
-      const cleared = clearChatHistory(req.user.id);
+      const cleared = clearChatHistory(userId);
       res.json({ success: cleared });
     } catch (error) {
       console.error('Error clearing chat history:', error);
@@ -642,13 +651,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get personalized study tips
   app.get("/api/ai/study-tips", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    // Support both session-based and header-based auth
+    const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
       const { generateStudyTips } = await import('./ai-chat-service');
-      const tips = await generateStudyTips(req.user.id);
+      const tips = await generateStudyTips(userId);
       res.json({ tips });
     } catch (error) {
       console.error('Error generating study tips:', error);

@@ -165,23 +165,69 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
     }
   };
 
+  // Send quick action message
+  const sendQuickAction = async (prompt: string) => {
+    if (isLoading) return;
+    
+    const userMessage = prompt;
+    const newUserMessage: Message = {
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newUserMessage]);
+    setIsLoading(true);
+    
+    try {
+      const response = await apiRequest('POST', '/api/ai/chat', { 
+        message: userMessage,
+        courseId,
+        lessonId 
+      });
+      const data = await response.json();
+      
+      const aiMessage: Message = {
+        role: 'assistant',
+        content: data.message,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast({
+        title: t('connectionError'),
+        description: t('connectionErrorDesc'),
+        variant: "destructive",
+      });
+      
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: t('troubleConnecting'),
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Quick action buttons
   const quickActions = [
     {
       label: t('explainConcept'),
-      action: () => setInputMessage(t('explainConceptPrompt'))
+      action: () => sendQuickAction(t('explainConceptPrompt'))
     },
     {
       label: t('practiceProblem'),
-      action: () => setInputMessage(t('practiceProblemPrompt'))
+      action: () => sendQuickAction(t('practiceProblemPrompt'))
     },
     {
       label: t('studyTipsLabel'),
-      action: () => setInputMessage(t('studyTipsPrompt'))
+      action: () => sendQuickAction(t('studyTipsPrompt'))
     },
     {
       label: t('reviewHelp'),
-      action: () => setInputMessage(t('reviewHelpPrompt'))
+      action: () => sendQuickAction(t('reviewHelpPrompt'))
     }
   ];
 

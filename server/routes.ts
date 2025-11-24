@@ -5058,11 +5058,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/user/daily-tasks", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
+  app.post("/api/user/daily-tasks", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       console.log('Task creation request received:', {
         userId: req.user.id,
@@ -5099,11 +5095,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/user/daily-tasks/:id/complete", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
+  app.post("/api/user/daily-tasks/:id/complete", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const taskId = parseInt(req.params.id);
       if (isNaN(taskId)) {
@@ -5123,11 +5115,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.delete("/api/user/daily-tasks/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
+  app.delete("/api/user/daily-tasks/:id", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const taskId = parseInt(req.params.id);
       if (isNaN(taskId)) {

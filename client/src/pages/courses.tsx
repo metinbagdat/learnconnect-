@@ -26,7 +26,7 @@ export default function Courses() {
     const [searchQuery, setSearchQuery] = useState("");
     const tabsRef = useRef<any>(null);
   
-  const [activeTab, setActiveTab] = useState("my-courses");
+  const [activeTab, setActiveTab] = useState("enrolled");
 
   const { data: userCoursesTree = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<any[]>({
     queryKey: ["/api/user/courses/tree"],
@@ -154,7 +154,7 @@ export default function Courses() {
                   
                   <div className="mt-4 md:mt-0 md:ml-4 flex flex-col sm:flex-row gap-3">
                     <Button 
-                      onClick={() => setActiveTab("explore-courses")}
+                      onClick={() => setActiveTab("available")}
                       className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg px-4 py-2 flex items-center gap-2 whitespace-nowrap"
                       data-testid="button-explore-courses"
                     >
@@ -177,20 +177,10 @@ export default function Courses() {
               </div>
               
               <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
-                <Tabs defaultValue="enrolled" onValueChange={(value) => {
-                  if (value === "available" && tabsRef.current) {
-                    // Trigger available courses tab
-                  }
-                }}>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList>
                     <TabsTrigger value="enrolled">{t('myCourses')}</TabsTrigger>
-                    <TabsTrigger 
-                      value="available" 
-                      ref={tabsRef}
-                      onClick={() => {
-                        // Ensure available tab is clicked
-                      }}
-                    >
+                    <TabsTrigger value="available">
                       {t('availableCourses')}
                     </TabsTrigger>
                   </TabsList>

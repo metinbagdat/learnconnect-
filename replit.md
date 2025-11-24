@@ -37,6 +37,25 @@ Preferred communication style: Simple, everyday language.
 - Widget available for embedding: `TestimonialsWidget`
 - Social hashtags: #LearnConnect #SuccessStory #ExamPrep
 
+✅ **How It Works Page** (`/how-it-works`)
+- 5-step process explaining LearnConnect journey: Sign Up → Assessment → Personal Plan → Study & Track → Achieve Success
+- Desktop and mobile optimized layouts
+- Daily user stat: 1000+ students achieving goals daily
+- Cross-linked with all other marketing pages
+- Widget available for embedding: `HowItWorksWidget`
+- Bilingual Turkish/English support
+- Direct CTA to signup and success stories
+
+✅ **Premium Pricing Page** (`/premium`)
+- Limited-time offer: 1 month premium at 50% discount (99₺ instead of 199₺)
+- Countdown timer showing remaining time (last 3 days)
+- Discount code: LC50
+- 8 premium features listed: Unlimited live lessons, personal consulting, exclusive question bank, detailed analytics, priority support, custom plans, performance tracking, certificates
+- Feature comparison table: Free vs Premium
+- Bilingual Turkish/English with urgent messaging
+- Widget available for embedding: `PremiumOfferWidget`
+- Social hashtags: #indirim #fırsat #premium #learnconnect
+
 ## Architecture Overview
 
 ### Core Features (Completed)
@@ -69,6 +88,9 @@ Preferred communication style: Simple, everyday language.
 **Widget Components:**
 - StudyTechniquesWidget - Embedded learning techniques promotion
 - AnxietyManagementWidget - Embedded anxiety management content
+- TestimonialsWidget - Embedded success stories showcase
+- HowItWorksWidget - Embedded 5-step process overview
+- PremiumOfferWidget - Embedded premium pricing promotion with countdown
 
 ## Technical Implementation
 

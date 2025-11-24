@@ -50,6 +50,8 @@ import AnalyticsCharts from "@/pages/analytics-charts";
 import StudyTechniques from "@/pages/study-techniques";
 import ExamAnxietyGuide from "@/pages/exam-anxiety-guide";
 import TestimonialsPage from "@/pages/testimonials";
+import HowItWorks from "@/pages/how-it-works";
+import PremiumPage from "@/pages/premium";
 
 function Router() {
   return (
@@ -57,6 +59,8 @@ function Router() {
       <Route path="/study-techniques" component={StudyTechniques} />
       <Route path="/exam-anxiety" component={ExamAnxietyGuide} />
       <Route path="/testimonials" component={TestimonialsPage} />
+      <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/premium" component={PremiumPage} />
       <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />

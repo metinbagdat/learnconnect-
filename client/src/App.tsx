@@ -47,10 +47,12 @@ import MarketingDashboard from "@/pages/marketing-dashboard";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import WaitlistManagement from "@/pages/waitlist-management";
 import AnalyticsCharts from "@/pages/analytics-charts";
+import StudyTechniques from "@/pages/study-techniques";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/study-techniques" component={StudyTechniques} />
       <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />

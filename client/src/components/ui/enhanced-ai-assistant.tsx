@@ -82,18 +82,21 @@ export function EnhancedAIAssistant({ courseId, lessonId, className = '' }: Enha
 
   // Send message function
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    // Allow empty messages to trigger concept suggestions
+    if (isLoading) return;
     
     const userMessage = inputMessage.trim();
     setInputMessage('');
     
-    // Add user message to chat
-    const newUserMessage: Message = {
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, newUserMessage]);
+    // Add user message to chat only if not empty (don't show placeholder)
+    if (userMessage) {
+      const newUserMessage: Message = {
+        role: 'user',
+        content: userMessage,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, newUserMessage]);
+    }
     
     setIsLoading(true);
     

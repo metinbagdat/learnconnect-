@@ -480,20 +480,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const user = await storage.getUserById(userId);
           if (!user) {
-            console.warn(`[Curriculum] User ${req.user.id} not found, skipping curriculum generation`);
+            console.warn(`[Curriculum] User ${userId} not found, skipping curriculum generation`);
             return;
           }
           
           await aiCurriculumService.generateAndSyncCurriculum(
-            req.user.id,
+            userId,
             validatedData.courseId,
             user.language || 'en',
             storage
           );
           
-          console.log(`[Curriculum] Successfully generated curriculum for user ${req.user.id}, course ${validatedData.courseId}`);
+          console.log(`[Curriculum] Successfully generated curriculum for user ${userId}, course ${validatedData.courseId}`);
         } catch (error) {
-          console.error(`[Curriculum] Failed to generate curriculum for user ${req.user.id}, course ${validatedData.courseId}:`, error);
+          console.error(`[Curriculum] Failed to generate curriculum for user ${userId}, course ${validatedData.courseId}:`, error);
           // Log the error for monitoring - in production, this should trigger alerts
           // Consider implementing a retry queue or manual retry mechanism
         }

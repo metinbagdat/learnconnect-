@@ -26,6 +26,8 @@ export default function Courses() {
     const [searchQuery, setSearchQuery] = useState("");
     const tabsRef = useRef<any>(null);
   
+  const [activeTab, setActiveTab] = useState("my-courses");
+
   const { data: userCoursesTree = [], isLoading: userCoursesLoading, error: userCoursesError, refetch: refetchUserCourses } = useQuery<any[]>({
     queryKey: ["/api/user/courses/tree"],
   });
@@ -152,7 +154,7 @@ export default function Courses() {
                   
                   <div className="mt-4 md:mt-0 md:ml-4 flex flex-col sm:flex-row gap-3">
                     <Button 
-                      onClick={() => tabsRef.current?.click?.()}
+                      onClick={() => setActiveTab("explore-courses")}
                       className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg px-4 py-2 flex items-center gap-2 whitespace-nowrap"
                       data-testid="button-explore-courses"
                     >

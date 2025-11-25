@@ -18,6 +18,7 @@ import { StudentTestimonials } from "@/components/ui/student-testimonials";
 import { NewsPortal } from "@/components/ui/news-portal";
 import { useSEO } from "@/hooks/use-seo";
 import { injectSchemaMarkup, generateOrganizationSchema } from "@/lib/schema-markup";
+import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -35,6 +36,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
+  const { toast } = useToast();
   const authContext = useAuth();
   const { user, loginMutation, registerMutation } = authContext;
   const langContext = useLanguage();

@@ -91,9 +91,9 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950">
       {/* Language Switcher Header */}
-      <div className="flex justify-end p-4 bg-white border-b">
+      <div className="flex justify-end p-4 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
         <LanguageSwitcher />
       </div>
       

@@ -25,17 +25,18 @@ export function LanguageSwitcher() {
   };
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-2">
       {languages.map((lang) => (
         <Button 
           key={lang.code}
           variant={language === lang.code ? "default" : "ghost"}
           size="sm" 
-          className="h-8 px-2"
+          className="h-9 px-3 flex items-center gap-1"
           onClick={() => handleLanguageChange(lang.code)}
+          data-testid={`button-lang-${lang.code}`}
         >
-          <span className="text-sm">{lang.flag}</span>
-          <span className="ml-1 text-xs">{lang.code.toUpperCase()}</span>
+          <span className="text-lg leading-none">{lang.flag}</span>
+          <span className="text-xs font-medium hidden sm:inline">{lang.name}</span>
         </Button>
       ))}
     </div>

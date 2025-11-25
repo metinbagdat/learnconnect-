@@ -25,13 +25,42 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    const parts = stored.split(".");
+    if (parts.length !== 2) {
+      console.error("Invalid password hash format:", { storedLength: stored.length, parts: parts.length });
+      return false;
+    }
+    const [hashed, salt] = parts;
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
+  // Create a seeded test user on startup for debugging (non-blocking)
+  setImmediate(async () => {
+    try {
+      const existingUser = await storage.getUserByUsername("testuser");
+      if (!existingUser) {
+        const hashedPassword = await hashPassword("password123");
+        await storage.createUser({
+          username: "testuser",
+          password: hashedPassword,
+          displayName: "Test User",
+          role: "student"
+        });
+        console.log("Seeded test user: testuser / password123");
+      }
+    } catch (err) {
+      console.log("Could not seed test user:", err);
+    }
+  });
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || (() => {
       if (process.env.NODE_ENV === 'production') {

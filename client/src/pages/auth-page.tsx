@@ -39,11 +39,11 @@ export default function AuthPage() {
   const { t } = useLanguage();
   
   useSEO({
-    title: "EduLearn - TYT & AYT Sınav Hazırlığı | Online Eğitim Platformu",
-    description: "TYT hazırlık ve AYT dersleri için AI destekli e-learning platformu. Kişiselleştirilmiş öğrenme yolları, uzman rehberlik ve 92% başarı oranı ile üniversite sınavlarına hazırlanın.",
-    keywords: "TYT hazırlık, AYT dersleri, online üniversite hazırlık, sınav hazırlığı, e-learning, AI öğrenme, STEM eğitimi",
-    ogTitle: "EduLearn - TYT & AYT Hazırlık Platformu",
-    ogDescription: "50,000+ öğrenci tarafından güvenilen, AI destekli kişiselleştirilmiş öğrenme yolları ile sınavlara hazırlanın.",
+    title: "EduLearn - learnconnect.net | TYT & AYT Sınav Hazırlığı",
+    description: "TYT hazırlık ve AYT dersleri için AI destekli e-learning platformu. learnconnect.net - Kişiselleştirilmiş öğrenme yolları ile sınavlara hazırlanın.",
+    keywords: "TYT hazırlık, AYT dersleri, learnconnect, EduLearn, online üniversite hazırlık, sınav hazırlığı",
+    ogTitle: "EduLearn - learnconnect.net",
+    ogDescription: "AI destekli kişiselleştirilmiş öğrenme platformu | learnconnect.net",
     ogType: "website"
   });
 
@@ -103,13 +103,11 @@ export default function AuthPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-2">
-              <svg className="w-12 h-12 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 5.727 2.45a1 1 0 00.788 0l7-3a1 1 0 000-1.841l-7-3z"></path>
-                <path d="M2.492 8.825l-.787.335c-.483.207-.795.712-.551 1.168.192.357.667.511 1.033.351l1.298-.558-.992-1.296zm10.665 2.31l-7.673 3.291c-.481.206-.796.71-.551 1.168.192.357.667.511 1.033.351l8.235-3.529c.392-.168.446-.707.098-.99-.27-.22-.67-.235-.968-.106l-.174.075v-.26z"></path>
-              </svg>
+              <div className="text-5xl">📚</div>
             </div>
-            <h1 className="text-3xl font-bold text-neutral-900">EduLearn</h1>
-            <p className="text-neutral-600 mt-2">Transform Your Learning Journey</p>
+            <h1 className="text-4xl font-bold text-neutral-900">EduLearn</h1>
+            <p className="text-neutral-600 mt-2 text-sm">learnconnect.net</p>
+            <p className="text-neutral-500 mt-1 text-xs">Transform Your Learning Journey</p>
           </div>
           
           <Tabs defaultValue="login">

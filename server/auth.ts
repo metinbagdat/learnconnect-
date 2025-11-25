@@ -26,24 +26,28 @@ async function hashPassword(password: string) {
 
 async function comparePasswords(supplied: string, stored: string) {
   try {
+    console.log(`[HASH] Comparing passwords, stored format check...`);
     const parts = stored.split(".");
     if (parts.length !== 2) {
-      console.error("Invalid password hash format:", { storedLength: stored.length, parts: parts.length });
+      console.error(`[HASH] Invalid password hash format. Expected 2 parts, got ${parts.length}`);
       return false;
     }
     const [hashed, salt] = parts;
+    console.log(`[HASH] Hash length: ${hashed.length}, Salt length: ${salt.length}`);
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    const isEqual = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log(`[HASH] Buffers equal: ${isEqual}`);
+    return isEqual;
   } catch (error) {
-    console.error("Password comparison error:", error);
+    console.error(`[HASH] Password comparison error:`, error);
     return false;
   }
 }
 
 export function setupAuth(app: Express) {
-  // Create a seeded test user on startup for debugging (non-blocking)
-  setImmediate(async () => {
+  // Create a seeded test user on startup for debugging
+  (async () => {
     try {
       const existingUser = await storage.getUserByUsername("testuser");
       if (!existingUser) {
@@ -54,12 +58,12 @@ export function setupAuth(app: Express) {
           displayName: "Test User",
           role: "student"
         });
-        console.log("Seeded test user: testuser / password123");
+        console.log("✓ Seeded test user: testuser / password123");
       }
     } catch (err) {
       console.log("Could not seed test user:", err);
     }
-  });
+  })();
 
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || (() => {
@@ -91,12 +95,22 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`[AUTH] Login attempt for user: ${username}`);
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
+          console.log(`[AUTH] User not found: ${username}`);
           return done(null, false, { message: "Incorrect username or password" });
         }
+        console.log(`[AUTH] User found: ${username}, checking password...`);
+        const passwordMatch = await comparePasswords(password, user.password);
+        console.log(`[AUTH] Password match: ${passwordMatch}`);
+        if (!passwordMatch) {
+          return done(null, false, { message: "Incorrect username or password" });
+        }
+        console.log(`[AUTH] Login successful for: ${username}`);
         return done(null, user);
       } catch (error) {
+        console.error(`[AUTH] Login error:`, error);
         return done(error);
       }
     }),

@@ -35,8 +35,18 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
-  const { t } = useLanguage();
+  const authContext = useAuth();
+  const { user, loginMutation, registerMutation } = authContext;
+  const langContext = useLanguage();
+  const { t } = langContext;
+
+  // Debug log
+  console.log("[AUTH_PAGE] Auth context:", { 
+    hasUser: !!user, 
+    hasLoginMutation: !!loginMutation?.mutate,
+    hasRegisterMutation: !!registerMutation?.mutate,
+    hasLanguage: !!langContext 
+  });
   
   useSEO({
     title: "EduLearn - learnconnect.net | TYT & AYT Sınav Hazırlığı",
@@ -77,12 +87,22 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+    console.log("[FORM] Login submit triggered with:", { username: data.username });
+    if (loginMutation?.mutate) {
+      loginMutation.mutate(data);
+    } else {
+      console.error("[FORM] loginMutation not available");
+    }
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
+    console.log("[FORM] Register submit triggered with:", { username: data.username });
     const { confirmPassword, ...userData } = data;
-    registerMutation.mutate(userData);
+    if (registerMutation?.mutate) {
+      registerMutation.mutate(userData);
+    } else {
+      console.error("[FORM] registerMutation not available");
+    }
   };
   
   // Redirect if user is already logged in
@@ -124,7 +144,10 @@ export default function AuthPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <form onSubmit={(e) => {
+                      console.log("[FORM] Form submit event triggered");
+                      loginForm.handleSubmit(onLoginSubmit)(e);
+                    }} className="space-y-4">
                       <FormField
                         control={loginForm.control}
                         name="username"

@@ -59,8 +59,11 @@ export default function AuthPage() {
     ogType: "website"
   });
 
-  // Inject organization schema on mount
+  // Clear localStorage and redirect logic on mount
   useEffect(() => {
+    // Clear stale user data from localStorage so form can display
+    localStorage.removeItem('edulearn_user');
+    
     const schema = generateOrganizationSchema({
       name: 'EduLearn',
       url: 'https://learnconnect.net',

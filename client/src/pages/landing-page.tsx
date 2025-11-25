@@ -34,7 +34,7 @@ export default function LandingPage() {
   // Content in multiple languages
   const content = {
     hero: {
-      title: isTr ? "Gelecekti Kur, Şimdi Öğren" : "Build Your Future, Learn Today",
+      title: isTr ? "Geleceğini Kur, Şimdi Öğren" : "Build Your Future, Learn Today",
       subtitle: isTr
         ? "YKS, TYT, AYT ve daha fazlası için kişiselleştirilmiş AI destekli öğrenme"
         : "Personalized AI-powered learning for YKS, TYT, AYT and beyond",

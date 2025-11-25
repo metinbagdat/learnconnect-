@@ -1,0 +1,540 @@
+One of the most basic elements of the learnconnect.net site; it is the user's self-planning. When the user chooses an activity, a program should be made for the curriculum and all related parameters and the user should be reminded of the motivational program. 
+
+What can be done for the user's self-planning and motivational reminders:
+1.	Smart Scheduling System:
+1.	The user sets their goals (how many hours per day, which lessons, exam date).
+2.	The system creates a personalized study schedule that aligns with the user's level and goals.
+3.	The program makes daily, weekly, monthly plans, taking into account the curriculum and the order of importance of the subjects.
+2.	Reminder and Motivation System:
+1.	Remind the user to follow the plan with push notifications and emails.
+2.	Motivational messages (example: "You have achieved your goal today, congratulations!" or "You only have 10 minutes left to reach your goal").
+3.	Progress tracking and celebrating achievements (badges, badges, progress bars).
+3.	Flexibility and Adaptability:
+1.	Dynamically adjusting the program based on the user's progress.
+2.	If the user can't make a plan for one day, don't suggest a make-up plan for the next day.
+4.	Social Motivation:
+1.	Add friends and see each other's progress.
+2.	Group goals and competitions.
+5.	Reward System:
+1.	Points, virtual rewards for following the plan and achieving goals.
+2.	Certain points can be exchanged for real rewards (discount, premium membership, etc.).
+6.	Data-Based Recommendations:
+1.	Determining which topics the user needs more based on the user's work data and updating the program accordingly.
+7.	Integrated Calendar:
+1.	Integrate the plan into the user's personal calendar (Google Calendar, Outlook).
+8.	Regular Reporting:
+1.	Weekly progress reports (how much he worked, what he was good at, which he was poor at).
+9.	Motivational Content:
+1.	Sharing motivational videos, quotes, success stories along with plans.
+10.	Psychological Support:
+1.	Tips and resources for exam anxiety, stress management.
+Technically, here are a few ideas on how these features can be implemented:
+1.	Backend: A database that tracks user goals, curriculum, and user progress.
+2.	Algorithm: An algorithm that creates a program based on the user's current situation and goals (for example, personalization with machine learning).
+3.	Notification System: Services for push notifications and email (Firebase Cloud Messaging, SendGrid, etc.).
+4.	Frontend: An interface where the user can view and edit their schedule and progress tracking graphs.
+An example user flow:
+1.	The user registers and sets his goals (exam date, how many hours a day he can study, lessons he has difficulty with).
+2.	The system creates an initial program for the user.
+3.	Every day, the user marks the activities in his schedule (completed/incomplete).
+4.	The system updates the program based on the user's progress and sends motivational notifications.
+5.	It supports the user with weekly reports and recommendations.
+To set up this system, you can build on top of your existing curriculum and user management infrastructure.
+LearnConnect.net Smart Planning & Motivation System
+
+# models.py - Akıllı Planlama Modelleri
+class UserStudyPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    selected_curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    target_date = models.DateField()  # Sınav tarihi
+    daily_study_hours = models.IntegerField(default=2)
+    difficulty_level = models.CharField(
+        max_length=20,
+        choices=[('beginner', 'Başlangıç'), ('intermediate', 'Orta'), ('advanced', 'İleri')]
+    )
+    focus_subjects = models.JSONField()  # Öncelikli dersler
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class StudySession(models.Model):
+    study_plan = models.ForeignKey(UserStudyPlan, on_delete=models.CASCADE, related_name='sessions')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    scheduled_date = models.DateField()
+    scheduled_time = models.TimeField()
+    duration_minutes = models.IntegerField(default=45)
+    status = models.CharField(
+        max_length=20,
+        choices=[('scheduled', 'Planlandı'), ('completed', 'Tamamlandı'), ('missed', 'Kaçırıldı')],
+        default='scheduled'
+    )
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+Program Creation Algorithm
+# services/planning_service.py
+from datetime import datetime, timedelta
+from django.utils import timezone
+
+class SmartPlanningEngine:
+    def create_personalized_plan(self, user, curriculum_id, preferences):
+        """Akıllı kişiselleştirilmiş çalışma programı oluşturur"""
+        
+        curriculum = Curriculum.objects.get(id=curriculum_id)
+        study_plan = UserStudyPlan.objects.create(
+            user=user,
+            selected_curriculum=curriculum,
+            start_date=timezone.now().date(),
+            target_date=preferences['target_date'],
+            daily_study_hours=preferences['daily_hours'],
+            difficulty_level=preferences['difficulty'],
+            focus_subjects=preferences['focus_subjects']
+        )
+        
+        # Program oluştur
+        self._generate_study_sessions(study_plan, curriculum)
+        
+        # Motivasyonel bildirimleri planla
+        self._schedule_motivational_alerts(study_plan)
+        
+        return study_plan
+    
+    def _generate_study_sessions(self, study_plan, curriculum):
+        """Ders oturumlarını oluşturur"""
+        current_date = study_plan.start_date
+        end_date = study_plan.target_date
+        
+        # Müfredatı bölümlere ayır ve planla
+        subjects_priority = self._calculate_subject_priority(study_plan)
+        
+        while current_date <= end_date:
+            # Haftanın gününe göre plan oluştur (Pazar günü dinlenme)
+            if current_date.weekday() != 6:  # Pazar değilse
+                daily_sessions = self._plan_daily_sessions(current_date, study_plan, subjects_priority)
+                
+                for session_data in daily_sessions:
+                    StudySession.objects.create(
+                        study_plan=study_plan,
+                        **session_data
+                    )
+            
+            current_date += timedelta(days=1)
+    
+    def _calculate_subject_priority(self, study_plan):
+        """Ders önceliklerini hesaplar"""
+        priorities = {}
+        
+        for subject in study_plan.focus_subjects:
+            # Kullanıcının geçmiş performansına göre öncelik belirle
+            user_performance = self._get_user_performance(study_plan.user, subject)
+            difficulty_weight = self._get_difficulty_weight(subject)
+            
+            priority_score = (user_performance * 0.3) + (difficulty_weight * 0.7)
+            priorities[subject] = priority_score
+        
+        return dict(sorted(priorities.items(), key=lambda x: x[1], reverse=True))
+
+2. MOTIVATIONAL REMINDER SYSTEM
+2.1 Multi-Channel Notification System
+
+# services/notification_service.py
+class MotivationalNotificationService:
+    def __init__(self):
+        self.notification_templates = {
+            'daily_reminder': {
+                'tr': {
+                    'push': '🎯 Bugünkü ders planın hazır! {course_name} dersine başlamaya ne dersin?',
+                    'email': {
+                        'subject': '🕐 Bugünkü Öğrenme Planın - LearnConnect',
+                        'body': 'Merhaba {user_name}!<br>Bugün {sessions_count} ders oturumun planlandı. Haydi başlayalım!'
+                    }
+                }
+            },
+            'progress_motivation': {
+                'tr': {
+                    'push': '🚀 Harika gidiyorsun! {completed_sessions} dersti tamamladın. {remaining_sessions} ders kaldı!',
+                    'email': {
+                        'subject': '📈 İlerleme Raporun - LearnConnect',
+                        'body': 'Mükemmel iş çıkarıyorsun {user_name}!<br>Toplam {total_progress}% ilerleme kaydettin.'
+                    }
+                }
+            },
+            'milestone_celebration': {
+                'tr': {
+                    'push': '🎉 Tebrikler! {milestone} tamamladın. Kendini ödüllendirmeyi unutma!',
+                    'email': {
+                        'subject': '🏆 Önemli Bir Kilometre Taşını Geçtin! - LearnConnect',
+                        'body': 'Harika haber {user_name}!<br>{milestone} başarıyla tamamladın. Gurur duyuyoruz!'
+                    }
+                }
+            }
+        }
+    
+    def send_daily_plan_notification(self, user, study_plan):
+        """Günlük plan hatırlatması gönderir"""
+        today_sessions = StudySession.objects.filter(
+            study_plan=study_plan,
+            scheduled_date=timezone.now().date(),
+            status='scheduled'
+        )
+        
+        if today_sessions.exists():
+            message = self.notification_templates['daily_reminder']['tr']['push'].format(
+                course_name=today_sessions.first().course.name_tr
+            )
+            
+            # Push bildirimi gönder
+            self.send_push_notification(user, message)
+            
+            # E-posta gönder
+            self.send_email_notification(
+                user,
+                'daily_reminder',
+                {
+                    'user_name': user.first_name,
+                    'sessions_count': today_sessions.count(),
+                    'today_date': timezone.now().strftime('%d.%m.%Y')
+                }
+            )
+
+2.2 Smart Reminder Algorithm
+
+# services/reminder_service.py
+class SmartReminderSystem:
+    def schedule_intelligent_reminders(self, study_plan):
+        """Akıllı hatırlatmaları planlar"""
+        
+        # Kullanıcının en verimli olduğu saatleri öğren
+        optimal_times = self._calculate_optimal_times(study_plan.user)
+        
+        for session in StudySession.objects.filter(study_plan=study_plan):
+            # Oturumdan 15 dakika önce hatırlatma
+            reminder_time = self._calculate_reminder_time(session, optimal_times)
+            
+            Reminder.objects.create(
+                user=study_plan.user,
+                study_session=session,
+                reminder_type='before_session',
+                scheduled_time=reminder_time,
+                message=self._generate_motivational_message(session)
+            )
+    
+    def _calculate_optimal_times(self, user):
+        """Kullanıcının en verimli çalışma saatlerini hesaplar"""
+        # Geçmiş çalışma verilerini analiz et
+        completed_sessions = StudySession.objects.filter(
+            study_plan__user=user,
+            status='completed'
+        )
+        
+        # En sık çalışılan saatleri bul
+        hour_performance = {}
+        for session in completed_sessions:
+            hour = session.completed_at.hour
+            if hour not in hour_performance:
+                hour_performance[hour] = []
+            hour_performance[hour].append(session.duration_minutes)
+        
+        # Ortalama performansa göre sırala
+        optimal_hours = sorted(
+            hour_performance.keys(),
+            key=lambda h: np.mean(hour_performance[h]),
+            reverse=True
+        )
+        
+        return optimal_hours[:3]  # En iyi 3 saat
+    
+    def _generate_motivational_message(self, session):
+        """Motivasyonel mesaj oluşturur"""
+        messages = [
+            f"🎯 {session.course.name_tr} dersi için hazır mısın? Sadece {session.duration_minutes} dakika!",
+            f"🚀 Öğrenme macerana devam! {session.module.title_tr} seni bekliyor.",
+            f"💫 Küçük adımlar büyük başarılar getirir! {session.course.name_tr} dersine başla.",
+            f"📚 {session.lesson.reading_time_min} dakikanda yeni bir şey öğrenmeye hazır ol!",
+            f"🌟 Bugünkü hedefine bir adım daha yaklaş! {session.course.name_tr} zamanı."
+        ]
+        
+        return random.choice(messages)
+
+3. PROGRESS TRACKING & MOTIVATION SYSTEM
+3.1 Visual Progress Panel
+# models.py - İlerleme Takip
+class UserProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    study_session = models.ForeignKey(StudySession, on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField(null=True, blank=True)
+    completed_percentage = models.IntegerField(default=0)
+    notes = models.TextField(blank=True)
+    mood = models.CharField(
+        max_length=20,
+        choices=[('excited', 'Heyecanlı'), ('focused', 'Odaklanmış'), ('tired', 'Yorgun'), ('demotivated', 'Motivasyon Düşük')],
+        blank=True
+    )
+
+class Achievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    achievement_type = models.CharField(max_length=50)
+    title = models.CharField(max_length=100)
+    title_tr = models.CharField(max_length=100)
+    description = models.TextField()
+    description_tr = models.TextField()
+    icon = models.CharField(max_length=50)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'achievement'
+
+class WeeklyReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    week_start = models.DateField()
+    week_end = models.DateField()
+    total_study_hours = models.FloatField()
+    completed_sessions = models.IntegerField()
+    overall_progress = models.FloatField()
+    motivation_score = models.FloatField()
+    recommendations = models.JSONField()
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+3.2 Achievement System
+# services/achievement_service.py
+class AchievementSystem:
+    def check_achievements(self, user, completed_session):
+        """Tamamlanan oturuma göre başarımları kontrol eder"""
+        achievements = []
+        
+        # Süreye dayalı başarımlar
+        achievements.extend(self._check_time_based_achievements(user))
+        
+        # İlerlemeye dayalı başarımlar
+        achievements.extend(self._check_progress_achievements(user))
+        
+        # Tutarlılık başarımları
+        achievements.extend(self._check_consistency_achievements(user))
+        
+        # Özel başarımlar
+        achievements.extend(self._check_special_achievements(user, completed_session))
+        
+        return achievements
+    
+    def _check_time_based_achievements(self, user):
+        """Zaman bazlı başarımları kontrol eder"""
+        achievements = []
+        
+        total_study_time = UserProgress.objects.filter(
+            user=user,
+            end_time__isnull=False
+        ).aggregate(total=Sum('end_time' - 'start_time'))['total']
+        
+        if total_study_time and total_study_time.total_seconds() >= 3600:  # 1 saat
+            achievements.append(self._create_achievement(
+                user, 'first_hour', 'İlk Saat', '1 saat çalışma tamamlandı!',
+                'İlk Saat', '1 saat çalışma tamamlandı!', '⏰'
+            ))
+        
+        return achievements
+    
+    def _check_consistency_achievements(self, user):
+        """Tutarlılık başarımlarını kontrol eder"""
+        achievements = []
+        
+        # 7 gün üst üste çalışma
+        recent_sessions = StudySession.objects.filter(
+            study_plan__user=user,
+            status='completed',
+            completed_at__gte=timezone.now() - timedelta(days=7)
+        ).dates('completed_at', 'day')
+        
+        if len(set(recent_sessions)) >= 7:
+            achievements.append(self._create_achievement(
+                user, 'one_week_streak', '7 Günlük Seri', '7 gün üst üste çalıştın!',
+                '7 Günlük Seri', '7 gün üst üste çalıştın!', '🔥'
+            ))
+        
+        return achievements
+
+4. USER INTERFACE FEATURES
+4.1 Personalized Dashboard
+# views.py - Dashboard Görünümü
+class PersonalizedDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'dashboard/dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Aktif çalışma planı
+        active_plan = UserStudyPlan.objects.filter(user=user).order_by('-created_at').first()
+        
+        # Bugünkü oturumlar
+        today_sessions = StudySession.objects.filter(
+            study_plan=active_plan,
+            scheduled_date=timezone.now().date()
+        ) if active_plan else []
+        
+        # İlerleme istatistikleri
+        progress_data = self._get_progress_data(user, active_plan)
+        
+        # Motivasyonel içerik
+        motivational_content = self._get_motivational_content(user)
+        
+        context.update({
+            'active_plan': active_plan,
+            'today_sessions': today_sessions,
+            'progress_data': progress_data,
+            'motivational_content': motivational_content,
+            'weekly_goal': self._calculate_weekly_goal(user),
+            'current_streak': self._get_current_streak(user),
+        })
+        
+        return context
+
+
+4.2 Mobile Notification Design
+# Bildirim içerikleri - Firebase Cloud Messaging için
+PUSH_NOTIFICATION_TEMPLATES = {
+    'MORNING_MOTIVATION': {
+        'tr': {
+            'title': '🌞 Günaydın!',
+            'body': 'Bugünkü öğrenme maceran başlamak için hazır. {session_count} ders oturumun var.'
+        }
+    },
+    'SESSION_REMINDER': {
+        'tr': {
+            'title': '🕐 Ders Zamanı!',
+            'body': '{course_name} dersi başlamak üzere. Hazır mısın?'
+        }
+    },
+    'PROGRESS_UPDATE': {
+        'tr': {
+            'title': '📊 İlerleme Raporun',
+            'body': 'Bu hafta {hours} saat çalıştın. {progress}% ilerleme kaydettin!'
+        }
+    },
+    'MILESTONE_CELEBRATION': {
+        'tr': {
+            'title': '🎉 Başarı!',
+            'body': '{achievement_name} başarımını kazandın! Tebrikler!'
+        }
+    },
+    'MISSED_SESSION_FOLLOWUP': {
+        'tr': {
+            'title': '💫 Telafi Zamanı',
+            'body': 'Dünkü dersi kaçırdın. Bugün telafi etmek ister misin?'
+        }
+    }
+}
+
+5. ADAPTIVE LEARNING SYSTEM
+5.1 Performance-Based Plan Update
+# services/adaptive_learning_service.py
+class AdaptiveLearningService:
+    def adjust_study_plan_based_on_performance(self, user, study_plan):
+        """Performansa göre çalışma planını günceller"""
+        
+        # Son 1 haftalık performansı analiz et
+        recent_sessions = StudySession.objects.filter(
+            study_plan=study_plan,
+            completed_at__gte=timezone.now() - timedelta(days=7)
+        )
+        
+        performance_by_subject = self._analyze_performance_by_subject(recent_sessions)
+        
+        # Zorlanılan konulara daha fazla zaman ayır
+        for subject, performance in performance_by_subject.items():
+            if performance['success_rate'] < 0.6:  # %60'ın altındaysa
+                self._increase_subject_focus(study_plan, subject, 1.5)  # %50 daha fazla zaman
+        
+        # Kolay konuları hızlandır
+        for subject, performance in performance_by_subject.items():
+            if performance['success_rate'] > 0.8:  # %80'in üstündeyse
+                self._decrease_subject_focus(study_plan, subject, 0.8)  # %20 daha az zaman
+    
+    def _analyze_performance_by_subject(self, sessions):
+        """Ders bazlı performans analizi"""
+        performance = {}
+        
+        for session in sessions:
+            subject = session.course.name
+            if subject not in performance:
+                performance[subject] = {
+                    'total_sessions': 0,
+                    'completed_sessions': 0,
+                    'total_duration': 0,
+                    'success_rate': 0
+                }
+            
+            performance[subject]['total_sessions'] += 1
+            if session.status == 'completed':
+                performance[subject]['completed_sessions'] += 1
+            
+            # Başarı oranını hesapla (basit bir metrik)
+            if performance[subject]['total_sessions'] > 0:
+                performance[subject]['success_rate'] = (
+                    performance[subject]['completed_sessions'] / 
+                    performance[subject]['total_sessions']
+                )
+        
+        return performance
+
+6. INTEGRATION FEATURES
+6.1 Calendar Integration
+# services/calendar_integration.py
+class CalendarIntegrationService:
+    def sync_to_google_calendar(self, user, study_plan):
+        """Çalışma planını Google Calendar'a senkronize eder"""
+        # Google Calendar API entegrasyonu
+        sessions = StudySession.objects.filter(study_plan=study_plan)
+        
+        for session in sessions:
+            event = {
+                'summary': f'📚 {session.course.name_tr} - {session.lesson.title_tr}',
+                'description': f'LearnConnect ders oturumu - {session.module.title_tr}',
+                'start': {
+                    'dateTime': f'{session.scheduled_date}T{session.scheduled_time}:00',
+                    'timeZone': 'Europe/Istanbul',
+                },
+                'end': {
+                    'dateTime': f'{session.scheduled_date}T{self._calculate_end_time(session)}:00',
+                    'timeZone': 'Europe/Istanbul',
+                },
+                'reminders': {
+                    'useDefault': False,
+                    'overrides': [
+                        {'method': 'popup', 'minutes': 15},
+                    ],
+                },
+            }
+            
+            # Google Calendar API'ye event oluştur
+            self._create_calendar_event(user, event)
+
+APPLICATION STEPS:
+
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        # 1. Temel planlama modellerini oluştur
+        self.setup_basic_models()
+        
+        # 2. Bildirim şablonlarını yükle
+        self.load_notification_templates()
+        
+        # 3. Varsayılan başarımları oluştur
+        self.create_default_achievements()
+        
+        self.stdout.write(
+            self.style.SUCCESS('Planlama sistemi başarıyla kuruldu!')
+        )
+
+User Flow:
+Registration/Collecting user preferences
+Personalized program creation
+Daily reminders and motivation
+Progress tracking and achievements
+Adaptive plan updates
+Technical Requirements:
+Celery - For scheduled tasks
+Redis - Cache ve message broker
+Firebase Cloud Messaging - Push notifications
+Google Calendar API - Calendar integration
+WebSocket - Real-time updates

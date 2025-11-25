@@ -1825,3 +1825,71 @@ export type AiStudyTipsLog = typeof aiStudyTipsLogs.$inferSelect;
 export type InsertAiStudyTipsLog = z.infer<typeof insertAiStudyTipsLogSchema>;
 export type AiReviewLog = typeof aiReviewLogs.$inferSelect;
 export type InsertAiReviewLog = z.infer<typeof insertAiReviewLogSchema>;
+
+// Smart study goals table - user's personalized study objectives
+export const studyGoals = pgTable("study_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  goalType: text("goal_type").notNull(),
+  targetExam: text("target_exam"),
+  subjects: text("subjects").array().default([]),
+  studyHoursPerWeek: integer("study_hours_per_week").notNull().default(10),
+  priority: text("priority").notNull().default("medium"),
+  targetDate: date("target_date"),
+  difficulty: text("difficulty").notNull().default("intermediate"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const studySessions = pgTable("study_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  goalId: integer("goal_id"),
+  courseId: integer("course_id"),
+  moduleId: integer("module_id"),
+  lessonId: integer("lesson_id"),
+  scheduledDate: date("scheduled_date").notNull(),
+  durationMinutes: integer("duration_minutes").notNull().default(45),
+  subject: text("subject"),
+  activity: text("activity"),
+  status: text("status").notNull().default("scheduled"),
+  completedAt: timestamp("completed_at"),
+  actualDurationMinutes: integer("actual_duration_minutes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  studySessionId: integer("study_session_id"),
+  completedPercentage: integer("completed_percentage").notNull().default(0),
+  notes: text("notes"),
+  mood: text("mood"),
+  productivityScore: integer("productivity_score"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const reminders = pgTable("reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  studySessionId: integer("study_session_id"),
+  reminderType: text("reminder_type").notNull(),
+  message: text("message").notNull(),
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  sent: boolean("sent").notNull().default(false),
+  sentAt: timestamp("sent_at"),
+  channel: text("channel").notNull().default("push"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Schemas and types for new tables
+export const insertStudyGoalSchema = createInsertSchema(studyGoals).omit({ id: true, createdAt: true });
+export type InsertStudyGoal = z.infer<typeof insertStudyGoalSchema>;
+export type SelectStudyGoal = typeof studyGoals.$inferSelect;
+
+export const insertStudySessionSchema = createInsertSchema(studySessions).omit({ id: true, createdAt: true });
+export type InsertStudySession = z.infer<typeof insertStudySessionSchema>;
+export type SelectStudySession = typeof studySessions.$inferSelect;

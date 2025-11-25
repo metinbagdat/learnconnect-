@@ -68,6 +68,12 @@ export default function AuthPage() {
     });
     injectSchemaMarkup(schema);
   }, []);
+
+  // Only redirect if user has valid id (logged in from API)
+  if (user && user.id) {
+    console.log("[AUTH_PAGE] User is logged in, redirecting to dashboard");
+    return <Redirect to="/" />;
+  }
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -159,11 +165,6 @@ export default function AuthPage() {
       })();
     }
   };
-  
-  // Redirect if user is already logged in
-  if (user) {
-    return <Redirect to="/" />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950">

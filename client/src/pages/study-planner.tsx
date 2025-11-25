@@ -63,9 +63,10 @@ export default function StudyPlannerPage() {
     goalType: 'exam_prep',
     studyHoursPerWeek: 10,
     priority: 'medium',
-    subjects: [],
+    subjects: ['Mathematics'],
     currentProgress: 0
   });
+  const [subjectInput, setSubjectInput] = useState('');
 
   // Fetch user's study goals
   const { data: studyGoals = [], isLoading: goalsLoading } = useQuery<StudyGoal[]>({
@@ -97,9 +98,10 @@ export default function StudyPlannerPage() {
         goalType: 'exam_prep',
         studyHoursPerWeek: 10,
         priority: 'medium',
-        subjects: [],
+        subjects: ['Mathematics'],
         currentProgress: 0
       });
+      setSubjectInput('');
       toast({
         title: t('goalCreated'),
         description: t('goalCreatedSuccessfully')
@@ -378,6 +380,45 @@ export default function StudyPlannerPage() {
                           value={newGoal.targetExam || ''}
                           onChange={(e) => setNewGoal({...newGoal, targetExam: e.target.value})}
                         />
+                      </div>
+
+                      <div>
+                        <Label>{language === 'tr' ? 'Konular' : 'Subjects'}</Label>
+                        <div className="flex gap-2 mb-2">
+                          <Input
+                            placeholder={language === 'tr' ? 'Bir konu ekleyin...' : 'Add a subject...'}
+                            value={subjectInput}
+                            onChange={(e) => setSubjectInput(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (subjectInput.trim()) {
+                                  setNewGoal({...newGoal, subjects: [...(newGoal.subjects || []), subjectInput.trim()]});
+                                  setSubjectInput('');
+                                }
+                              }
+                            }}
+                          />
+                          <Button 
+                            type="button"
+                            size="sm"
+                            onClick={() => {
+                              if (subjectInput.trim()) {
+                                setNewGoal({...newGoal, subjects: [...(newGoal.subjects || []), subjectInput.trim()]});
+                                setSubjectInput('');
+                              }
+                            }}
+                          >
+                            {language === 'tr' ? 'Ekle' : 'Add'}
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {newGoal.subjects?.map((subject, idx) => (
+                            <Badge key={idx} variant="secondary" className="cursor-pointer" onClick={() => setNewGoal({...newGoal, subjects: newGoal.subjects?.filter((_, i) => i !== idx)})}>
+                              {subject} ✕
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="flex space-x-2">

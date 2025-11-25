@@ -275,8 +275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updateSchema = insertCourseCategorySchema.partial().omit({ 
-        id: true, 
-        createdAt: true
+        id: true as never, 
+        createdAt: true as never
       });
       const validatedData = updateSchema.parse(req.body);
       

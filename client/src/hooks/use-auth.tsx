@@ -167,13 +167,23 @@ export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     // Return safe default instead of throwing - allows graceful fallback
+    console.warn("useAuth called outside AuthProvider - returning stub mutations");
     return {
       user: null,
       isLoading: false,
       error: null,
-      loginMutation: null as any,
-      logoutMutation: null as any,
-      registerMutation: null as any,
+      loginMutation: {
+        mutate: () => console.error("Auth context not available"),
+        isPending: false,
+      } as any,
+      logoutMutation: {
+        mutate: () => console.error("Auth context not available"),
+        isPending: false,
+      } as any,
+      registerMutation: {
+        mutate: () => console.error("Auth context not available"),
+        isPending: false,
+      } as any,
     };
   }
   return context;

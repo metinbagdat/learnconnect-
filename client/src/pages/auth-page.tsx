@@ -92,6 +92,11 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Language Switcher Header */}
+      <div className="flex justify-end p-4 bg-white border-b">
+        <LanguageSwitcher />
+      </div>
+      
       <div className="flex-1 flex">
       {/* Left side - Forms */}
       <div className="flex-1 flex items-center justify-center p-6 bg-white">

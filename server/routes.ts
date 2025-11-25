@@ -4014,45 +4014,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // STUDY PLANNING API ROUTES
   // ===============================
 
-  // Get user's study goals
-  app.get("/api/study-goals", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    const userId = req.user.id;
-
-    try {
-      const goals = await db.select().from(studyGoals).where(eq(studyGoals.userId, userId));
-      res.json(goals);
-    } catch (error) {
-      console.error("Error fetching study goals:", error);
-      res.status(500).json({ message: "Failed to fetch study goals" });
-    }
-  });
-
-  // Create a new study goal
-  app.post("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    const userId = req.user.id;
-
-    try {
-      const goalData = insertStudyGoal.parse({
-        ...req.body,
-        userId
-      });
-
-      const [newGoal] = await db.insert(studyGoals).values(goalData).returning();
-      res.status(201).json(newGoal);
-    } catch (error) {
-      console.error("Error creating study goal:", error);
-      res.status(500).json({ message: "Failed to create study goal" });
-    }
-  });
-
   // Generate AI study plan for a goal
   app.post("/api/study-goals/:goalId/generate-plan", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;

@@ -20,17 +20,23 @@ export default function CoursesCatalog() {
   });
 
   const enrollMutation = useMutation({
-    mutationFn: (courseId: number) => apiRequest('POST', '/api/user/courses', { courseId }).then(r => r.json()),
+    mutationFn: async (courseId: number) => {
+      const response = await apiRequest('POST', '/api/user/courses', { courseId });
+      return response.json();
+    },
     onSuccess: () => {
       toast({
-        title: 'Success',
-        description: 'Successfully enrolled in course',
+        title: 'Başarılı',
+        description: 'Kursa başarıyla kaydoldunuz',
       });
+      // Refetch user courses after enrollment
+      window.location.reload();
     },
     onError: (error: any) => {
+      const errorMessage = error instanceof Error ? error.message : 'Kursa kaydolma başarısız oldu';
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to enroll in course',
+        title: 'Hata',
+        description: errorMessage,
         variant: 'destructive',
       });
     },

@@ -59,11 +59,13 @@ export default function AuthPage() {
     ogType: "website"
   });
 
-  // Clear localStorage and redirect logic on mount
+  // Clear localStorage on auth page mount - essential for form display
   useEffect(() => {
-    // Clear stale user data from localStorage so form can display
     localStorage.removeItem('edulearn_user');
-    
+    queryClient.setQueryData(["/api/user"], null);
+  }, []);
+  
+  useEffect(() => {
     const schema = generateOrganizationSchema({
       name: 'EduLearn',
       url: 'https://learnconnect.net',
@@ -72,11 +74,8 @@ export default function AuthPage() {
     injectSchemaMarkup(schema);
   }, []);
 
-  // Only redirect if user has valid id (logged in from API)
-  if (user && user.id) {
-    console.log("[AUTH_PAGE] User is logged in, redirecting to dashboard");
-    return <Redirect to="/" />;
-  }
+  // NEVER redirect on auth page - show form regardless of user state
+  // The form will handle authentication logic
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

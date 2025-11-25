@@ -19,6 +19,7 @@ import { NewsPortal } from "@/components/ui/news-portal";
 import { useSEO } from "@/hooks/use-seo";
 import { injectSchemaMarkup, generateOrganizationSchema } from "@/lib/schema-markup";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),

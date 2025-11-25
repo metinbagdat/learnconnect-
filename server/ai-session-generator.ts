@@ -1,10 +1,7 @@
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import Anthropic from "@anthropic-ai/sdk";
-
-// Import tables directly for type safety
-const studyGoals = require("@shared/schema").studyGoals;
-const studySessions = require("@shared/schema").studySessions;
+import { studyGoals, studySessions } from "@shared/schema";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

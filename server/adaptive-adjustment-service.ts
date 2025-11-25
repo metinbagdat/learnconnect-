@@ -38,13 +38,14 @@ export async function generateAdaptiveAdjustments(
       return getDefaultAdjustments();
     }
 
-    // Calculate metrics
-    const completedCount = recentProgress.filter(p => p.status === "completed").length;
+    // Calculate metrics from available fields
+    const completedCount = recentProgress.filter(p => (p.lessonsCompleted || 0) > 0).length;
     const completionRate = (completedCount / recentProgress.length) * 100;
-    const avgTimeSpent = recentProgress.reduce((sum, p) => sum + (p.timeSpent || 0), 0) / recentProgress.length;
+    const avgHours = recentProgress.reduce((sum, p) => sum + (p.hoursStudied || 0), 0) / recentProgress.length;
+    const avgScore = recentProgress.reduce((sum, p) => sum + (p.performanceScore || 0), 0) / recentProgress.length;
     const strugglingTopics = recentProgress
-      .filter(p => (p.timeSpent || 0) > avgTimeSpent * 2)
-      .map((_, idx) => `Topic ${idx + 1}`);
+      .filter(p => (p.performanceScore || 0) < 50)
+      .map((_, idx) => `Learning Area ${idx + 1}`);
 
     // Get user's goals
     const userGoals = await db
@@ -58,7 +59,7 @@ export async function generateAdaptiveAdjustments(
     // Generate AI-powered adjustments
     return await generateAIAdjustments(
       completionRate,
-      avgTimeSpent,
+      avgHours,
       strugglingTopics,
       goal
     );
@@ -201,20 +202,21 @@ export async function detectLearningInterventionNeeds(
       };
     }
 
-    const completedCount = recentProgress.filter(p => p.status === "completed").length;
+    const completedCount = recentProgress.filter(p => (p.lessonsCompleted || 0) > 0).length;
     const completionRate = (completedCount / recentProgress.length) * 100;
+    const avgScore = recentProgress.reduce((sum, p) => sum + (p.performanceScore || 0), 0) / recentProgress.length;
     const lastUpdated = Math.max(
-      ...recentProgress.map(p => new Date(p.updatedAt || 0).getTime())
+      ...recentProgress.map(p => new Date(p.createdAt).getTime())
     );
     const daysSinceUpdate = (Date.now() - lastUpdated) / (1000 * 60 * 60 * 24);
 
     // Detection logic
-    if (completionRate < 30) {
+    if (avgScore < 40 || completionRate < 30) {
       return {
         needsIntervention: true,
         interventionType: "tutoring",
         severity: "high",
-        message: "Low completion rate detected. Consider reaching out for tutoring support.",
+        message: "Low performance detected. Consider reaching out for tutoring support.",
       };
     }
 
@@ -227,7 +229,7 @@ export async function detectLearningInterventionNeeds(
       };
     }
 
-    if (completionRate < 50) {
+    if (completionRate < 50 || avgScore < 60) {
       return {
         needsIntervention: true,
         interventionType: "pacing",

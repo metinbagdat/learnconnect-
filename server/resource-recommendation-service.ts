@@ -36,15 +36,15 @@ export async function analyzeProgressAndRecommend(
       return getDefaultRecommendations();
     }
 
-    // Calculate performance metrics
-    const completedCount = userProgress.filter(p => p.status === "completed").length;
-    const inProgressCount = userProgress.filter(p => p.status === "in_progress").length;
+    // Calculate performance metrics based on available fields
+    const completedCount = userProgress.filter(p => (p.lessonsCompleted || 0) > 0).length;
     const completionRate = (completedCount / userProgress.length) * 100;
-
-    // Find struggle areas (low completion rate or stuck in progress)
+    const avgHours = userProgress.reduce((sum, p) => sum + (p.hoursStudied || 0), 0) / userProgress.length;
+    
+    // Find struggle areas (low performance score or low completion)
     const strugglingTopics = userProgress
-      .filter(p => p.status === "in_progress" || (p.timeSpent || 0) > 120)
-      .map(p => p.topicId);
+      .filter(p => (p.performanceScore || 0) < 50 || (p.lessonsCompleted || 0) === 0)
+      .map((_, idx) => idx);
 
     // Generate AI-powered recommendations
     return await generateAIRecommendations(

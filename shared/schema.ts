@@ -1563,6 +1563,30 @@ export const studyProgress = pgTable("study_progress", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  studySessionId: integer("study_session_id"),
+  completedPercentage: integer("completed_percentage").notNull().default(0),
+  notes: text("notes"),
+  mood: text("mood"),
+  productivityScore: integer("productivity_score"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const reminders = pgTable("reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  studySessionId: integer("study_session_id"),
+  reminderType: text("reminder_type").notNull(),
+  message: text("message").notNull(),
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  sent: boolean("sent").notNull().default(false),
+  sentAt: timestamp("sent_at"),
+  channel: text("channel").notNull().default("push"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Level Assessment System Tables
 export const levelAssessments = pgTable("level_assessments", {
   id: serial("id").primaryKey(),
@@ -1699,6 +1723,8 @@ export type StudyGoal = typeof studyGoals.$inferSelect;
 export type StudySchedule = typeof studySchedules.$inferSelect;
 export type LearningRecommendation = typeof learningRecommendations.$inferSelect;
 export type StudyProgress = typeof studyProgress.$inferSelect;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type Reminder = typeof reminders.$inferSelect;
 
 // Assessment system types
 export type LevelAssessment = typeof levelAssessments.$inferSelect;
@@ -1825,3 +1851,10 @@ export type AiStudyTipsLog = typeof aiStudyTipsLogs.$inferSelect;
 export type InsertAiStudyTipsLog = z.infer<typeof insertAiStudyTipsLogSchema>;
 export type AiReviewLog = typeof aiReviewLogs.$inferSelect;
 export type InsertAiReviewLog = z.infer<typeof insertAiReviewLogSchema>;
+
+// Smart Planning insert schemas
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ id: true, createdAt: true });
+export const insertReminderSchema = createInsertSchema(reminders).omit({ id: true, createdAt: true });
+
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type InsertReminder = z.infer<typeof insertReminderSchema>;

@@ -1,21 +1,6 @@
 import { db } from "./db";
-import { studySessions } from "@shared/schema";
-import { eq, and, lte, lt } from "drizzle-orm";
-import { pgTable, serial, integer, text, boolean, timestamp } from "drizzle-orm/pg-core";
-
-// Reminders table - in-memory for now since it's not in schema yet
-const reminders = pgTable("reminders", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  studySessionId: integer("study_session_id"),
-  reminderType: text("reminder_type").notNull(),
-  message: text("message").notNull(),
-  scheduledTime: timestamp("scheduled_time").notNull(),
-  sent: boolean("sent").notNull().default(false),
-  sentAt: timestamp("sent_at"),
-  channel: text("channel").notNull().default("push"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+import { studySessions, reminders } from "@shared/schema";
+import { eq, and, lte } from "drizzle-orm";
 
 interface ReminderPayload {
   userId: number;

@@ -10,9 +10,14 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, CheckCircle, Target, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/contexts/consolidated-language-context";
+import { Sidebar } from "@/components/layout/sidebar";
+import { MobileNav } from "@/components/layout/mobile-nav";
+import PageWrapper from "@/components/layout/page-wrapper";
 
 export default function SmartPlanningDashboard() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showGoalForm, setShowGoalForm] = useState(false);
 
   // Fetch study goals
@@ -86,13 +91,18 @@ export default function SmartPlanningDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white">Smart Study Planning</h1>
-          <p className="text-lg text-slate-600 dark:text-slate-300">Create personalized study goals and track your progress</p>
-        </div>
+    <PageWrapper>
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 overflow-auto">
+          <MobileNav />
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+              {/* Header */}
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold text-slate-900 dark:text-white">{t("smartPlanning") || "Smart Study Planning"}</h1>
+                <p className="text-lg text-slate-600 dark:text-slate-300">{t("smartPlanningDesc") || "Create personalized study goals and track your progress"}</p>
+              </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

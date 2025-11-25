@@ -1,0 +1,445 @@
+design a system that allows users to create a personalized study plan and then reminds them of their plan with motivational messages.
+Steps:
+1.	User selects a curriculum (TYT, AYT, etc.) and sets preferences (start date, target date, daily study hours, etc.)
+2.	System generates a study plan (schedule of lessons) based on the curriculum and user preferences.
+3.	System sends reminders and motivational messages to the user about their upcoming sessions and progress.
+break down the implementation into parts:
+•	Database models for user study plan, study sessions, and reminders.
+•	A service to generate the study plan (schedule).
+•	A notification system to send reminders and motivational messages.
+Let's start with the models:
+1.	UserStudyPlan: Main plan for a user, containing overall preferences.
+2.	StudySession: Individual study sessions (lessons) scheduled for specific dates and times.
+3.	Reminder: For scheduling reminders (could be integrated with StudySession, but we'll keep separate for flexibility).
+track user progress (which sessions are completed) and adjust the plan if needed.
+However, the question specifically asks for the planning and reminder system.
+design the models:
+UserStudyPlan:
+•	user (ForeignKey to User)
+•	curriculum (ForeignKey to Curriculum)
+•	start_date (DateField)
+•	target_date (DateField)
+•	daily_study_hours (IntegerField) # How many hours per day the user wants to study
+•	created_at (DateTimeField)
+StudySession:
+•	study_plan (ForeignKey to UserStudyPlan)
+•	lesson (ForeignKey to Lesson)
+•	scheduled_date (DateField)
+•	scheduled_time (TimeField) # Could be omitted if we just care about the date, but we can use it for reminders
+•	duration_minutes (IntegerField) # How long the session is planned to be
+•	status (CharField with choices: 'scheduled', 'completed', 'missed')
+Reminder:
+•	user (ForeignKey to User)
+•	study_session (ForeignKey to StudySession)
+•	reminder_type (CharField) # e.g., 'before_session', 'motivational'
+•	scheduled_time (DateTimeField) # When to send the reminder
+•	message (TextField)
+•	sent (BooleanField, default=False)
+the plan generation:
+a curriculum with courses, modules, and lessons. distribute the lessons from the selected curriculum over the available time (from start_date to target_date) considering the user's daily study hours.
+Steps for generating the plan:
+1.	Calculate total available study days (excluding rest days? We'll let the user study every day for now).
+2.	Calculate total study minutes available: (number of days) * (daily_study_hours * 60)
+3.	Calculate total estimated study time for the curriculum: sum of reading_time_min for all lessons in the curriculum.
+4.	If total estimated study time > total available study minutes, we need to adjust (either extend the target date or increase daily hours? We'll just use the available time and distribute accordingly).
+However, just assign lessons by time. consider the structure (courses, modules) and maybe spread out the lessons of a module.
+•	Divide the available time by the number of courses (or by the weight of each course?).
+•	Then, for each course, distribute the lessons of each module over the available days for that course.
+Alternatively, use a simpler method:
+1.	Get all lessons in the curriculum, ordered by course and module.
+2.	Assign lessons to days until the daily study time is filled, then move to the next day.
+the module structure and not mix too many courses in one day? assign one course per day? Or let the user choose.
+Since the user might have preferences, let them choose the focus (e.g., which courses they want to study more) and then generate the plan accordingly.
+For simplicity, assume we distribute the lessons evenly by time, but we can improve this later.
+Algorithm for generating study sessions:
+1.	Get all lessons in the curriculum (through the courses and modules).
+2.	Calculate the total reading time for the curriculum (sum of reading_time_min for all lessons).
+3.	Calculate the available study minutes (from start_date to target_date, multiplied by daily_study_hours * 60).
+4.	If the total reading time is more than available, we cannot complete the curriculum. We can either:
+o	Adjust the daily study hours or target date (and ask the user)
+o	Or, we can prioritize some lessons? (But don't have priority)
+assume enough time.
+5.	assign lessons to days until the daily study time is filled.
+Steps for assigning:
+•	iterate from start_date to target_date.
+•	For each day, assign lessons until the total time for that day reaches (daily_study_hours * 60).
+•	take lessons in the order of the curriculum (course order, then module order, then lesson order).
+6.	create a StudySession for each lesson on the assigned day.
+However, this might not be the best because we might have a lesson that is longer than the daily study time? can break lessons? Probably not. So adjust:
+•	If a lesson's reading_time_min is more than the daily study time, assign it to a day and then the next day we continue with the same lesson? But that doesn't make sense because the lesson is a single unit.
+So assume that the user can study for the entire lesson in one day, even if it exceeds the daily study time? Or we can split the lesson into multiple sessions?
+Let's not split lessons. assign one lesson per session. If a lesson's reading_time_min is more than the daily study time, we assign it and then that day we don't assign any other lesson.
+Alternatively, we can adjust the daily study time for that day to be the lesson's reading time? But then the user might be overstudying on that day.
+adjust the plan by having the system recommend a daily study time that is at least as long as the longest lesson. But for now, assume the daily study time is sufficient for any single lesson.
+7.	consider that the user might not want to study on certain days (weekends?). add a setting for that later.
+Now, the reminder system:
+remind the user about their study sessions. set up:
+•	A reminder for each study session (e.g., 15 minutes before the scheduled time? But don't have a scheduled time, only date).
+Since we only have the date, send a reminder in the morning of the day, or the night before.
+let the user set their preferred reminder time (e.g., 8:00 AM every day for that day's sessions).
+So we can design:
+•	For each study session, we create a Reminder that is scheduled for the same day at a fixed time (e.g., 8:00 AM) or at a time the user sets.
+have motivational reminders:
+•	Reminders that are not tied to a specific session, but to the progress (e.g., "You have completed 50% of your plan!").
+schedule these motivational reminders at milestones (e.g., after completing 25%, 50%, 75% of the plan).
+Implementation:
+have a Celery task (or Django Q) that runs periodically (every day) and:
+•	Sends reminders for study sessions that are scheduled for today (or tomorrow, if it's a reminder the day before) and haven't been sent.
+•	Checks for progress and sends motivational messages when milestones are reached.
+use push notifications, email, or SMS.
+write the code for generating the study plan:
+create a service function:
+def create_study_plan(user, curriculum, start_date, target_date, daily_study_hours, preferred_reminder_time=None):
+Steps:
+text
+ 1. Create UserStudyPlan object.
+ 2. Get all lessons in the curriculum.
+ 3. Sort the lessons by course and module (or by the order in the curriculum).
+ 4. Iterate over each day from start_date to target_date (excluding days the user doesn't want to study, but we don't have that yet).
+ 5. For each day, while the total study time for the day is less than daily_study_hours * 60, assign the next lesson.
+
+    - If the lesson's reading_time_min is more than the remaining time for the day, we skip that day and move to the next day? But then we might have a lesson that is too long and we keep skipping. So we assign the lesson even if it exceeds the daily study time? We can do that, but then we set the day's total to the lesson's time and move on.
+
+ 6. Create StudySession for the lesson on that day.
+
+ 7. If we have assigned all lessons, we break.
+
+ 8. If we reach the target_date and there are still lessons left, we can mark the plan as not completed? Or adjust the plan? We can just assign the remaining lessons to the last day? But that would exceed the daily study time. We can just let it be and the user can adjust.
+create reminders for each study session:
+
+  - We can create a Reminder for each StudySession at the preferred_reminder_time on the day of the session.
+We can also schedule motivational reminders based on the total number of sessions and the progress.
+We'll create a function to check progress and send motivational messages when the user completes a certain percentage of the plan.
+We can schedule these motivational reminders when the user completes a session and the progress crosses a milestone (25%, 50%, etc.)
+Let's write the code for the plan generation:
+assume the curriculum structure:
+Curriculum -> Courses -> Modules -> Lessons
+get all lessons for a curriculum. do:
+
+  lessons = Lesson.objects.filter(module__course__curriculum=curriculum).order_by('module__course__order', 'module__order', 'order')
+use the order fields to sort.
+Now, the code for the plan generation:
+Note: use the reading_time_min of the lesson to determine the duration.
+create a function that returns a list of dates from start_date to target_date (excluding non-study days, but for now we include all).
+Then we iterate over each date and assign lessons until the daily study time is filled.
+keep an index for the next lesson to assign.
+Example:
+  total_daily_minutes = daily_study_hours * 60
+  current_lesson_index = 0
+  lessons_list = list(lessons)  # We make a list to iterate
+
+  for date in date_range:
+      daily_remaining = total_daily_minutes
+
+      while daily_remaining > 0 and current_lesson_index < len(lessons_list):
+          lesson = lessons_list[current_lesson_index]
+          if lesson.reading_time_min <= daily_remaining:
+              # We can assign this lesson
+              create_study_session(study_plan, lesson, date, lesson.reading_time_min)
+              daily_remaining -= lesson.reading_time_min
+              current_lesson_index += 1
+          else:
+              # This lesson is too long for the remaining time, but we assign it anyway and break the while loop for this day.
+              create_study_session(study_plan, lesson, date, lesson.reading_time_min)
+              daily_remaining = 0  # We break the day because we don't want to assign more than the daily study time? But we are assigning a lesson that exceeds the daily study time? Actually, we are assigning it and then setting the daily_remaining to 0, so we break.
+              current_lesson_index += 1
+
+      if current_lesson_index >= len(lessons_list):
+          break
+This way, we assign every lesson, but if a lesson is longer than the daily study time, we assign it and then that day we don't assign any other lesson.
+We can also adjust by splitting the lesson? But we don't want to split. So this is acceptable.
+Now, the function create_study_session:
+text
+  def create_study_session(study_plan, lesson, date, duration):
+      StudySession.objects.create(
+          study_plan=study_plan,
+          lesson=lesson,
+          scheduled_date=date,
+          duration_minutes=duration,
+          status='scheduled'
+      )
+Then, we create reminders for each study session at the user's preferred time on the day of the session.
+
+  if preferred_reminder_time is not None:
+      reminder_datetime = datetime.combine(date, preferred_reminder_time)
+      Reminder.objects.create(
+          user=user,
+          study_session=study_session,
+          reminder_type='before_session',
+          scheduled_time=reminder_datetime,
+          message=f"Remember to study {lesson.title} today!"
+      )
+create a motivational reminder system:
+
+Celery task that runs daily and checks the progress of each user's study plan.
+
+calculate the progress as:
+
+      total_sessions = StudySession.objects.filter(study_plan=study_plan).count()
+      completed_sessions = StudySession.objects.filter(study_plan=study_plan, status='completed').count()
+      progress = (completed_sessions / total_sessions) * 100
+
+  Then, check if the progress has crossed a milestone (25, 50, 75, 100) and if we haven't sent the motivational message for that milestone, we send it.
+store the milestones that have been sent in the UserStudyPlan or in a separate model.
+Alternatively, send a motivational message every time a milestone is reached (without storing) but then send multiple times for the same milestone? store the last milestone sent.
+Let's add a field to UserStudyPlan: last_milestone_sent (IntegerField, default=0)
+Then, in the task, check:
+
+  milestones = [25, 50, 75, 100]
+  current_milestone = None
+  for milestone in milestones:
+      if progress >= milestone and study_plan.last_milestone_sent < milestone:
+          current_milestone = milestone
+          break
+
+  if current_milestone is not None:
+      send_motivational_message(user, current_milestone, progress)
+      study_plan.last_milestone_sent = current_milestone
+      study_plan.save()
+send motivational messages for streaks (consecutive days of study) or for completing a module, etc.
+This is a basic implementation. 
+Let's code the plan generation function:
+create a file services/planning_service.py:
+from datetime import timedelta
+from django.utils import timezone
+from .models import Curriculum, UserStudyPlan, StudySession, Reminder
+def create_study_plan(user, curriculum_id, start_date, target_date, daily_study_hours, preferred_reminder_time=None):
+curriculum = Curriculum.objects.get(id=curriculum_id)
+study_plan = UserStudyPlan.objects.create(
+user=user,
+curriculum=curriculum,
+start_date=start_date,
+target_date=target_date,
+daily_study_hours=daily_study_hours
+)
+text
+    # Get all lessons in the curriculum, ordered by course and module
+    lessons = Lesson.objects.filter(module__course__curriculum=curriculum).order_by('module__course__order', 'module__order', 'order')
+    lessons_list = list(lessons)
+
+    # Calculate total minutes per day
+    daily_minutes = daily_study_hours * 60
+
+    # Generate date range from start_date to target_date
+    current_date = start_date
+    lesson_index = 0
+
+    while current_date <= target_date and lesson_index < len(lessons_list):
+        daily_remaining = daily_minutes
+
+        while daily_remaining > 0 and lesson_index < len(lessons_list):
+            lesson = lessons_list[lesson_index]
+            if lesson.reading_time_min <= daily_remaining:
+                # Assign the lesson
+                session = StudySession.objects.create(
+                    study_plan=study_plan,
+                    lesson=lesson,
+                    scheduled_date=current_date,
+                    duration_minutes=lesson.reading_time_min,
+                    status='scheduled'
+                )
+                daily_remaining -= lesson.reading_time_min
+                lesson_index += 1
+
+                # Create reminder if preferred_reminder_time is set
+                if preferred_reminder_time:
+                    reminder_datetime = timezone.datetime.combine(current_date, preferred_reminder_time)
+                    # Make sure the datetime is timezone aware
+                    reminder_datetime = timezone.make_aware(reminder_datetime)
+                    Reminder.objects.create(
+                        user=user,
+                        study_session=session,
+                        reminder_type='before_session',
+                        scheduled_time=reminder_datetime,
+                        message=f"Bugünkü ders: {lesson.title_tr} - {lesson.reading_time_min} dakika"
+                    )
+            else:
+                # Assign the lesson even if it exceeds the daily remaining, then break
+                session = StudySession.objects.create(
+                    study_plan=study_plan,
+                    lesson=lesson,
+                    scheduled_date=current_date,
+                    duration_minutes=lesson.reading_time_min,
+                    status='scheduled'
+                )
+                lesson_index += 1
+                if preferred_reminder_time:
+                    reminder_datetime = timezone.datetime.combine(current_date, preferred_reminder_time)
+                    reminder_datetime = timezone.make_aware(reminder_datetime)
+                    Reminder.objects.create(
+                        user=user,
+                        study_session=session,
+                        reminder_type='before_session',
+                        scheduled_time=reminder_datetime,
+                        message=f"Bugünkü ders: {lesson.title_tr} - {lesson.reading_time_min} dakika"
+                    )
+                break
+
+        current_date += timedelta(days=1)
+
+    return study_plan
+improve this by not assigning lessons on non-study days (like weekends) but we don't have that setting yet.
+adjust the order of lessons? Maybe the user wants to focus on a specific course first? We can let the user set the priority of courses.
+use the natural order of the curriculum.
+the motivational reminder system:
+create a Celery task that runs every day and checks the progress of each active study plan.
+define active study plans as those that are not completed and have a target_date in the future.
+calculate the progress and check for milestones.
+send daily motivational messages? Maybe not to avoid spamming.
+send when a milestone is reached.
+send a weekly progress report? We can add that later.
+Let's code the task:
+@shared_task
+def check_milestones_and_send_motivational_reminders():
+active_study_plans = UserStudyPlan.objects.filter(target_date__gte=timezone.now().date())
+
+    for plan in active_study_plans:
+        total_sessions = StudySession.objects.filter(study_plan=plan).count()
+        completed_sessions = StudySession.objects.filter(study_plan=plan, status='completed').count()
+
+        if total_sessions == 0:
+            continue
+
+        progress = (completed_sessions / total_sessions) * 100
+
+        milestones = [25, 50, 75, 100]
+        current_milestone = None
+        for milestone in milestones:
+            if progress >= milestone and plan.last_milestone_sent < milestone:
+                current_milestone = milestone
+                break
+
+        if current_milestone is not None:
+            # Send motivational message
+            message = f"Tebrikler! Planınızın %{current_milestone} tamamladınız. Harika gidiyorsunuz!"
+            # We can use a notification system (email, push, etc.)
+            # For now, we create a Reminder of type 'motivational' and then another task will send it?
+            # Or we can send it directly? Let's assume we have a function to send push notifications.
+
+            # We'll create a Reminder for now, but without a study_session, and set scheduled_time to now.
+            Reminder.objects.create(
+                user=plan.user,
+                study_session=None,
+                reminder_type='motivational',
+                scheduled_time=timezone.now(),
+                message=message,
+                sent=True  # We mark it as sent because we are going to send it immediately? Or we have a task that sends reminders? We can do either.
+            )
+
+            # Actually, we can send it immediately by calling a notification function.
+            # Let's assume we have a function: send_notification(user, message)
+            send_notification(plan.user, message)
+
+            plan.last_milestone_sent = current_milestone
+            plan.save()
+send a message when the user completes the plan (100%).
+extend this to include more personalized messages.
+check for streaks (consecutive days of study) and send motivational messages for that.
+calculate the current streak by:
+
+    from django.db.models import Count
+    from datetime import timedelta
+
+    # Get the distinct dates the user has completed sessions, ordered by date descending
+    completed_dates = StudySession.objects.filter(
+        study_plan=plan,
+        status='completed'
+    ).values('scheduled_date').annotate(count=Count('scheduled_date')).order_by('-scheduled_date')
+
+    streak = 0
+    current_date = timezone.now().date()
+    for i, session_date in enumerate(completed_dates):
+        if i == 0:
+            # The last completed session must be yesterday or today to count
+            if session_date['scheduled_date'] == current_date or session_date['scheduled_date'] == current_date - timedelta(days=1):
+                streak += 1
+            else:
+                break
+        else:
+            # Check if the next completed session is the next day
+            if session_date['scheduled_date'] == current_date - timedelta(days=i):
+                streak += 1
+            else:
+                break
+
+    Then send a message for streaks of 3, 7, 14, 30 days, etc.
+store the highest streak and the current streak in the UserStudyPlan and update it daily.
+This is getting complex, so leave it for a future iteration.
+
+ - Letting the user choose the order of courses (priority)
+  - Allowing the user to set rest days
+  - Adjusting the plan if the user falls behind (rescheduling uncompleted sessions)
+  - Allowing the user to adjust the plan manually
+But for now, this meets the basic requirements.
+Let's also note that we are creating reminders for each session at a fixed time of the day (the same for every session). let the user set a reminder time for each day of the week? But that's too complex. just use the same time every day.
+allow the user to change the reminder time for future sessions.
+create a task that sends the reminders (the ones we created in the Reminder model) at the scheduled_time.
+task that runs every minute and sends reminders that are due and not sent.
+use Celery beat for that.
+ create a task:
+@shared_task
+def send_due_reminders():
+now = timezone.now()
+due_reminders = Reminder.objects.filter(scheduled_time__lte=now, sent=False)
+text
+    for reminder in due_reminders:
+        # Send the reminder via push notification, email, etc.
+        send_notification(reminder.user, reminder.message)
+        reminder.sent = True
+        reminder.save()
+use this task to send the motivational reminders if we don't send them immediately.
+But in the motivational task above, we sent them immediately. change the motivational task to create a Reminder and then the send_due_reminders task will send it.
+change the motivational task to:
+
+    Reminder.objects.create(
+        user=plan.user,
+        study_session=None,
+        reminder_type='motivational',
+        scheduled_time=timezone.now(),  # We want to send it now
+        message=message,
+        sent=False  # The send_due_reminders task will pick it up and send it
+    )
+call send_notification directly in the motivational task.
+one task (send_due_reminders) that sends all types of reminders.
+This is better because one place for sending notifications.
+use the Reminder model for other types of reminders (like system announcements).
+adjust:
+•	The plan generation creates reminders for sessions (if preferred_reminder_time is set) with sent=False and scheduled_time = combination of session date and preferred_reminder_time.
+•	The motivational task creates reminders with sent=False and scheduled_time=now.
+•	The send_due_reminders task sends all due reminders (scheduled_time <= now) that are not sent.
+consider the user's timezone? use timezone.now() which is the server time. store the user's timezone and convert accordingly.
+add a timezone field to the UserProfile model.
+create a reminder, convert the preferred_reminder_time (which is in the user's timezone) to UTC for storage? Or we store the scheduled_time in UTC and then when we check, convert to the user's timezone? It's better to store in UTC and then when sending, check in the user's timezone.
+Alternatively, store the scheduled_time in UTC and when we create the reminder for a session, convert the user's preferred time (which is in their timezone) to UTC.
+Example:
+
+  user_timezone = pytz.timezone(user.profile.timezone)
+  reminder_datetime = user_timezone.localize(datetime.combine(current_date, preferred_reminder_time))
+  reminder_datetime_utc = reminder_datetime.astimezone(pytz.utc)
+Then store reminder_datetime_utc.
+task send_due_reminders can run in UTC and check for reminders where scheduled_time_utc <= now_utc.
+use timezone.now() which returns UTC if we set TIME_ZONE in settings to UTC.
+
+update the plan generation function to use the user's timezone.
+the user has a profile with timezone.
+get it by: user.profile.timezone
+
+  from django.conf import settings
+  import pytz
+
+  user_timezone = pytz.timezone(user.profile.timezone)
+  reminder_datetime = user_timezone.localize(datetime.combine(current_date, preferred_reminder_time))
+  reminder_datetime_utc = reminder_datetime.astimezone(pytz.utc)
+
+  Then create the Reminder with scheduled_time=reminder_datetime_utc.
+
+implement the models, services, and tasks.
+the models:
+Curriculum, Course, Module, Lesson.
+create:
+•	UserStudyPlan
+•	StudySession
+•	Reminder
+create these models in models.py.
+create the functions in services/planning_service.py and tasks in tasks.py.
+Celery to run the tasks.

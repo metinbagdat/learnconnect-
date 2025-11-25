@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { studyGoals, studySessions, userProgress, reminders } from "@shared/schema";
-import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
+import { studyGoals, studySessions } from "@shared/schema";
+import { eq, desc, gte, and } from "drizzle-orm";
 import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic({
@@ -81,10 +81,10 @@ export async function getUserStudySessions(userId: number, upcomingOnly = false)
 
   if (upcomingOnly) {
     const today = new Date().toISOString().split("T")[0];
-    query = query.where(gte(studySessions.sessionDate, today));
+    query = query.where(gte(studySessions.sessionDate, today as any)) as any;
   }
 
-  return await query.orderBy(studySessions.sessionDate);
+  return await (query as any).orderBy(studySessions.sessionDate);
 }
 
 export async function markSessionComplete(sessionId: number, completionRate: number, focusScore: number, notes?: string) {
@@ -96,85 +96,31 @@ export async function markSessionComplete(sessionId: number, completionRate: num
       completionRate,
       focusScore,
       notes,
-    })
+      status: "completed",
+    } as any)
     .where(eq(studySessions.id, sessionId))
     .returning();
   return updated;
 }
 
-export async function trackProgress(userId: number, sessionId: number, completedPercentage: number, mood?: string, productivityScore?: number) {
-  const [created] = await db
-    .insert(userProgress)
-    .values({
-      userId,
-      studySessionId: sessionId,
-      completedPercentage,
-      mood,
-      productivityScore,
-    })
-    .returning();
-  return created;
-}
-
-export async function getUserProgress(userId: number, days = 30) {
-  const fromDate = new Date();
-  fromDate.setDate(fromDate.getDate() - days);
-
-  return await db
-    .select()
-    .from(userProgress)
-    .where(and(eq(userProgress.userId, userId), gte(userProgress.createdAt, fromDate)))
-    .orderBy(desc(userProgress.createdAt));
-}
-
-export async function createReminder(data: any) {
-  const [created] = await db.insert(reminders).values(data).returning();
-  return created;
-}
-
-export async function getReminders(userId: number, unsentOnly = true) {
-  let query = db.select().from(reminders).where(eq(reminders.userId, userId));
-
-  if (unsentOnly) {
-    query = query.where(eq(reminders.sent, false));
-  }
-
-  return await query.orderBy(reminders.scheduledTime);
-}
-
-export async function markReminderAsSent(reminderId: number) {
-  const [updated] = await db
-    .update(reminders)
-    .set({
-      sent: true,
-      sentAt: new Date(),
-    })
-    .where(eq(reminders.id, reminderId))
-    .returning();
-  return updated;
-}
-
 export async function getProgressCharts(userId: number) {
-  // Weekly completion rates
-  const weeklyData = await db
-    .select({
-      week: sql<string>`DATE_TRUNC('week', ${userProgress.createdAt})`,
-      avgCompletion: sql<number>`AVG(${userProgress.completedPercentage})`,
-      avgProductivity: sql<number>`AVG(${userProgress.productivityScore})`,
-    })
-    .from(userProgress)
-    .where(eq(userProgress.userId, userId))
-    .groupBy(sql`DATE_TRUNC('week', ${userProgress.createdAt})`);
-
-  // Sessions per week
   const sessionsData = await db
-    .select({
-      week: sql<string>`DATE_TRUNC('week', ${studySessions.sessionDate})`,
-      count: sql<number>`COUNT(*)`,
-    })
+    .select()
     .from(studySessions)
     .where(eq(studySessions.userId, userId))
-    .groupBy(sql`DATE_TRUNC('week', ${studySessions.sessionDate})`);
+    .orderBy(studySessions.sessionDate);
 
-  return { weeklyData, sessionsData };
+  const byDate: Record<string, number> = {};
+  sessionsData.forEach((session: any) => {
+    const date = session.sessionDate instanceof Date 
+      ? session.sessionDate.toISOString().split('T')[0]
+      : String(session.sessionDate);
+    byDate[date] = (byDate[date] || 0) + 1;
+  });
+
+  return {
+    sessionsPerDay: Object.entries(byDate).map(([date, count]) => ({ date, count })),
+    totalSessions: sessionsData.length,
+    completedSessions: sessionsData.filter((s: any) => s.status === "completed").length,
+  };
 }

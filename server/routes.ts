@@ -7008,6 +7008,90 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // Smart Planning API Routes
+  import * as smartPlanning from "./smart-planning";
+
+  app.post("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const goal = await smartPlanning.createStudyGoal(req.user.id, req.body);
+      res.status(201).json(goal);
+    } catch (error) {
+      console.error("Error creating study goal:", error);
+      res.status(500).json({ message: "Failed to create study goal" });
+    }
+  });
+
+  app.get("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const goals = await smartPlanning.getUserStudyGoals(req.user.id);
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching study goals:", error);
+      res.status(500).json({ message: "Failed to fetch study goals" });
+    }
+  });
+
+  app.patch("/api/study-goals/:id", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const id = parseInt(req.params.id);
+      const updated = await smartPlanning.updateStudyGoal(id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating study goal:", error);
+      res.status(500).json({ message: "Failed to update study goal" });
+    }
+  });
+
+  app.post("/api/study-sessions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const session = await smartPlanning.createStudySession(req.user.id, req.body);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error("Error creating study session:", error);
+      res.status(500).json({ message: "Failed to create study session" });
+    }
+  });
+
+  app.get("/api/study-sessions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const upcomingOnly = req.query.upcoming === "true";
+      const sessions = await smartPlanning.getUserStudySessions(req.user.id, upcomingOnly);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching study sessions:", error);
+      res.status(500).json({ message: "Failed to fetch study sessions" });
+    }
+  });
+
+  app.patch("/api/study-sessions/:id/complete", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const id = parseInt(req.params.id);
+      const { completionRate, focusScore, notes } = req.body;
+      const updated = await smartPlanning.markSessionComplete(id, completionRate, focusScore, notes);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error completing study session:", error);
+      res.status(500).json({ message: "Failed to complete study session" });
+    }
+  });
+
+  app.get("/api/study-progress-charts", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const charts = await smartPlanning.getProgressCharts(req.user.id);
+      res.json(charts);
+    } catch (error) {
+      console.error("Error fetching progress charts:", error);
+      res.status(500).json({ message: "Failed to fetch progress charts" });
+    }
+  });
+
   // Logout endpoint
   app.post("/api/logout", (req, res) => {
     req.logout((err) => {

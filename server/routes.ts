@@ -270,8 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updateSchema = insertCourseCategorySchema.partial().omit({ 
-        id: true, 
-        createdAt: true 
+        id: true as any, 
+        createdAt: true as any
       });
       const validatedData = updateSchema.parse(req.body);
       
@@ -1827,7 +1827,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         currentLevel: userLevel?.level || 1,
         totalXP: userLevel?.currentXp || 0,
         totalPoints: userLevel?.totalPoints || 0,
-        currentStreak: userLevel?.currentStreak || 0,
+        currentStreak: userLevel?.streak || 0,
         achievementsUnlocked: userAchievements.length,
         activeLearningDays: learningDays.size,
         strengthAreas: ["Programming", "Data Analysis"], // Simplified for now
@@ -4055,7 +4055,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         messages: [{ role: "user", content: prompt }]
       });
 
-      const aiResponse = JSON.parse(response.content[0].text);
+      const firstContent = response.content[0];
+      const aiResponse = JSON.parse('text' in firstContent ? firstContent.text : '');
       
       // Save the generated schedule to database
       const schedulePromises = aiResponse.weeklySchedule.flatMap((day: any) =>
@@ -4402,8 +4403,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       await trackUsage(userId, 'analytics');
       
       // Calculate analytics
-      const subjectProgress = {};
-      const monthlyProgress = {};
+      const subjectProgress: Record<string, any> = {};
+      const monthlyProgress: Record<string, any> = {};
       let totalAssessments = 0;
       let averageScore = 0;
       

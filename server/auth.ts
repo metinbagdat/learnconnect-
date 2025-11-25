@@ -182,6 +182,9 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", ensureAuthenticated, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { password, ...userWithoutPassword } = req.user;
       res.json(userWithoutPassword);
     } catch (error) {

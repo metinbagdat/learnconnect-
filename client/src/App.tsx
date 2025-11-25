@@ -58,12 +58,14 @@ import AdaptiveLearning from "@/pages/adaptive-learning";
 function Router() {
   return (
     <Switch>
+      <Route path="/landing" component={LandingPage} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/" component={LandingPage} />
       <Route path="/study-techniques" component={StudyTechniques} />
       <Route path="/exam-anxiety" component={ExamAnxietyGuide} />
       <Route path="/testimonials" component={TestimonialsPage} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/premium" component={PremiumPage} />
-      <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/dashboard-standalone" component={DashboardStandalone} />
       <ProtectedRoute path="/courses" component={Courses} />
@@ -112,8 +114,6 @@ function Router() {
       <ProtectedRoute path="/affiliate" component={AffiliateDashboard} />
       <ProtectedRoute path="/waitlist" component={WaitlistManagement} />
       <ProtectedRoute path="/analytics-charts" component={AnalyticsCharts} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>
   );

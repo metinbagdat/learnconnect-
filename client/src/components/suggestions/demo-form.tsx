@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export function SuggestionDemoForm() {
   const [learningGoal, setLearningGoal] = useState("");
@@ -15,6 +16,7 @@ export function SuggestionDemoForm() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   // Mutation for creating learning path
   const createLearningPathMutation = useMutation({
@@ -34,6 +36,10 @@ export function SuggestionDemoForm() {
       setTimeframe("");
       // Refresh any related queries
       queryClient.invalidateQueries({ queryKey: ['/api/learning-paths'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/study-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      // Navigate to smart planning dashboard to see the new path
+      setTimeout(() => navigate('/smart-planning'), 1000);
     },
     onError: (error) => {
       toast({

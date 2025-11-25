@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Globe } from "lucide-react";
+import { Sidebar } from "@/components/layout/sidebar";
+import { MobileNav } from "@/components/layout/mobile-nav";
 
 export default function SuggestionsDemoPage() {
   const { language, setLanguage, t } = useLanguage();
@@ -31,8 +33,12 @@ export default function SuggestionsDemoPage() {
   const topTopics = trendingTopics.slice(0, 3);
 
   return (
-    <div className="container py-10">
-      <div className="mb-8">
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-1 overflow-auto">
+        <MobileNav />
+        <div className="container py-10">
+          <div className="mb-8">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{t('smartSuggestions', 'Smart Suggestions')}</h1>
@@ -129,6 +135,8 @@ export default function SuggestionsDemoPage() {
               {t('courseTopicsDesc', 'Browse trending topics or search for specific subjects you want to master.')}
             </p>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </div>

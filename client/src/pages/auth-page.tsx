@@ -177,9 +177,10 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full"
-                        disabled={loginMutation.isPending}
+                        disabled={loginMutation?.isPending}
+                        data-testid="button-login"
                       >
-                        {loginMutation.isPending ? "Logging in..." : "Login"}
+                        {loginMutation?.isPending ? "Logging in..." : "Login"}
                       </Button>
                     </form>
                   </Form>
@@ -195,7 +196,10 @@ export default function AuthPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <form onSubmit={(e) => {
+                      console.log("[FORM] Register form submit event triggered");
+                      registerForm.handleSubmit(onRegisterSubmit)(e);
+                    }} className="space-y-4">
                       <FormField
                         control={registerForm.control}
                         name="displayName"
@@ -251,9 +255,10 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full"
-                        disabled={registerMutation.isPending}
+                        disabled={registerMutation?.isPending}
+                        data-testid="button-register"
                       >
-                        {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                        {registerMutation?.isPending ? "Creating account..." : "Create Account"}
                       </Button>
                     </form>
                   </Form>

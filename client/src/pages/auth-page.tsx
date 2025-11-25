@@ -88,22 +88,73 @@ export default function AuthPage() {
 
   const onLoginSubmit = (data: LoginFormValues) => {
     console.log("[FORM] ===== LOGIN SUBMIT TRIGGERED =====", data);
-    if (loginMutation?.mutate) {
+    console.log("[FORM] loginMutation available:", !!loginMutation?.mutate);
+    if (loginMutation && loginMutation.mutate) {
       console.log("[FORM] Calling mutation.mutate with:", data);
       loginMutation.mutate(data);
+      console.log("[FORM] Mutation called successfully");
     } else {
-      console.error("[FORM] ERROR: loginMutation not available", { loginMutation });
+      console.error("[FORM] ERROR: loginMutation.mutate not available", { 
+        hasMutation: !!loginMutation,
+        hasMutate: !!loginMutation?.mutate,
+        mutation: loginMutation 
+      });
+      // Direct API call as fallback
+      console.log("[FORM] Attempting direct API call");
+      (async () => {
+        try {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+            credentials: "include"
+          });
+          console.log("[FORM] Direct API response:", res.status);
+          const responseData = await res.json();
+          console.log("[FORM] Direct API data:", responseData);
+          if (res.ok) {
+            localStorage.setItem('edulearn_user', JSON.stringify(responseData));
+            window.location.href = '/';
+          } else {
+            toast({ title: "Login failed", description: responseData.message, variant: "destructive" });
+          }
+        } catch (error) {
+          console.error("[FORM] Direct API error:", error);
+          toast({ title: "Error", description: String(error), variant: "destructive" });
+        }
+      })();
     }
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
     console.log("[FORM] ===== REGISTER SUBMIT TRIGGERED =====", data);
     const { confirmPassword, ...userData } = data;
-    if (registerMutation?.mutate) {
+    if (registerMutation && registerMutation.mutate) {
       console.log("[FORM] Calling register mutation.mutate with:", userData);
       registerMutation.mutate(userData);
     } else {
-      console.error("[FORM] ERROR: registerMutation not available", { registerMutation });
+      console.error("[FORM] ERROR: registerMutation.mutate not available");
+      // Direct API call as fallback
+      (async () => {
+        try {
+          const res = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userData),
+            credentials: "include"
+          });
+          const responseData = await res.json();
+          if (res.ok) {
+            localStorage.setItem('edulearn_user', JSON.stringify(responseData));
+            window.location.href = '/';
+          } else {
+            toast({ title: "Registration failed", description: responseData.message, variant: "destructive" });
+          }
+        } catch (error) {
+          console.error("[FORM] Register error:", error);
+          toast({ title: "Error", description: String(error), variant: "destructive" });
+        }
+      })();
     }
   };
   
@@ -145,12 +196,17 @@ export default function AuthPage() {
                   <CardDescription>Log in to your account to continue</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={(e) => {
-                      console.log("[FORM] ===== LOGIN FORM SUBMIT EVENT =====", e.type);
-                      e.preventDefault();
-                      loginForm.handleSubmit(onLoginSubmit)(e);
-                    }} className="space-y-4">
+                  <form onSubmit={(e) => {
+                    console.log("[FORM] ===== LOGIN FORM SUBMIT EVENT =====", e.type);
+                    e.preventDefault();
+                    
+                    const username = loginForm.getValues("username");
+                    const password = loginForm.getValues("password");
+                    console.log("[FORM] Values retrieved:", { username, password });
+                    
+                    onLoginSubmit({ username, password });
+                  }} className="space-y-4">
+                    <Form {...loginForm}>
                       <FormField
                         control={loginForm.control}
                         name="username"
@@ -186,8 +242,8 @@ export default function AuthPage() {
                       >
                         {loginMutation?.isPending ? "Logging in..." : "Login"}
                       </Button>
-                    </form>
-                  </Form>
+                    </Form>
+                  </form>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -199,12 +255,18 @@ export default function AuthPage() {
                   <CardDescription>Fill in your details to get started</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={(e) => {
-                      console.log("[FORM] ===== REGISTER FORM SUBMIT EVENT =====", e.type);
-                      e.preventDefault();
-                      registerForm.handleSubmit(onRegisterSubmit)(e);
-                    }} className="space-y-4">
+                  <form onSubmit={(e) => {
+                    console.log("[FORM] ===== REGISTER FORM SUBMIT EVENT =====", e.type);
+                    e.preventDefault();
+                    
+                    const username = registerForm.getValues("username");
+                    const password = registerForm.getValues("password");
+                    const displayName = registerForm.getValues("displayName");
+                    console.log("[FORM] Register values retrieved:", { username, password, displayName });
+                    
+                    onRegisterSubmit({ username, password, displayName: displayName, confirmPassword: password, role: "student" });
+                  }} className="space-y-4">
+                    <Form {...registerForm}>
                       <FormField
                         control={registerForm.control}
                         name="displayName"
@@ -266,8 +328,8 @@ export default function AuthPage() {
                       >
                         {registerMutation?.isPending ? "Creating account..." : "Create Account"}
                       </Button>
-                    </form>
-                  </Form>
+                    </Form>
+                  </form>
                 </CardContent>
               </Card>
             </TabsContent>

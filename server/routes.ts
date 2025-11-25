@@ -79,6 +79,8 @@ import {
 import * as smartPlanning from "./smart-planning";
 import * as notificationService from "./notification-service";
 import * as aiSessionGenerator from "./ai-session-generator";
+import { analyzeProgressAndRecommend, getTopicResources, trackResourceEngagement } from "./resource-recommendation-service";
+import { generateAdaptiveAdjustments, detectLearningInterventionNeeds } from "./adaptive-adjustment-service";
 import { db } from "./db";
 import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
@@ -3603,6 +3605,93 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error generating new recommendations:", error);
       res.status(500).json({ message: "Failed to generate recommendations" });
+    }
+  });
+
+  // Adaptive Learning API Endpoints
+  
+  // Get adaptive adjustments for current user
+  app.get("/api/adaptive/adjustments", (app as any).ensureAuthenticated, async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const adjustments = await generateAdaptiveAdjustments(req.user.id);
+      res.json(adjustments);
+    } catch (error) {
+      console.error("Error generating adaptive adjustments:", error);
+      res.status(500).json({ message: "Failed to generate adaptive adjustments" });
+    }
+  });
+
+  // Get personalized resource recommendations
+  app.get("/api/adaptive/resources", (app as any).ensureAuthenticated, async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const resources = await analyzeProgressAndRecommend(req.user.id);
+      res.json(resources);
+    } catch (error) {
+      console.error("Error analyzing progress and recommending resources:", error);
+      res.status(500).json({ message: "Failed to get resource recommendations" });
+    }
+  });
+
+  // Detect if user needs intervention
+  app.get("/api/adaptive/intervention", (app as any).ensureAuthenticated, async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const intervention = await detectLearningInterventionNeeds(req.user.id);
+      res.json(intervention);
+    } catch (error) {
+      console.error("Error detecting intervention needs:", error);
+      res.status(500).json({ message: "Failed to detect intervention needs" });
+    }
+  });
+
+  // Get resources for a specific topic
+  app.get("/api/adaptive/topic/:topicId/resources", (app as any).ensureAuthenticated, async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const topicId = parseInt(req.params.topicId);
+      const performanceLevel = (req.query.level as string) || "developing";
+      
+      const resources = await getTopicResources(
+        req.user.id,
+        topicId,
+        performanceLevel as "struggling" | "developing" | "proficient"
+      );
+      res.json(resources);
+    } catch (error) {
+      console.error("Error getting topic resources:", error);
+      res.status(500).json({ message: "Failed to get topic resources" });
+    }
+  });
+
+  // Track resource engagement
+  app.post("/api/adaptive/resources/:resourceId/track", (app as any).ensureAuthenticated, async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const resourceId = req.params.resourceId;
+      const { timeSpent, helpful } = req.body;
+      
+      await trackResourceEngagement(req.user.id, resourceId, timeSpent || 0, helpful || false);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking resource engagement:", error);
+      res.status(500).json({ message: "Failed to track engagement" });
     }
   });
 

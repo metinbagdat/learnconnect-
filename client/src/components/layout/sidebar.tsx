@@ -168,6 +168,19 @@ export function Sidebar() {
           </SidebarLink>
 
           <SidebarLink 
+            href="/adaptive-learning" 
+            icon={<TrendingUp className="h-5 w-5" />}
+            isActive={location === '/adaptive-learning'}
+          >
+            <span className="flex items-center">
+              {t('adaptiveLearning', 'Adaptive Learning')}
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
+                ✨ AI
+              </span>
+            </span>
+          </SidebarLink>
+
+          <SidebarLink 
             href="/advanced-adaptive" 
             icon={<Brain className="h-5 w-5" />}
             isActive={location === '/advanced-adaptive'}

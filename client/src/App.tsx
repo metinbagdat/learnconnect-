@@ -53,6 +53,7 @@ import TestimonialsPage from "@/pages/testimonials";
 import HowItWorks from "@/pages/how-it-works";
 import PremiumPage from "@/pages/premium";
 import SmartPlanningDashboard from "@/pages/smart-planning-dashboard";
+import AdaptiveLearning from "@/pages/adaptive-learning";
 
 function Router() {
   return (
@@ -96,7 +97,8 @@ function Router() {
       <ProtectedRoute path="/learning-trails" component={LearningTrailsPage} />
       <ProtectedRoute path="/admin" component={AdminPanel} />
       <ProtectedRoute path="/suggestions" component={SuggestionsDemoPage} />
-      <ProtectedRoute path="/adaptive-learning" component={AdaptiveLearningDemo} />
+      <ProtectedRoute path="/adaptive-learning" component={AdaptiveLearning} />
+      <ProtectedRoute path="/adaptive-learning-demo" component={AdaptiveLearningDemo} />
       <ProtectedRoute path="/advanced-adaptive" component={AdvancedAdaptiveLearning} />
       <ProtectedRoute path="/emoji-milestones" component={EmojiMilestonesDemo} />
       <ProtectedRoute path="/animated-progress" component={AnimatedProgressDemo} />

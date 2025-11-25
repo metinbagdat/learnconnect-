@@ -60,10 +60,16 @@ export default function AuthPage() {
     ogType: "website"
   });
 
-  // Clear localStorage on auth page mount - essential for form display
+  // Only clear localStorage if user manually navigated to /auth (not after logout redirect)
   useEffect(() => {
-    localStorage.removeItem('edulearn_user');
-    queryClient.setQueryData(["/api/user"], null);
+    const user = JSON.parse(localStorage.getItem('edulearn_user') || 'null');
+    // Only clear if we have a user but they're trying to re-auth (shouldn't happen normally)
+    if (user && !location.pathname.includes('logout')) {
+      // User is already logged in, don't clear anything
+    } else {
+      // Fresh auth attempt, clear stale data
+      localStorage.removeItem('edulearn_user');
+    }
   }, []);
   
   useEffect(() => {

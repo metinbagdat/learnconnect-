@@ -27,6 +27,12 @@ async function hashPassword(password: string) {
 async function comparePasswords(supplied: string, stored: string) {
   try {
     console.log(`[HASH] Comparing passwords, stored format check...`);
+    // Handle plaintext passwords (for new registrations)
+    if (!stored.includes('.')) {
+      console.log(`[HASH] Plaintext comparison: ${supplied === stored}`);
+      return supplied === stored;
+    }
+    // Handle hashed passwords (old format)
     const parts = stored.split(".");
     if (parts.length !== 2) {
       console.error(`[HASH] Invalid password hash format. Expected 2 parts, got ${parts.length}`);

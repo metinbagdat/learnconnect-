@@ -60,7 +60,6 @@ function Router() {
     <Switch>
       <Route path="/landing" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/" component={LandingPage} />
       <Route path="/study-techniques" component={StudyTechniques} />
       <Route path="/exam-anxiety" component={ExamAnxietyGuide} />
       <Route path="/testimonials" component={TestimonialsPage} />

@@ -275,8 +275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updateSchema = insertCourseCategorySchema.partial().omit({ 
-        id: true as any, 
-        createdAt: true as any
+        id: true, 
+        createdAt: true
       });
       const validatedData = updateSchema.parse(req.body);
       
@@ -7027,6 +7027,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // AI Study Tips Logs endpoints
   app.post("/api/ai-logs/tips", (app as any).ensureAuthenticated, async (req, res) => {
     try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const validated = insertAiStudyTipsLogSchema.parse(req.body);
       const log = await storage.createAiStudyTipsLog({ ...validated, userId: req.user.id });
       res.status(201).json(log);
@@ -7041,6 +7042,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   app.get("/api/ai-logs/tips", (app as any).ensureAuthenticated, async (req, res) => {
     try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const limit = parseInt(req.query.limit as string) || 50;
       const logs = await storage.getAiStudyTipsLogs(req.user.id, limit);
       res.json(logs);
@@ -7065,6 +7067,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // AI Review Logs endpoints
   app.post("/api/ai-logs/review", (app as any).ensureAuthenticated, async (req, res) => {
     try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const validated = insertAiReviewLogSchema.parse(req.body);
       const log = await storage.createAiReviewLog({ ...validated, userId: req.user.id });
       res.status(201).json(log);
@@ -7079,6 +7082,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   app.get("/api/ai-logs/review", (app as any).ensureAuthenticated, async (req, res) => {
     try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const limit = parseInt(req.query.limit as string) || 50;
       const logs = await storage.getAiReviewLogs(req.user.id, limit);
       res.json(logs);

@@ -68,33 +68,21 @@ export default function StudyPlannerPage() {
   });
 
   // Fetch user's study goals
-  const { data: studyGoals, isLoading: goalsLoading } = useQuery<StudyGoal[]>({
+  const { data: studyGoals = [], isLoading: goalsLoading } = useQuery<StudyGoal[]>({
     queryKey: ['/api/study-goals'],
-    queryFn: async () => {
-      const response = await fetch('/api/study-goals');
-      if (!response.ok) throw new Error('Failed to fetch study goals');
-      return response.json();
-    }
+    retry: 1,
   });
 
   // Fetch user's study schedule
-  const { data: studySchedule, isLoading: scheduleLoading } = useQuery<StudySchedule[]>({
+  const { data: studySchedule = [], isLoading: scheduleLoading } = useQuery<StudySchedule[]>({
     queryKey: ['/api/study-schedule'],
-    queryFn: async () => {
-      const response = await fetch('/api/study-schedule');
-      if (!response.ok) throw new Error('Failed to fetch study schedule');
-      return response.json();
-    }
+    retry: 1,
   });
 
   // Fetch AI recommendations
-  const { data: recommendations } = useQuery<LearningRecommendation[]>({
+  const { data: recommendations = [] } = useQuery<LearningRecommendation[]>({
     queryKey: ['/api/learning-recommendations'],
-    queryFn: async () => {
-      const response = await fetch('/api/learning-recommendations');
-      if (!response.ok) throw new Error('Failed to fetch recommendations');
-      return response.json();
-    }
+    retry: 1,
   });
 
   // Create study goal mutation

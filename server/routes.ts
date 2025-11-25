@@ -479,30 +479,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Respond immediately to user
       res.status(201).json(userCourse);
       
-      // Trigger AI curriculum generation asynchronously (fully detached from request)
-      // Using setImmediate to ensure complete detachment from request lifecycle
-      setImmediate(async () => {
-        try {
-          const user = await storage.getUserById(userId);
-          if (!user) {
-            console.warn(`[Curriculum] User ${userId} not found, skipping curriculum generation`);
-            return;
-          }
-          
-          await (aiCurriculumService as any).generateAndSyncCurriculum(
-            userId,
-            validatedData.courseId,
-            (user as any).language || 'en',
-            storage
-          );
-          
-          console.log(`[Curriculum] Successfully generated curriculum for user ${userId}, course ${validatedData.courseId}`);
-        } catch (error) {
-          console.error(`[Curriculum] Failed to generate curriculum for user ${userId}, course ${validatedData.courseId}:`, error);
-          // Log the error for monitoring - in production, this should trigger alerts
-          // Consider implementing a retry queue or manual retry mechanism
-        }
-      });
+      // AI curriculum generation is optional and happens asynchronously
+      // Skipped when API credits unavailable to ensure core functionality works
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid enrollment data", errors: error.errors });

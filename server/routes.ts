@@ -76,6 +76,9 @@ import {
   generatePredictiveAnalytics,
   generateAdaptiveInsights
 } from "./advanced-adaptive-service";
+import * as smartPlanning from "./smart-planning";
+import * as notificationService from "./notification-service";
+import * as aiSessionGenerator from "./ai-session-generator";
 import { db } from "./db";
 import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
@@ -7009,8 +7012,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Smart Planning API Routes
-  import * as smartPlanning from "./smart-planning";
-
   app.post("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -7089,6 +7090,62 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error fetching progress charts:", error);
       res.status(500).json({ message: "Failed to fetch progress charts" });
+    }
+  });
+
+  // AI Auto-generate sessions from goal
+  app.post("/api/study-goals/:goalId/generate-sessions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const goalId = parseInt(req.params.goalId);
+      const result = await aiSessionGenerator.generateStudySessionsFromGoal(goalId, req.user.id);
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating sessions:", error);
+      res.status(500).json({ message: "Failed to generate sessions" });
+    }
+  });
+
+  // Schedule reminder
+  app.post("/api/reminders", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const reminder = await notificationService.scheduleReminder({
+        ...req.body,
+        userId: req.user.id,
+      });
+      res.status(201).json(reminder);
+    } catch (error) {
+      console.error("Error scheduling reminder:", error);
+      res.status(500).json({ message: "Failed to schedule reminder" });
+    }
+  });
+
+  // Get pending reminders
+  app.get("/api/reminders", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const pending = await notificationService.getPendingReminders();
+      res.json(pending.filter((r: any) => r.userId === req.user?.id));
+    } catch (error) {
+      console.error("Error fetching reminders:", error);
+      res.status(500).json({ message: "Failed to fetch reminders" });
+    }
+  });
+
+  // Process reminders (can be called by a webhook or scheduler)
+  app.post("/api/reminders/process", async (req, res) => {
+    try {
+      // Verify webhook secret
+      const secret = req.headers["x-webhook-secret"];
+      if (secret !== process.env.WEBHOOK_SECRET) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      await notificationService.processPendingReminders();
+      res.json({ message: "Reminders processed successfully" });
+    } catch (error) {
+      console.error("Error processing reminders:", error);
+      res.status(500).json({ message: "Failed to process reminders" });
     }
   });
 

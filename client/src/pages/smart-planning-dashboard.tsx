@@ -16,17 +16,17 @@ export default function SmartPlanningDashboard() {
   const [showGoalForm, setShowGoalForm] = useState(false);
 
   // Fetch study goals
-  const { data: goals, isLoading: goalsLoading } = useQuery({
+  const { data: goals = [], isLoading: goalsLoading } = useQuery({
     queryKey: ["/api/study-goals"],
   });
 
   // Fetch study sessions
-  const { data: sessions, isLoading: sessionsLoading } = useQuery({
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
     queryKey: ["/api/study-sessions"],
   });
 
   // Fetch progress charts
-  const { data: progressData } = useQuery({
+  const { data: progressData = { sessionsPerDay: [], completedSessions: 0, totalSessions: 0 } } = useQuery({
     queryKey: ["/api/study-progress-charts"],
   });
 

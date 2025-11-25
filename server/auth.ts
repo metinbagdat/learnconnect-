@@ -46,19 +46,19 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Create a seeded test user on startup for debugging
+  // Create a seeded test user on startup for debugging - USING PLAINTEXT FOR TESTING
   (async () => {
     try {
       const existingUser = await storage.getUserByUsername("testuser");
       if (!existingUser) {
-        const hashedPassword = await hashPassword("password123");
+        // TEMPORARY: Store plaintext for testing
         await storage.createUser({
           username: "testuser",
-          password: hashedPassword,
+          password: "password123",
           displayName: "Test User",
           role: "student"
         });
-        console.log("✓ Seeded test user: testuser / password123");
+        console.log("✓ Seeded test user: testuser / password123 (PLAINTEXT FOR TESTING)");
       }
     } catch (err) {
       console.log("Could not seed test user:", err);
@@ -95,15 +95,20 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log(`[AUTH] Login attempt for user: ${username}`);
+        console.log(`[AUTH] Login attempt for user: ${username}, password: ${password}`);
         const user = await storage.getUserByUsername(username);
         if (!user) {
           console.log(`[AUTH] User not found: ${username}`);
           return done(null, false, { message: "Incorrect username or password" });
         }
-        console.log(`[AUTH] User found: ${username}, checking password...`);
-        const passwordMatch = await comparePasswords(password, user.password);
-        console.log(`[AUTH] Password match: ${passwordMatch}`);
+        console.log(`[AUTH] User found: ${username}`);
+        console.log(`[AUTH] Stored password: ${user.password}`);
+        console.log(`[AUTH] Supplied password: ${password}`);
+        
+        // TEMPORARY: Direct plaintext comparison for testing
+        const passwordMatch = user.password === password;
+        console.log(`[AUTH] Password match (plaintext): ${passwordMatch}`);
+        
         if (!passwordMatch) {
           return done(null, false, { message: "Incorrect username or password" });
         }
@@ -141,7 +146,7 @@ export function setupAuth(app: Express) {
 
       const user = await storage.createUser({
         username,
-        password: await hashPassword(password),
+        password: password,
         displayName,
         role
       });

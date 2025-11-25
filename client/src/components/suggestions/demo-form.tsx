@@ -38,7 +38,7 @@ export function SuggestionDemoForm() {
       queryClient.invalidateQueries({ queryKey: ['/api/learning-paths'] });
       queryClient.invalidateQueries({ queryKey: ['/api/study-goals'] });
       queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
-      // Navigate to smart planning dashboard to see the new path
+      // Navigate to smart planning dashboard to see the new path, then to courses after review
       setTimeout(() => navigate('/smart-planning'), 1000);
     },
     onError: (error) => {

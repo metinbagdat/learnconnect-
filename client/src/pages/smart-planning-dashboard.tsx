@@ -9,15 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, CheckCircle, Target, TrendingUp } from "lucide-react";
+import { Calendar, CheckCircle, Target, TrendingUp, BookOpen } from "lucide-react";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { useLocation } from "wouter";
 
 export default function SmartPlanningDashboard() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [showGoalForm, setShowGoalForm] = useState(false);
+  const [, navigate] = useLocation();
 
   // Fetch study goals
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
@@ -42,7 +44,10 @@ export default function SmartPlanningDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/study-goals"] });
       setShowGoalForm(false);
-      toast({ title: "Study goal created successfully!" });
+      toast({ 
+        title: t("studyGoalCreated", "Study goal created successfully!"),
+        description: t("readyToContinue", "Ready to continue? Check out our curriculum!") 
+      });
       form.reset();
     },
     onError: () => {
@@ -96,10 +101,20 @@ export default function SmartPlanningDashboard() {
         <MobileNav />
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 p-6">
           <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-white">{t("smartPlanning") || "Smart Study Planning"}</h1>
-              <p className="text-lg text-slate-600 dark:text-slate-300">{t("smartPlanningDesc") || "Create personalized study goals and track your progress"}</p>
+            {/* Header with CTA */}
+            <div className="flex justify-between items-start gap-4">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold text-slate-900 dark:text-white">{t("smartPlanning") || "Smart Study Planning"}</h1>
+                <p className="text-lg text-slate-600 dark:text-slate-300">{t("smartPlanningDesc") || "Create personalized study goals and track your progress"}</p>
+              </div>
+              <Button 
+                onClick={() => navigate("/courses")}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center gap-2 whitespace-nowrap"
+                data-testid="button-start-learning"
+              >
+                <BookOpen className="w-4 h-4" />
+                {t("startLearning", "Start Learning")}
+              </Button>
             </div>
 
             {/* Stats Overview */}

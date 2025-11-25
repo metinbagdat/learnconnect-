@@ -12,6 +12,8 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  console.log(`[API] ${method} ${url}`, data ? { data } : "");
+  
   // Get auth token from localStorage if available
   const user = localStorage.getItem('edulearn_user');
   const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
@@ -26,15 +28,26 @@ export async function apiRequest(
     }
   }
   
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
+  try {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+    
+    console.log(`[API] Response: ${method} ${url}`, { status: res.status, ok: res.ok });
+    
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[API] Error response:`, { status: res.status, text });
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res;
+  } catch (error) {
+    console.error(`[API] Request failed:`, error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

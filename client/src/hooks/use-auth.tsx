@@ -49,10 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log("[MUTATION] Login mutation starting", credentials);
       const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      const json = await res.json();
+      console.log("[MUTATION] Login mutation response", json);
+      return json;
     },
     onSuccess: (user: SelectUser) => {
+      console.log("[MUTATION] Login success", user);
       // Store user in localStorage as fallback mechanism
       localStorage.setItem('edulearn_user', JSON.stringify(user));
       
@@ -73,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.location.href = user.role === 'admin' ? '/admin' : '/';
     },
     onError: (error: Error) => {
+      console.error("[MUTATION] Login error", error);
       toast({
         title: "Login failed",
         description: error.message,

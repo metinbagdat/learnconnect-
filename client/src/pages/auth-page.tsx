@@ -87,21 +87,23 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (data: LoginFormValues) => {
-    console.log("[FORM] Login submit triggered with:", { username: data.username });
+    console.log("[FORM] ===== LOGIN SUBMIT TRIGGERED =====", data);
     if (loginMutation?.mutate) {
+      console.log("[FORM] Calling mutation.mutate with:", data);
       loginMutation.mutate(data);
     } else {
-      console.error("[FORM] loginMutation not available");
+      console.error("[FORM] ERROR: loginMutation not available", { loginMutation });
     }
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    console.log("[FORM] Register submit triggered with:", { username: data.username });
+    console.log("[FORM] ===== REGISTER SUBMIT TRIGGERED =====", data);
     const { confirmPassword, ...userData } = data;
     if (registerMutation?.mutate) {
+      console.log("[FORM] Calling register mutation.mutate with:", userData);
       registerMutation.mutate(userData);
     } else {
-      console.error("[FORM] registerMutation not available");
+      console.error("[FORM] ERROR: registerMutation not available", { registerMutation });
     }
   };
   
@@ -145,7 +147,8 @@ export default function AuthPage() {
                 <CardContent>
                   <Form {...loginForm}>
                     <form onSubmit={(e) => {
-                      console.log("[FORM] Form submit event triggered");
+                      console.log("[FORM] ===== LOGIN FORM SUBMIT EVENT =====", e.type);
+                      e.preventDefault();
                       loginForm.handleSubmit(onLoginSubmit)(e);
                     }} className="space-y-4">
                       <FormField
@@ -179,6 +182,7 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={loginMutation?.isPending}
                         data-testid="button-login"
+                        onClick={() => console.log("[BTN] Login button clicked")}
                       >
                         {loginMutation?.isPending ? "Logging in..." : "Login"}
                       </Button>
@@ -197,7 +201,8 @@ export default function AuthPage() {
                 <CardContent>
                   <Form {...registerForm}>
                     <form onSubmit={(e) => {
-                      console.log("[FORM] Register form submit event triggered");
+                      console.log("[FORM] ===== REGISTER FORM SUBMIT EVENT =====", e.type);
+                      e.preventDefault();
                       registerForm.handleSubmit(onRegisterSubmit)(e);
                     }} className="space-y-4">
                       <FormField
@@ -257,6 +262,7 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={registerMutation?.isPending}
                         data-testid="button-register"
+                        onClick={() => console.log("[BTN] Register button clicked")}
                       >
                         {registerMutation?.isPending ? "Creating account..." : "Create Account"}
                       </Button>

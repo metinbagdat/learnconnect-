@@ -1,19 +1,39 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, BookOpen } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CoursesCatalog() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ['/api/courses'],
+  });
+
+  const enrollMutation = useMutation({
+    mutationFn: (courseId: number) => apiRequest('POST', '/api/user/courses', { courseId }).then(r => r.json()),
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Successfully enrolled in course',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to enroll in course',
+        variant: 'destructive',
+      });
+    },
   });
 
   const filtered = courses?.filter((course: any) => {
@@ -95,10 +115,30 @@ export default function CoursesCatalog() {
                       <span className="text-lg font-bold text-green-600">
                         ₺{course.price}
                       </span>
-                      <Button size="sm">Kaydol</Button>
+                      <Button 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLocation(`/checkout/${course.id}`);
+                        }}
+                        data-testid={`buy-${course.id}`}
+                      >
+                        Kaydol
+                      </Button>
                     </div>
                   ) : (
-                    <Button className="w-full" size="sm">Başla</Button>
+                    <Button 
+                      className="w-full" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        enrollMutation.mutate(course.id);
+                      }}
+                      disabled={enrollMutation.isPending}
+                      data-testid={`enroll-${course.id}`}
+                    >
+                      {enrollMutation.isPending ? 'Kaydediliyor...' : 'Başla'}
+                    </Button>
                   )}
                 </div>
               </Card>

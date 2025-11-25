@@ -228,20 +228,20 @@ export function setupAuth(app: Express) {
           if (user) {
             console.log('[MIDDLEWARE] User found via header ID:', user.id);
             req.user = user;
-            return next();
+            next();
           } else {
             console.log('[MIDDLEWARE] User not found for header ID:', userId);
-            return res.status(401).json({ message: "Unauthorized" });
+            res.status(401).json({ message: "Unauthorized" });
           }
         })
         .catch(error => {
           console.error("[MIDDLEWARE] Error retrieving user from header ID:", error);
-          return res.status(401).json({ message: "Unauthorized" });
+          res.status(401).json({ message: "Unauthorized" });
         });
     } else {
       // No authentication succeeded
       console.log('[MIDDLEWARE] No authentication found - no session, no header');
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
     }
   };
 

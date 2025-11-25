@@ -7,9 +7,14 @@ import { useLanguage } from "@/contexts/consolidated-language-context";
 import { Globe } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { useState, useRef } from "react";
 
 export default function SuggestionsDemoPage() {
   const { language, setLanguage, t } = useLanguage();
+  const formRef = useRef<any>(null);
+  const [selectedGoal, setSelectedGoal] = useState("");
+  const [selectedField, setSelectedField] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
   
   // Fetch trending suggestions from our API with language support
   const { data: trendingGoals = [] } = useQuery<string[]>({
@@ -58,7 +63,7 @@ export default function SuggestionsDemoPage() {
         </div>
       </div>
       
-      {/* Trending suggestions */}
+      {/* Trending suggestions - Now clickable to populate form */}
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -68,7 +73,16 @@ export default function SuggestionsDemoPage() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {topGoals.map(goal => (
-                <Badge key={goal} variant="secondary" className="text-sm py-1">
+                <Badge 
+                  key={goal} 
+                  variant={selectedGoal === goal ? "default" : "secondary"}
+                  className="text-sm py-1 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    setSelectedGoal(goal);
+                    formRef.current?.setGoal(goal);
+                  }}
+                  data-testid={`badge-goal-${goal}`}
+                >
                   {goal}
                 </Badge>
               ))}
@@ -84,7 +98,16 @@ export default function SuggestionsDemoPage() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {topFields.map(field => (
-                <Badge key={field} variant="secondary" className="text-sm py-1">
+                <Badge 
+                  key={field} 
+                  variant={selectedField === field ? "default" : "secondary"}
+                  className="text-sm py-1 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    setSelectedField(field);
+                    formRef.current?.setField(field);
+                  }}
+                  data-testid={`badge-field-${field}`}
+                >
                   {field}
                 </Badge>
               ))}
@@ -100,7 +123,16 @@ export default function SuggestionsDemoPage() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {topTopics.map(topic => (
-                <Badge key={topic} variant="secondary" className="text-sm py-1">
+                <Badge 
+                  key={topic} 
+                  variant={selectedTopic === topic ? "default" : "secondary"}
+                  className="text-sm py-1 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    setSelectedTopic(topic);
+                    formRef.current?.setTopic(topic);
+                  }}
+                  data-testid={`badge-topic-${topic}`}
+                >
                   {topic}
                 </Badge>
               ))}
@@ -109,7 +141,7 @@ export default function SuggestionsDemoPage() {
         </Card>
       </div>
       
-      <SuggestionDemoForm />
+      <SuggestionDemoForm ref={formRef} />
       
       <div className="mt-10 bg-muted p-6 rounded-lg">
         <h2 className="text-xl font-semibold mb-4">{t('howSmartSuggestionsWork', 'How Smart Suggestions Work')}</h2>

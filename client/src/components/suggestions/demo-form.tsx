@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SuggestionSelect, SuggestionAutocomplete } from "./suggestion-select";
@@ -8,7 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
-export function SuggestionDemoForm() {
+export const SuggestionDemoForm = forwardRef(function SuggestionDemoForm(_props, ref) {
   const [learningGoal, setLearningGoal] = useState("");
   const [careerField, setCareerField] = useState("");
   const [courseTopic, setCourseTopic] = useState("");
@@ -17,6 +17,13 @@ export function SuggestionDemoForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
+
+  // Expose setter methods for parent component
+  useImperativeHandle(ref, () => ({
+    setGoal: (goal: string) => setLearningGoal(goal),
+    setField: (field: string) => setCareerField(field),
+    setTopic: (topic: string) => setCourseTopic(topic),
+  }));
 
   // Mutation for creating learning path
   const createLearningPathMutation = useMutation({
@@ -131,4 +138,4 @@ export function SuggestionDemoForm() {
       </CardContent>
     </Card>
   );
-}
+});

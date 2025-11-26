@@ -121,6 +121,16 @@ export function CourseRecommendations() {
             {t('weWillRecommendCourses')}
           </p>
         </CardContent>
+        <CardFooter>
+          <Button 
+            variant="default" 
+            className="w-full" 
+            onClick={() => window.location.href = "/courses"}
+            data-testid="browse-courses-button"
+          >
+            {t('browseCourses') || 'Kursları Gözat'}
+          </Button>
+        </CardFooter>
       </Card>
     );
   }

@@ -1,23 +1,10 @@
-import OpenAI from "openai";
-import Anthropic from "@anthropic-ai/sdk";
 import { Course, insertCourseSchema, LearningPath, InsertLearningPath, InsertLearningPathStep } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "./storage";
+import { callAIWithFallback, parseAIJSON } from "./ai-provider-service";
 
 // Define InsertCourse type from the schema
 type InsertCourse = z.infer<typeof insertCourseSchema>;
-
-// Initialize the OpenAI client
-// Use gpt-3.5-turbo model which is widely available with most API keys
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Initialize the Anthropic client
-// Use claude-3-sonnet-20240229 model
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 // Course generation prompts
 const COURSE_GENERATION_SYSTEM_PROMPT = `
@@ -77,22 +64,18 @@ export async function generateCourse(
   }
   
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    const result = await callAIWithFallback({
       messages: [
         { role: "system", content: COURSE_GENERATION_SYSTEM_PROMPT },
         { role: "user", content: prompt }
       ],
-      response_format: { type: "json_object" },
+      maxTokens: 2000,
       temperature: 0.7,
+      jsonMode: true,
     });
     
-    const responseContent = completion.choices[0].message.content;
-    if (!responseContent) {
-      throw new Error("Empty response from AI service");
-    }
-    
-    return JSON.parse(responseContent) as GeneratedCourse;
+    const parsed = parseAIJSON(result.content, {});
+    return parsed as GeneratedCourse;
   } catch (error: any) {
     console.error("Error generating course:", error);
     throw new Error(`Failed to generate course: ${error.message || 'Unknown error'}`);
@@ -151,8 +134,7 @@ export async function generateCourseRecommendations(
   `;
   
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    const result = await callAIWithFallback({
       messages: [
         { 
           role: "system", 
@@ -160,16 +142,12 @@ export async function generateCourseRecommendations(
         },
         { role: "user", content: prompt }
       ],
-      response_format: { type: "json_object" },
+      maxTokens: 2000,
       temperature: 0.7,
+      jsonMode: true,
     });
     
-    const responseContent = completion.choices[0].message.content;
-    if (!responseContent) {
-      throw new Error("Empty response from AI service");
-    }
-    
-    const recommendations = JSON.parse(responseContent);
+    const recommendations = parseAIJSON(result.content, { recommendations: [] });
     return recommendations.recommendations || [];
   } catch (error: any) {
     console.error("Error generating recommendations:", error);

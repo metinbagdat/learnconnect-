@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { callAIWithFallback, parseAIJSON } from "./ai-provider-service";
 
 /*
 <important_code_snippet_instructions>
@@ -11,10 +11,6 @@ When copying code from this code snippet, ensure you also include this informati
 // <important_do_not_delete>
 const DEFAULT_MODEL_STR = "claude-sonnet-4-20250514";
 // </important_do_not_delete>
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 export interface LearningStyleProfile {
   visual: number;
@@ -102,14 +98,23 @@ Respond in JSON format:
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: DEFAULT_MODEL_STR,
-      system: systemPrompt,
-      max_tokens: 1000,
+    const aiResult = await callAIWithFallback({
+      systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
+      model: "claude-sonnet-4-20250514",
+      maxTokens: 1000,
+      temperature: 0.7,
+      jsonMode: true,
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = parseAIJSON(aiResult.content, {
+      visual: 0.25,
+      auditory: 0.25,
+      kinesthetic: 0.25,
+      readingWriting: 0.25,
+      dominant: 'visual',
+      confidence: 0.5
+    });
     return result as LearningStyleProfile;
   } catch (error) {
     console.error('Error detecting learning style:', error);
@@ -164,14 +169,22 @@ Please provide the following information in JSON format:
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: DEFAULT_MODEL_STR,
-      system: systemPrompt,
-      max_tokens: 1000,
+    const aiResult = await callAIWithFallback({
+      systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
+      model: "claude-sonnet-4-20250514",
+      maxTokens: 1000,
+      temperature: 0.7,
+      jsonMode: true,
     });
 
-    const result = JSON.parse(response.content[0].text);
+    const result = parseAIJSON(aiResult.content, {
+      currentDifficulty: 0.5,
+      recommendedDifficulty: 0.5,
+      adjustmentReason: "Unable to determine adjustment",
+      confidenceLevel: 0.5,
+      nextStepSuggestions: []
+    });
     return result as DifficultyAdjustment;
   } catch (error) {
     console.error('Error generating difficulty adjustment:', error);

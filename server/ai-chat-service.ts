@@ -1,9 +1,5 @@
-import OpenAI from "openai";
 import { storage } from "./storage";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { callAIWithFallback } from "./ai-provider-service";
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -216,18 +212,14 @@ export async function processStudyCompanionChat(
       ...recentMessages.filter(msg => msg.role !== 'system')
     ];
 
-    // Get AI response  
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: aiMessages.map(msg => ({
-        role: msg.role as 'system' | 'user' | 'assistant',
-        content: msg.content
-      })),
+    // Get AI response using unified provider
+    const aiResult = await callAIWithFallback({
+      messages: aiMessages,
       temperature: 0.7,
-      max_tokens: 800,
+      maxTokens: 800,
     });
-
-    const aiResponse = completion.choices[0]?.message?.content;
+    
+    const aiResponse = aiResult.content;
     if (!aiResponse) {
       throw new Error("Empty response from AI");
     }

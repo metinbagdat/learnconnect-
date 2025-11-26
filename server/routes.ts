@@ -8,6 +8,7 @@ import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
 import { registerControlEndpoints } from "./control-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
+import { alertSystem } from "./alert-system";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -7403,6 +7404,103 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error fetching metrics history:", error);
       res.status(500).json({ message: "Failed to fetch metrics history" });
+    }
+  });
+
+  // Alert System Endpoints
+  app.get("/api/study-planner/alerts", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const alerts = alertSystem.getActiveAlerts();
+      const stats = alertSystem.getAlertStats();
+      
+      res.json({
+        status: "success",
+        alerts,
+        stats,
+        count: alerts.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+      res.status(500).json({ message: "Failed to fetch alerts" });
+    }
+  });
+
+  app.post("/api/study-planner/alerts/dismiss", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const { alertId } = req.body;
+      if (!alertId) return res.status(400).json({ message: "Missing alertId" });
+      
+      const dismissed = alertSystem.dismissAlert(alertId);
+      
+      res.json({
+        status: dismissed ? "success" : "alert_not_found",
+        alertId,
+        dismissed,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error dismissing alert:", error);
+      res.status(500).json({ message: "Failed to dismiss alert" });
+    }
+  });
+
+  app.post("/api/study-planner/alerts/clear-all", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const cleared = alertSystem.clearAllAlerts();
+      
+      res.json({
+        status: "success",
+        clearedCount: cleared,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error clearing alerts:", error);
+      res.status(500).json({ message: "Failed to clear alerts" });
+    }
+  });
+
+  app.get("/api/study-planner/alerts/history", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const history = alertSystem.getAlertHistory();
+      
+      res.json({
+        status: "success",
+        data: history,
+        count: history.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching alert history:", error);
+      res.status(500).json({ message: "Failed to fetch alert history" });
+    }
+  });
+
+  app.get("/api/study-planner/alerts/today", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const todayAlerts = alertSystem.getAlertsByToday();
+      const stats = alertSystem.getAlertStats();
+      
+      res.json({
+        status: "success",
+        data: todayAlerts,
+        stats,
+        count: todayAlerts.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching today's alerts:", error);
+      res.status(500).json({ message: "Failed to fetch today's alerts" });
     }
   });
 

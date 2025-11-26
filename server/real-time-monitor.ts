@@ -1,4 +1,5 @@
 import { studyPlannerControl } from "./study-planner-control";
+import { alertSystem } from "./alert-system";
 
 export interface MetricsData {
   planGeneration: {
@@ -93,7 +94,7 @@ class RealTimeMonitor {
   private async collectMetrics(): Promise<void> {
     try {
       const health = studyPlannerControl.getHealthMonitorStatus();
-      const alerts = studyPlannerControl.getHealthMonitorAlerts();
+      const systemAlerts = studyPlannerControl.getHealthMonitorAlerts();
 
       // Get current timestamp
       const now = new Date();
@@ -143,14 +144,9 @@ class RealTimeMonitor {
         this.metricsHistory.shift();
       }
 
-      this.alerts = alerts.map((alert: any, index: number) => ({
-        id: `alert-${Date.now()}-${index}`,
-        type: alert.level === "critical" ? "critical" : "warning",
-        module: alert.module || "system",
-        message: alert.message,
-        timestamp: new Date().toISOString(),
-        resolved: false,
-      }));
+      // Check metrics against alert rules
+      const newAlerts = alertSystem.checkMetrics(this.metrics);
+      this.alerts = alertSystem.getActiveAlerts();
     } catch (error) {
       console.error("[RealTimeMonitor] Error collecting metrics:", error);
     }

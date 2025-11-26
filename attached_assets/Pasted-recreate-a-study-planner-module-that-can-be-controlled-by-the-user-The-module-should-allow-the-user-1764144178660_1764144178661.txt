@@ -1,0 +1,237 @@
+recreate a study-planner module that can be controlled by the user. The module should allow the user to:
+1.	Select a curriculum
+2.	Set their available study hours per day and days per week
+3.	Generate a study plan that distributes the curriculum topics over the available time
+4.	Adjust the plan dynamically if the user changes their availability or progress
+We'll break down the steps:
+Step 1: Curriculum and Topic Management
+•	We have a database of topics for each curriculum and each subject.
+Step 2: User Inputs
+•	User selects curriculum
+•	User inputs:
+o	Start date
+o	End date (or target exam date)
+o	How many hours per day they can study
+o	Which days of the week they are available (e.g., Monday to Friday)
+Step 3: Plan Generation
+•	Calculate the total available study hours: (number of weeks * days per week * hours per day)
+•	Distribute the topics (each topic has an estimated time to complete) across the available time, considering:
+o	The difficulty of the topic
+o	The importance of the topic (weightage in the exam)
+o	Prerequisites and order of topics
+Step 4: Display the Plan
+•	Show a weekly/daily breakdown of what to study.
+Step 5: Track Progress
+•	Allow the user to mark topics as completed, which will adjust the plan accordingly.
+Step 6: Adjustments
+•	If the user falls behind, the plan should be able to reschedule the remaining topics.
+Let's design the database models, then the views, and then the templates.
+Database Models:
+1.	Curriculum
+o	name (e.g., TYT, AYT)
+o	description
+2.	Subject
+o	curriculum (ForeignKey to Curriculum)
+o	name (e.g., Mathematics, Physics)
+o	color (for UI)
+o	icon (for UI)
+3.	Topic
+o	subject (ForeignKey to Subject)
+o	name
+o	estimated_hours (how long it takes to study this topic)
+o	order (to maintain sequence)
+4.	StudyPlan
+o	user (ForeignKey to User)
+o	curriculum (ForeignKey to Curriculum)
+o	start_date
+o	end_date
+o	hours_per_day
+o	days_per_week (JSON field, e.g., [1,2,3,4,5] for Mon-Fri)
+5.	StudySession
+o	study_plan (ForeignKey to StudyPlan)
+o	topic (ForeignKey to Topic)
+o	scheduled_date (the date when this topic is scheduled)
+o	completed (boolean, default False)
+o	actual_hours (if completed, how many hours it took)
+Now, let's think about the plan generation algorithm:
+1.	Get all topics for the selected curriculum, ordered by subject and then by order.
+2.	Calculate total available study hours:
+total_weeks = (end_date - start_date).days / 7
+total_hours = total_weeks * (days_per_week.length) * hours_per_day
+3.	Check if total_hours is enough to cover the total estimated hours of all topics.
+4.	If not, we can either:
+o	Extend the end date (if possible) or
+o	Reduce the topics (but we don't want to skip) so we might adjust the hours per topic? But that's not ideal.
+5.	We want to distribute the topics evenly, but also respect the order of topics within a subject.
+6.	We can break the available time into slots (each slot is one day) and assign topics to these slots.
+7.	We can use a round-robin approach per subject to ensure each subject gets regular attention.
+8.	Alternatively, we can use a priority queue where we assign the next topic from each subject in a balanced way.
+9.	We also need to account for the fact that some topics might be prerequisites for others.
+10.	We'll create a list of all topics that need to be scheduled, and then assign them to days until we run out of days or topics.
+11.	We can use the following algorithm:
+Let available_days = list of dates from start_date to end_date, excluding days not in days_per_week.
+Let subjects = list of subjects in the curriculum.
+For each subject, we have a queue of topics (in order).
+We'll assign topics to days until all topics are assigned.
+We can do:
+day_index = 0
+while there are topics left and day_index < available_days.length:
+For each subject in subjects:
+If the subject has a topic that fits in the day (considering the hours_per_day and already assigned hours that day), assign it.
+text
+ But we don't want to assign too many topics in one day. We can assign up to hours_per_day.
+This is a complex problem and we might need to use a more sophisticated scheduling algorithm.
+12.	Alternatively, we can use a simpler method:
+o	We calculate the total hours needed for each subject.
+o	We allocate a percentage of the total available hours to each subject based on the ratio of the subject's total hours to the overall total.
+o	Then we break each subject's topics into the allocated hours, respecting the order.
+13.	We can use a library like ortools for constraint programming if we want an optimal schedule, but that might be overkill.
+14.	For now, let's use a simple method:
+o	We create a list of all topics with their subject and estimated hours.
+o	We sort the topics by subject and order.
+o	We then assign topics to days in a round-robin fashion, but making sure we don't exceed hours_per_day for a day.
+Steps:
+Let available_days = [list of dates]
+Let current_day_index = 0
+Let current_day_hours_used = 0
+For each topic in topics (in order):
+text
+ If current_day_hours_used + topic.estimated_hours <= hours_per_day:
+   Assign topic to available_days[current_day_index]
+   current_day_hours_used += topic.estimated_hours
+ Else:
+   current_day_index += 1
+   current_day_hours_used = 0
+   If current_day_index >= available_days.length, break (not enough days)
+   Then assign the topic to the new day.
+But this doesn't account for multiple subjects in one day.
+15.	We can adjust to have a list of subjects and for each day, we try to take one topic from each subject until the day is full.
+16.	Given the complexity, let's start with a simple round-robin per subject:
+We'll create a list of topics for each subject.
+Then, we'll iterate over the available_days:
+For each day, we'll try to assign topics from different subjects until we reach the hours_per_day.
+We'll rotate through the subjects so that each subject gets a turn.
+Example:
+Let subjects = [Math, Physics, Chemistry]
+Let topics for Math: [M1, M2, M3], Physics: [P1, P2], Chemistry: [C1, C2, C3]
+Day1: Assign M1, then P1, then C1 -> if hours allow, otherwise stop when the day is full.
+Day2: Assign M2, then P2, then C2
+Day3: Assign M3, then C3
+But we have to consider the estimated hours of each topic.
+17.	We can do:
+available_days = ... (list of dates)
+subject_queues = {subject: deque(topics) for subject in subjects}
+for day in available_days:
+hours_remaining = hours_per_day
+# We'll iterate through the subjects in a fixed order, but we can also randomize or prioritize
+for subject in subjects:
+if hours_remaining <= 0:
+break
+if subject_queues[subject] and subject_queues[subject][0].estimated_hours <= hours_remaining:
+topic = subject_queues[subject].popleft()
+create StudySession for this topic on this day
+hours_remaining -= topic.estimated_hours
+But this might lead to one subject being finished early and then the queue for that subject is empty.
+18.	We can improve by using a while loop that continues until the day is full and we have topics.
+19.	Another idea: we can use a priority queue where the priority is the subject that has the most remaining hours (or least) and then the topic order.
+20.	Given the time, let's implement a simple version and then improve.
+We'll do:
+text
+total_topics = list of all topics for the curriculum, ordered by subject and then order.
+
+We'll split the total_topics into chunks that fit into hours_per_day, but without considering subject balance.
+
+Then we assign each chunk to a day.
+21.	But this might group many topics of the same subject in one day, which is not ideal.
+22.	Alternatively, we can use a method that assigns one topic per subject per day until we run out of topics or days.
+23.	We'll do:
+subjects = list of subjects in the curriculum
+topics_by_subject = {subject: list of topics for that subject}
+We'll create a list of iterators for each subject.
+Then, for each day in available_days:
+hours_remaining = hours_per_day
+for subject in subjects:
+if hours_remaining <= 0:
+break
+try:
+topic = next(iterator for subject)
+if topic.estimated_hours <= hours_remaining:
+assign topic to day
+hours_remaining -= topic.estimated_hours
+else:
+# put the topic back? or leave it for the next day?
+# We cannot assign this topic today because it's too long, so we skip for today and try the next subject.
+# But then we might never assign it if it's always too long? So we need to assign it even if it takes the whole day?
+# We can assign it if it's the only topic we can assign that day?
+# Let's assign it if it's the first topic and we haven't assigned anything yet.
+if hours_remaining == hours_per_day:
+# We assign it and use the whole day
+assign topic to day
+hours_remaining = 0
+else:
+# We leave it for the next day and break the inner loop? But then we might not assign it until the end.
+# Instead, we can try to assign the topic in the next day, but then we break the round-robin.
+# We'll skip for now and try the next subject.
+continue
+except StopIteration:
+# No more topics for this subject
+pass
+This method is simple but might not be efficient.
+24.	We can also pre-calculate the number of days per subject by:
+total_hours_per_subject = sum(topic.estimated_hours for topic in topics)
+total_days = len(available_days)
+Then, we allocate days to each subject in proportion to their total hours.
+Then, we assign the topics of each subject to the allocated days.
+25.	Given the complexity and time, we'll start with a very simple method:
+We'll assign topics to days in the order of the subjects and topics, without round-robin.
+We'll just assign as many topics as possible to a day until we reach hours_per_day, then move to the next day.
+This might not be balanced, but it's the simplest.
+26.	We can improve the algorithm later. Let's get the basic functionality working.
+Steps for the simple method:
+text
+    topics = Topic.objects.filter(subject__curriculum=curriculum).order_by('subject', 'order')
+    available_days = ...  # from start_date to end_date, excluding days not in days_per_week
+
+    day_index = 0
+    current_day_hours = 0
+
+    for topic in topics:
+        # If we have run out of days, break
+        if day_index >= len(available_days):
+            break
+
+        # If the topic fits in the current day, assign it
+        if current_day_hours + topic.estimated_hours <= hours_per_day:
+            # Assign topic to available_days[day_index]
+            StudySession.objects.create(
+                study_plan=plan,
+                topic=topic,
+                scheduled_date=available_days[day_index],
+                completed=False
+            )
+            current_day_hours += topic.estimated_hours
+        else:
+            # Move to the next day and assign the topic there
+            day_index += 1
+            current_day_hours = 0
+            # Check if we have more days
+            if day_index < len(available_days):
+                StudySession.objects.create(
+                    study_plan=plan,
+                    topic=topic,
+                    scheduled_date=available_days[day_index],
+                    completed=False
+                )
+                current_day_hours = topic.estimated_hours
+            else:
+                break
+27.	This method doesn't balance subjects, but it's straightforward.
+28.	We can then create a view to generate the plan and a template to display it.
+29.	We'll also need to handle the case when the user changes their plan (e.g., changes hours per day or days per week) by regenerating the plan.
+30.	We'll also need to handle progress tracking: when a user marks a session as completed, we update the progress.
+31.	We can also adjust the plan if the user falls behind by rescheduling the remaining topics.
+32.	For rescheduling, we can:
+o	Remove all future sessions (that are not completed) and then regenerate the plan from the current date with the remaining topics.
+33.	We'll create a function to regenerate the plan.
+34.	Now, let's code the models, then the views, then the templates.
+models and the plan generation function, and then the basic views and templates.

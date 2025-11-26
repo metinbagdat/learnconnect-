@@ -5,6 +5,7 @@ import { setupAuth } from "./auth";
 import { registerStripeRoutes } from "./stripe-routes";
 import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
 import { studyPlannerControl } from "./study-planner-control";
+import { controlHandlers } from "./study-planner-control-handlers";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -7281,6 +7282,65 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error initializing planner:", error);
       res.status(500).json({ message: "Failed to initialize planner" });
+    }
+  });
+
+  // Control Panel Module Action Handlers
+  app.post("/api/study-planner/module-action", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const { module, action } = req.body;
+      if (!module || !action) return res.status(400).json({ message: "Missing module or action" });
+      
+      const result = await controlHandlers.handleModuleAction(module, action, req.user.id);
+      res.json(result);
+    } catch (error) {
+      console.error("Error handling module action:", error);
+      res.status(500).json({ message: "Failed to execute module action" });
+    }
+  });
+
+  app.post("/api/study-planner/emergency-reset", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const result = await controlHandlers.handleSystemReset();
+      res.json(result);
+    } catch (error) {
+      console.error("Error in emergency reset:", error);
+      res.status(500).json({ message: "Failed to execute emergency reset" });
+    }
+  });
+
+  app.post("/api/study-planner/clear-cache", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const result = await controlHandlers.handleClearAllCache();
+      res.json(result);
+    } catch (error) {
+      console.error("Error clearing cache:", error);
+      res.status(500).json({ message: "Failed to clear cache" });
+    }
+  });
+
+  app.post("/api/study-planner/export-logs", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const result = await controlHandlers.handleExportLogs();
+      res.json(result);
+    } catch (error) {
+      console.error("Error exporting logs:", error);
+      res.status(500).json({ message: "Failed to export logs" });
+    }
+  });
+
+  app.post("/api/study-planner/restart", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const result = await controlHandlers.handleRestartPlanner();
+      res.json(result);
+    } catch (error) {
+      console.error("Error restarting planner:", error);
+      res.status(500).json({ message: "Failed to restart planner" });
     }
   });
 

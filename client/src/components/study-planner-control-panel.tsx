@@ -93,12 +93,38 @@ export function StudyPlannerControlPanel() {
   };
 
   const handleModuleAction = async (module: string, action: string) => {
-    console.log(`Action: ${action} on module: ${module}`);
+    setLoading(true);
+    try {
+      const response = await apiRequest('POST', '/api/study-planner/module-action', {
+        module,
+        action,
+      });
+      const result = await response.json();
+      if (result.success) {
+        // Refresh health status after action
+        await fetchHealthStatus();
+      }
+    } catch (error) {
+      console.error('Action failed:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSystemReset = async () => {
-    if (confirm('Are you sure you want to perform an emergency reset?')) {
-      console.log('Emergency reset initiated');
+    if (confirm('Are you sure you want to perform an emergency reset? This will reset all modules and clear caches.')) {
+      setLoading(true);
+      try {
+        const response = await apiRequest('POST', '/api/study-planner/emergency-reset', {});
+        const result = await response.json();
+        if (result.success) {
+          await fetchHealthStatus();
+        }
+      } catch (error) {
+        console.error('Emergency reset failed:', error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

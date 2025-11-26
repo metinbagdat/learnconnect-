@@ -1,8 +1,8 @@
 import { storage } from "../storage";
-import type { Module, Lesson, InsertModule, InsertLesson } from "@shared/schema";
+import type { Module, Lesson } from "@shared/schema";
 
 export class ContentManager {
-  async createModule(courseId: number, moduleData: Omit<InsertModule, "courseId">): Promise<Module | null> {
+  async createModule(courseId: number, moduleData: any): Promise<Module | undefined> {
     try {
       const module = await storage.createModule({
         ...moduleData,
@@ -16,38 +16,16 @@ export class ContentManager {
     }
   }
 
-  async updateModule(moduleId: number, updates: Partial<InsertModule>): Promise<Module | null> {
-    try {
-      const module = await storage.updateModule(moduleId, updates);
-      console.log("[ContentManager] Module updated:", moduleId);
-      return module;
-    } catch (error) {
-      console.error("[ContentManager] Error updating module:", error);
-      throw error;
-    }
-  }
-
-  async deleteModule(moduleId: number): Promise<boolean> {
-    try {
-      await storage.deleteModule(moduleId);
-      console.log("[ContentManager] Module deleted:", moduleId);
-      return true;
-    } catch (error) {
-      console.error("[ContentManager] Error deleting module:", error);
-      throw error;
-    }
-  }
-
   async getModulesByCourse(courseId: number): Promise<Module[]> {
     try {
-      return await storage.getModulesByCourse(courseId);
+      return await storage.getModules(courseId);
     } catch (error) {
       console.error("[ContentManager] Error getting modules:", error);
       return [];
     }
   }
 
-  async createLesson(moduleId: number, lessonData: Omit<InsertLesson, "moduleId">): Promise<Lesson | null> {
+  async createLesson(moduleId: number, lessonData: any): Promise<Lesson | undefined> {
     try {
       const lesson = await storage.createLesson({
         ...lessonData,
@@ -61,31 +39,9 @@ export class ContentManager {
     }
   }
 
-  async updateLesson(lessonId: number, updates: Partial<InsertLesson>): Promise<Lesson | null> {
-    try {
-      const lesson = await storage.updateLesson(lessonId, updates);
-      console.log("[ContentManager] Lesson updated:", lessonId);
-      return lesson;
-    } catch (error) {
-      console.error("[ContentManager] Error updating lesson:", error);
-      throw error;
-    }
-  }
-
-  async deleteLesson(lessonId: number): Promise<boolean> {
-    try {
-      await storage.deleteLesson(lessonId);
-      console.log("[ContentManager] Lesson deleted:", lessonId);
-      return true;
-    } catch (error) {
-      console.error("[ContentManager] Error deleting lesson:", error);
-      throw error;
-    }
-  }
-
   async getLessonsByModule(moduleId: number): Promise<Lesson[]> {
     try {
-      return await storage.getLessonsByModule(moduleId);
+      return await storage.getLessons(moduleId);
     } catch (error) {
       console.error("[ContentManager] Error getting lessons:", error);
       return [];

@@ -7,6 +7,7 @@ import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } f
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
 import { registerControlEndpoints } from "./control-endpoints";
+import { registerCourseControlEndpoints } from "./course-control-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
 import { alertSystem } from "./alert-system";
 import { predictiveMaintenanceEngine } from "./predictive-maintenance";
@@ -7351,6 +7352,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   // Register control endpoints
   registerControlEndpoints(app);
+  registerCourseControlEndpoints(app);
 
   // Real-time Monitoring Endpoints
   app.get("/api/study-planner/metrics", (app as any).ensureAuthenticated, async (req, res) => {

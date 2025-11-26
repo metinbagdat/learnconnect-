@@ -1,14 +1,9 @@
 import { storage } from "../storage";
-import type { UserCourse, UserLesson, InsertUserCourse, InsertUserLesson } from "@shared/schema";
+import type { UserCourse, UserLesson } from "@shared/schema";
 
 export class EnrollmentManager {
-  async enrollUser(userId: number, courseId: number): Promise<UserCourse | null> {
+  async enrollUser(userId: number, courseId: number): Promise<UserCourse | undefined> {
     try {
-      const existing = await storage.getUserCourse(userId, courseId);
-      if (existing) {
-        return existing;
-      }
-
       const enrollment = await storage.createUserCourse({
         userId,
         courseId,
@@ -24,43 +19,21 @@ export class EnrollmentManager {
     }
   }
 
-  async unenrollUser(userId: number, courseId: number): Promise<boolean> {
+  async updateProgress(userId: number, courseId: number, progress: number): Promise<UserCourse | undefined> {
     try {
-      await storage.deleteUserCourse(userId, courseId);
-      console.log("[EnrollmentManager] User", userId, "unenrolled from course", courseId);
-      return true;
-    } catch (error) {
-      console.error("[EnrollmentManager] Error unenrolling user:", error);
-      throw error;
-    }
-  }
-
-  async updateProgress(userId: number, courseId: number, progress: number): Promise<UserCourse | null> {
-    try {
-      const enrollment = await storage.getUserCourse(userId, courseId);
-      if (!enrollment) return null;
-
-      const updated = await storage.updateUserCourse(userId, courseId, {
+      const enrollment = await storage.updateUserCourse(userId, courseId, {
         progress: Math.min(100, Math.max(0, progress)),
       });
       console.log("[EnrollmentManager] Progress updated for user", userId, "in course", courseId);
-      return updated;
+      return enrollment;
     } catch (error) {
       console.error("[EnrollmentManager] Error updating progress:", error);
       throw error;
     }
   }
 
-  async markLessonComplete(userId: number, lessonId: number): Promise<UserLesson | null> {
+  async markLessonComplete(userId: number, lessonId: number): Promise<UserLesson | undefined> {
     try {
-      const userLesson = await storage.getUserLesson(userId, lessonId);
-      if (userLesson) {
-        return await storage.updateUserLesson(userId, lessonId, {
-          completed: true,
-          progress: 100,
-        });
-      }
-
       const created = await storage.createUserLesson({
         userId,
         lessonId,
@@ -84,27 +57,23 @@ export class EnrollmentManager {
     }
   }
 
-  async getUserProgress(userId: number, courseId: number): Promise<{ progress: number; completedLessons: number; totalLessons: number } | null> {
+  async getUserProgress(userId: number, courseId: number) {
     try {
-      const enrollment = await storage.getUserCourse(userId, courseId);
+      const userCourses = await storage.getUserCourses(userId);
+      const enrollment = userCourses.find((uc) => uc.courseId === courseId);
       if (!enrollment) return null;
 
-      const userLessons = await storage.getUserLessons(userId);
-      const courseModules = await storage.getModulesByCourse(courseId);
-      
+      const courseModules = await storage.getModules(courseId);
       let totalLessons = 0;
-      const completedLessonIds = new Set(userLessons.filter((ul) => ul.completed).map((ul) => ul.lessonId));
 
       for (const module of courseModules) {
-        const lessons = await storage.getLessonsByModule(module.id);
+        const lessons = await storage.getLessons(module.id);
         totalLessons += lessons.length;
       }
 
-      const completedLessons = completedLessonIds.size;
-
       return {
-        progress: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
-        completedLessons,
+        progress: enrollment.progress,
+        completedLessons: Math.round((enrollment.progress / 100) * totalLessons),
         totalLessons,
       };
     } catch (error) {
@@ -113,7 +82,7 @@ export class EnrollmentManager {
     }
   }
 
-  async completeEnrollment(userId: number, courseId: number): Promise<UserCourse | null> {
+  async completeEnrollment(userId: number, courseId: number): Promise<UserCourse | undefined> {
     try {
       const updated = await storage.updateUserCourse(userId, courseId, {
         completed: true,

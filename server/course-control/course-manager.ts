@@ -1,8 +1,8 @@
 import { storage } from "../storage";
-import type { Course, InsertCourse } from "@shared/schema";
+import type { Course } from "@shared/schema";
 
 export class CourseManager {
-  async createCourse(courseData: InsertCourse & { instructorId: number }): Promise<Course | null> {
+  async createCourse(courseData: any): Promise<Course | undefined> {
     try {
       const course = await storage.createCourse(courseData);
       console.log("[CourseManager] Course created:", course?.id);
@@ -13,7 +13,7 @@ export class CourseManager {
     }
   }
 
-  async updateCourse(courseId: number, updates: Partial<InsertCourse>): Promise<Course | null> {
+  async updateCourse(courseId: number, updates: Partial<Course>): Promise<Course | undefined> {
     try {
       const course = await storage.updateCourse(courseId, updates);
       console.log("[CourseManager] Course updated:", courseId);
@@ -24,29 +24,18 @@ export class CourseManager {
     }
   }
 
-  async deleteCourse(courseId: number): Promise<boolean> {
-    try {
-      await storage.deleteCourse(courseId);
-      console.log("[CourseManager] Course deleted:", courseId);
-      return true;
-    } catch (error) {
-      console.error("[CourseManager] Error deleting course:", error);
-      throw error;
-    }
-  }
-
-  async getCourse(courseId: number): Promise<Course | null> {
+  async getCourse(courseId: number): Promise<Course | undefined> {
     try {
       return await storage.getCourse(courseId);
     } catch (error) {
       console.error("[CourseManager] Error getting course:", error);
-      return null;
+      return undefined;
     }
   }
 
   async getAllCourses(): Promise<Course[]> {
     try {
-      return await storage.getAllCourses();
+      return await storage.getCourses();
     } catch (error) {
       console.error("[CourseManager] Error getting all courses:", error);
       return [];
@@ -55,14 +44,13 @@ export class CourseManager {
 
   async searchCourses(query: string): Promise<Course[]> {
     try {
-      const allCourses = await storage.getAllCourses();
+      const allCourses = await storage.getCourses();
       const lowerQuery = query.toLowerCase();
-      return allCourses.filter(
-        (c) =>
-          c.titleEn?.toLowerCase().includes(lowerQuery) ||
-          c.titleTr?.toLowerCase().includes(lowerQuery) ||
-          c.descriptionEn?.toLowerCase().includes(lowerQuery) ||
-          c.descriptionTr?.toLowerCase().includes(lowerQuery)
+      return allCourses.filter((c: Course) =>
+        (c.titleEn?.toLowerCase() || "").includes(lowerQuery) ||
+        (c.titleTr?.toLowerCase() || "").includes(lowerQuery) ||
+        (c.descriptionEn?.toLowerCase() || "").includes(lowerQuery) ||
+        (c.descriptionTr?.toLowerCase() || "").includes(lowerQuery)
       );
     } catch (error) {
       console.error("[CourseManager] Error searching courses:", error);
@@ -72,8 +60,7 @@ export class CourseManager {
 
   async getCoursesByCategory(categoryId: number): Promise<Course[]> {
     try {
-      const allCourses = await storage.getAllCourses();
-      return allCourses.filter((c) => c.categoryId === categoryId);
+      return await storage.getCoursesInCategory(categoryId);
     } catch (error) {
       console.error("[CourseManager] Error getting courses by category:", error);
       return [];
@@ -82,8 +69,8 @@ export class CourseManager {
 
   async getCoursesByInstructor(instructorId: number): Promise<Course[]> {
     try {
-      const allCourses = await storage.getAllCourses();
-      return allCourses.filter((c) => c.instructorId === instructorId);
+      const allCourses = await storage.getCourses();
+      return allCourses.filter((c: Course) => c.instructorId === instructorId);
     } catch (error) {
       console.error("[CourseManager] Error getting courses by instructor:", error);
       return [];

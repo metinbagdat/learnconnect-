@@ -6,33 +6,28 @@ export class RecommendationEngine {
     try {
       const userCourses = await storage.getUserCourses(userId);
       const enrolledCourseIds = new Set(userCourses.map((uc) => uc.courseId));
-      
-      const allCourses = await storage.getAllCourses();
+
+      const allCourses = await storage.getCourses();
       const user = await storage.getUser(userId);
 
       const recommendations = allCourses.filter((c) => !enrolledCourseIds.has(c.id));
 
-      // Score courses based on user interests
-      const scored = recommendations.map((course) => {
+      const scored = recommendations.map((course: Course) => {
         let score = 0;
 
-        // Match with user interests
         if (user?.interests && Array.isArray(user.interests)) {
           const courseTitle = (course.titleEn || "") + (course.titleTr || "");
-          const userInterests = user.interests || [];
-          for (const interest of userInterests) {
-            if (courseTitle.toLowerCase().includes(interest.toLowerCase())) {
+          for (const interest of user.interests) {
+            if (courseTitle.toLowerCase().includes((interest as string).toLowerCase())) {
               score += 30;
             }
           }
         }
 
-        // Boost popular courses
         if (course.rating && course.rating >= 4) {
           score += 20;
         }
 
-        // Prefer beginner courses
         if (course.level === "Beginner") {
           score += 10;
         }
@@ -55,11 +50,9 @@ export class RecommendationEngine {
       const course = await storage.getCourse(courseId);
       if (!course) return [];
 
-      const allCourses = await storage.getAllCourses();
+      const allCourses = await storage.getCourses();
       const related = allCourses.filter(
-        (c) =>
-          c.id !== courseId &&
-          (c.categoryId === course.categoryId || c.level === course.level)
+        (c: Course) => c.id !== courseId && (c.categoryId === course.categoryId || c.level === course.level)
       );
 
       return related.slice(0, limit);
@@ -71,10 +64,10 @@ export class RecommendationEngine {
 
   async getTrendingCourses(limit: number = 5): Promise<Course[]> {
     try {
-      const allCourses = await storage.getAllCourses();
+      const allCourses = await storage.getCourses();
       const trending = allCourses
-        .filter((c) => c.rating !== null)
-        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .filter((c: Course) => c.rating !== null)
+        .sort((a: Course, b: Course) => (b.rating || 0) - (a.rating || 0))
         .slice(0, limit);
 
       return trending;
@@ -86,11 +79,11 @@ export class RecommendationEngine {
 
   async getCoursesForLearningPath(interests: string[], limit: number = 10): Promise<Course[]> {
     try {
-      const allCourses = await storage.getAllCourses();
-      
-      const scored = allCourses.map((course) => {
+      const allCourses = await storage.getCourses();
+
+      const scored = allCourses.map((course: Course) => {
         let score = 0;
-        const courseText = (course.titleEn + course.titleTr).toLowerCase();
+        const courseText = ((course.titleEn || "") + (course.titleTr || "")).toLowerCase();
 
         for (const interest of interests) {
           if (courseText.includes(interest.toLowerCase())) {

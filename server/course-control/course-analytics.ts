@@ -3,20 +3,22 @@ import { storage } from "../storage";
 export class CourseAnalytics {
   async getCourseStats(courseId: number) {
     try {
-      const enrollments = await storage.getAllUserCourses();
-      const courseEnrollments = enrollments.filter((e) => e.courseId === courseId);
+      const allEnrollments = await storage.getAllUserCourses?.() || [];
+      const courseEnrollments = allEnrollments.filter((e: any) => e.courseId === courseId);
 
-      const completedCount = courseEnrollments.filter((e) => e.completed).length;
-      const avgProgress = courseEnrollments.length > 0
-        ? Math.round(courseEnrollments.reduce((sum, e) => sum + e.progress, 0) / courseEnrollments.length)
-        : 0;
+      const completedCount = courseEnrollments.filter((e: any) => e.completed).length;
+      const avgProgress =
+        courseEnrollments.length > 0
+          ? Math.round(courseEnrollments.reduce((sum: number, e: any) => sum + e.progress, 0) / courseEnrollments.length)
+          : 0;
 
       return {
         courseId,
         totalEnrollments: courseEnrollments.length,
         completedEnrollments: completedCount,
         averageProgress: avgProgress,
-        completionRate: courseEnrollments.length > 0 ? Math.round((completedCount / courseEnrollments.length) * 100) : 0,
+        completionRate:
+          courseEnrollments.length > 0 ? Math.round((completedCount / courseEnrollments.length) * 100) : 0,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -31,11 +33,12 @@ export class CourseAnalytics {
       const analytics = {
         userId,
         totalCoursesEnrolled: userCourses.length,
-        completedCourses: userCourses.filter((uc) => uc.completed).length,
-        averageProgress: userCourses.length > 0
-          ? Math.round(userCourses.reduce((sum, uc) => sum + uc.progress, 0) / userCourses.length)
-          : 0,
-        courses: userCourses.map((uc) => ({
+        completedCourses: userCourses.filter((uc: any) => uc.completed).length,
+        averageProgress:
+          userCourses.length > 0
+            ? Math.round(userCourses.reduce((sum: number, uc: any) => sum + uc.progress, 0) / userCourses.length)
+            : 0,
+        courses: userCourses.map((uc: any) => ({
           courseId: uc.courseId,
           progress: uc.progress,
           completed: uc.completed,
@@ -51,32 +54,10 @@ export class CourseAnalytics {
     }
   }
 
-  async getEnrollmentTrends(courseId: number) {
-    try {
-      const enrollments = await storage.getAllUserCourses();
-      const courseEnrollments = enrollments.filter((e) => e.courseId === courseId);
-
-      // Group by date
-      const trends: Record<string, number> = {};
-      for (const enrollment of courseEnrollments) {
-        const date = new Date(enrollment.enrolledAt).toISOString().split("T")[0];
-        trends[date] = (trends[date] || 0) + 1;
-      }
-
-      return {
-        courseId,
-        trends: Object.entries(trends).map(([date, count]) => ({ date, enrollments: count })),
-      };
-    } catch (error) {
-      console.error("[CourseAnalytics] Error getting enrollment trends:", error);
-      return null;
-    }
-  }
-
   async getProgressDistribution(courseId: number) {
     try {
-      const enrollments = await storage.getAllUserCourses();
-      const courseEnrollments = enrollments.filter((e) => e.courseId === courseId);
+      const allEnrollments = await storage.getAllUserCourses?.() || [];
+      const courseEnrollments = allEnrollments.filter((e: any) => e.courseId === courseId);
 
       const distribution = {
         "0-25%": 0,
@@ -113,10 +94,10 @@ export class CourseAnalytics {
 
   async getTopPerformers(courseId: number, limit: number = 10) {
     try {
-      const enrollments = await storage.getAllUserCourses();
-      const courseEnrollments = enrollments
-        .filter((e) => e.courseId === courseId)
-        .sort((a, b) => b.progress - a.progress)
+      const allEnrollments = await storage.getAllUserCourses?.() || [];
+      const courseEnrollments = allEnrollments
+        .filter((e: any) => e.courseId === courseId)
+        .sort((a: any, b: any) => b.progress - a.progress)
         .slice(0, limit);
 
       return {

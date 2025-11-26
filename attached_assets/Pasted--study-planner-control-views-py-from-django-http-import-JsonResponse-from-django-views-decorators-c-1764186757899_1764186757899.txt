@@ -1,0 +1,69 @@
+# study_planner/control_views.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import logging
+import json
+
+logger = logging.getLogger('study_planner')
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def control_module_action(request, module_name, action):
+    """Handle control actions for study planner modules"""
+    try:
+        user = request.user
+        data = json.loads(request.body)
+        
+        control_system = StudyPlannerControl()
+        
+        # Validate user permissions
+        if not control_system.has_permission(user, module_name, action):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Permission denied'
+            }, status=403)
+        
+        # Execute the requested action
+        result = control_system.execute_action(module_name, action, data)
+        
+        # Log the action
+        logger.info(f"User {user.id} executed {action} on {module_name}")
+        
+        return JsonResponse({
+            'status': 'success',
+            'action': action,
+            'module': module_name,
+            'result': result,
+            'timestamp': time.time()
+        })
+        
+    except Exception as e:
+        logger.error(f"Control action failed: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_module_status(request, module_name=None):
+    """Get status of study planner modules"""
+    try:
+        control_system = StudyPlannerControl()
+        
+        if module_name:
+            status = control_system.get_module_status(module_name)
+        else:
+            status = control_system.get_system_status()
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': status
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

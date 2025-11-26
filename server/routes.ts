@@ -6,6 +6,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
+import { registerControlEndpoints } from "./control-endpoints";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -7343,6 +7344,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       res.status(500).json({ message: "Failed to restart planner" });
     }
   });
+
+  // Register control endpoints
+  registerControlEndpoints(app);
 
   // Logout endpoint
   app.post("/api/logout", (req, res) => {

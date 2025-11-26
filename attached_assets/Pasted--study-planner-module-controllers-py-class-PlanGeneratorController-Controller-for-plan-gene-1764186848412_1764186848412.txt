@@ -1,0 +1,98 @@
+# study_planner/module_controllers.py
+class PlanGeneratorController:
+    """Controller for plan generation module"""
+    
+    def __init__(self):
+        self.generator = PlanGenerator()
+        self.cache = PlanCache()
+    
+    def restart_generation(self, user_data):
+        """Restart plan generation with new parameters"""
+        try:
+            # Clear existing plans
+            self.cache.clear_user_plans(user_data['user_id'])
+            
+            # Regenerate with new parameters
+            new_plan = self.generator.generate_plan(
+                curriculum=user_data['curriculum'],
+                preferences=user_data.get('preferences', {}),
+                force_regenerate=True
+            )
+            
+            return {
+                'status': 'restarted',
+                'plan_id': new_plan.id,
+                'generated_at': time.time()
+            }
+            
+        except Exception as e:
+            logger.error(f"Plan generation restart failed: {e}")
+            raise
+    
+    def configure_generator(self, config_data):
+        """Update plan generator configuration"""
+        try:
+            self.generator.update_configuration(config_data)
+            
+            return {
+                'status': 'configured',
+                'new_settings': config_data,
+                'updated_at': time.time()
+            }
+            
+        except Exception as e:
+            logger.error(f"Generator configuration failed: {e}")
+            raise
+    
+    def test_generation(self, test_data):
+        """Test plan generation with sample data"""
+        try:
+            test_result = self.generator.test_generation(test_data)
+            
+            return {
+                'status': 'test_completed',
+                'result': test_result,
+                'performance_metrics': self.generator.get_performance_metrics()
+            }
+            
+        except Exception as e:
+            logger.error(f"Generation test failed: {e}")
+            raise
+
+class ScheduleManagerController:
+    """Controller for schedule management module"""
+    
+    def refresh_schedules(self, user_data):
+        """Refresh all user schedules"""
+        try:
+            refreshed = self.schedule_manager.refresh_all_schedules(
+                user_data['user_id']
+            )
+            
+            return {
+                'status': 'refreshed',
+                'schedules_updated': len(refreshed),
+                'refresh_time': time.time()
+            }
+            
+        except Exception as e:
+            logger.error(f"Schedule refresh failed: {e}")
+            raise
+    
+    def optimize_schedules(self, optimization_data):
+        """Optimize schedules based on new constraints"""
+        try:
+            optimization_result = self.schedule_manager.optimize(
+                user_id=optimization_data['user_id'],
+                constraints=optimization_data.get('constraints', {})
+            )
+            
+            return {
+                'status': 'optimized',
+                'improvement_score': optimization_result['score'],
+                'changes_made': optimization_result['changes']
+            }
+            
+        except Exception as e:
+            logger.error(f"Schedule optimization failed: {e}")
+            raise

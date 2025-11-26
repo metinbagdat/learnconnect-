@@ -1,208 +1,189 @@
-# EduLearn Platform - Comprehensive E-Learning Solution
+# EduLearn - Study Planner Control & Management System
 
-## Overview
-EduLearn Platform is a sophisticated e-learning solution designed to deliver dynamic and interactive STEM and business development courses. It targets diverse learners, from early education to professional reskilling, by integrating AI-powered learning assistance, gamification features, and comprehensive learning management capabilities. The platform aims to provide a personalized and engaging educational experience, fostering continuous learning and skill development.
+## Project Overview
+Comprehensive educational platform (EduLearn) with AI-powered study planning, course management, and interactive learning features. Supports Turkish and English languages, focuses on exam preparation (TYT/AYT), includes AI study companions, personalized learning paths, and smart study planning.
 
-## User Preferences
-Preferred communication style: Simple, everyday language.
+## Latest Session: Study Planner Infrastructure Complete ✅
 
-## Deployment
-- **Custom Domain**: learnconnect.net (registered and ready to configure)
-- **Deployment Platform**: Replit (Autoscale deployment with custom domain support)
-- **Status**: ✅ Production Ready - All core features functional
-- **Last Updated**: November 24, 2025
-- **Build Status**: App running successfully on port 5000
+### Major Components Implemented
 
-## Marketing Strategy Content (Nov 24, 2025)
-✅ **Study Techniques Page** (`/study-techniques`)
-- 5 most efficient study techniques (Feynman, Time Blocking, Active Recall, Backward Study, AI Automation)
-- Bilingual content (Turkish/English)
-- Promotional route for user engagement
-- Social hashtags: #efficientlearning #studytechniques #learnconnect
-- Widget available for embedding: `StudyTechniquesWidget`
+#### 1. Study Planner Control System (`server/study-planner-control.ts`)
+**5 Integrated Modules:**
+- **Plan Generator** - Creates AI-powered study plans based on user goals
+- **Schedule Manager** - Generates daily schedules and manages study sessions
+- **Progress Tracker** - Monitors learning progress and milestone tracking
+- **Motivation Engine** - Delivers Turkish-language motivational messages
+- **Analytics Engine** - Provides comprehensive learning analytics and insights
 
-✅ **Exam Anxiety Management Page** (`/exam-anxiety`)
-- 6 proven anxiety management techniques (Anxiety Normal, Breathing, Planning, Sleep, Exercise, AI)
-- Bilingual support with full localization
-- Cross-linked with study techniques page
-- Social hashtags: #sınavkaygısı #motivasyon #başarıçıkma
-- Widget available for embedding: `AnxietyManagementWidget`
+**Features:**
+- Module initialization with user preferences
+- Health monitoring integration
+- Graceful shutdown mechanism
+- Centralized control interface
 
-✅ **Success Stories Page** (`/testimonials`)
-- 6 featured student testimonials with transformational outcomes
-- Real student names and verified achievements (net improvements, confidence gains, etc.)
-- Stats section: 5000+ students, 95% success rate, +20 avg net increase, 4.9/5 rating
-- Bilingual support with full Turkish/English localization
-- All testimonials feature 5-star ratings and specific use cases
-- Widget available for embedding: `TestimonialsWidget`
-- Social hashtags: #LearnConnect #SuccessStory #ExamPrep
+#### 2. Health Monitoring System (`server/study-planner-health-monitor.ts`)
+**Real-time Metrics Tracking:**
+- Response time tracking (per module)
+- Error rate calculations
+- User engagement scoring
+- System load monitoring
+- Active alert generation (warning/critical levels)
 
-✅ **How It Works Page** (`/how-it-works`)
-- 5-step process explaining LearnConnect journey: Sign Up → Assessment → Personal Plan → Study & Track → Achieve Success
-- Desktop and mobile optimized layouts
-- Daily user stat: 1000+ students achieving goals daily
-- Cross-linked with all other marketing pages
-- Widget available for embedding: `HowItWorksWidget`
-- Bilingual Turkish/English support
-- Direct CTA to signup and success stories
+**Key Methods:**
+- `recordOperation()` - Track performance of module operations
+- `startMonitoring()` - Begin continuous health checks
+- `getHealthStatus()` - Get current module health
+- `getAlerts()` - Retrieve system alerts
+- `getMetrics()` - Get performance metrics
 
-✅ **Premium Pricing Page** (`/premium`)
-- Limited-time offer: 1 month premium at 50% discount (99₺ instead of 199₺)
-- Countdown timer showing remaining time (last 3 days)
-- Discount code: LC50
-- 8 premium features listed: Unlimited live lessons, personal consulting, exclusive question bank, detailed analytics, priority support, custom plans, performance tracking, certificates
-- Feature comparison table: Free vs Premium
-- Bilingual Turkish/English with urgent messaging
-- Widget available for embedding: `PremiumOfferWidget`
-- Social hashtags: #indirim #fırsat #premium #learnconnect
+#### 3. Control Handlers (`server/study-planner-control-handlers.ts`)
+**Module Action Handlers for:**
+- Plan Generation: Restart, Configure, Test
+- Schedule Management: Refresh, Optimize, Clear Cache
+- Progress Tracking: Sync Data, Recalculate, Export
+- Motivation Engine: Refresh, Update Messages
+- Analytics Engine: Recalculate, Export
 
-## Architecture Overview
+**System Actions:**
+- Emergency Reset - Full system reset
+- Clear All Cache - Flush all caching
+- Export Logs - Generate system logs
+- Restart Planner - Reinitialize system
 
-### Core Features (Completed)
-1. **AI Logging System** - 3 database tables, 9 storage methods, 9 API endpoints
-2. **Adaptive Learning Engine** - Personalized task generation, real-time evaluation, dynamic adjustment
-3. **AI Reasoning Engine** - 6-step planning pipeline for daily study optimization
-4. **Bilingual Support** - Turkish/English for all content and UI
-5. **React Query Integration** - Server state management across all components
-6. **Gamification System** - Challenges, achievements, levels, leaderboards, streaks
-7. **Analytics Dashboard** - Progress tracking, performance metrics, user activity logs
-8. **Social Features** - Forum, posts, comments, user profiles, social feed
-9. **Study Management** - Time tracking, daily plans, task management, goal setting
-10. **Certificate System** - Issuance, verification, revocation with unique IDs
+#### 4. Control Endpoints (`server/control-endpoints.ts`)
+**Comprehensive REST API:**
 
-### Database Schema (PostgreSQL + Drizzle ORM)
-- **20+ tables**: Users, Courses, Modules, Lessons, Progress, Analytics, Forums, Certificates, AI Logs, etc.
-- **Bilingual fields**: All content in English and Turkish
-- **Timestamps**: ISO string for compatibility
-- **Relationships**: Foreign keys with cascading deletes
+**Module Control:**
+- `POST /api/study-planner/control/:module/:action` - Execute module actions
+- `GET /api/study-planner/status/:module?` - Get module/system status
 
-### Component Library
-**Student Interface Components:**
-- CourseCatalog, CoursePlayer, ExamPortal, Forum, Certificates, Notifications
-- StudyTimer, TaskManager, UserProfile, PracticeTest
+**Monitoring:**
+- `GET /api/study-planner/metrics` - Get performance metrics
+- `GET /api/study-planner/alerts?type=warning|critical` - Get system alerts
 
-**Dashboard Components:**
-- EnhancedTYTDashboard - Real-time TYT performance tracking with charts
-- Marketing pages with social promotion widgets
+**System Control:**
+- `POST /api/study-planner/system/:action` - Execute system actions
+- `GET /api/study-planner/audit-log?limit=50` - Get audit trail
 
-**Widget Components:**
-- StudyTechniquesWidget - Embedded learning techniques promotion
-- AnxietyManagementWidget - Embedded anxiety management content
-- TestimonialsWidget - Embedded success stories showcase
-- HowItWorksWidget - Embedded 5-step process overview
-- PremiumOfferWidget - Embedded premium pricing promotion with countdown
+**Permission System:**
+- Role-based access control (admin, instructor, user)
+- Permission checking before action execution
+- Comprehensive logging and audit trails
 
-## Technical Implementation
+#### 5. Control Panel Component (`client/src/components/study-planner-control-panel.tsx`)
+**Features:**
+- Real-time health status monitoring
+- Module status display with response times
+- Active alerts visualization
+- Module-specific action buttons
+- System metrics dashboard
+- Auto-refresh every 30 seconds
+- Beautiful, responsive design
 
-### Frontend Stack
-- React 18 + TypeScript
-- Vite for fast bundling
-- Wouter for routing
-- TanStack React Query v5 for state management
-- Tailwind CSS + shadcn/ui for styling
-- Framer Motion for animations
-- Dark mode support with CSS variables
+**Accessible at:** `/control-panel` route
 
-### Backend Stack
-- Node.js + Express.js
-- TypeScript for type safety
-- Drizzle ORM for database
-- Passport.js for authentication
-- Zod for schema validation
+#### 6. Control Panel Page (`client/src/pages/control-panel.tsx`)
+- Wraps the control panel component
+- Protected route (authentication required)
+- Full-page display of planner control center
 
-### AI Integration
-- Anthropic Claude (claude-3-5-sonnet-20241022) for content generation
-- OpenAI GPT-4 as fallback
-- Error handling with automatic provider fallback
-- Rate limiting and security validation
+---
 
-### Bilingual Implementation
-- `consolidated-language-context` for global language state
-- Named exports from context: `useLanguage()` hook
-- Fallback to English if context unavailable
-- Turkish (tr) and English (en) language codes
+## Feature Implementations Completed
 
-## Recent Fixes (Session Nov 24)
-- ✅ Fixed import paths: `@/contexts/consolidated-language-context` (not @/hooks/use-language)
-- ✅ Created Study Techniques page with 5 techniques + AI promotion
-- ✅ Created Exam Anxiety Management page with 6 anxiety tips
-- ✅ Created widget components for embedding on landing page
-- ✅ Registered both routes in App.tsx
-- ✅ Fixed JSX syntax errors in component maps
+### ✅ Automatic Assignment Creation
+- Triggered on course enrollment via `POST /api/user/courses`
+- Creates one assignment per module
+- Calculates staggered due dates (7 days apart per module)
+- Links assignments to users via `userAssignments` table
+- Added to to-do list automatically
 
-## System Architecture
+### ✅ Premium Feature Fixes
+- Fixed "bağlantı hatası" (connection error) on "kavram açıkla" button
+- Removed premium-only requirement from `/api/ai/chat` endpoint
+- Fixed premium blocks on AI companion features
+- All AI features now accessible during testing
 
-### UI/UX Decisions
-- Glass morphism aesthetic with gradients
-- Responsive grid-based layout for mobile/tablet/desktop
-- Emoji-enhanced content for visual engagement
-- Smooth animations using Framer Motion
-- Color-coded sections by topic/difficulty
+### ✅ Course Detail Enhancements
+- First module auto-expands when opening course
+- Lessons load instantly (no "No lesson selected" errors)
+- Full Turkish language support throughout
 
-### API Design
-- RESTful endpoints with consistent naming
-- Authenticated routes with session middleware
-- React Query default fetcher pre-configured
-- Proper cache invalidation on mutations
-- Bilingual content returned from endpoints
+### ✅ Unified Learning Cascade
+- Lesson completion → Course progress → Program progress → Goal progress → User level
+- All components interconnected and updating automatically
 
-### Security
-- Password hashing with validation
-- Session-based authentication
-- Protected routes via wrapper component
-- Input sanitization via Zod schemas
-- Environment variables for sensitive data
+---
 
-## File Organization
+## API Endpoints Summary
+
+### Study Planner APIs
 ```
-src/
-├── pages/
-│   ├── study-techniques.tsx          # Study techniques marketing page
-│   ├── exam-anxiety-guide.tsx        # Anxiety management guide
-│   ├── landing-page.tsx              # Main landing page
-│   ├── dashboard.tsx                 # Student dashboard
-│   └── [40+ other pages]
-├── components/
-│   ├── study-techniques-widget.tsx   # Study techniques embed
-│   ├── anxiety-management-widget.tsx # Anxiety management embed
-│   ├── [50+ UI components]
-├── contexts/
-│   ├── consolidated-language-context.tsx  # Language state
-│   ├── ai-provider.tsx               # AI feature flags
-├── pages/
-├── lib/
-│   ├── queryClient.ts                # React Query config
-│   ├── protected-route.tsx           # Auth wrapper
-server/
-├── routes.ts                         # All API endpoints
-├── storage.ts                        # Database interface
-├── auth.ts                           # Authentication logic
-├── adaptive-learning-engine.ts       # AI task generation
-├── ai-reasoning-engine.ts            # AI planning pipeline
-├── common-modules.ts                 # Utility functions
-├── error-handling.ts                 # Error & security
-shared/
-├── schema.ts                         # Drizzle schema + types
-├── bilingual-topics.ts               # TYT/AYT curriculum
+GET  /api/study-planner/health              - Get module health status
+GET  /api/study-planner/metrics             - Get performance metrics
+GET  /api/study-planner/alerts              - Get system alerts
+GET  /api/study-planner/status/:module?     - Get module/system status
+POST /api/study-planner/initialize          - Initialize planner
+POST /api/study-planner/control/:module/:action  - Execute module action
+POST /api/study-planner/system/:action      - Execute system action
+GET  /api/study-planner/audit-log           - Get audit log
 ```
 
-## Next Steps
-1. Integrate widgets into landing page hero section
-2. Add analytics tracking to both pages
-3. Create email marketing templates linking to pages
-4. Set up referral system to track page conversions
-5. Add testimonials section from successful students
-6. Create social media templates for content promotion
+### Course & Assignment APIs
+```
+POST /api/user/courses                      - Enroll in course (auto-creates assignments)
+GET  /api/assignments                       - Get user assignments
+POST /api/assignments                       - Create assignment
+GET  /api/modules/:moduleId/lessons         - Get module lessons
+```
 
-## Performance Notes
-- Memoized React components for rendering optimization
-- Lazy loading for large content sections
-- Database query optimization with proper indexing
-- CSS-in-JS with Tailwind for minimal bundle size
-- Image optimization for web (no stock images in hero areas)
+---
 
-## Bilingual Testing
-- ✅ Language context properly configured
-- ✅ All text content has EN/TR versions
-- ✅ Navigation links maintain language preference
-- ✅ Components properly import from consolidated context
+## Technology Stack
+- **Frontend:** React, TypeScript, Tailwind CSS, Shadcn UI
+- **Backend:** Express, TypeScript, Node.js
+- **Database:** PostgreSQL (Neon)
+- **AI Services:** Anthropic Claude, OpenAI (with OpenRouter fallback)
+- **Real-time:** WebSockets
+- **Language Support:** Turkish, English
+
+---
+
+## Key Architectural Decisions
+
+1. **Modular Control System** - Each module (Plan Generator, Schedule Manager, etc.) is independent but interconnected
+2. **Health Monitoring** - Continuous monitoring ensures system reliability
+3. **Permission-Based Access** - Role-based authorization (admin, instructor, user)
+4. **Cascading Progress** - Single action propagates through all connected components
+5. **AI Fallback Chain** - Anthropic → OpenAI → OpenRouter/DeepSeek for resilience
+
+---
+
+## User Preferences & Settings
+- **Language:** Turkish support prioritized throughout
+- **Assignment Creation:** Automatic on course enrollment
+- **UI/UX:** Modern, responsive design with loading states
+- **Monitoring:** Real-time health metrics visible to admins
+
+---
+
+## Notes for Future Development
+
+1. **Audit Log Persistence** - Currently placeholder; implement database storage
+2. **Cache Management** - Current cache clearing is basic; add granular control
+3. **Email Notifications** - Integrate alerts with user notification system
+4. **Advanced Analytics** - Expand analytics engine with predictive features
+5. **Mobile App** - React Native version for iOS/Android
+
+---
+
+## Recent Bug Fixes
+- Fixed lexical declaration initialization error in course-detail.tsx
+- Fixed missing `generateDailyPlan` import
+- Removed premium requirement blocks from AI endpoints
+- Fixed course enrollment assignment creation
+
+---
+
+**Last Updated:** November 26, 2025
+**Status:** Production Ready ✅

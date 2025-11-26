@@ -1001,6 +1001,14 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return newAssignment;
   }
+
+  async createUserAssignment(userAssignment: InsertUserAssignment): Promise<UserAssignment> {
+    const [newUserAssignment] = await db
+      .insert(userAssignments)
+      .values(userAssignment)
+      .returning();
+    return newUserAssignment;
+  }
   
   // Badge operations
   async getBadges(): Promise<Badge[]> {

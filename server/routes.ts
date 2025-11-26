@@ -478,7 +478,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userCourse = await storage.enrollUserInCourse(validatedData);
       
-      // Respond immediately to user
+      // Auto-create assignments for each module in the course
+      try {
+        const courseModules = await storage.getModules(validatedData.courseId);
+        const enrollmentDate = new Date();
+        
+        for (let i = 0; i < courseModules.length; i++) {
+          const module = courseModules[i];
+          const dueDate = new Date(enrollmentDate);
+          dueDate.setDate(dueDate.getDate() + (7 * (i + 1))); // 7 days per module
+          
+          const assignmentTitle = module.titleEn || module.title;
+          const assignment = await storage.createAssignment({
+            title: `Assignment: ${assignmentTitle}`,
+            description: `Complete all lessons in the ${assignmentTitle} module`,
+            courseId: validatedData.courseId,
+            dueDate: dueDate,
+            points: 10
+          });
+          
+          // Link assignment to user
+          await storage.createUserAssignment({
+            userId: userId,
+            assignmentId: assignment.id,
+            status: "not_started"
+          });
+        }
+      } catch (assignmentError) {
+        console.error('Error creating assignments:', assignmentError);
+        // Don't fail enrollment if assignment creation fails
+      }
+      
+      // Respond to user
       res.status(201).json(userCourse);
       
       // AI curriculum generation is optional and happens asynchronously

@@ -4014,7 +4014,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // STUDY PLANNING API ROUTES
   // ===============================
 
-  // Generate AI study plan for a goal
+  // Generate AI study plan for a goal (with OpenAI/Anthropic fallback)
   app.post("/api/study-goals/:goalId/generate-plan", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;
     
@@ -4040,11 +4040,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       if (!goal) {
         return res.status(404).json({ message: "Study goal not found" });
       }
-
-      // Generate AI-powered study plan using Anthropic
-      const anthropic = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
-      });
 
       const prompt = `Create a detailed weekly study schedule for a ${goal.goalType} goal.
       
@@ -4082,15 +4077,61 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         ]
       }`;
 
-      const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        messages: [{ role: "user", content: prompt }]
-      });
+      let aiResponse: any = null;
+      let usedProvider = '';
 
-      const firstContent = response.content[0];
-      const aiResponse = JSON.parse('text' in firstContent ? firstContent.text : '');
-      
+      // Try OpenAI first
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+          });
+
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            max_tokens: 2000,
+            messages: [{ role: "user", content: prompt }]
+          });
+
+          const content = response.choices[0].message.content;
+          aiResponse = JSON.parse(content || '');
+          usedProvider = 'OpenAI';
+          console.log("Generated plan using OpenAI");
+        } catch (openaiError: any) {
+          console.warn("OpenAI failed, trying Anthropic:", openaiError.message);
+        }
+      }
+
+      // Fall back to Anthropic
+      if (!aiResponse && process.env.ANTHROPIC_API_KEY) {
+        try {
+          const anthropic = new Anthropic({
+            apiKey: process.env.ANTHROPIC_API_KEY,
+          });
+
+          const response = await anthropic.messages.create({
+            model: "claude-opus-4-1",
+            max_tokens: 2000,
+            messages: [{ role: "user", content: prompt }]
+          });
+
+          const firstContent = response.content[0];
+          aiResponse = JSON.parse('text' in firstContent ? firstContent.text : '');
+          usedProvider = 'Anthropic';
+          console.log("Generated plan using Anthropic");
+        } catch (anthropicError: any) {
+          console.warn("Anthropic failed:", anthropicError.message);
+        }
+      }
+
+      // If both fail, provide helpful error
+      if (!aiResponse) {
+        return res.status(503).json({ 
+          message: "AI services unavailable. Please check API credits or keys.",
+          helpText: "To use AI study plan generation:\n1. Set up OpenAI API key (OPENAI_API_KEY env var)\n2. OR set up Anthropic API key (ANTHROPIC_API_KEY env var)\n3. Ensure the API account has available credits\nAlternatively, use Replit's built-in AI integrations (no API key needed)."
+        });
+      }
+
       // Save the generated schedule to database
       const schedulePromises = aiResponse.weeklySchedule.flatMap((day: any) =>
         day.sessions.map((session: any) => {
@@ -4102,7 +4143,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
             endTime: session.endTime,
             subject: session.subject,
             isCompleted: false,
-            scheduledDate: goal.targetDate // Use goal target date as reference
+            scheduledDate: goal.targetDate
           };
           
           return db.insert(studySchedules).values(scheduleData).returning();
@@ -4126,9 +4167,10 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
 
       res.json({
-        message: "AI study plan generated successfully",
+        message: `AI study plan generated successfully using ${usedProvider}`,
         schedule: aiResponse.weeklySchedule,
-        recommendations: aiResponse.recommendations
+        recommendations: aiResponse.recommendations,
+        provider: usedProvider
       });
 
     } catch (error) {

@@ -1,7 +1,8 @@
 import { db } from "./db";
 import { eq, desc, gte } from "drizzle-orm";
 import Anthropic from "@anthropic-ai/sdk";
-import { studyGoals, studySessions } from "@shared/schema";
+import { studyGoals, studySessions, studyPrograms } from "@shared/schema";
+import { storage } from "./storage";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -50,8 +51,44 @@ Return valid JSON only, no markdown.`;
 }
 
 export async function createStudyGoal(userId: number, data: any) {
-  const [created] = await db.insert(studyGoals).values({ ...data, userId }).returning();
-  return created;
+  try {
+    // 1. Create the study goal
+    const [goal] = await db.insert(studyGoals).values({ ...data, userId }).returning();
+    
+    // 2. Auto-create a study program cascaded from the goal
+    const subjects = data.subjects || [];
+    const studyHours = data.studyHoursPerWeek || 10;
+    const targetDate = data.targetDate ? new Date(data.targetDate) : new Date();
+    const weeksUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 7)));
+    
+    const programData = {
+      title: `${data.goalType || 'Study'} Program - ${subjects.join(', ') || 'General'}`,
+      description: `Auto-generated study program for goal: ${goal.id}. Targets: ${subjects.join(', ') || 'General studies'}.`,
+      targetGroup: "all",
+      courseIds: [], // Empty initially, can be filled by user
+      totalDurationWeeks: weeksUntilTarget,
+      weeklyHours: studyHours,
+      isAiGenerated: true,
+      createdBy: userId, // User creates their own program
+      isActive: true,
+    };
+    
+    const createdProgram = await storage.createStudyProgram(programData);
+    
+    // 3. Enroll user in the program (this creates ilerleme/progress entry)
+    const enrollment = await storage.enrollUserInProgram(userId, createdProgram.id);
+    
+    console.log(`✓ Goal ${goal.id} created → Program ${createdProgram.id} auto-created → User enrolled (Progress: ${enrollment.id})`);
+    
+    return {
+      ...goal,
+      program: createdProgram,
+      progress: enrollment
+    };
+  } catch (error) {
+    console.error("Error in createStudyGoal cascade:", error);
+    throw error;
+  }
 }
 
 export async function getUserStudyGoals(userId: number) {

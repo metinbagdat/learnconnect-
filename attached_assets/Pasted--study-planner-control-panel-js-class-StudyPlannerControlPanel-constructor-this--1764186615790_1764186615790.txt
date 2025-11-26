@@ -1,0 +1,104 @@
+// study-planner-control-panel.js
+class StudyPlannerControlPanel {
+    constructor() {
+        this.modules = {};
+        this.controlElements = {};
+        this.initializeControlPanel();
+    }
+    
+    initializeControlPanel() {
+        this.createControlInterface();
+        this.bindEventListeners();
+        this.startRealTimeMonitoring();
+    }
+    
+    createControlInterface() {
+        const controlHTML = `
+        <div class="planner-control-panel" id="planner-control-panel">
+            <div class="control-header">
+                <h3>🎛️ Study Planner Control Center</h3>
+                <div class="system-status" id="system-status">
+                    <span class="status-indicator active"></span>
+                    System Active
+                </div>
+            </div>
+            
+            <div class="control-grid">
+                <!-- Module Controls -->
+                <div class="control-module" data-module="plan_generation">
+                    <h4>📊 Plan Generation</h4>
+                    <div class="control-actions">
+                        <button class="btn btn-control" data-action="restart">Restart</button>
+                        <button class="btn btn-control" data-action="configure">Configure</button>
+                        <button class="btn btn-control" data-action="test">Test</button>
+                    </div>
+                    <div class="module-status" id="plan-generation-status">
+                        Status: <span class="status-text">Active</span>
+                    </div>
+                </div>
+                
+                <div class="control-module" data-module="schedule_management">
+                    <h4>📅 Schedule Management</h4>
+                    <div class="control-actions">
+                        <button class="btn btn-control" data-action="refresh">Refresh</button>
+                        <button class="btn btn-control" data-action="optimize">Optimize</button>
+                        <button class="btn btn-control" data-action="clear">Clear Cache</button>
+                    </div>
+                    <div class="module-status" id="schedule-management-status">
+                        Status: <span class="status-text">Active</span>
+                    </div>
+                </div>
+                
+                <div class="control-module" data-module="progress_tracking">
+                    <h4>📈 Progress Tracking</h4>
+                    <div class="control-actions">
+                        <button class="btn btn-control" data-action="sync">Sync Data</button>
+                        <button class="btn btn-control" data-action="recalculate">Recalculate</button>
+                        <button class="btn btn-control" data-action="export">Export</button>
+                    </div>
+                    <div class="module-status" id="progress-tracking-status">
+                        Status: <span class="status-text">Active</span>
+                    </div>
+                </div>
+                
+                <!-- System Controls -->
+                <div class="system-controls">
+                    <h4>⚙️ System Controls</h4>
+                    <div class="control-group">
+                        <button class="btn btn-system" id="restart-planner">Restart Planner</button>
+                        <button class="btn btn-system" id="clear-cache">Clear All Cache</button>
+                        <button class="btn btn-system" id="export-logs">Export Logs</button>
+                        <button class="btn btn-system" id="emergency-reset">Emergency Reset</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Real-time Metrics -->
+            <div class="metrics-panel">
+                <h4>📊 Real-time Metrics</h4>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="response-time">0ms</div>
+                        <div class="metric-label">Avg Response Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="error-rate">0%</div>
+                        <div class="metric-label">Error Rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="active-users">0</div>
+                        <div class="metric-label">Active Users</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="system-load">0%</div>
+                        <div class="metric-label">System Load</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', controlHTML);
+        this.initializeControls();
+    }
+}

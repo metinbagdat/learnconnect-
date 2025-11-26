@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerStripeRoutes } from "./stripe-routes";
 import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
+import { studyPlannerControl } from "./study-planner-control";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -7226,6 +7227,60 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error processing reminders:", error);
       res.status(500).json({ message: "Failed to process reminders" });
+    }
+  });
+
+  // Study Planner Control & Management System - Health Monitoring APIs
+  app.get("/api/study-planner/health", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const health = studyPlannerControl.getHealthMonitorStatus();
+      res.json(health);
+    } catch (error) {
+      console.error("Error fetching health status:", error);
+      res.status(500).json({ message: "Failed to fetch health status" });
+    }
+  });
+
+  app.get("/api/study-planner/metrics", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const metrics = studyPlannerControl.getHealthMonitorMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  app.get("/api/study-planner/alerts", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const type = req.query.type as "warning" | "critical" | undefined;
+      const alerts = studyPlannerControl.getHealthMonitorAlerts(type);
+      res.json({ alerts, count: alerts.length });
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+      res.status(500).json({ message: "Failed to fetch alerts" });
+    }
+  });
+
+  app.get("/api/study-planner/status", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const status = studyPlannerControl.getSystemStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Error fetching planner status:", error);
+      res.status(500).json({ message: "Failed to fetch planner status" });
+    }
+  });
+
+  app.post("/api/study-planner/initialize", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const preferences = req.body.preferences || {};
+      const result = await studyPlannerControl.initializePlanner(req.user.id, preferences);
+      res.json(result);
+    } catch (error) {
+      console.error("Error initializing planner:", error);
+      res.status(500).json({ message: "Failed to initialize planner" });
     }
   });
 

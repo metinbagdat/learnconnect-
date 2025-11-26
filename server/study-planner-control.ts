@@ -9,7 +9,7 @@ import {
   markSessionComplete,
   getProgressCharts,
 } from "./smart-planning";
-import { generateDailyPlan } from "./ai-daily-plan-service";
+import { HealthMonitor } from "./study-planner-health-monitor";
 
 export interface StudyPlannerModule {
   initialize(preferences: any): Promise<void>;
@@ -55,12 +55,12 @@ export class ScheduleManager implements StudyPlannerModule {
   }
 
   async getDailySchedule(userId: number, date: string) {
-    return await generateDailyPlan({
-      userId,
+    const sessions = await getUserStudySessions(userId, true);
+    return {
       date,
-      language: "tr",
-      targetStudyTime: 240,
-    });
+      sessions,
+      message: "Daily schedule retrieved successfully"
+    };
   }
 
   async getUpcomingSessions(userId: number) {
@@ -161,6 +161,7 @@ export class StudyPlannerControl {
   private userPreferences: Map<number, any> = new Map();
   private systemStatus: { [key: string]: string } = {};
   private healthCheckInterval: NodeJS.Timeout | null = null;
+  private healthMonitor: HealthMonitor;
 
   constructor() {
     this.modules = {
@@ -170,6 +171,7 @@ export class StudyPlannerControl {
       motivation_engine: new MotivationEngine(),
       analytics_engine: new AnalyticsEngine(),
     };
+    this.healthMonitor = new HealthMonitor(this);
   }
 
   async initializePlanner(userId: number, preferences: any = {}) {
@@ -184,6 +186,7 @@ export class StudyPlannerControl {
       }
 
       this._startHealthMonitoring();
+      this.healthMonitor.startMonitoring();
 
       return {
         status: "success",
@@ -245,8 +248,29 @@ export class StudyPlannerControl {
     return {
       status: "operational",
       modules: this.systemStatus,
+      health: this.healthMonitor.getHealthStatus(),
       timestamp: new Date(),
     };
+  }
+
+  getHealthMonitorStatus() {
+    return this.healthMonitor.getHealthStatus();
+  }
+
+  getHealthMonitorAlerts(type?: "warning" | "critical") {
+    return this.healthMonitor.getAlerts(type);
+  }
+
+  getHealthMonitorMetrics() {
+    return this.healthMonitor.getMetrics();
+  }
+
+  recordModuleOperation(moduleName: string, responseTime: number, success: boolean) {
+    this.healthMonitor.recordOperation(moduleName, responseTime, success);
+  }
+
+  recordModuleEngagement(moduleName: string, engagementScore: number) {
+    this.healthMonitor.recordEngagement(moduleName, engagementScore);
   }
 
   private _startHealthMonitoring() {
@@ -267,6 +291,7 @@ export class StudyPlannerControl {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
     }
+    this.healthMonitor.stopMonitoring();
     console.log("[StudyPlannerControl] Planner shutdown");
   }
 }

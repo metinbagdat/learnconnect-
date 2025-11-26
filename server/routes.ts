@@ -71,6 +71,7 @@ import { seedSkillChallenges } from "./seed-skill-challenges";
 import { generateExamLearningPath, saveExamLearningPath, generatePredefinedExamPaths } from "./entrance-exam-service";
 import { getSuggestions } from "./suggestion-service";
 import { generateAdaptiveLearningPath, updateStepProgress, generateNewRecommendations } from "./adaptive-learning-service";
+import { handleUnifiedLearningAction, getUnifiedLearningContext } from "./unified-learning-service";
 import { 
   detectLearningStyle,
   generateDifficultyAdjustment,

@@ -54,6 +54,7 @@ import HowItWorks from "@/pages/how-it-works";
 import PremiumPage from "@/pages/premium";
 import SmartPlanningDashboard from "@/pages/smart-planning-dashboard";
 import AdaptiveLearning from "@/pages/adaptive-learning";
+import ControlPanel from "@/pages/control-panel";
 
 function Router() {
   return (
@@ -113,6 +114,7 @@ function Router() {
       <ProtectedRoute path="/affiliate" component={AffiliateDashboard} />
       <ProtectedRoute path="/waitlist" component={WaitlistManagement} />
       <ProtectedRoute path="/analytics-charts" component={AnalyticsCharts} />
+      <ProtectedRoute path="/control-panel" component={ControlPanel} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,0 +1,70 @@
+// study-planner-control-handlers.js
+class ControlHandlers {
+    constructor(controlPanel) {
+        this.controlPanel = controlPanel;
+        this.initializeHandlers();
+    }
+    
+    initializeHandlers() {
+        // Module control handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-control')) {
+                this.handleModuleControl(e);
+            }
+        });
+        
+        // System control handlers
+        document.getElementById('restart-planner')?.addEventListener('click', () => this.restartPlanner());
+        document.getElementById('clear-cache')?.addEventListener('click', () => this.clearAllCache());
+        document.getElementById('export-logs')?.addEventListener('click', () => this.exportLogs());
+        document.getElementById('emergency-reset')?.addEventListener('click', () => this.emergencyReset());
+    }
+    
+    async handleModuleControl(event) {
+        const button = event.target;
+        const module = button.closest('.control-module').dataset.module;
+        const action = button.dataset.action;
+        
+        try {
+            const result = await this.executeModuleAction(module, action);
+            this.showNotification(`${module} ${action} completed`, 'success');
+            this.updateModuleStatus(module, result.status);
+        } catch (error) {
+            this.showNotification(`Failed to ${action} ${module}: ${error.message}`, 'error');
+        }
+    }
+    
+    async executeModuleAction(module, action) {
+        const endpoints = {
+            'plan_generation': {
+                'restart': '/api/study-planner/restart-generation/',
+                'configure': '/api/study-planner/configure/',
+                'test': '/api/study-planner/test-generation/'
+            },
+            'schedule_management': {
+                'refresh': '/api/schedule/refresh/',
+                'optimize': '/api/schedule/optimize/',
+                'clear': '/api/schedule/clear-cache/'
+            },
+            'progress_tracking': {
+                'sync': '/api/progress/sync/',
+                'recalculate': '/api/progress/recalculate/',
+                'export': '/api/progress/export/'
+            }
+        };
+        
+        const url = endpoints[module]?.[action];
+        if (!url) throw new Error(`Invalid action ${action} for module ${module}`);
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.getCSRFToken()
+            }
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    }
+}

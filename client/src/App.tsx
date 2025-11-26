@@ -57,6 +57,7 @@ import AdaptiveLearning from "@/pages/adaptive-learning";
 import ControlPanel from "@/pages/control-panel";
 import { MonitoringPage } from "@/pages/monitoring";
 import { PermissionsDemoPage } from "@/pages/permissions-demo";
+import { CoursesControlPage } from "@/pages/courses-control";
 
 function Router() {
   return (
@@ -119,6 +120,7 @@ function Router() {
       <ProtectedRoute path="/control-panel" component={ControlPanel} />
       <ProtectedRoute path="/monitoring" component={MonitoringPage} />
       <ProtectedRoute path="/permissions" component={PermissionsDemoPage} />
+      <ProtectedRoute path="/courses-control" component={CoursesControlPage} />
       <Route component={NotFound} />
     </Switch>
   );

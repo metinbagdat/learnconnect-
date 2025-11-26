@@ -1,0 +1,127 @@
+// courses-control-panel.js
+class CoursesControlPanel {
+    constructor() {
+        this.modules = {};
+        this.interactionMonitor = new InteractionMonitor();
+        this.initializeControlPanel();
+    }
+    
+    initializeControlPanel() {
+        this.createControlInterface();
+        this.bindControlHandlers();
+        this.startRealTimeMonitoring();
+        this.initializeInteractionTracker();
+    }
+    
+    createControlInterface() {
+        const controlHTML = `
+        <div class="courses-control-panel" id="courses-control-panel">
+            <div class="control-header">
+                <h3>📚 Courses Module Control Center</h3>
+                <div class="system-status">
+                    <span class="status-indicator active" id="courses-status"></span>
+                    <span id="courses-status-text">System Active</span>
+                </div>
+            </div>
+            
+            <div class="control-tabs">
+                <button class="tab-button active" data-tab="module-controls">Module Controls</button>
+                <button class="tab-button" data-tab="interaction-monitor">Interaction Monitor</button>
+                <button class="tab-button" data-tab="content-management">Content Management</button>
+                <button class="tab-button" data-tab="analytics-dashboard">Analytics</button>
+                <button class="tab-button" data-tab="user-management">User Management</button>
+            </div>
+            
+            <!-- Module Controls Tab -->
+            <div class="tab-content active" id="module-controls">
+                <div class="control-grid">
+                    ${this.generateModuleControls()}
+                </div>
+            </div>
+            
+            <!-- Interaction Monitor Tab -->
+            <div class="tab-content" id="interaction-monitor">
+                <div class="interaction-dashboard">
+                    <div class="real-time-interactions">
+                        <h4>🔄 Real-time Interactions</h4>
+                        <div class="interaction-list" id="interaction-list"></div>
+                    </div>
+                    <div class="interaction-flow">
+                        <h4>📊 Interaction Flow Map</h4>
+                        <div class="flow-diagram" id="interaction-flow-diagram"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System-wide Controls -->
+            <div class="system-controls-section">
+                <h4>⚙️ System-wide Controls</h4>
+                <div class="control-buttons">
+                    <button class="btn-system" id="sync-all-modules">Sync All Modules</button>
+                    <button class="btn-system" id="clear-all-cache">Clear All Cache</button>
+                    <button class="btn-system" id="export-system-logs">Export System Logs</button>
+                    <button class="btn-system" id="emergency-stop">Emergency Stop</button>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', controlHTML);
+    }
+    
+    generateModuleControls() {
+        const modulesConfig = {
+            'course_management': {
+                name: '📊 Course Management',
+                actions: ['refresh_catalog', 'update_metadata', 'sync_enrollments', 'validate_courses'],
+                status: 'active'
+            },
+            'content_delivery': {
+                name: '🎥 Content Delivery', 
+                actions: ['optimize_delivery', 'clear_cache', 'test_streaming', 'update_cdn'],
+                status: 'active'
+            },
+            'progress_tracking': {
+                name: '📈 Progress Tracking',
+                actions: ['recalculate_progress', 'sync_achievements', 'fix_stuck_progress', 'export_data'],
+                status: 'active'
+            },
+            'user_engagement': {
+                name: '💬 User Engagement',
+                actions: ['send_motivation', 'update_recommendations', 'analyze_behavior', 'trigger_reminders'],
+                status: 'active'
+            },
+            'analytics_engine': {
+                name: '📊 Analytics Engine',
+                actions: ['generate_reports', 'update_metrics', 'clear_analytics', 'export_insights'],
+                status: 'active'
+            }
+        };
+        
+        let html = '';
+        for (const [moduleId, config] of Object.entries(modulesConfig)) {
+            html += `
+            <div class="control-module" data-module="${moduleId}">
+                <div class="module-header">
+                    <h4>${config.name}</h4>
+                    <div class="module-status" data-module="${moduleId}-status">
+                        <span class="status-dot ${config.status}"></span>
+                        ${config.status}
+                    </div>
+                </div>
+                <div class="module-actions">
+                    ${config.actions.map(action => 
+                        `<button class="btn-module-action" data-module="${moduleId}" data-action="${action}">
+                            ${this.formatActionName(action)}
+                        </button>`
+                    ).join('')}
+                </div>
+                <div class="module-metrics" id="${moduleId}-metrics">
+                    <!-- Real-time metrics will be populated here -->
+                </div>
+            </div>
+            `;
+        }
+        return html;
+    }
+}

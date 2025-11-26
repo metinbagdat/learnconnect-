@@ -1,0 +1,87 @@
+// interaction-tracker.js
+class InteractionTracker {
+    constructor() {
+        this.interactions = [];
+        this.flowMap = new Map();
+        this.realtimeMonitor = new RealtimeMonitor();
+        this.initializeTracking();
+    }
+    
+    initializeTracking() {
+        // Override fetch to track all API calls
+        const originalFetch = window.fetch;
+        window.fetch = async (...args) => {
+            const startTime = performance.now();
+            const response = await originalFetch(...args);
+            const endTime = performance.now();
+            
+            this.trackApiCall(args[0], args[1], response, endTime - startTime);
+            return response;
+        };
+        
+        // Track DOM interactions
+        document.addEventListener('click', this.trackUserInteraction.bind(this));
+        document.addEventListener('input', this.trackUserInput.bind(this));
+        document.addEventListener('scroll', this.trackUserScroll.bind(this));
+    }
+    
+    trackApiCall(url, options, response, duration) {
+        const interaction = {
+            type: 'api_call',
+            timestamp: Date.now(),
+            url: url,
+            method: options?.method || 'GET',
+            duration: duration,
+            status: response.status,
+            module: this.extractModuleFromUrl(url),
+            user_id: this.getCurrentUserId()
+        };
+        
+        this.interactions.push(interaction);
+        this.updateFlowMap(interaction);
+        this.updateRealtimeDisplay(interaction);
+    }
+    
+    trackUserInteraction(event) {
+        const target = event.target;
+        if (target.classList.contains('course-related')) {
+            const interaction = {
+                type: 'user_click',
+                timestamp: Date.now(),
+                element: target.tagName,
+                classes: target.className,
+                text: target.textContent?.substring(0, 50),
+                module: this.determineModuleFromElement(target),
+                user_id: this.getCurrentUserId()
+            };
+            
+            this.interactions.push(interaction);
+        }
+    }
+    
+    updateFlowMap(interaction) {
+        const module = interaction.module;
+        if (!this.flowMap.has(module)) {
+            this.flowMap.set(module, {
+                interactions: [],
+                api_calls: 0,
+                user_actions: 0,
+                average_response_time: 0
+            });
+        }
+        
+        const moduleData = this.flowMap.get(module);
+        moduleData.interactions.push(interaction);
+        
+        if (interaction.type === 'api_call') {
+            moduleData.api_calls++;
+            moduleData.average_response_time = 
+                (moduleData.average_response_time * (moduleData.api_calls - 1) + interaction.duration) / moduleData.api_calls;
+        } else {
+            moduleData.user_actions++;
+        }
+        
+        this.flowMap.set(module, moduleData);
+        this.renderFlowDiagram();
+    }
+}

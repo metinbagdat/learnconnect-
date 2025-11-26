@@ -138,7 +138,7 @@ export class AlertSystem {
     const now = new Date().toISOString();
 
     // Check all rules
-    for (const [ruleName, rule] of this.alertRules.entries()) {
+    this.alertRules.forEach((rule, ruleName) => {
       const shouldAlert = rule.condition(metrics);
       const alertKey = ruleName;
       const existingAlert = this.activeAlerts.get(alertKey);
@@ -171,7 +171,7 @@ export class AlertSystem {
 
         console.log(`[AlertSystem] RESOLVED: ${rule.message}`);
       }
-    }
+    });
 
     // Maintain history size
     if (this.alertHistory.length > this.maxHistorySize) {

@@ -1,6 +1,7 @@
 import { Express } from "express";
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
+import { permissions } from "./permissions";
 
 const logger = {
   info: (msg: string) => console.log(`[INFO] ${new Date().toISOString()} ${msg}`),
@@ -9,57 +10,13 @@ const logger = {
 };
 
 interface ControlRequest {
-  user: { id: number; role: string };
+  user: { id: number; role: string; isPremium?: boolean; isAdmin?: boolean };
   module: string;
   action: string;
   data?: any;
 }
 
-export class ControlPermissions {
-  // Define what actions each role can perform
-  private rolePermissions: { [key: string]: { [key: string]: string[] } } = {
-    admin: {
-      plan_generation: ["Restart", "Configure", "Test"],
-      schedule_management: ["Refresh", "Optimize", "Clear Cache"],
-      progress_tracking: ["Sync Data", "Recalculate", "Export"],
-      motivation_engine: ["Refresh", "Update Messages"],
-      analytics_engine: ["Recalculate", "Export"],
-      system: ["Restart", "ClearCache", "ExportLogs", "EmergencyReset"],
-    },
-    instructor: {
-      plan_generation: ["Test"],
-      schedule_management: ["Refresh"],
-      progress_tracking: ["Sync Data", "Export"],
-      analytics_engine: ["Recalculate", "Export"],
-      system: [],
-    },
-    user: {
-      analytics_engine: ["Export"],
-      system: [],
-    },
-  };
-
-  hasPermission(
-    userId: number,
-    userRole: string,
-    module: string,
-    action: string
-  ): boolean {
-    const permissions = this.rolePermissions[userRole] || {};
-    const moduleActions = permissions[module] || [];
-    return moduleActions.includes(action);
-  }
-
-  logPermissionDenied(userId: number, module: string, action: string): void {
-    logger.warn(
-      `Permission denied for user ${userId}: ${action} on ${module}`
-    );
-  }
-}
-
 export function registerControlEndpoints(app: Express) {
-  const permissions = new ControlPermissions();
-
   // ==========================================
   // Module Control Endpoints
   // ==========================================
@@ -77,19 +34,23 @@ export function registerControlEndpoints(app: Express) {
 
         const { module, action } = req.params;
         const userId = req.user.id;
-        const userRole = req.user.role || "user";
 
-        // Permission check
-        if (!permissions.hasPermission(userId, userRole, module, action)) {
-          permissions.logPermissionDenied(userId, module, action);
+        // Permission check using unified permissions system
+        if (!permissions.hasPermission(req.user, module, action)) {
+          const userRole = permissions.getUserRole(req.user);
+          logger.warn(
+            `Permission denied for user ${userId} (${userRole}): ${action} on ${module}`
+          );
           return res.status(403).json({
             status: "error",
             message: "Permission denied",
-            details: `User role '${userRole}' cannot perform '${action}' on '${module}'`,
+            details: `Your role does not have permission to perform '${action}' on '${module}' module`,
+            userRole,
           });
         }
 
         // Log the action attempt
+        const userRole = permissions.getUserRole(req.user);
         logger.info(
           `User ${userId} (${userRole}) executing ${action} on ${module}`
         );
@@ -251,17 +212,21 @@ export function registerControlEndpoints(app: Express) {
 
         const { action } = req.params;
         const userId = req.user.id;
-        const userRole = req.user.role || "user";
 
-        // Permission check - only admins can perform system actions
-        if (!permissions.hasPermission(userId, userRole, "system", action)) {
-          permissions.logPermissionDenied(userId, "system", action);
+        // Permission check - only admins and support staff can perform system actions
+        if (!permissions.canAccessSystemControls(req.user)) {
+          const userRole = permissions.getUserRole(req.user);
+          logger.warn(
+            `Unauthorized system action attempt by user ${userId} (${userRole}): ${action}`
+          );
           return res.status(403).json({
             status: "error",
-            message: "Permission denied - only administrators can perform system actions",
+            message: "Permission denied - only administrators and support staff can perform system actions",
+            userRole,
           });
         }
 
+        const userRole = permissions.getUserRole(req.user);
         logger.info(`User ${userId} (${userRole}) executing system action: ${action}`);
 
         let result;
@@ -315,11 +280,14 @@ export function registerControlEndpoints(app: Express) {
       try {
         if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-        // Only admins and instructors can view audit logs
-        if (!["admin", "instructor"].includes(req.user.role || "user")) {
+        // Only admins can view audit logs
+        if (!permissions.canManageSystem(req.user)) {
+          const userRole = permissions.getUserRole(req.user);
+          logger.warn(`Unauthorized audit log access by user ${req.user.id} (${userRole})`);
           return res.status(403).json({
             status: "error",
-            message: "Permission denied - insufficient privileges for audit log access",
+            message: "Permission denied - only administrators can access audit logs",
+            userRole,
           });
         }
 

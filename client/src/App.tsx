@@ -56,6 +56,7 @@ import SmartPlanningDashboard from "@/pages/smart-planning-dashboard";
 import AdaptiveLearning from "@/pages/adaptive-learning";
 import ControlPanel from "@/pages/control-panel";
 import { MonitoringPage } from "@/pages/monitoring";
+import { PermissionsDemoPage } from "@/pages/permissions-demo";
 
 function Router() {
   return (
@@ -117,6 +118,7 @@ function Router() {
       <ProtectedRoute path="/analytics-charts" component={AnalyticsCharts} />
       <ProtectedRoute path="/control-panel" component={ControlPanel} />
       <ProtectedRoute path="/monitoring" component={MonitoringPage} />
+      <ProtectedRoute path="/permissions" component={PermissionsDemoPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -4080,11 +4080,12 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       let aiResponse: any = null;
       let usedProvider = '';
 
-      // Try OpenAI first
-      if (process.env.OPENAI_API_KEY) {
+      // Try OpenAI first (Replit AI integrations)
+      if (process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
         try {
           const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
+            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
           });
 
           const response = await openai.chat.completions.create({
@@ -4095,18 +4096,19 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
           const content = response.choices[0].message.content;
           aiResponse = JSON.parse(content || '');
-          usedProvider = 'OpenAI';
-          console.log("Generated plan using OpenAI");
+          usedProvider = 'OpenAI (Replit AI)';
+          console.log("Generated plan using OpenAI (Replit AI)");
         } catch (openaiError: any) {
           console.warn("OpenAI failed, trying Anthropic:", openaiError.message);
         }
       }
 
-      // Fall back to Anthropic
-      if (!aiResponse && process.env.ANTHROPIC_API_KEY) {
+      // Fall back to Anthropic (Replit AI integrations)
+      if (!aiResponse && process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY) {
         try {
           const anthropic = new Anthropic({
-            apiKey: process.env.ANTHROPIC_API_KEY,
+            apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
+            baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
           });
 
           const response = await anthropic.messages.create({
@@ -4117,8 +4119,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
           const firstContent = response.content[0];
           aiResponse = JSON.parse('text' in firstContent ? firstContent.text : '');
-          usedProvider = 'Anthropic';
-          console.log("Generated plan using Anthropic");
+          usedProvider = 'Anthropic (Replit AI)';
+          console.log("Generated plan using Anthropic (Replit AI)");
         } catch (anthropicError: any) {
           console.warn("Anthropic failed:", anthropicError.message);
         }

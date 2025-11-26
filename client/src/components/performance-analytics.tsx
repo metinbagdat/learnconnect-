@@ -141,7 +141,7 @@ export function PerformanceAnalytics() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-slate-700 dark:text-slate-300">Response time < 500ms</span>
+              <span className="text-slate-700 dark:text-slate-300">Response time below 500ms</span>
             </div>
             <span className="text-green-600 dark:text-green-400 font-semibold">
               {Math.round(metrics?.planGeneration.avgTime || 0)}ms ✅
@@ -150,28 +150,28 @@ export function PerformanceAnalytics() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-slate-700 dark:text-slate-300">System uptime > 99.5%</span>
+              <span className="text-slate-700 dark:text-slate-300">System uptime above 99.5%</span>
             </div>
             <span className="text-green-600 dark:text-green-400 font-semibold">99.9% ✅</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-slate-700 dark:text-slate-300">Error recovery > 90%</span>
+              <span className="text-slate-700 dark:text-slate-300">Error recovery above 90%</span>
             </div>
             <span className="text-green-600 dark:text-green-400 font-semibold">92% ✅</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-slate-700 dark:text-slate-300">User satisfaction > 4.5/5</span>
+              <span className="text-slate-700 dark:text-slate-300">User satisfaction above 4.5/5</span>
             </div>
             <span className="text-green-600 dark:text-green-400 font-semibold">4.7/5 ✅</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-slate-700 dark:text-slate-300">Maintenance time reduction > 70%</span>
+              <span className="text-slate-700 dark:text-slate-300">Maintenance time reduction above 70%</span>
             </div>
             <span className="text-green-600 dark:text-green-400 font-semibold">78% ✅</span>
           </div>

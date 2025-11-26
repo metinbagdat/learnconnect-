@@ -1,0 +1,68 @@
+# courses/permissions.py
+class CoursesPermissionManager:
+    """Manages permissions for courses module controls"""
+    
+    def __init__(self):
+        self.role_permissions = self.load_role_permissions()
+        self.module_permissions = self.load_module_permissions()
+    
+    def load_role_permissions(self):
+        return {
+            'student': {
+                'modules': ['content_delivery', 'progress_tracking'],
+                'actions': ['view', 'interact', 'track_progress'],
+                'data_access': ['own_progress', 'course_content']
+            },
+            'instructor': {
+                'modules': ['course_management', 'content_delivery', 'analytics_engine'],
+                'actions': ['view', 'create', 'update', 'analyze'],
+                'data_access': ['own_courses', 'student_progress']
+            },
+            'admin': {
+                'modules': ['all_modules'],
+                'actions': ['all_actions'],
+                'data_access': ['all_data']
+            },
+            'support': {
+                'modules': ['course_management', 'user_engagement', 'analytics_engine'],
+                'actions': ['view', 'troubleshoot', 'generate_reports'],
+                'data_access': ['system_metrics', 'user_support_data']
+            }
+        }
+    
+    def can_perform_action(self, user, module, action, data=None):
+        """Check if user can perform specific action"""
+        user_role = self.get_user_role(user)
+        user_permissions = self.role_permissions.get(user_role, {})
+        
+        # Check module access
+        if 'all_modules' not in user_permissions['modules']:
+            if module not in user_permissions['modules']:
+                return False
+        
+        # Check action permissions
+        if 'all_actions' not in user_permissions['actions']:
+            if action not in user_permissions['actions']:
+                return False
+        
+        # Check data access permissions
+        if data and not self.can_access_data(user, data, user_permissions):
+            return False
+        
+        return True
+    
+    def log_permission_check(self, user, module, action, granted, reason=None):
+        """Log all permission checks for audit trail"""
+        audit_log = {
+            'timestamp': time.time(),
+            'user_id': user.id,
+            'user_role': self.get_user_role(user),
+            'module': module,
+            'action': action,
+            'granted': granted,
+            'reason': reason,
+            'ip_address': self.get_user_ip()
+        }
+        
+        # Store in audit database
+        AuditLog.objects.create(**audit_log)

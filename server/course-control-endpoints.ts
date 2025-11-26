@@ -4,6 +4,8 @@ import { interactionTracker } from "./course-control/interaction-tracker";
 import { integrationManager } from "./course-control/integration-manager";
 import { registerDataFlowEndpoints } from "./course-control/data-flow-endpoints";
 import { registerAnalyticsEndpoints } from "./course-control/analytics-endpoints";
+import { registerNotificationEndpoints } from "./course-control/notification-endpoints";
+import { registerPermissionEndpoints } from "./course-control/permission-endpoints";
 import { insertCourseSchema } from "@shared/schema";
 
 export function registerCourseControlEndpoints(app: Express) {
@@ -345,9 +347,11 @@ export function registerCourseControlEndpoints(app: Express) {
     }
   });
 
-  // Register data flow and analytics endpoints
+  // Register data flow, analytics, notifications, and permissions endpoints
   registerDataFlowEndpoints(app);
   registerAnalyticsEndpoints(app);
+  registerNotificationEndpoints(app);
+  registerPermissionEndpoints(app);
 
   console.log("[CourseControl] Endpoints registered successfully");
 }

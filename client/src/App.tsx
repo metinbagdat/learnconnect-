@@ -55,6 +55,7 @@ import PremiumPage from "@/pages/premium";
 import SmartPlanningDashboard from "@/pages/smart-planning-dashboard";
 import AdaptiveLearning from "@/pages/adaptive-learning";
 import ControlPanel from "@/pages/control-panel";
+import { MonitoringPage } from "@/pages/monitoring";
 
 function Router() {
   return (
@@ -115,6 +116,7 @@ function Router() {
       <ProtectedRoute path="/waitlist" component={WaitlistManagement} />
       <ProtectedRoute path="/analytics-charts" component={AnalyticsCharts} />
       <ProtectedRoute path="/control-panel" component={ControlPanel} />
+      <ProtectedRoute path="/monitoring" component={MonitoringPage} />
       <Route component={NotFound} />
     </Switch>
   );

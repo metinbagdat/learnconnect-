@@ -1,0 +1,62 @@
+# study_planner/alert_system.py
+class AlertSystem:
+    """Real-time alert system for study planner"""
+    
+    def __init__(self):
+        self.alert_rules = self.load_alert_rules()
+        self.active_alerts = []
+    
+    def load_alert_rules(self):
+        return {
+            'high_error_rate': {
+                'condition': lambda metrics: metrics['error_rate'] > 5,
+                'message': 'High error rate detected in study planner',
+                'severity': 'high',
+                'action': 'restart_module'
+            },
+            'slow_response': {
+                'condition': lambda metrics: metrics['avg_response_time'] > 1000,
+                'message': 'Slow response times detected',
+                'severity': 'medium',
+                'action': 'optimize_queries'
+            },
+            'low_engagement': {
+                'condition': lambda metrics: metrics['user_engagement'] < 0.3,
+                'message': 'Low user engagement detected',
+                'severity': 'low',
+                'action': 'send_motivation'
+            }
+        }
+    
+    def check_metrics(self, metrics):
+        """Check metrics against alert rules"""
+        new_alerts = []
+        
+        for rule_name, rule in self.alert_rules.items():
+            if rule['condition'](metrics):
+                alert = {
+                    'id': f"{rule_name}_{int(time.time())}",
+                    'rule': rule_name,
+                    'message': rule['message'],
+                    'severity': rule['severity'],
+                    'timestamp': time.time(),
+                    'metrics': metrics
+                }
+                
+                new_alerts.append(alert)
+                self.trigger_alert_action(rule['action'], alert)
+        
+        return new_alerts
+    
+    def trigger_alert_action(self, action, alert):
+        """Trigger automatic actions for alerts"""
+        action_handlers = {
+            'restart_module': self.restart_affected_module,
+            'optimize_queries': self.optimize_database_queries,
+            'send_motivation': self.send_motivational_notifications,
+            'scale_resources': self.scale_system_resources
+        }
+        
+        handler = action_handlers.get(action)
+        if handler:
+            handler(alert)

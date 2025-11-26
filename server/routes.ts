@@ -7,6 +7,7 @@ import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } f
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
 import { registerControlEndpoints } from "./control-endpoints";
+import { realTimeMonitor } from "./real-time-monitor";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -7347,6 +7348,63 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   // Register control endpoints
   registerControlEndpoints(app);
+
+  // Real-time Monitoring Endpoints
+  app.get("/api/study-planner/metrics", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const metrics = realTimeMonitor.getMetrics();
+      const alerts = realTimeMonitor.getAlerts();
+      
+      res.json({
+        status: "success",
+        data: metrics,
+        alerts,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
+    }
+  });
+
+  app.post("/api/study-planner/metrics/export", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const format = (req.body?.format as "json" | "csv") || "json";
+      const exportedData = realTimeMonitor.exportMetrics(format);
+      
+      res.setHeader("Content-Type", format === "csv" ? "text/csv" : "application/json");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="metrics-export.${format === "csv" ? "csv" : "json"}"`
+      );
+      res.send(exportedData);
+    } catch (error) {
+      console.error("Error exporting metrics:", error);
+      res.status(500).json({ message: "Failed to export metrics" });
+    }
+  });
+
+  app.get("/api/study-planner/metrics/history", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const history = realTimeMonitor.getMetricsHistory();
+      
+      res.json({
+        status: "success",
+        data: history,
+        count: history.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching metrics history:", error);
+      res.status(500).json({ message: "Failed to fetch metrics history" });
+    }
+  });
 
   // Logout endpoint
   app.post("/api/logout", (req, res) => {

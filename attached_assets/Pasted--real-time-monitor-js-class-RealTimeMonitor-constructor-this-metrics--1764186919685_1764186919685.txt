@@ -1,0 +1,101 @@
+// real-time-monitor.js
+class RealTimeMonitor {
+    constructor() {
+        this.metrics = {};
+        this.updateInterval = 5000; // 5 seconds
+        this.charts = {};
+        this.initializeMonitor();
+    }
+    
+    initializeMonitor() {
+        this.createMetricsDashboard();
+        this.startMetricsCollection();
+        this.initializeCharts();
+    }
+    
+    createMetricsDashboard() {
+        const dashboardHTML = `
+        <div class="metrics-dashboard" id="metrics-dashboard">
+            <div class="dashboard-header">
+                <h3>📊 Study Planner Metrics</h3>
+                <div class="dashboard-controls">
+                    <button id="refresh-metrics">🔄 Refresh</button>
+                    <button id="export-metrics">📤 Export</button>
+                    <button id="toggle-auto-refresh">⏸️ Auto-refresh</button>
+                </div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-widget">
+                    <h4>Plan Generation</h4>
+                    <div class="metric-chart" id="plan-generation-chart"></div>
+                    <div class="metric-stats">
+                        <div>Success Rate: <span id="plan-success-rate">0%</span></div>
+                        <div>Avg Time: <span id="plan-avg-time">0ms</span></div>
+                        <div>Queue: <span id="plan-queue">0</span></div>
+                    </div>
+                </div>
+                
+                <div class="metric-widget">
+                    <h4>Schedule Management</h4>
+                    <div class="metric-chart" id="schedule-chart"></div>
+                    <div class="metric-stats">
+                        <div>Active Schedules: <span id="active-schedules">0</span></div>
+                        <div>Conflicts: <span id="schedule-conflicts">0</span></div>
+                        <div>Optimization Score: <span id="optimization-score">0%</span></div>
+                    </div>
+                </div>
+                
+                <div class="metric-widget">
+                    <h4>User Engagement</h4>
+                    <div class="metric-chart" id="engagement-chart"></div>
+                    <div class="metric-stats">
+                        <div>Active Users: <span id="active-users-count">0</span></div>
+                        <div>Avg Session: <span id="avg-session-time">0m</span></div>
+                        <div>Completion Rate: <span id="completion-rate">0%</span></div>
+                    </div>
+                </div>
+                
+                <div class="metric-widget">
+                    <h4>System Health</h4>
+                    <div class="metric-chart" id="system-health-chart"></div>
+                    <div class="metric-stats">
+                        <div>CPU Load: <span id="cpu-load">0%</span></div>
+                        <div>Memory Usage: <span id="memory-usage">0%</span></div>
+                        <div>Error Rate: <span id="system-error-rate">0%</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alerts-panel">
+                <h4>🚨 Active Alerts</h4>
+                <div class="alerts-list" id="alerts-list">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', dashboardHTML);
+    }
+    
+    async startMetricsCollection() {
+        while (this.autoRefresh) {
+            try {
+                const metrics = await this.fetchMetrics();
+                this.updateMetricsDisplay(metrics);
+                this.updateCharts(metrics);
+                this.checkAlerts(metrics);
+            } catch (error) {
+                console.error('Metrics collection failed:', error);
+            }
+            await this.sleep(this.updateInterval);
+        }
+    }
+    
+    async fetchMetrics() {
+        const response = await fetch('/api/study-planner/metrics/');
+        if (!response.ok) throw new Error('Failed to fetch metrics');
+        return await response.json();
+    }
+}

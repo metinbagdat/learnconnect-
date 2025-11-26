@@ -1,5 +1,6 @@
 import { studyPlannerControl } from "./study-planner-control";
 import { apiRequest } from "../client/src/lib/queryClient";
+import { getModuleController } from "./module-controllers";
 
 export class ControlHandlers {
   private controlSystem = studyPlannerControl;
@@ -36,6 +37,40 @@ export class ControlHandlers {
   }
 
   private async executeModuleAction(module: string, action: string, userId: number): Promise<any> {
+    const controller = getModuleController(module);
+    if (!controller) {
+      throw new Error(`Unknown module: ${module}`);
+    }
+
+    // Map action names to controller methods
+    const actionMap: { [key: string]: string } = {
+      Restart: "restartGeneration",
+      Configure: "configureGenerator",
+      Test: "testGeneration",
+      Refresh: "refreshSchedules",
+      Optimize: "optimizeSchedules",
+      "Clear Cache": "clearCache",
+      "Sync Data": "syncData",
+      Recalculate: "recalculateAnalytics",
+      Export: "exportAnalytics",
+      "Update Messages": "updateMessages",
+    };
+
+    const methodName = actionMap[action];
+    if (!methodName || typeof controller[methodName] !== "function") {
+      return this.fallbackExecuteAction(module, action, userId);
+    }
+
+    // Execute the controller method
+    if (methodName === "restartGeneration" || methodName === "configureGenerator") {
+      return await controller[methodName](userId, {});
+    } else {
+      return await controller[methodName](userId);
+    }
+  }
+
+  private async fallbackExecuteAction(module: string, action: string, userId: number): Promise<any> {
+    // Fallback for legacy action handling
     switch (module) {
       case "plan_generation":
         return this.handlePlanGenerationAction(action, userId);

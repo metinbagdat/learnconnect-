@@ -4,7 +4,8 @@ import { enrollmentManager } from "./enrollment-manager";
 import { recommendationEngine } from "./recommendation-engine";
 import { courseAnalytics } from "./course-analytics";
 import { coursePermissions } from "./course-permissions";
-import type { Course, InsertCourse } from "@shared/schema";
+import { interactionChainManager } from "./interaction-chain-manager";
+import type { Course } from "@shared/schema";
 
 export class CourseControl {
   // Unified course operations
@@ -14,18 +15,22 @@ export class CourseControl {
   recommendationEngine = recommendationEngine;
   courseAnalytics = courseAnalytics;
   permissions = coursePermissions;
+  interactionChain = interactionChainManager;
 
   // High-level operations combining multiple managers
-  async createCourseWithContent(
-    courseData: Omit<InsertCourse, "instructorId"> & { instructorId: number },
-    userRole: string
-  ): Promise<{ course: Course | null; status: string }> {
+  async createCourseWithContent(courseData: any, userRole: string, userId: number = 0, sessionId: string = "default"): Promise<{ course: any; status: string }> {
     if (!this.permissions.canCreateCourse(userRole)) {
       return { course: null, status: "Permission denied" };
     }
 
     try {
+      this.interactionChain.setUserContext(userId, sessionId);
+      this.interactionChain.logInteraction("course_management", "course_management", "create_course", { courseData }, sessionId);
+
       const course = await this.courseManager.createCourse(courseData);
+      
+      this.interactionChain.logInteraction("course_management", "analytics_engine", "course_created", { courseId: course?.id }, sessionId);
+      
       console.log("[CourseControl] Course created with content");
       return { course, status: "success" };
     } catch (error) {
@@ -116,9 +121,21 @@ export class CourseControl {
   getStatus(): { status: string; modules: string[]; timestamp: string } {
     return {
       status: "operational",
-      modules: ["courseManager", "contentManager", "enrollmentManager", "recommendationEngine", "courseAnalytics", "permissions"],
+      modules: [
+        "courseManager",
+        "contentManager",
+        "enrollmentManager",
+        "recommendationEngine",
+        "courseAnalytics",
+        "permissions",
+        "interactionChain",
+      ],
       timestamp: new Date().toISOString(),
     };
+  }
+
+  initializeWithUserContext(userId: number, sessionId: string): void {
+    this.interactionChain.setUserContext(userId, sessionId);
   }
 }
 

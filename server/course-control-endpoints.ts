@@ -138,5 +138,115 @@ export function registerCourseControlEndpoints(app: Express) {
     }
   });
 
+  // Interaction Chain Management Endpoints
+  app.post("/api/course-control/interaction-log", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const { sourceModule, targetModule, action, data } = req.body;
+      const sessionId = (req.session as any)?.id || "default";
+
+      const interaction = courseControl.interactionChain.logInteraction(
+        sourceModule,
+        targetModule,
+        action,
+        data,
+        sessionId
+      );
+
+      res.json({ status: "success", interaction });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to log interaction" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/recent", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const limit = parseInt((req.query.limit as string) || "20");
+      const interactions = courseControl.interactionChain.getRecentInteractions(limit);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get recent interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/user/:userId", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const userId = parseInt(req.params.userId);
+      const interactions = courseControl.interactionChain.getInteractionsByUser(userId);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/module/:moduleName", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const moduleName = req.params.moduleName;
+      const interactions = courseControl.interactionChain.getInteractionsByModule(moduleName);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get module interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/stats", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const stats = courseControl.interactionChain.getInteractionStats();
+
+      res.json({ status: "success", data: stats });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get interaction stats" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/validation-report", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const report = courseControl.interactionChain.getValidationReport();
+
+      res.json({ status: "success", data: report });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get validation report" });
+    }
+  });
+
+  app.get("/api/course-control/dependency-map", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const map = courseControl.interactionChain.getDependencyMap();
+
+      res.json({ status: "success", data: map });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get dependency map" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/flow/:moduleName", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const moduleName = req.params.moduleName;
+      const flow = courseControl.interactionChain.getInteractionFlow(moduleName);
+
+      res.json({ status: "success", data: flow });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get interaction flow" });
+    }
+  });
+
   console.log("[CourseControl] Endpoints registered successfully");
 }

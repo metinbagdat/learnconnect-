@@ -1,0 +1,60 @@
+# courses/interaction_manager.py
+class InteractionChainManager:
+    """Manages all interactions across course modules"""
+    
+    def __init__(self):
+        self.interaction_log = []
+        self.dependency_map = self._build_dependency_map()
+        self.flow_validator = FlowValidator()
+    
+    def _build_dependency_map(self):
+        """Map all module dependencies and interactions"""
+        return {
+            'course_management': {
+                'depends_on': [],
+                'triggers': ['content_delivery', 'progress_tracking', 'analytics_engine'],
+                'data_flows': ['course_metadata', 'enrollment_data']
+            },
+            'content_delivery': {
+                'depends_on': ['course_management'],
+                'triggers': ['user_engagement', 'progress_tracking'],
+                'data_flows': ['content_access', 'completion_events']
+            },
+            'progress_tracking': {
+                'depends_on': ['course_management', 'content_delivery'],
+                'triggers': ['analytics_engine', 'recommendation_engine'],
+                'data_flows': ['progress_updates', 'achievement_events']
+            },
+            'user_engagement': {
+                'depends_on': ['content_delivery'],
+                'triggers': ['analytics_engine', 'recommendation_engine'],
+                'data_flows': ['engagement_metrics', 'interaction_patterns']
+            }
+        }
+    
+    def log_interaction(self, source_module, target_module, action, data):
+        """Log every interaction between modules"""
+        interaction = {
+            'id': f"interaction_{len(self.interaction_log) + 1}",
+            'timestamp': time.time(),
+            'source': source_module,
+            'target': target_module,
+            'action': action,
+            'data': data,
+            'session_id': self._get_current_session(),
+            'user_id': self._get_current_user()
+        }
+        
+        self.interaction_log.append(interaction)
+        self._validate_interaction_flow(interaction)
+        self._propagate_interaction(interaction)
+        
+        return interaction
+    
+    def _propagate_interaction(self, interaction):
+        """Propagate interactions to dependent modules"""
+        dependent_modules = self.dependency_map.get(interaction['target'], {}).get('triggers', [])
+        
+        for module in dependent_modules:
+            if module in self.control_system.modules:
+                self.control_system.modules[module].handle_external_event(interaction)

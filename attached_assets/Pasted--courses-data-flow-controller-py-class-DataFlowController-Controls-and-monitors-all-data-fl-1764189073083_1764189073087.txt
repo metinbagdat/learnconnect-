@@ -1,0 +1,64 @@
+# courses/data_flow_controller.py
+class DataFlowController:
+    """Controls and monitors all data flow between modules"""
+    
+    def __init__(self):
+        self.data_pipelines = {}
+        self.flow_validator = DataFlowValidator()
+        self.performance_monitor = PerformanceMonitor()
+    
+    def create_data_pipeline(self, pipeline_name, source_module, target_modules):
+        """Create a managed data pipeline between modules"""
+        pipeline = {
+            'name': pipeline_name,
+            'source': source_module,
+            'targets': target_modules,
+            'data_schema': self._define_data_schema(pipeline_name),
+            'validation_rules': self._get_validation_rules(pipeline_name),
+            'performance_metrics': {},
+            'error_handling': self._get_error_handling_strategy(pipeline_name)
+        }
+        
+        self.data_pipelines[pipeline_name] = pipeline
+        self._initialize_pipeline_monitoring(pipeline)
+        
+        return pipeline
+    
+    def process_data_flow(self, pipeline_name, data):
+        """Process data through a managed pipeline"""
+        pipeline = self.data_pipelines[pipeline_name]
+        
+        try:
+            # Validate input data
+            validation_result = self.flow_validator.validate_data(
+                pipeline['data_schema'], data
+            )
+            
+            if not validation_result['valid']:
+                raise DataValidationError(validation_result['errors'])
+            
+            # Process through pipeline steps
+            processed_data = data
+            for target_module in pipeline['targets']:
+                start_time = time.time()
+                
+                processed_data = self._send_to_module(
+                    target_module, processed_data, pipeline_name
+                )
+                
+                # Update performance metrics
+                processing_time = time.time() - start_time
+                self._update_pipeline_metrics(pipeline_name, target_module, processing_time)
+            
+            # Log successful data flow
+            self._log_data_flow_completion(pipeline_name, data, processed_data)
+            
+            return {
+                'success': True,
+                'processed_data': processed_data,
+                'pipeline_metrics': pipeline['performance_metrics']
+            }
+            
+        except Exception as e:
+            self._handle_pipeline_error(pipeline_name, data, e)
+            return {'success': False, 'error': str(e)}

@@ -6,6 +6,7 @@ import { registerDataFlowEndpoints } from "./course-control/data-flow-endpoints"
 import { registerAnalyticsEndpoints } from "./course-control/analytics-endpoints";
 import { registerNotificationEndpoints } from "./course-control/notification-endpoints";
 import { registerPermissionEndpoints } from "./course-control/permission-endpoints";
+import { registerValidationEndpoints } from "./course-control/validation-endpoints";
 import { insertCourseSchema } from "@shared/schema";
 
 export function registerCourseControlEndpoints(app: Express) {
@@ -347,11 +348,12 @@ export function registerCourseControlEndpoints(app: Express) {
     }
   });
 
-  // Register data flow, analytics, notifications, and permissions endpoints
+  // Register data flow, analytics, notifications, permissions, and validation endpoints
   registerDataFlowEndpoints(app);
   registerAnalyticsEndpoints(app);
   registerNotificationEndpoints(app);
   registerPermissionEndpoints(app);
+  registerValidationEndpoints(app);
 
   console.log("[CourseControl] Endpoints registered successfully");
 }

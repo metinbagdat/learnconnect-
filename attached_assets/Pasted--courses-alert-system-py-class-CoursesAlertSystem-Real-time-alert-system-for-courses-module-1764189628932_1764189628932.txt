@@ -1,0 +1,66 @@
+# courses/alert_system.py
+class CoursesAlertSystem:
+    """Real-time alert system for courses module"""
+    
+    def __init__(self):
+        self.alert_rules = self.load_alert_rules()
+        self.active_alerts = []
+        self.notification_channels = ['dashboard', 'email', 'slack']
+    
+    def load_alert_rules(self):
+        return {
+            'high_error_rate': {
+                'condition': lambda metrics: metrics.get('error_rate', 0) > 5,
+                'message': 'High error rate in courses module',
+                'severity': 'critical',
+                'actions': ['restart_services', 'notify_admins']
+            },
+            'slow_content_delivery': {
+                'condition': lambda metrics: metrics.get('content_delivery_time', 0) > 2000,
+                'message': 'Slow content delivery detected',
+                'severity': 'high',
+                'actions': ['optimize_cdn', 'clear_cache']
+            },
+            'low_user_engagement': {
+                'condition': lambda metrics: metrics.get('engagement_rate', 0) < 0.3,
+                'message': 'Low user engagement in courses',
+                'severity': 'medium',
+                'actions': ['trigger_motivation', 'update_recommendations']
+            },
+            'data_sync_failure': {
+                'condition': lambda metrics: metrics.get('sync_success_rate', 0) < 0.9,
+                'message': 'Data synchronization issues detected',
+                'severity': 'high',
+                'actions': ['retry_sync', 'notify_technical']
+            }
+        }
+    
+    def check_metrics_and_alert(self, metrics):
+        """Check metrics against all alert rules"""
+        new_alerts = []
+        
+        for rule_name, rule in self.alert_rules.items():
+            if rule['condition'](metrics):
+                alert = self.create_alert(rule_name, rule, metrics)
+                new_alerts.append(alert)
+                
+                # Execute automatic actions
+                for action in rule['actions']:
+                    self.execute_alert_action(action, alert)
+        
+        return new_alerts
+    
+    def execute_alert_action(self, action, alert):
+        """Execute automatic actions for alerts"""
+        action_handlers = {
+            'restart_services': self.restart_affected_services,
+            'notify_admins': self.notify_administrators,
+            'optimize_cdn': self.optimize_content_delivery,
+            'clear_cache': self.clear_system_cache,
+            'trigger_motivation': self.trigger_motivation_campaign,
+            'retry_sync': self.retry_data_synchronization
+        }
+        
+        handler = action_handlers.get(action)
+        if handler:
+            handler(alert)

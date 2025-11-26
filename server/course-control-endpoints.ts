@@ -3,6 +3,7 @@ import { courseControl } from "./course-control/course-control";
 import { interactionTracker } from "./course-control/interaction-tracker";
 import { integrationManager } from "./course-control/integration-manager";
 import { registerDataFlowEndpoints } from "./course-control/data-flow-endpoints";
+import { registerAnalyticsEndpoints } from "./course-control/analytics-endpoints";
 import { insertCourseSchema } from "@shared/schema";
 
 export function registerCourseControlEndpoints(app: Express) {
@@ -149,7 +150,13 @@ export function registerCourseControlEndpoints(app: Express) {
       const { sourceModule, targetModule, action, data } = req.body;
       const sessionId = (req.session as any)?.id || "default";
 
-      const interaction = courseControl.interactionChain.logInteraction(sourceModule, targetModule, action, data, sessionId);
+      const interaction = courseControl.interactionChain.logInteraction(
+        sourceModule,
+        targetModule,
+        action,
+        data,
+        sessionId
+      );
 
       res.json({ status: "success", interaction });
     } catch (error) {
@@ -161,12 +168,38 @@ export function registerCourseControlEndpoints(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-      const limit = parseInt((req.query.limit as string) || "50");
+      const limit = parseInt((req.query.limit as string) || "20");
       const interactions = courseControl.interactionChain.getRecentInteractions(limit);
 
-      res.json({ status: "success", interactions });
+      res.json({ status: "success", interactions, count: interactions.length });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get interactions" });
+      res.status(500).json({ message: "Failed to get recent interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/user/:userId", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const userId = parseInt(req.params.userId);
+      const interactions = courseControl.interactionChain.getInteractionsByUser(userId);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/module/:moduleName", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const moduleName = req.params.moduleName;
+      const interactions = courseControl.interactionChain.getInteractionsByModule(moduleName);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get module interactions" });
     }
   });
 
@@ -178,33 +211,7 @@ export function registerCourseControlEndpoints(app: Express) {
 
       res.json({ status: "success", data: stats });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get stats" });
-    }
-  });
-
-  app.get("/api/course-control/interactions/user/:userId", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const userId = parseInt(req.params.userId);
-      const interactions = courseControl.interactionChain.getUserInteractions(userId);
-
-      res.json({ status: "success", interactions });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get user interactions" });
-    }
-  });
-
-  app.get("/api/course-control/interactions/module/:moduleName", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const moduleName = req.params.moduleName;
-      const interactions = courseControl.interactionChain.getModuleInteractions(moduleName);
-
-      res.json({ status: "success", interactions });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get module interactions" });
+      res.status(500).json({ message: "Failed to get interaction stats" });
     }
   });
 
@@ -224,9 +231,9 @@ export function registerCourseControlEndpoints(app: Express) {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-      const dependencyMap = courseControl.interactionChain.getDependencyMap();
+      const map = courseControl.interactionChain.getDependencyMap();
 
-      res.json({ status: "success", data: dependencyMap });
+      res.json({ status: "success", data: map });
     } catch (error) {
       res.status(500).json({ message: "Failed to get dependency map" });
     }
@@ -237,144 +244,11 @@ export function registerCourseControlEndpoints(app: Express) {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
       const moduleName = req.params.moduleName;
-      const flowMap = courseControl.interactionChain.getModuleTriggers(moduleName);
+      const flow = courseControl.interactionChain.getInteractionFlow(moduleName);
 
-      res.json({ status: "success", data: flowMap });
+      res.json({ status: "success", data: flow });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get module flow" });
-    }
-  });
-
-  // Integration Manager Endpoints
-  app.post("/api/course-control/integration/enroll", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const { courseId } = req.body;
-      const sessionId = (req.session as any)?.id || "default";
-
-      if (!courseId) {
-        return res.status(400).json({ message: "courseId is required" });
-      }
-
-      const chain = await integrationManager.handleCourseEnrollment(req.user.id, courseId, sessionId);
-
-      res.json({
-        status: chain.status === "success" ? "success" : "error",
-        chainId: chain.id,
-        chain,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Integration failed", error: String(error) });
-    }
-  });
-
-  app.post("/api/course-control/integration/complete", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const { courseId } = req.body;
-      const sessionId = (req.session as any)?.id || "default";
-
-      if (!courseId) {
-        return res.status(400).json({ message: "courseId is required" });
-      }
-
-      const chain = await integrationManager.handleCourseCompletion(req.user.id, courseId, sessionId);
-
-      res.json({
-        status: chain.status === "success" ? "success" : "error",
-        chainId: chain.id,
-        chain,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Integration failed", error: String(error) });
-    }
-  });
-
-  app.post("/api/course-control/integration/progress", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const { courseId, contentId, progress } = req.body;
-      const sessionId = (req.session as any)?.id || "default";
-
-      if (!courseId || contentId === undefined || progress === undefined) {
-        return res.status(400).json({ message: "courseId, contentId, and progress are required" });
-      }
-
-      const chain = await integrationManager.handleContentProgress(req.user.id, courseId, contentId, progress, sessionId);
-
-      res.json({
-        status: chain.status === "success" ? "success" : "error",
-        chainId: chain.id,
-        chain,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Integration failed", error: String(error) });
-    }
-  });
-
-  app.get("/api/course-control/integration/chain/:chainId", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const chain = integrationManager.getChainStatus(req.params.chainId);
-
-      if (!chain) {
-        return res.status(404).json({ message: "Chain not found" });
-      }
-
-      res.json({ status: "success", chain });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get chain status" });
-    }
-  });
-
-  app.get("/api/course-control/integration/history", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const limit = parseInt((req.query.limit as string) || "50");
-      const history = integrationManager.getChainHistory(limit);
-
-      res.json({
-        status: "success",
-        chains: history,
-        count: history.length,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get integration history" });
-    }
-  });
-
-  app.get("/api/course-control/integration/stats", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const stats = integrationManager.getIntegrationStats();
-
-      res.json({
-        status: "success",
-        data: stats,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get integration stats" });
-    }
-  });
-
-  app.get("/api/course-control/integration/dependencies", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
-      const map = integrationManager.getDependencyMap();
-
-      res.json({
-        status: "success",
-        data: map,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get dependency map" });
+      res.status(500).json({ message: "Failed to get interaction flow" });
     }
   });
 
@@ -384,7 +258,15 @@ export function registerCourseControlEndpoints(app: Express) {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
       const { type, module, action, duration = 0, status = 200, metadata = {} } = req.body;
-      const record = interactionTracker.recordInteraction(req.user.id, type, module, action, duration, status, metadata);
+      const record = interactionTracker.recordInteraction(
+        req.user.id,
+        type,
+        module,
+        action,
+        duration,
+        status,
+        metadata
+      );
 
       res.json({ status: "success", record });
     } catch (error) {
@@ -414,6 +296,31 @@ export function registerCourseControlEndpoints(app: Express) {
     }
   });
 
+  app.get("/api/course-control/interactions/module/:module", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const module = req.params.module;
+      const limit = parseInt((req.query.limit as string) || "50");
+      const interactions = interactionTracker.getRecentInteractions(limit, module);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get module interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/stats", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const stats = interactionTracker.getInteractionStats();
+      res.json({ status: "success", data: stats });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get interaction stats" });
+    }
+  });
+
   app.get("/api/course-control/interactions/performance-report", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -438,8 +345,9 @@ export function registerCourseControlEndpoints(app: Express) {
     }
   });
 
-  // Register data flow endpoints
+  // Register data flow and analytics endpoints
   registerDataFlowEndpoints(app);
+  registerAnalyticsEndpoints(app);
 
   console.log("[CourseControl] Endpoints registered successfully");
 }

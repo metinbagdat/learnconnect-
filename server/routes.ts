@@ -52,6 +52,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { generateCourse, saveGeneratedCourse, generateCourseRecommendations, generateLearningPath, saveLearningPath } from "./ai-service";
+import { callAIWithFallback, parseAIJSON } from "./ai-provider-service";
 import * as aiCurriculumService from "./ai-curriculum-service";
 import { 
   generateLessonTrail, 
@@ -4077,60 +4078,31 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         ]
       }`;
 
+      // Use unified AI provider with fallback
       let aiResponse: any = null;
       let usedProvider = '';
 
-      // Try OpenAI first (Replit AI integrations)
-      if (process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-        try {
-          const openai = new OpenAI({
-            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-          });
+      try {
+        const aiResult = await callAIWithFallback({
+          prompt,
+          maxTokens: 2000,
+          temperature: 0.7,
+          jsonMode: true,
+        });
 
-          const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            max_tokens: 2000,
-            messages: [{ role: "user", content: prompt }]
-          });
-
-          const content = response.choices[0].message.content;
-          aiResponse = JSON.parse(content || '');
-          usedProvider = 'OpenAI (Replit AI)';
-          console.log("Generated plan using OpenAI (Replit AI)");
-        } catch (openaiError: any) {
-          console.warn("OpenAI failed, trying Anthropic:", openaiError.message);
-        }
-      }
-
-      // Fall back to Anthropic (Replit AI integrations)
-      if (!aiResponse && process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY) {
-        try {
-          const anthropic = new Anthropic({
-            apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
-            baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
-          });
-
-          const response = await anthropic.messages.create({
-            model: "claude-opus-4-1",
-            max_tokens: 2000,
-            messages: [{ role: "user", content: prompt }]
-          });
-
-          const firstContent = response.content[0];
-          aiResponse = JSON.parse('text' in firstContent ? firstContent.text : '');
-          usedProvider = 'Anthropic (Replit AI)';
-          console.log("Generated plan using Anthropic (Replit AI)");
-        } catch (anthropicError: any) {
-          console.warn("Anthropic failed:", anthropicError.message);
-        }
-      }
-
-      // If both fail, provide helpful error
-      if (!aiResponse) {
-        return res.status(503).json({ 
+        aiResponse = parseAIJSON(aiResult.content, {});
+        usedProvider = aiResult.provider.toUpperCase();
+        console.log(`Generated plan using ${usedProvider}`);
+      } catch (error: any) {
+        return res.status(503).json({
           message: "AI services unavailable. Please check API credits or keys.",
-          helpText: "To use AI study plan generation:\n1. Set up OpenAI API key (OPENAI_API_KEY env var)\n2. OR set up Anthropic API key (ANTHROPIC_API_KEY env var)\n3. Ensure the API account has available credits\nAlternatively, use Replit's built-in AI integrations (no API key needed)."
+          error: error.message,
+        });
+      }
+
+      if (!aiResponse.weeklySchedule) {
+        return res.status(503).json({
+          message: "Failed to generate valid study plan. Please try again.",
         });
       }
 

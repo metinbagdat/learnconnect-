@@ -35,6 +35,16 @@ export default function CourseDetail() {
   const [loadingContent, setLoadingContent] = useState<boolean>(false);
   const [lessonMetadata, setLessonMetadata] = useState<any>(null);
   const [contentCache, setContentCache] = useState<Record<number, { content: string; metadata: any }>>({});
+  const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  
+  // Auto-load first module's lessons on mount
+  useEffect(() => {
+    if (modules.length > 0 && !expandedModule) {
+      const firstModule = modules[0];
+      setExpandedModule(`module-${firstModule.id}`);
+      loadLessonsForModule(firstModule.id);
+    }
+  }, [modules.length]);
   
   // Fetch course details
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
@@ -340,14 +350,20 @@ export default function CourseDetail() {
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-lg shadow-sm">
                     <div className="p-4 border-b border-neutral-100">
-                      <h2 className="text-lg font-semibold">Traditional Module View</h2>
-                      <p className="text-sm text-gray-600 mt-1">Standard course structure without AI personalization</p>
+                      <h2 className="text-lg font-semibold">
+                        {language === 'tr' ? 'Modül Listesi' : 'Traditional Module View'}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {language === 'tr' ? 'Standart kurs yapısı' : 'Standard course structure without AI personalization'}
+                      </p>
                     </div>
                     <div className="p-2">
                       <Accordion 
                         type="single" 
                         collapsible
+                        value={expandedModule || ''}
                         onValueChange={(value) => {
+                          setExpandedModule(value);
                           // Extract module ID from the value and load lessons
                           const moduleId = parseInt(value?.replace('module-', '') || '0');
                           if (moduleId > 0) loadLessonsForModule(moduleId);
@@ -464,8 +480,12 @@ export default function CourseDetail() {
                         <div className="flex items-center justify-center h-64">
                           <div className="text-center">
                             <FileText className="h-12 w-12 mx-auto text-neutral-300 mb-4" />
-                            <h3 className="text-lg font-medium text-neutral-900">No lesson selected</h3>
-                            <p className="text-neutral-500 mt-1">Select a lesson from the list to start learning.</p>
+                            <h3 className="text-lg font-medium text-neutral-900">
+                              {language === 'tr' ? 'Ders seçilmedi' : 'No lesson selected'}
+                            </h3>
+                            <p className="text-neutral-500 mt-1">
+                              {language === 'tr' ? 'Öğrenmeye başlamak için listeden bir ders seçin.' : 'Select a lesson from the list to start learning.'}
+                            </p>
                           </div>
                         </div>
                       )}

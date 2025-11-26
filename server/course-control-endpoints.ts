@@ -1,5 +1,6 @@
 import { Express } from "express";
 import { courseControl } from "./course-control/course-control";
+import { interactionTracker } from "./course-control/interaction-tracker";
 import { insertCourseSchema } from "@shared/schema";
 
 export function registerCourseControlEndpoints(app: Express) {
@@ -245,6 +246,99 @@ export function registerCourseControlEndpoints(app: Express) {
       res.json({ status: "success", data: flow });
     } catch (error) {
       res.status(500).json({ message: "Failed to get interaction flow" });
+    }
+  });
+
+  // Interaction Tracker Endpoints
+  app.post("/api/course-control/interactions/track", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const { type, module, action, duration = 0, status = 200, metadata = {} } = req.body;
+      const record = interactionTracker.recordInteraction(
+        req.user.id,
+        type,
+        module,
+        action,
+        duration,
+        status,
+        metadata
+      );
+
+      res.json({ status: "success", record });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to track interaction" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/flow-map", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const flowMap = interactionTracker.getFlowMap();
+      res.json({ status: "success", data: flowMap });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get flow map" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/flow-diagram", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const diagram = interactionTracker.getFlowDiagram();
+      res.json({ status: "success", data: diagram });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get flow diagram" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/module/:module", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const module = req.params.module;
+      const limit = parseInt((req.query.limit as string) || "50");
+      const interactions = interactionTracker.getRecentInteractions(limit, module);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get module interactions" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/stats", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const stats = interactionTracker.getInteractionStats();
+      res.json({ status: "success", data: stats });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get interaction stats" });
+    }
+  });
+
+  app.get("/api/course-control/interactions/performance-report", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const report = interactionTracker.getPerformanceReport();
+      res.json({ status: "success", data: report });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get performance report" });
+    }
+  });
+
+  app.get("/api/user/interactions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+      const limit = parseInt((req.query.limit as string) || "100");
+      const interactions = interactionTracker.getUserInteractions(req.user.id, limit);
+
+      res.json({ status: "success", interactions, count: interactions.length });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get user interactions" });
     }
   });
 

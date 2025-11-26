@@ -1,0 +1,82 @@
+# courses/integration_manager.py
+class CoursesIntegrationManager:
+    """Manages all integrations between courses module and other app modules"""
+    
+    def __init__(self):
+        self.integrations = {
+            'study_planner': StudyPlannerIntegration(),
+            'user_profile': UserProfileIntegration(),
+            'notification_system': NotificationIntegration(),
+            'achievement_system': AchievementIntegration(),
+            'social_features': SocialIntegration()
+        }
+        self.data_sync = DataSynchronizer()
+    
+    def handle_course_enrollment(self, user_id, course_id):
+        """Coordinate course enrollment across all modules"""
+        try:
+            # Log the start of cross-module interaction
+            interaction_id = self.interaction_logger.start_interaction_chain(
+                'course_enrollment', 
+                {'user_id': user_id, 'course_id': course_id}
+            )
+            
+            # Execute enrollment sequence
+            steps = [
+                ('course_management', 'validate_enrollment'),
+                ('user_profile', 'update_enrolled_courses'),
+                ('study_planner', 'add_course_to_planner'),
+                ('notification_system', 'send_enrollment_confirmation'),
+                ('achievement_system', 'check_enrollment_achievements')
+            ]
+            
+            results = {}
+            for module_name, action in steps:
+                result = self.execute_integration_step(
+                    module_name, action, 
+                    user_id, course_id, interaction_id
+                )
+                results[module_name] = result
+                
+                if not result['success']:
+                    self.handle_integration_failure(module_name, action, result)
+            
+            # Complete the interaction chain
+            self.interaction_logger.complete_interaction_chain(
+                interaction_id, results
+            )
+            
+            return {
+                'success': True,
+                'interaction_id': interaction_id,
+                'results': results
+            }
+            
+        except Exception as e:
+            logger.error(f"Course enrollment integration failed: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def execute_integration_step(self, module_name, action, *args):
+        """Execute a single integration step with full tracking"""
+        start_time = time.time()
+        
+        try:
+            module = self.integrations[module_name]
+            result = getattr(module, action)(*args)
+            
+            # Log the successful interaction
+            self.interaction_logger.log_module_interaction(
+                module_name, action, 'success',
+                time.time() - start_time, result
+            )
+            
+            return {'success': True, 'data': result}
+            
+        except Exception as e:
+            # Log the failed interaction
+            self.interaction_logger.log_module_interaction(
+                module_name, action, 'failed',
+                time.time() - start_time, {'error': str(e)}
+            )
+            
+            return {'success': False, 'error': str(e)}

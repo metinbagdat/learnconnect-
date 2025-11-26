@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useInteractionTracker } from "@/hooks/use-interaction-tracker";
 
 interface Module {
   id: string;
@@ -14,6 +15,7 @@ interface Module {
 export function CoursesControlPanel() {
   const [systemStatus, setSystemStatus] = useState("active");
   const [recentInteractions, setRecentInteractions] = useState<any[]>([]);
+  const tracker = useInteractionTracker();
 
   const { data: statusData } = useQuery({
     queryKey: ["/api/course-control/status"],
@@ -32,6 +34,16 @@ export function CoursesControlPanel() {
 
   const { data: dependencyMapData } = useQuery({
     queryKey: ["/api/course-control/dependency-map"],
+  });
+
+  const { data: flowDiagramData } = useQuery({
+    queryKey: ["/api/course-control/interactions/flow-diagram"],
+    refetchInterval: 5000,
+  });
+
+  const { data: performanceData } = useQuery({
+    queryKey: ["/api/course-control/interactions/performance-report"],
+    refetchInterval: 10000,
   });
 
   useEffect(() => {
@@ -260,23 +272,75 @@ export function CoursesControlPanel() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <Card className="bg-white dark:bg-slate-700">
-            <CardHeader>
-              <CardTitle className="text-lg">📈 Module Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {statsData?.data?.interactionsBySource &&
-                  Object.entries(statsData.data.interactionsBySource).map(([module, count]) => (
-                    <div key={module} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600">
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">From {module}</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{count}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">interactions initiated</p>
+          <div className="space-y-4">
+            <Card className="bg-white dark:bg-slate-700">
+              <CardHeader>
+                <CardTitle className="text-lg">📈 Module Analytics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {statsData?.data?.interactionsBySource &&
+                    Object.entries(statsData.data.interactionsBySource).map(([module, count]) => (
+                      <div key={module} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">From {module}</p>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{count}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">interactions initiated</p>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Flow Diagram */}
+            <Card className="bg-white dark:bg-slate-700">
+              <CardHeader>
+                <CardTitle className="text-lg">🔄 Module Flow Diagram</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {flowDiagramData?.data?.flows && flowDiagramData.data.flows.length > 0 ? (
+                    flowDiagramData.data.flows.map((flow: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-3 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600 flex items-center justify-between"
+                      >
+                        <span className="text-sm font-medium text-slate-900 dark:text-white">
+                          {flow.source} → {flow.target}
+                        </span>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded text-sm font-semibold">
+                          {flow.count}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 text-center py-4">No flows detected</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Performance Report */}
+            {performanceData?.data && (
+              <Card className="bg-white dark:bg-slate-700">
+                <CardHeader>
+                  <CardTitle className="text-lg">⚡ Performance Report</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Slowest API Calls</h4>
+                    <div className="space-y-1">
+                      {performanceData.data.slowestApis?.slice(0, 5).map((api: any, idx: number) => (
+                        <div key={idx} className="flex justify-between text-sm p-2 bg-slate-50 dark:bg-slate-800 rounded">
+                          <span className="text-slate-600 dark:text-slate-400">{api.action}</span>
+                          <span className="font-medium text-red-600 dark:text-red-400">{api.duration.toFixed(2)}ms</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         {/* Content Tab */}

@@ -7059,8 +7059,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  // Smart Planning API Routes (PREMIUM ONLY)
-  app.post("/api/study-goals", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Smart Planning"), async (req, res) => {
+  // Smart Planning API Routes
+  app.post("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const goal = await smartPlanning.createStudyGoal(req.user.id, req.body);
@@ -7071,7 +7071,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.get("/api/study-goals", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Study Goals"), async (req, res) => {
+  app.get("/api/study-goals", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const goals = await smartPlanning.getUserStudyGoals(req.user.id);
@@ -7082,7 +7082,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.patch("/api/study-goals/:id", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Study Goals"), async (req, res) => {
+  app.patch("/api/study-goals/:id", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const id = parseInt(req.params.id);
@@ -7094,7 +7094,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  app.post("/api/study-sessions", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Study Sessions"), async (req, res) => {
+  app.post("/api/study-sessions", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const session = await smartPlanning.createStudySession(req.user.id, req.body);

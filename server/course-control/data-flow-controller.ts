@@ -81,7 +81,6 @@ export class DataFlowController {
     const startTime = Date.now();
 
     try {
-      // Validate data against schema
       if (!this.validateData(data, pipeline.schema)) {
         throw new Error("Data validation failed");
       }
@@ -99,7 +98,6 @@ export class DataFlowController {
       let processedData = data;
       const stepResults: any[] = [];
 
-      // Process through each target module
       for (const target of pipeline.targets) {
         const stepStartTime = Date.now();
         try {
@@ -141,7 +139,6 @@ export class DataFlowController {
 
       const totalDuration = Date.now() - startTime;
 
-      // Update metrics
       pipeline.metrics.totalFlows++;
       pipeline.metrics.successfulFlows++;
       pipeline.metrics.lastFlowTime = Date.now();
@@ -190,7 +187,6 @@ export class DataFlowController {
   }
 
   private validateData(data: Record<string, any>, schema: Record<string, any>): boolean {
-    // Simple validation - check required fields
     if (!schema.required || !Array.isArray(schema.required)) {
       return true;
     }
@@ -209,7 +205,6 @@ export class DataFlowController {
     data: Record<string, any>,
     pipelineId: string
   ): Promise<Record<string, any>> {
-    // Simulate async module processing
     await new Promise((resolve) => setTimeout(resolve, Math.random() * 100));
 
     return {
@@ -232,7 +227,6 @@ export class DataFlowController {
 
     events.push(flowEvent);
 
-    // Maintain max size
     if (events.length > this.maxEventsPerPipeline) {
       events.shift();
     }

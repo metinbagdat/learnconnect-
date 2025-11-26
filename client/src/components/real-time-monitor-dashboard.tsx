@@ -71,7 +71,7 @@ export function RealTimeMonitorDashboard() {
   });
 
   const metrics = (metricsSnapshot as any)?.data as MetricsData | undefined;
-  const alerts = (metricsSnapshot as any)?.alerts as Alert[] | undefined;
+  const alerts: Alert[] = ((metricsSnapshot as any)?.alerts || []) as Alert[];
 
   useEffect(() => {
     if (metrics) {

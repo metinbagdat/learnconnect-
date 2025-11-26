@@ -9,6 +9,8 @@ import { controlHandlers } from "./study-planner-control-handlers";
 import { registerControlEndpoints } from "./control-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
 import { alertSystem } from "./alert-system";
+import { predictiveMaintenanceEngine } from "./predictive-maintenance";
+import { selfHealingEngine } from "./self-healing";
 import { 
   insertCourseSchema, 
   insertUserCourseSchema, 
@@ -7501,6 +7503,61 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Error fetching today's alerts:", error);
       res.status(500).json({ message: "Failed to fetch today's alerts" });
+    }
+  });
+
+  // Predictive Maintenance Endpoints
+  app.get("/api/study-planner/predictions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const predictions = predictiveMaintenanceEngine.predict();
+      
+      res.json({
+        status: "success",
+        predictions,
+        count: predictions.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching predictions:", error);
+      res.status(500).json({ message: "Failed to fetch predictions" });
+    }
+  });
+
+  // Self-Healing Status
+  app.get("/api/study-planner/healing-status", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const status = selfHealingEngine.getHealingStatus();
+      
+      res.json({
+        status: "success",
+        data: status,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error fetching healing status:", error);
+      res.status(500).json({ message: "Failed to fetch healing status" });
+    }
+  });
+
+  app.post("/api/study-planner/trigger-healing", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const result = await selfHealingEngine.checkAndHeal();
+      
+      res.json({
+        status: "success",
+        healed: result.healed,
+        actions: result.actions,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error triggering healing:", error);
+      res.status(500).json({ message: "Failed to trigger healing" });
     }
   });
 

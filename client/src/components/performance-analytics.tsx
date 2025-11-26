@@ -128,7 +128,7 @@ export function PerformanceAnalytics() {
         <div className="bg-white dark:bg-slate-700 rounded-lg p-4 shadow">
           <div className="text-sm text-slate-600 dark:text-slate-400 mb-1">Error Recovery</div>
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">92%</div>
-          <div className="text-xs text-green-600 dark:text-green-400 mt-2">✅ > 90% target</div>
+          <div className="text-xs text-green-600 dark:text-green-400 mt-2">✅ Exceeds 90% target</div>
         </div>
       </div>
 

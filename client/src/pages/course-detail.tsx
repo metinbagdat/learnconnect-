@@ -37,15 +37,6 @@ export default function CourseDetail() {
   const [contentCache, setContentCache] = useState<Record<number, { content: string; metadata: any }>>({});
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   
-  // Auto-load first module's lessons on mount
-  useEffect(() => {
-    if (modules.length > 0 && !expandedModule) {
-      const firstModule = modules[0];
-      setExpandedModule(`module-${firstModule.id}`);
-      loadLessonsForModule(firstModule.id);
-    }
-  }, [modules.length]);
-  
   // Fetch course details
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
     queryKey: [`/api/courses/${courseId}`],
@@ -167,6 +158,15 @@ export default function CourseDetail() {
       });
     }
   };
+  
+  // Auto-load first module's lessons on mount
+  useEffect(() => {
+    if (modules.length > 0 && !expandedModule) {
+      const firstModule = modules[0];
+      setExpandedModule(`module-${firstModule.id}`);
+      loadLessonsForModule(firstModule.id);
+    }
+  }, [modules.length, expandedModule, loadLessonsForModule]);
   
   if (courseLoading || modulesLoading) {
     return (

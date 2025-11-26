@@ -592,8 +592,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // AI Study Companion Chat API (PREMIUM ONLY)
-  app.post("/api/ai/chat", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Study Companion"), async (req, res) => {
+  // AI Study Companion Chat API
+  app.post("/api/ai/chat", (app as any).ensureAuthenticated, async (req, res) => {
     // Support both session-based and header-based auth
     const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
     
@@ -628,8 +628,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get chat history for the current user (PREMIUM ONLY)
-  app.get("/api/ai/chat/history", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Chat History"), async (req, res) => {
+  // Get chat history for the current user
+  app.get("/api/ai/chat/history", (app as any).ensureAuthenticated, async (req, res) => {
     // Support both session-based and header-based auth
     const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
     
@@ -4048,7 +4048,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // ===============================
 
   // Generate AI study plan for a goal (PREMIUM ONLY - with OpenAI/Anthropic fallback)
-  app.post("/api/study-goals/:goalId/generate-plan", (app as any).ensureAuthenticated, checkSubscription, requirePremium("AI Study Plan Generation"), async (req, res) => {
+  app.post("/api/study-goals/:goalId/generate-plan", (app as any).ensureAuthenticated, async (req, res) => {
     let userId: number;
     
     if (req.isAuthenticated()) {
@@ -4455,7 +4455,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Assessment analytics and history
-  app.get("/api/assessments/analytics/:userId", checkSubscription, requirePremium('detailed_analytics'), async (req, res) => {
+  app.get("/api/assessments/analytics/:userId", async (req, res) => {
     let userId;
     
     if (req.isAuthenticated()) {

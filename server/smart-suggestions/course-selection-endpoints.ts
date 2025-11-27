@@ -4,8 +4,7 @@ import { courseSelectionController } from '../course-selection-controller';
 export const courseSelectionRouter = Router();
 
 /**
- * Analyze selected courses
- * POST /api/course-selection/analyze
+ * Analyze selected courses - POST /api/course-selection/analyze
  */
 courseSelectionRouter.post('/analyze', async (req, res) => {
   try {
@@ -17,11 +16,7 @@ courseSelectionRouter.post('/analyze', async (req, res) => {
     }
 
     const analysis = await courseSelectionController.analyzeCourseSelection(courseIds);
-
-    res.json({
-      success: true,
-      data: analysis
-    });
+    res.json({ success: true, data: analysis });
   } catch (error) {
     console.error('[CourseSelection] Analyze failed:', error);
     res.status(500).json({ error: 'Failed to analyze courses' });
@@ -29,8 +24,7 @@ courseSelectionRouter.post('/analyze', async (req, res) => {
 });
 
 /**
- * Build prerequisite tree
- * POST /api/course-selection/prerequisites
+ * Build prerequisite tree - POST /api/course-selection/prerequisites
  */
 courseSelectionRouter.post('/prerequisites', async (req, res) => {
   try {
@@ -41,12 +35,8 @@ courseSelectionRouter.post('/prerequisites', async (req, res) => {
       return res.status(400).json({ error: 'courseIds must be an array' });
     }
 
-    const prerequisiteMap = courseSelectionController.buildPrerequisiteTree(courseIds);
-
-    res.json({
-      success: true,
-      data: prerequisiteMap
-    });
+    const prerequisites = courseSelectionController.buildPrerequisiteTree(courseIds);
+    res.json({ success: true, data: prerequisites });
   } catch (error) {
     console.error('[CourseSelection] Prerequisites failed:', error);
     res.status(500).json({ error: 'Failed to build prerequisite tree' });
@@ -54,8 +44,7 @@ courseSelectionRouter.post('/prerequisites', async (req, res) => {
 });
 
 /**
- * Build optimal learning sequence
- * POST /api/course-selection/sequence
+ * Build optimal learning sequence - POST /api/course-selection/sequence
  */
 courseSelectionRouter.post('/sequence', async (req, res) => {
   try {
@@ -67,11 +56,7 @@ courseSelectionRouter.post('/sequence', async (req, res) => {
     }
 
     const sequence = courseSelectionController.buildOptimalSequence(courseIds, constraints);
-
-    res.json({
-      success: true,
-      data: sequence
-    });
+    res.json({ success: true, data: sequence });
   } catch (error) {
     console.error('[CourseSelection] Sequence failed:', error);
     res.status(500).json({ error: 'Failed to build learning sequence' });
@@ -79,8 +64,7 @@ courseSelectionRouter.post('/sequence', async (req, res) => {
 });
 
 /**
- * Build curriculum structure
- * POST /api/course-selection/structure
+ * Build curriculum structure - POST /api/course-selection/structure
  */
 courseSelectionRouter.post('/structure', async (req, res) => {
   try {
@@ -93,11 +77,7 @@ courseSelectionRouter.post('/structure', async (req, res) => {
 
     const sequence = courseSelectionController.buildOptimalSequence(courseIds, constraints);
     const structure = courseSelectionController.buildCurriculumStructure(sequence, constraints);
-
-    res.json({
-      success: true,
-      data: structure
-    });
+    res.json({ success: true, data: structure });
   } catch (error) {
     console.error('[CourseSelection] Structure failed:', error);
     res.status(500).json({ error: 'Failed to build curriculum structure' });
@@ -105,8 +85,7 @@ courseSelectionRouter.post('/structure', async (req, res) => {
 });
 
 /**
- * Get completion estimate
- * POST /api/course-selection/estimate
+ * Get completion estimate - POST /api/course-selection/estimate
  */
 courseSelectionRouter.post('/estimate', async (req, res) => {
   try {
@@ -119,11 +98,7 @@ courseSelectionRouter.post('/estimate', async (req, res) => {
 
     const sequence = courseSelectionController.buildOptimalSequence(courseIds, constraints);
     const estimate = courseSelectionController.estimateCompletionTime(sequence);
-
-    res.json({
-      success: true,
-      data: estimate
-    });
+    res.json({ success: true, data: estimate });
   } catch (error) {
     console.error('[CourseSelection] Estimate failed:', error);
     res.status(500).json({ error: 'Failed to estimate completion time' });
@@ -131,8 +106,7 @@ courseSelectionRouter.post('/estimate', async (req, res) => {
 });
 
 /**
- * Get difficulty curve
- * POST /api/course-selection/difficulty-curve
+ * Get difficulty curve - POST /api/course-selection/difficulty-curve
  */
 courseSelectionRouter.post('/difficulty-curve', async (req, res) => {
   try {
@@ -144,12 +118,8 @@ courseSelectionRouter.post('/difficulty-curve', async (req, res) => {
     }
 
     const sequence = courseSelectionController.buildOptimalSequence(courseIds, constraints);
-    const difficultyCurve = courseSelectionController.calculateDifficultyCurve(sequence);
-
-    res.json({
-      success: true,
-      data: difficultyCurve
-    });
+    const curve = courseSelectionController.calculateDifficultyCurve(sequence);
+    res.json({ success: true, data: curve });
   } catch (error) {
     console.error('[CourseSelection] Difficulty curve failed:', error);
     res.status(500).json({ error: 'Failed to calculate difficulty curve' });
@@ -157,8 +127,7 @@ courseSelectionRouter.post('/difficulty-curve', async (req, res) => {
 });
 
 /**
- * Get complete curriculum plan
- * POST /api/course-selection/plan
+ * Get complete curriculum plan - POST /api/course-selection/plan
  */
 courseSelectionRouter.post('/plan', async (req, res) => {
   try {

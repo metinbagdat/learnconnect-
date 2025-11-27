@@ -1,0 +1,151 @@
+// curriculum-generation-dashboard.js
+class CurriculumGenerationDashboard {
+    constructor(userId) {
+        this.userId = userId;
+        this.enrolledCourses = [];
+        this.generatedCurricula = [];
+        this.initializeDashboard();
+    }
+    
+    async initializeDashboard() {
+        await this.loadUserData();
+        this.renderDashboard();
+        this.setupAIIntegration();
+    }
+    
+    async loadUserData() {
+        // Load enrolled courses
+        const coursesResponse = await fetch(`/api/users/${this.userId}/enrolled-courses/`);
+        this.enrolledCourses = await coursesResponse.json();
+        
+        // Load previous curriculum productions
+        const curriculaResponse = await fetch(`/api/curriculum/productions/${this.userId}/`);
+        this.generatedCurricula = await curriculaResponse.json();
+    }
+    
+    renderDashboard() {
+        const dashboardHTML = `
+        <div class="curriculum-generation-dashboard" id="curriculum-dashboard">
+            <!-- Header Section -->
+            <div class="dashboard-header">
+                <h2>🎯 AI-Powered Curriculum Generator</h2>
+                <div class="ai-status">
+                    <span class="status-indicator active"></span>
+                    AI System Active
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Course Selection Panel -->
+                <div class="dashboard-panel course-selection-panel">
+                    <h3>📚 Your Enrolled Courses</h3>
+                    <div class="course-selection-container" id="course-selection-container">
+                        ${this.renderCourseSelection()}
+                    </div>
+                    <div class="selection-controls">
+                        <button class="btn-primary" onclick="generateCurriculum()">
+                            🚀 Generate Curriculum
+                        </button>
+                        <button class="btn-secondary" onclick="loadAISuggestions()">
+                            🤖 Get AI Course Suggestions
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Curriculum Generation Panel -->
+                <div class="dashboard-panel generation-panel">
+                    <h3>⚙️ Curriculum Generation Options</h3>
+                    <div class="generation-options">
+                        <div class="option-group">
+                            <label>Curriculum Type:</label>
+                            <select id="curriculum-type">
+                                <option value="general">General Learning Path</option>
+                                <option value="personalized">AI-Personalized</option>
+                                <option value="intensive">Intensive Program</option>
+                                <option value="flexible">Flexible Schedule</option>
+                            </select>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label>Learning Pace:</label>
+                            <select id="learning-pace">
+                                <option value="slow">Slow & Steady</option>
+                                <option value="moderate" selected>Moderate</option>
+                                <option value="fast">Fast Track</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        
+                        <div class="option-group">
+                            <label>Focus Areas:</label>
+                            <div class="focus-areas" id="focus-areas">
+                                <!-- AI-suggested focus areas -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-controls">
+                        <button class="btn-ai" onclick="optimizeWithAI()">
+                            🧠 AI Optimize Selection
+                        </button>
+                        <button class="btn-ai" onclick="analyzePrerequisites()">
+                            🔍 Analyze Prerequisites
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI Suggestions Panel -->
+                <div class="dashboard-panel ai-suggestions-panel">
+                    <h3>💡 AI Course Suggestions</h3>
+                    <div class="ai-suggestions" id="ai-suggestions">
+                        <!-- AI-generated course suggestions -->
+                    </div>
+                    <div class="ai-confidence">
+                        <label>AI Confidence Level:</label>
+                        <div class="confidence-meter">
+                            <div class="confidence-fill" id="confidence-fill"></div>
+                        </div>
+                        <span class="confidence-value" id="confidence-value">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Production History -->
+                <div class="dashboard-panel production-history">
+                    <h3>📊 Previous Curriculum Productions</h3>
+                    <div class="production-list" id="production-list">
+                        ${this.renderProductionHistory()}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Real-time Generation Progress -->
+            <div class="generation-progress" id="generation-progress" style="display: none;">
+                <h4>🔄 Generating Your Curriculum</h4>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-steps" id="progress-steps"></div>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('main-container').innerHTML = dashboardHTML;
+    }
+    
+    renderCourseSelection() {
+        return this.enrolledCourses.map(course => `
+            <div class="course-selection-item" data-course-id="${course.id}">
+                <input type="checkbox" id="course-${course.id}" checked 
+                       onchange="toggleCourseSelection('${course.id}')">
+                <label for="course-${course.id}">
+                    <strong>${course.title}</strong>
+                    <span class="course-meta">${course.difficulty} • ${course.duration}</span>
+                </label>
+                <div class="course-actions">
+                    <button onclick="viewCourseDetails('${course.id}')">👁️</button>
+                    <button onclick="analyzeCourse('${course.id}')">📊</button>
+                </div>
+            </div>
+        `).join('');
+    }
+}

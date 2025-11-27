@@ -261,7 +261,7 @@ export class CurriculumAIEngine {
     // Filter by focus areas if provided
     if (preferences?.focusAreas?.length) {
       focusedCourses = focusedCourses.filter(c => 
-        preferences.focusAreas.some(area => c.titleEn?.toLowerCase().includes(area.toLowerCase()))
+        preferences.focusAreas.some((area: string) => c.titleEn?.toLowerCase().includes(area.toLowerCase()))
       );
     }
 

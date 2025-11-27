@@ -69,9 +69,8 @@ export class ProductionManager {
         await db.insert(userCurriculums).values({
           userId: production.userId,
           curriculumJson: JSON.stringify(production),
-          isProduction: true,
           createdAt: new Date()
-        }).execute().catch(() => {
+        } as any).catch(() => {
           // DB table might not exist for productions, skip
         });
       } catch (e) {

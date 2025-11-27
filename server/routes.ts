@@ -24,6 +24,7 @@ import { registerDataFlowEndpoints } from "./smart-suggestions/data-flow-endpoin
 import { registerMLModelEndpoints } from "./smart-suggestions/ml-model-endpoints";
 import { registerAIAdaptationEndpoints } from "./smart-suggestions/ai-adaptation-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
+import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
 import { alertSystem } from "./alert-system";
 import { predictiveMaintenanceEngine } from "./predictive-maintenance";
@@ -7385,6 +7386,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerMLModelEndpoints(app);
   registerAIAdaptationEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
+  app.use('/api/production', productionRouter);
 
   // Real-time Monitoring Endpoints
   app.get("/api/study-planner/metrics", (app as any).ensureAuthenticated, async (req, res) => {

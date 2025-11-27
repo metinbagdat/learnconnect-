@@ -2059,3 +2059,110 @@ export type AiLearningDataRecord = typeof aiLearningData.$inferSelect;
 export type InsertAiCurriculumGenerationSession = z.infer<typeof insertAiCurriculumGenerationSessionSchema>;
 export type InsertCurriculumProductionArchive = z.infer<typeof insertCurriculumProductionArchiveSchema>;
 export type InsertAiLearningData = z.infer<typeof insertAiLearningDataSchema>;
+
+// Step 8: Memory Enhancement & Spaced Repetition Integration Tables
+export const learningStyleAssessments = pgTable("learning_style_assessments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  visualScore: numeric("visual_score", { precision: 3, scale: 2 }).default("0"),
+  auditoryScore: numeric("auditory_score", { precision: 3, scale: 2 }).default("0"),
+  kinestheticScore: numeric("kinesthetic_score", { precision: 3, scale: 2 }).default("0"),
+  readingWritingScore: numeric("reading_writing_score", { precision: 3, scale: 2 }).default("0"),
+  dominantStyle: text("dominant_style"),
+  assessmentData: jsonb("assessment_data"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const memoryTechniques = pgTable("memory_techniques", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  technique: text("technique").notNull(),
+  applicableMaterializationLevel: text("applicable_memorization_level").notNull(),
+  instructions: text("instructions"),
+  examples: jsonb("examples"),
+  effectivenessScore: numeric("effectiveness_score", { precision: 3, scale: 2 }).default("0.75"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const spacedRepetitionSchedules = pgTable("spaced_repetition_schedules", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  topicId: integer("topic_id").notNull(),
+  nextReviewDate: timestamp("next_review_date").notNull(),
+  interval: integer("interval").default(1),
+  easeFactor: numeric("ease_factor", { precision: 3, scale: 2 }).default("2.5"),
+  repetitions: integer("repetitions").default(0),
+  quality: integer("quality").default(0),
+  lastReviewDate: timestamp("last_review_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  topicId: integer("topic_id").notNull(),
+  completionStatus: text("completion_status").default("not_started"),
+  timeSpent: integer("time_spent").default(0),
+  testScore: numeric("test_score", { precision: 5, scale: 2 }),
+  attempts: integer("attempts").default(0),
+  memoryTechniqueId: integer("memory_technique_id"),
+  lastStudied: timestamp("last_studied").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const brainTrainingExercises = pgTable("brain_training_exercises", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(),
+  difficulty: text("difficulty").default("medium"),
+  instructions: text("instructions"),
+  duration: integer("duration").default(300),
+  targetAudience: text("target_audience"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userBrainTraining = pgTable("user_brain_training", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  exerciseId: integer("exercise_id").notNull(),
+  score: integer("score").default(0),
+  timeSpent: integer("time_spent").default(0),
+  completedAt: timestamp("completed_at").notNull().defaultNow(),
+});
+
+export const topicMemoryTechniques = pgTable("topic_memory_techniques", {
+  id: serial("id").primaryKey(),
+  topicId: integer("topic_id").notNull(),
+  memoryTechniqueId: integer("memory_technique_id").notNull(),
+  reason: text("reason"),
+  effectiveness: numeric("effectiveness", { precision: 3, scale: 2 }).default("0.8"),
+});
+
+// Step 8: Memory Enhancement Insert Schemas
+export const insertLearningStyleAssessmentSchema = createInsertSchema(learningStyleAssessments).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMemoryTechniqueSchema = createInsertSchema(memoryTechniques).omit({ id: true, createdAt: true });
+export const insertSpacedRepetitionScheduleSchema = createInsertSchema(spacedRepetitionSchedules).omit({ id: true, createdAt: true });
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ id: true, createdAt: true });
+export const insertBrainTrainingExerciseSchema = createInsertSchema(brainTrainingExercises).omit({ id: true, createdAt: true });
+export const insertUserBrainTrainingSchema = createInsertSchema(userBrainTraining).omit({ id: true });
+export const insertTopicMemoryTechniqueSchema = createInsertSchema(topicMemoryTechniques).omit({ id: true });
+
+// Step 8: Memory Enhancement Types
+export type LearningStyleAssessment = typeof learningStyleAssessments.$inferSelect;
+export type MemoryTechnique = typeof memoryTechniques.$inferSelect;
+export type SpacedRepetitionSchedule = typeof spacedRepetitionSchedules.$inferSelect;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type BrainTrainingExercise = typeof brainTrainingExercises.$inferSelect;
+export type UserBrainTraining = typeof userBrainTraining.$inferSelect;
+export type TopicMemoryTechnique = typeof topicMemoryTechniques.$inferSelect;
+
+export type InsertLearningStyleAssessment = z.infer<typeof insertLearningStyleAssessmentSchema>;
+export type InsertMemoryTechnique = z.infer<typeof insertMemoryTechniqueSchema>;
+export type InsertSpacedRepetitionSchedule = z.infer<typeof insertSpacedRepetitionScheduleSchema>;
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type InsertBrainTrainingExercise = z.infer<typeof insertBrainTrainingExerciseSchema>;
+export type InsertUserBrainTraining = z.infer<typeof insertUserBrainTrainingSchema>;
+export type InsertTopicMemoryTechnique = z.infer<typeof insertTopicMemoryTechniqueSchema>;

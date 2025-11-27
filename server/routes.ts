@@ -26,6 +26,7 @@ import { registerAIAdaptationEndpoints } from "./smart-suggestions/ai-adaptation
 import { registerCurriculumMLEndpoints } from "./smart-suggestions/curriculum-ml-endpoints";
 import { registerRealTimeAdaptationEndpoints } from "./smart-suggestions/real-time-adaptation-endpoints";
 import { registerSystemValidationEndpoints } from "./smart-suggestions/system-validation-endpoints";
+import { registerMemoryEnhancementEndpoints } from "./smart-suggestions/memory-enhancement-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -7391,6 +7392,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerCurriculumMLEndpoints(app);
   registerRealTimeAdaptationEndpoints(app);
   registerSystemValidationEndpoints(app);
+  registerMemoryEnhancementEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
   app.use('/api/production', productionRouter);
 

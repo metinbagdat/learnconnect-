@@ -1,0 +1,141 @@
+// curriculum-generation-form.js
+class CurriculumGenerationForm {
+    constructor() {
+        this.formData = {};
+        this.aiSuggestions = {};
+        this.initializeForm();
+    }
+    
+    initializeForm() {
+        this.createFormInterface();
+        this.setupRealTimeValidation();
+        this.setupAIIntegration();
+    }
+    
+    createFormInterface() {
+        const formHTML = `
+        <div class="curriculum-generation-form" id="curriculum-form">
+            <form id="generation-form">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h4>🎯 Curriculum Goals</h4>
+                    <div class="form-group">
+                        <label for="curriculum-name">Curriculum Name</label>
+                        <input type="text" id="curriculum-name" name="name" required
+                               placeholder="Enter a descriptive name for your curriculum">
+                        <div class="ai-name-suggestions" id="name-suggestions"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="learning-objectives">Learning Objectives</label>
+                        <textarea id="learning-objectives" name="objectives" 
+                                  placeholder="Describe what you want to achieve..."></textarea>
+                        <div class="ai-objective-helper">
+                            <button type="button" onclick="generateAIObjectives()">
+                                🤖 AI Generate Objectives
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Course Selection -->
+                <div class="form-section">
+                    <h4>📚 Course Selection</h4>
+                    <div class="course-selection-interface">
+                        <div class="available-courses" id="available-courses">
+                            <!-- Available courses will be populated here -->
+                        </div>
+                        <div class="selected-courses" id="selected-courses">
+                            <h5>Selected Courses</h5>
+                            <div id="selected-courses-list"></div>
+                        </div>
+                    </div>
+                    <div class="ai-course-suggestions" id="course-suggestions-panel">
+                        <h5>💡 AI Course Suggestions</h5>
+                        <div id="ai-course-suggestions"></div>
+                    </div>
+                </div>
+                
+                <!-- Constraints & Preferences -->
+                <div class="form-section">
+                    <h4>⚙️ Learning Preferences</h4>
+                    <div class="preferences-grid">
+                        <div class="preference-group">
+                            <label for="time-commitment">Weekly Time Commitment</label>
+                            <select id="time-commitment" name="time_commitment">
+                                <option value="light">1-5 hours</option>
+                                <option value="moderate" selected>5-15 hours</option>
+                                <option value="serious">15-25 hours</option>
+                                <option value="intensive">25+ hours</option>
+                            </select>
+                        </div>
+                        
+                        <div class="preference-group">
+                            <label for="learning-pace">Preferred Learning Pace</label>
+                            <select id="learning-pace" name="learning_pace">
+                                <option value="slow">Slow & Thorough</option>
+                                <option value="moderate" selected>Balanced Pace</option>
+                                <option value="fast">Fast Track</option>
+                            </select>
+                        </div>
+                        
+                        <div class="preference-group">
+                            <label for="difficulty-level">Target Difficulty</label>
+                            <select id="difficulty-level" name="difficulty_level">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate" selected>Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Configuration -->
+                <div class="form-section">
+                    <h4>🤖 AI Configuration</h4>
+                    <div class="ai-configuration">
+                        <div class="config-group">
+                            <label for="ai-personalization">AI Personalization Level</label>
+                            <input type="range" id="ai-personalization" name="personalization" 
+                                   min="0" max="100" value="75">
+                            <span class="config-value" id="personalization-value">75%</span>
+                        </div>
+                        
+                        <div class="config-group">
+                            <label for="ai-creativity">AI Creativity</label>
+                            <input type="range" id="ai-creativity" name="creativity" 
+                                   min="0" max="100" value="60">
+                            <span class="config-value" id="creativity-value">60%</span>
+                        </div>
+                        
+                        <div class="config-options">
+                            <label>
+                                <input type="checkbox" name="save_production" checked>
+                                Save this production for future use
+                            </label>
+                            <label>
+                                <input type="checkbox" name="allow_ai_learning" checked>
+                                Allow AI to learn from this generation
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">🚀 Generate Curriculum</button>
+                    <button type="button" class="btn-secondary" onclick="saveAsDraft()">
+                        💾 Save as Draft
+                    </button>
+                    <button type="button" class="btn-ai" onclick="previewAICurriculum()">
+                        👁️ AI Preview
+                    </button>
+                </div>
+            </form>
+        </div>
+        `;
+        
+        document.getElementById('form-container').innerHTML = formHTML;
+    }
+}

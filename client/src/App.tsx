@@ -68,6 +68,7 @@ import { PermissionsDemoPage } from "@/pages/permissions-demo";
 import { CoursesControlPage } from "@/pages/courses-control";
 import CurriculumGenerationPage from "@/pages/curriculum-generation";
 import CurriculumCustomization from "@/pages/curriculum-customization";
+import StudentCurriculumDashboard from "@/pages/student-curriculum-dashboard";
 
 function Router() {
   return (
@@ -112,6 +113,7 @@ function Router() {
       <ProtectedRoute path="/my-curriculum" component={MyCurriculumPage} />
       <ProtectedRoute path="/curriculum-generate" component={CurriculumGenerationPage} />
       <ProtectedRoute path="/curriculum-customize" component={CurriculumCustomization} />
+      <ProtectedRoute path="/student-curriculum-dashboard" component={StudentCurriculumDashboard} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />
       <ProtectedRoute path="/assessment" component={AssessmentPage} />

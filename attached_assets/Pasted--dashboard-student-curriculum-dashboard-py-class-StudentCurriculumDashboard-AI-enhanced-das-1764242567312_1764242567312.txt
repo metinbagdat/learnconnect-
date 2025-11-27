@@ -1,0 +1,41 @@
+# dashboard/student_curriculum_dashboard.py
+class StudentCurriculumDashboard:
+    """AI-enhanced dashboard for student curriculum management"""
+    
+    def get_student_curriculum_data(self, user_id):
+        """Get comprehensive curriculum data for student dashboard"""
+        return {
+            'current_curriculum': self._get_current_curriculum(user_id),
+            'learning_progress': self._get_learning_progress(user_id),
+            'ai_recommendations': self._get_ai_recommendations(user_id),
+            'production_history': self._get_production_history(user_id),
+            'performance_insights': self._get_performance_insights(user_id)
+        }
+    
+    def _get_current_curriculum(self, user_id):
+        """Get current active curriculum with AI insights"""
+        curriculum = PersonalizedCurriculum.objects.filter(user_id=user_id).latest('created_at')
+        
+        return {
+            'basic_info': {
+                'title': curriculum.curriculum_structure.get('title', 'Personalized Curriculum'),
+                'estimated_duration': curriculum.estimated_duration,
+                'success_probability': curriculum.success_probability
+            },
+            'learning_path': curriculum.learning_path,
+            'ai_insights': {
+                'reasoning': curriculum.ai_reasoning,
+                'challenges': curriculum.potential_challenges,
+                'optimizations': curriculum.optimization_suggestions
+            },
+            'progress_tracking': self._calculate_curriculum_progress(user_id, curriculum)
+        }
+    
+    def _get_ai_recommendations(self, user_id):
+        """Get AI-powered curriculum recommendations"""
+        return {
+            'course_suggestions': self._get_course_suggestions(user_id),
+            'curriculum_optimizations': self._get_optimization_suggestions(user_id),
+            'learning_strategies': self._get_learning_strategies(user_id),
+            'resource_recommendations': self._get_resource_recommendations(user_id)
+        }

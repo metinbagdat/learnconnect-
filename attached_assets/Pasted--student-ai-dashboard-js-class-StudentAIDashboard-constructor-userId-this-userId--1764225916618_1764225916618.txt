@@ -1,0 +1,93 @@
+// student-ai-dashboard.js
+class StudentAIDashboard {
+    constructor(userId) {
+        this.userId = userId;
+        this.aiInsights = {};
+        this.initializeDashboard();
+    }
+    
+    async initializeDashboard() {
+        // Load AI-enhanced data
+        await this.loadAIData();
+        this.renderDashboard();
+        this.setupRealTimeUpdates();
+    }
+    
+    async loadAIData() {
+        const endpoints = [
+            `/api/ai/dashboard/overview/${this.userId}`,
+            `/api/ai/dashboard/goals/${this.userId}`,
+            `/api/ai/dashboard/suggestions/${this.userId}`,
+            `/api/ai/dashboard/performance/${this.userId}`
+        ];
+        
+        const responses = await Promise.all(endpoints.map(url => fetch(url)));
+        const data = await Promise.all(responses.map(r => r.json()));
+        
+        this.aiInsights = {
+            overview: data[0],
+            goals: data[1],
+            suggestions: data[2],
+            performance: data[3]
+        };
+    }
+    
+    renderDashboard() {
+        const dashboardHTML = `
+        <div class="student-ai-dashboard" id="student-ai-dashboard">
+            <!-- Header with AI Personalization -->
+            <div class="dashboard-header">
+                <h2>🎯 My AI-Powered Learning Dashboard</h2>
+                <div class="ai-personalization-info">
+                    <span class="personalization-level">Personalization: 92%</span>
+                    <button class="btn-ai-settings">AI Settings</button>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- AI Goal Tracking -->
+                <div class="dashboard-widget goal-tracker">
+                    <h3>🎯 Smart Goal Tracking</h3>
+                    <div class="ai-goal-progress" id="ai-goal-progress"></div>
+                    <div class="ai-goal-suggestions" id="ai-goal-suggestions"></div>
+                </div>
+                
+                <!-- Course Recommendations -->
+                <div class="dashboard-widget course-recommendations">
+                    <h3>🎓 AI Course Suggestions</h3>
+                    <div class="ai-course-suggestions" id="ai-course-suggestions"></div>
+                    <div class="ai-reasoning" id="course-ai-reasoning"></div>
+                </div>
+                
+                <!-- Study Plan AI -->
+                <div class="dashboard-widget study-plan-ai">
+                    <h3>📅 AI-Optimized Study Plan</h3>
+                    <div class="ai-study-schedule" id="ai-study-schedule"></div>
+                    <div class="ai-adaptation-info" id="ai-adaptation-info"></div>
+                </div>
+                
+                <!-- Performance Analytics -->
+                <div class="dashboard-widget performance-ai">
+                    <h3>📊 AI Performance Insights</h3>
+                    <div class="ai-performance-metrics" id="ai-performance-metrics"></div>
+                    <div class="ai-predictions" id="ai-predictions"></div>
+                </div>
+            </div>
+            
+            <!-- AI Controls -->
+            <div class="ai-controls-panel">
+                <h4>🤖 AI Assistant Controls</h4>
+                <div class="ai-control-buttons">
+                    <button class="btn-ai" id="refresh-ai-suggestions">Refresh AI Suggestions</button>
+                    <button class="btn-ai" id="adjust-ai-personalization">Adjust Personalization</button>
+                    <button class="btn-ai" id="provide-ai-feedback">Provide AI Feedback</button>
+                    <button class="btn-ai" id="view-ai-analytics">View AI Analytics</button>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('main-container').innerHTML = dashboardHTML;
+        this.populateAIData();
+    }
+}

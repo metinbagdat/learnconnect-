@@ -56,6 +56,7 @@ import SmartPlanningDashboard from "@/pages/smart-planning-dashboard";
 import { OnboardingPage } from "@/pages/onboarding";
 import { PreCourseGuidance } from "@/pages/pre-course-guidance";
 import { AIControlDashboard } from "@/pages/ai-control-dashboard";
+import { InteractionTracking } from "@/pages/interaction-tracking";
 import AdaptiveLearning from "@/pages/adaptive-learning";
 import ControlPanel from "@/pages/control-panel";
 import { MonitoringPage } from "@/pages/monitoring";
@@ -97,6 +98,7 @@ function Router() {
       <ProtectedRoute path="/onboarding" component={OnboardingPage} />
       <ProtectedRoute path="/pre-course-guidance" component={PreCourseGuidance} />
       <ProtectedRoute path="/ai-control" component={AIControlDashboard} />
+      <ProtectedRoute path="/interaction-tracking" component={InteractionTracking} />
       <ProtectedRoute path="/my-curriculum" component={MyCurriculumPage} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />

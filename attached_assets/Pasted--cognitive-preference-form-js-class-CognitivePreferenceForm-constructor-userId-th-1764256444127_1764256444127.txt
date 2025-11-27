@@ -1,0 +1,136 @@
+// cognitive-preference-form.js
+class CognitivePreferenceForm {
+    constructor(userId) {
+        this.userId = userId;
+        this.preferences = {};
+        this.initializeForm();
+    }
+    
+    initializeForm() {
+        this.createPreferenceForm();
+        this.loadCurrentPreferences();
+        this.setupAIPrecommendations();
+    }
+    
+    createPreferenceForm() {
+        const formHTML = `
+        <div class="cognitive-preference-form" id="cognitive-form">
+            <form id="preference-form">
+                <div class="form-header">
+                    <h3>🎯 Cognitive Learning Preferences</h3>
+                    <p>Customize how you learn based on your cognitive profile</p>
+                </div>
+                
+                <!-- Learning Style Section -->
+                <div class="form-section">
+                    <h4>📚 Preferred Learning Style</h4>
+                    <div class="preference-options">
+                        <div class="option-group">
+                            <label>
+                                <input type="radio" name="learning_style" value="visual">
+                                <span class="option-content">
+                                    <strong>👁️ Visual Learner</strong>
+                                    <small>Learn best through images, diagrams, and spatial understanding</small>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="option-group">
+                            <label>
+                                <input type="radio" name="learning_style" value="auditory">
+                                <span class="option-content">
+                                    <strong>👂 Auditory Learner</strong>
+                                    <small>Learn best through listening and verbal instruction</small>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="option-group">
+                            <label>
+                                <input type="radio" name="learning_style" value="kinesthetic">
+                                <span class="option-content">
+                                    <strong>🖐️ Kinesthetic Learner</strong>
+                                    <small>Learn best through hands-on activities and movement</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Memory Techniques Section -->
+                <div class="form-section">
+                    <h4>🧠 Preferred Memory Techniques</h4>
+                    <div class="technique-selection" id="technique-selection">
+                        ${this.renderTechniqueOptions()}
+                    </div>
+                    <div class="ai-recommendation" id="technique-recommendation">
+                        <p>🤖 <strong>AI Suggestion:</strong> Based on your profile, we recommend starting with Spaced Repetition and Mnemonics</p>
+                    </div>
+                </div>
+                
+                <!-- Study Preferences -->
+                <div class="form-section">
+                    <h4>⏱️ Study Session Preferences</h4>
+                    <div class="preference-grid">
+                        <div class="preference-item">
+                            <label for="session-length">Preferred Session Length</label>
+                            <select id="session-length" name="session_length">
+                                <option value="25">25 minutes (Pomodoro)</option>
+                                <option value="45">45 minutes (Standard)</option>
+                                <option value="60">60 minutes (Extended)</option>
+                                <option value="90">90 minutes (Deep Work)</option>
+                            </select>
+                        </div>
+                        <div class="preference-item">
+                            <label for="break-length">Break Length</label>
+                            <select id="break-length" name="break_length">
+                                <option value="5">5 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="15">15 minutes</option>
+                            </select>
+                        </div>
+                        <div class="preference-item">
+                            <label for="daily-goal">Daily Study Goal</label>
+                            <select id="daily-goal" name="daily_goal">
+                                <option value="2">2 hours</option>
+                                <option value="3">3 hours</option>
+                                <option value="4">4 hours</option>
+                                <option value="5">5+ hours</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cognitive Training Preferences -->
+                <div class="form-section">
+                    <h4>💪 Cognitive Training</h4>
+                    <div class="training-preferences">
+                        <label>
+                            <input type="checkbox" name="enable_cognitive_training" checked>
+                            Enable daily cognitive training exercises
+                        </label>
+                        <label>
+                            <input type="checkbox" name="enable_memory_assessment" checked>
+                            Regular memory capacity assessment
+                        </label>
+                        <label>
+                            <input type="checkbox" name="enable_focus_training" checked>
+                            Focus and attention training
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">💾 Save Preferences</button>
+                    <button type="button" class="btn-secondary" onclick="runAIOptimization()">
+                        🤖 AI Optimize Preferences
+                    </button>
+                    <button type="button" class="btn-outline" onclick="resetToDefaults()">
+                        🔄 Reset to Defaults
+                    </button>
+                </div>
+            </form>
+        </div>
+        `;
+        
+        document.getElementById('form-container').innerHTML = formHTML;
+    }
+}

@@ -170,7 +170,7 @@ class RegistrationAIProcessor {
    * Analyze skill gaps based on background and goals
    */
   private analyzeSkillGaps(userData: RegistrationData): ProfileInsights["skillGapAnalysis"] {
-    const gaps = [];
+    const gaps: Array<{ skill: string; proficiency: "beginner" | "intermediate" | "advanced"; priority: "high" | "medium" | "low" }> = [];
 
     // Map career goals to required skills
     const skillMap: Record<string, string[]> = {
@@ -214,7 +214,7 @@ class RegistrationAIProcessor {
     };
 
     let primaryDriver = "Personal development";
-    let secondaryDrivers = [];
+    let secondaryDrivers: string[] = [];
 
     if (userData.motivation) {
       Object.entries(motivationKeywords).forEach(([key, value]) => {
@@ -228,7 +228,7 @@ class RegistrationAIProcessor {
       primaryDriver = `Pursuing a career as ${userData.careerGoal}`;
     }
 
-    const riskFactors = [];
+    const riskFactors: string[] = [];
     if (userData.availableHoursPerWeek && userData.availableHoursPerWeek < 3) {
       riskFactors.push("Limited time availability");
     }
@@ -358,7 +358,13 @@ class RegistrationAIProcessor {
     milestones: string[];
     confidence: number;
   }> {
-    const goals = [];
+    const goals: Array<{
+      goal: string;
+      type: string;
+      timelineWeeks: number;
+      milestones: string[];
+      confidence: number;
+    }> = [];
 
     // Career-based goal
     if (userData.careerGoal) {

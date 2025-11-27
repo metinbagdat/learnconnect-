@@ -53,6 +53,8 @@ import TestimonialsPage from "@/pages/testimonials";
 import HowItWorks from "@/pages/how-it-works";
 import PremiumPage from "@/pages/premium";
 import SmartPlanningDashboard from "@/pages/smart-planning-dashboard";
+import { OnboardingPage } from "@/pages/onboarding";
+import { PreCourseGuidance } from "@/pages/pre-course-guidance";
 import AdaptiveLearning from "@/pages/adaptive-learning";
 import ControlPanel from "@/pages/control-panel";
 import { MonitoringPage } from "@/pages/monitoring";
@@ -91,6 +93,8 @@ function Router() {
       <ProtectedRoute path="/tyt/trials/new" component={TytDashboard} />
       <ProtectedRoute path="/study-planner" component={StudyPlannerPage} />
       <ProtectedRoute path="/smart-planning" component={SmartPlanningDashboard} />
+      <ProtectedRoute path="/onboarding" component={OnboardingPage} />
+      <ProtectedRoute path="/pre-course-guidance" component={PreCourseGuidance} />
       <ProtectedRoute path="/my-curriculum" component={MyCurriculumPage} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />

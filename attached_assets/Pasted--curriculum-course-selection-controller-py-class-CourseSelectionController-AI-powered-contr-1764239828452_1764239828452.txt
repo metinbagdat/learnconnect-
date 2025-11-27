@@ -1,0 +1,44 @@
+# curriculum/course_selection_controller.py
+class CourseSelectionController:
+    """AI-powered controller for course selection and arrangement"""
+    
+    def __init__(self):
+        self.course_analyzer = CourseAnalyzer()
+        self.prerequisite_manager = PrerequisiteManager()
+        self.learning_path_builder = LearningPathBuilder()
+    
+    def generate_curriculum_from_selection(self, user_id, selected_courses, constraints):
+        """Generate curriculum based on selected courses with AI optimization"""
+        
+        # Analyze selected courses
+        course_analysis = self.course_analyzer.analyze_course_selection(selected_courses)
+        
+        # Check prerequisites and dependencies
+        prerequisite_map = self.prerequisite_manager.build_prerequisite_tree(selected_courses)
+        
+        # Generate optimal learning sequence
+        learning_sequence = self.learning_path_builder.build_optimal_sequence(
+            selected_courses, prerequisite_map, constraints
+        )
+        
+        # Create curriculum structure
+        curriculum_structure = self._build_curriculum_structure(learning_sequence, constraints)
+        
+        return {
+            'course_analysis': course_analysis,
+            'prerequisite_map': prerequisite_map,
+            'learning_sequence': learning_sequence,
+            'curriculum_structure': curriculum_structure,
+            'completion_estimate': self._estimate_completion_time(learning_sequence),
+            'difficulty_curve': self._calculate_difficulty_curve(learning_sequence)
+        }
+    
+    def _build_curriculum_structure(self, learning_sequence, constraints):
+        """Build comprehensive curriculum structure"""
+        return {
+            'phases': self._create_learning_phases(learning_sequence),
+            'milestones': self._set_learning_milestones(learning_sequence),
+            'assessment_points': self._place_assessment_points(learning_sequence),
+            'resource_allocation': self._allocate_resources(learning_sequence),
+            'timeline': self._create_learning_timeline(learning_sequence, constraints)
+        }

@@ -1,7 +1,6 @@
-import { Router } from 'express';
+import { Router, type Express } from 'express';
 import { curriculumAIEngine } from '../ai-curriculum-generation';
-import { requireAuth } from '@/server/middleware';
-import { db } from '@/server/db';
+import { db } from '../db';
 import { userCurriculums, courses } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
@@ -11,9 +10,10 @@ export const curriculumGenerationRouter = Router();
  * Generate personalized curriculum
  * POST /api/curriculum/generate
  */
-curriculumGenerationRouter.post('/generate', requireAuth, async (req, res) => {
+curriculumGenerationRouter.post('/generate', async (req, res) => {
   try {
-    const userId = req.user.id;
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+    const userId = (req.user as any).id;
     const { preferences } = req.body;
 
     const result = await curriculumAIEngine.generatePersonalizedCurriculum(userId, preferences);
@@ -43,9 +43,10 @@ curriculumGenerationRouter.post('/generate', requireAuth, async (req, res) => {
  * Get all user's generated curricula
  * GET /api/curriculum/list
  */
-curriculumGenerationRouter.get('/list', requireAuth, async (req, res) => {
+curriculumGenerationRouter.get('/list', async (req, res) => {
   try {
-    const userId = req.user.id;
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
+    const userId = (req.user as any).id;
     const productions = curriculumAIEngine.getProductions(userId);
 
     const curriculaData = productions.map(genId => {
@@ -73,8 +74,9 @@ curriculumGenerationRouter.get('/list', requireAuth, async (req, res) => {
  * Get specific curriculum production details
  * GET /api/curriculum/production/:generationId
  */
-curriculumGenerationRouter.get('/production/:generationId', requireAuth, async (req, res) => {
+curriculumGenerationRouter.get('/production/:generationId', async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
     const { generationId } = req.params;
     const production = curriculumAIEngine.getProductionData(generationId);
 
@@ -83,7 +85,7 @@ curriculumGenerationRouter.get('/production/:generationId', requireAuth, async (
     }
 
     // Verify ownership
-    if (production.userContext.userId !== req.user.id) {
+    if (production.userContext.userId !== (req.user as any).id) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -101,7 +103,8 @@ curriculumGenerationRouter.get('/production/:generationId', requireAuth, async (
  * Get generation session status
  * GET /api/curriculum/session/:generationId
  */
-curriculumGenerationRouter.get('/session/:generationId', requireAuth, async (req, res) => {
+curriculumGenerationRouter.get('/session/:generationId', async (req, res) => {
+  if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
   try {
     const { generationId } = req.params;
     const session = curriculumAIEngine.getGenerationSession(generationId);
@@ -131,8 +134,9 @@ curriculumGenerationRouter.get('/session/:generationId', requireAuth, async (req
  * Export curriculum to JSON
  * GET /api/curriculum/:generationId/export
  */
-curriculumGenerationRouter.get('/:generationId/export', requireAuth, async (req, res) => {
+curriculumGenerationRouter.get('/:generationId/export', async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
     const { generationId } = req.params;
     const production = curriculumAIEngine.getProductionData(generationId);
 
@@ -140,7 +144,7 @@ curriculumGenerationRouter.get('/:generationId/export', requireAuth, async (req,
       return res.status(404).json({ error: 'Production not found' });
     }
 
-    if (production.userContext.userId !== req.user.id) {
+    if (production.userContext.userId !== (req.user as any).id) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -177,8 +181,9 @@ curriculumGenerationRouter.get('/:generationId/export', requireAuth, async (req,
  * Get curriculum analytics
  * GET /api/curriculum/analytics/:generationId
  */
-curriculumGenerationRouter.get('/analytics/:generationId', requireAuth, async (req, res) => {
+curriculumGenerationRouter.get('/analytics/:generationId', async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
     const { generationId } = req.params;
     const production = curriculumAIEngine.getProductionData(generationId);
 
@@ -186,7 +191,7 @@ curriculumGenerationRouter.get('/analytics/:generationId', requireAuth, async (r
       return res.status(404).json({ error: 'Production not found' });
     }
 
-    if (production.userContext.userId !== req.user.id) {
+    if (production.userContext.userId !== (req.user as any).id) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -216,12 +221,13 @@ curriculumGenerationRouter.get('/analytics/:generationId', requireAuth, async (r
  * Get interaction log for curriculum generation
  * GET /api/curriculum/interactions
  */
-curriculumGenerationRouter.get('/interactions', requireAuth, async (req, res) => {
+curriculumGenerationRouter.get('/interactions', async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
     const interactions = curriculumAIEngine.exportInteractionLog();
     
     // Filter to user's interactions if needed
-    const userInteractions = interactions.filter(i => i.userId === req.user.id);
+    const userInteractions = interactions.filter(i => i.userId === (req.user as any).id);
 
     res.json({
       success: true,
@@ -238,10 +244,11 @@ curriculumGenerationRouter.get('/interactions', requireAuth, async (req, res) =>
  * Regenerate curriculum with new preferences
  * POST /api/curriculum/:generationId/regenerate
  */
-curriculumGenerationRouter.post('/:generationId/regenerate', requireAuth, async (req, res) => {
+curriculumGenerationRouter.post('/:generationId/regenerate', async (req, res) => {
   try {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
     const { preferences } = req.body;
-    const userId = req.user.id;
+    const userId = (req.user as any).id;
 
     // Get original production
     const originalProduction = curriculumAIEngine.getProductionData(req.params.generationId);

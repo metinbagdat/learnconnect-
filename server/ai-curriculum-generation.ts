@@ -1,4 +1,4 @@
-import { db } from "@/server/db";
+import { db } from "./db";
 import { 
   courses, 
   userCourses, 
@@ -36,6 +36,7 @@ interface PersonalizedCurriculum {
   milestones: any[];
   aiConfidence: number;
   generationMethod: string;
+  difficulty?: string;
 }
 
 interface GenerationSession {

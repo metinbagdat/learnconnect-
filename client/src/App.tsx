@@ -66,6 +66,7 @@ import ControlPanel from "@/pages/control-panel";
 import { MonitoringPage } from "@/pages/monitoring";
 import { PermissionsDemoPage } from "@/pages/permissions-demo";
 import { CoursesControlPage } from "@/pages/courses-control";
+import CurriculumGenerationPage from "@/pages/curriculum-generation";
 
 function Router() {
   return (
@@ -108,6 +109,7 @@ function Router() {
       <ProtectedRoute path="/admin-ai-dashboard" component={AdminAIDashboard} />
       <ProtectedRoute path="/goal-setting" component={GoalSettingForm} />
       <ProtectedRoute path="/my-curriculum" component={MyCurriculumPage} />
+      <ProtectedRoute path="/curriculum-generate" component={CurriculumGenerationPage} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />
       <ProtectedRoute path="/assessment" component={AssessmentPage} />

@@ -67,6 +67,7 @@ import { MonitoringPage } from "@/pages/monitoring";
 import { PermissionsDemoPage } from "@/pages/permissions-demo";
 import { CoursesControlPage } from "@/pages/courses-control";
 import CurriculumGenerationPage from "@/pages/curriculum-generation";
+import CurriculumCustomization from "@/pages/curriculum-customization";
 
 function Router() {
   return (

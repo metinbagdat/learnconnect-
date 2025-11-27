@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
-import { useLanguage } from '@/hooks/use-language';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,6 @@ import { Loader2, Zap, Brain, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function CurriculumGenerationDashboard() {
   const { user } = useAuth();
-  const { t, language } = useLanguage();
   const { toast } = useToast();
 
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);

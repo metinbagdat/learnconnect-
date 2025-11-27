@@ -286,7 +286,20 @@ import {
   aiReviewLogs,
   insertAiConceptLogSchema,
   insertAiStudyTipsLogSchema,
-  insertAiReviewLogSchema
+  insertAiReviewLogSchema,
+  // Step 6.1: AI Data Flow types & tables
+  type AiCurriculumGenerationSession,
+  type CurriculumProductionArchive,
+  type AiLearningDataRecord,
+  type InsertAiCurriculumGenerationSession,
+  type InsertCurriculumProductionArchive,
+  type InsertAiLearningData,
+  aiCurriculumGenerationSessions,
+  curriculumProductionArchives,
+  aiLearningData,
+  insertAiCurriculumGenerationSessionSchema,
+  insertCurriculumProductionArchiveSchema,
+  insertAiLearningDataSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";

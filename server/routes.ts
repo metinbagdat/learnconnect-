@@ -23,6 +23,7 @@ import { registerAIDataFlowEndpoints } from "./smart-suggestions/ai-data-flow-en
 import { registerDataFlowEndpoints } from "./smart-suggestions/data-flow-endpoints";
 import { registerMLModelEndpoints } from "./smart-suggestions/ml-model-endpoints";
 import { registerAIAdaptationEndpoints } from "./smart-suggestions/ai-adaptation-endpoints";
+import { registerCurriculumMLEndpoints } from "./smart-suggestions/curriculum-ml-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -7385,6 +7386,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerDataFlowEndpoints(app);
   registerMLModelEndpoints(app);
   registerAIAdaptationEndpoints(app);
+  registerCurriculumMLEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
   app.use('/api/production', productionRouter);
 

@@ -2006,3 +2006,56 @@ export type EnhancedInteractionLog = typeof enhancedInteractionLogs.$inferSelect
 export type InsertAiProfile = z.infer<typeof insertAiProfileSchema>;
 export type InsertAiSuggestion = z.infer<typeof insertAiSuggestionSchema>;
 export type InsertEnhancedInteractionLog = z.infer<typeof insertEnhancedInteractionLogSchema>;
+
+// Step 6.1: AI Data Flow & Database Integration
+export const aiCurriculumGenerationSessions = pgTable("ai_curriculum_generation_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionId: text("session_id").notNull().unique(),
+  inputParameters: jsonb("input_parameters").notNull(),
+  userContext: jsonb("user_context"),
+  courseSelections: jsonb("course_selections"),
+  aiModelsUsed: jsonb("ai_models_used"),
+  intermediateResults: jsonb("intermediate_results"),
+  generationSteps: jsonb("generation_steps"),
+  generatedCurricula: jsonb("generated_curricula"),
+  selectedCurriculum: jsonb("selected_curriculum"),
+  status: text("status").default("completed"),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const curriculumProductionArchives = pgTable("curriculum_production_archives", {
+  id: serial("id").primaryKey(),
+  productionId: integer("production_id").notNull(),
+  archiveReason: text("archive_reason").notNull(),
+  archivedData: jsonb("archived_data").notNull(),
+  archivedBy: integer("archived_by").notNull(),
+  archivedAt: timestamp("archived_at").notNull().defaultNow(),
+  retentionDays: integer("retention_days").default(90),
+});
+
+export const aiLearningData = pgTable("ai_learning_data", {
+  id: serial("id").primaryKey(),
+  generationSessionId: integer("generation_session_id").notNull(),
+  inputData: jsonb("input_data").notNull(),
+  outputData: jsonb("output_data").notNull(),
+  userFeedback: jsonb("user_feedback"),
+  performanceMetrics: jsonb("performance_metrics"),
+  learningSignals: jsonb("learning_signals"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Insert schemas for AI data flow
+export const insertAiCurriculumGenerationSessionSchema = createInsertSchema(aiCurriculumGenerationSessions).omit({ id: true, startedAt: true });
+export const insertCurriculumProductionArchiveSchema = createInsertSchema(curriculumProductionArchives).omit({ id: true, archivedAt: true });
+export const insertAiLearningDataSchema = createInsertSchema(aiLearningData).omit({ id: true, createdAt: true });
+
+// Types for AI data flow
+export type AiCurriculumGenerationSession = typeof aiCurriculumGenerationSessions.$inferSelect;
+export type CurriculumProductionArchive = typeof curriculumProductionArchives.$inferSelect;
+export type AiLearningDataRecord = typeof aiLearningData.$inferSelect;
+
+export type InsertAiCurriculumGenerationSession = z.infer<typeof insertAiCurriculumGenerationSessionSchema>;
+export type InsertCurriculumProductionArchive = z.infer<typeof insertCurriculumProductionArchiveSchema>;
+export type InsertAiLearningData = z.infer<typeof insertAiLearningDataSchema>;

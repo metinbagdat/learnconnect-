@@ -1,0 +1,48 @@
+# curriculum/ai_data_flow.py
+class CurriculumAIDataFlow:
+    """Manages AI data flow for curriculum generation"""
+    
+    def __init__(self):
+        self.data_pipelines = {}
+        self.quality_controller = DataQualityController()
+    
+    def create_curriculum_data_pipeline(self, user_id):
+        """Create data pipeline for curriculum generation"""
+        pipeline = {
+            'user_data_collection': self._collect_user_data(user_id),
+            'course_data_processing': self._process_course_data(user_id),
+            'ai_feature_engineering': self._engineer_features(user_id),
+            'curriculum_generation': self._generate_curricula(user_id),
+            'production_saving': self._save_productions(user_id)
+        }
+        
+        self.data_pipelines[user_id] = pipeline
+        return pipeline
+    
+    def execute_pipeline(self, user_id, input_data):
+        """Execute complete curriculum generation pipeline"""
+        pipeline = self.data_pipelines[user_id]
+        
+        try:
+            results = {}
+            for stage_name, stage_function in pipeline.items():
+                stage_result = stage_function(input_data)
+                results[stage_name] = stage_result
+                
+                # Quality check at each stage
+                quality_check = self.quality_controller.check_stage_quality(stage_name, stage_result)
+                if not quality_check['passed']:
+                    raise DataQualityError(f"Stage {stage_name} failed quality check")
+            
+            # Save complete pipeline results
+            self._save_pipeline_results(user_id, results)
+            
+            return {
+                'success': True,
+                'pipeline_results': results,
+                'quality_checks': [qc['results'] for qc in quality_checks]
+            }
+            
+        except Exception as e:
+            logger.error(f"Curriculum pipeline failed for user {user_id}: {e}")
+            return {'success': False, 'error': str(e)}

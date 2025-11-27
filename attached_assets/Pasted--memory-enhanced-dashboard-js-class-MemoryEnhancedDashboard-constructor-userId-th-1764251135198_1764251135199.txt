@@ -1,0 +1,156 @@
+// memory-enhanced-dashboard.js
+class MemoryEnhancedDashboard {
+    constructor(userId) {
+        this.userId = userId;
+        this.cognitiveProfile = {};
+        this.memoryEnhancedCurricula = [];
+        this.initializeDashboard();
+    }
+    
+    async initializeDashboard() {
+        await this.loadCognitiveData();
+        this.renderEnhancedDashboard();
+        this.setupMemoryTechniqueControls();
+    }
+    
+    async loadCognitiveData() {
+        const endpoints = [
+            `/api/cognitive/profile/${this.userId}`,
+            `/api/memory-enhanced/curricula/${this.userId}`,
+            `/api/cognitive/performance/${this.userId}`
+        ];
+        
+        const responses = await Promise.all(endpoints.map(url => fetch(url)));
+        const data = await Promise.all(responses.map(r => r.json()));
+        
+        this.cognitiveProfile = data[0];
+        this.memoryEnhancedCurricula = data[1];
+        this.performanceData = data[2];
+    }
+    
+    renderEnhancedDashboard() {
+        const dashboardHTML = `
+        <div class="memory-enhanced-dashboard" id="memory-dashboard">
+            <!-- Cognitive Header -->
+            <div class="cognitive-header">
+                <h2>🧠 AI-Powered Memory Enhanced Learning</h2>
+                <div class="cognitive-status">
+                    <span class="memory-score">Memory Score: ${this.cognitiveProfile.memory_capacity * 100}%</span>
+                    <span class="learning-efficiency">Efficiency: +${this.calculateEfficiency()}%</span>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Cognitive Profile Panel -->
+                <div class="dashboard-panel cognitive-profile">
+                    <h3>📊 Your Cognitive Profile</h3>
+                    <div class="profile-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Memory Capacity</span>
+                            <div class="metric-bar">
+                                <div class="metric-fill" style="width: ${this.cognitiveProfile.memory_capacity * 100}%"></div>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Learning Style</span>
+                            <span class="metric-value">${this.cognitiveProfile.learning_style}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Focus Duration</span>
+                            <span class="metric-value">${this.cognitiveProfile.attention_span} min</span>
+                        </div>
+                    </div>
+                    <button class="btn-cognitive" onclick="runCognitiveAssessment()">
+                        🔄 Update Assessment
+                    </button>
+                </div>
+                
+                <!-- Memory Techniques Panel -->
+                <div class="dashboard-panel memory-techniques">
+                    <h3>🎯 Active Memory Techniques</h3>
+                    <div class="techniques-list" id="techniques-list">
+                        ${this.renderActiveTechniques()}
+                    </div>
+                    <div class="technique-controls">
+                        <button class="btn-technique" onclick="adjustTechniquePreferences()">
+                            ⚙️ Adjust Preferences
+                        </button>
+                        <button class="btn-technique" onclick="learnNewTechnique()">
+                            📚 Learn New Technique
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Curriculum Panel -->
+                <div class="dashboard-panel enhanced-curriculum">
+                    <h3>🚀 Memory-Enhanced Curriculum</h3>
+                    <div class="curriculum-options" id="curriculum-options">
+                        ${this.renderCurriculumOptions()}
+                    </div>
+                    <div class="enhancement-info">
+                        <div class="enhancement-metric">
+                            <span>Expected Time Reduction: </span>
+                            <strong>${this.calculateTimeReduction()}%</strong>
+                        </div>
+                        <div class="enhancement-metric">
+                            <span>Predicted Retention: </span>
+                            <strong>${this.calculateRetention()}%</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cognitive Training Panel -->
+                <div class="dashboard-panel cognitive-training">
+                    <h3>💪 Daily Cognitive Training</h3>
+                    <div class="training-exercises" id="training-exercises">
+                        ${this.renderTrainingExercises()}
+                    </div>
+                    <div class="training-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="training-progress"></div>
+                        </div>
+                        <span>Daily Training: 2/5 exercises</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Memory Assistant -->
+            <div class="ai-memory-assistant">
+                <h4>🤖 AI Memory Assistant</h4>
+                <div class="assistant-controls">
+                    <button class="btn-ai" onclick="optimizeMemorySchedule()">
+                        🧠 Optimize Memory Schedule
+                    </button>
+                    <button class="btn-ai" onclick="generateMnemonicSuggestions()">
+                        💡 Generate Mnemonics
+                    </button>
+                    <button class="btn-ai" onclick="analyzeLearningPatterns()">
+                        📊 Analyze Patterns
+                    </button>
+                </div>
+                <div class="assistant-suggestions" id="assistant-suggestions">
+                    <!-- AI suggestions will appear here -->
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('main-container').innerHTML = dashboardHTML;
+    }
+    
+    renderActiveTechniques() {
+        const techniques = this.cognitiveProfile.preferred_techniques || [];
+        return techniques.map(tech => `
+            <div class="technique-item" data-technique="${tech}">
+                <span class="technique-name">${this.formatTechniqueName(tech)}</span>
+                <span class="technique-effectiveness">
+                    ${Math.round(this.cognitiveProfile.technique_effectiveness[tech] * 100)}% effective
+                </span>
+                <div class="technique-actions">
+                    <button onclick="disableTechnique('${tech}')">🚫</button>
+                    <button onclick="testTechnique('${tech}')">🧪</button>
+                </div>
+            </div>
+        `).join('');
+    }
+}

@@ -215,7 +215,7 @@ class AIAdaptationSystem {
     const profile = await db.select().from(aiProfiles).where(eq(aiProfiles.userId, userId));
 
     if (profile.length > 0) {
-      const currentData = profile[0].aiProfileData || {};
+      const currentData = (profile[0].aiProfileData || {}) as Record<string, any>;
 
       const updated = {
         aiProfileData: {

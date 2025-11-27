@@ -1,0 +1,51 @@
+# models/memory_integration_models.py
+class CognitiveUserProfile(models.Model):
+    """Extended user profile with cognitive and memory data"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    
+    # Cognitive Assessment Data
+    memory_capacity = models.FloatField(default=0.5)  # 0-1 scale
+    learning_style = models.CharField(max_length=50)  # visual, auditory, kinesthetic
+    attention_span = models.IntegerField()  # minutes
+    processing_speed = models.FloatField()
+    
+    # Memory Technique Preferences
+    preferred_techniques = models.JSONField(default=list)
+    technique_effectiveness = models.JSONField(default=dict)
+    
+    # Cognitive Performance History
+    performance_trends = models.JSONField(default=dict)
+    improvement_areas = models.JSONField(default=list)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class MemoryEnhancedCurriculum(models.Model):
+    """Curriculum enhanced with memory techniques"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    base_curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
+    
+    # Memory Enhancements
+    memory_techniques_applied = models.JSONField()
+    spaced_repetition_schedule = models.JSONField()
+    mnemonic_mappings = models.JSONField()
+    cognitive_break_points = models.JSONField()
+    
+    # Performance Predictions
+    predicted_retention_rate = models.FloatField()
+    expected_study_time_reduction = models.FloatField()  # percentage
+    difficulty_adjustments = models.JSONField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class CognitiveTrainingSession(models.Model):
+    """Individual cognitive training sessions"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session_type = models.CharField(max_length=100)  # memory, focus, speed
+    duration = models.IntegerField()  # minutes
+    exercises = models.JSONField()
+    performance_metrics = models.JSONField()
+    completion_date = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'cognitive_training_session'

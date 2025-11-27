@@ -2166,3 +2166,138 @@ export type InsertMemoryStudyProgress = z.infer<typeof insertMemoryStudyProgress
 export type InsertBrainTrainingExercise = z.infer<typeof insertBrainTrainingExerciseSchema>;
 export type InsertUserBrainTraining = z.infer<typeof insertUserBrainTrainingSchema>;
 export type InsertTopicMemoryTechnique = z.infer<typeof insertTopicMemoryTechniqueSchema>;
+
+// Step 8.2: Comprehensive Integration Database Schema - Memory Enhancement Models
+export const cognitiveUserProfiles = pgTable("cognitive_user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  
+  // Cognitive Assessment Data
+  memoryCapacity: numeric("memory_capacity", { precision: 3, scale: 2 }).default("0.5"),
+  learningStyle: text("learning_style").default("visual"), // visual, auditory, kinesthetic, reading_writing
+  attentionSpan: integer("attention_span").default(45), // minutes
+  processingSpeed: numeric("processing_speed", { precision: 3, scale: 2 }).default("1.0"),
+  
+  // Memory Technique Preferences
+  preferredTechniques: text("preferred_techniques").array().default([]),
+  techniqueEffectiveness: jsonb("technique_effectiveness").default({}),
+  
+  // Cognitive Performance History
+  performanceTrends: jsonb("performance_trends").default({}),
+  improvementAreas: text("improvement_areas").array().default([]),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const memoryEnhancedCurricula = pgTable("memory_enhanced_curricula", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  baseCurriculumId: integer("base_curriculum_id").notNull(),
+  
+  // Memory Enhancements
+  memoryTechniquesApplied: jsonb("memory_techniques_applied").notNull(),
+  spacedRepetitionSchedule: jsonb("spaced_repetition_schedule").notNull(),
+  mnemonicMappings: jsonb("mnemonic_mappings").notNull(),
+  cognitiveBreakPoints: jsonb("cognitive_break_points").notNull(),
+  
+  // Performance Predictions
+  predictedRetentionRate: numeric("predicted_retention_rate", { precision: 5, scale: 2 }).default("0.80"),
+  expectedStudyTimeReduction: numeric("expected_study_time_reduction", { precision: 5, scale: 2 }).default("0.35"),
+  difficultyAdjustments: jsonb("difficulty_adjustments").default({}),
+  
+  // Status tracking
+  status: text("status").default("active"), // active, completed, archived
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const cognitiveTrainingSessions = pgTable("cognitive_training_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  
+  // Session Information
+  sessionType: text("session_type").notNull(), // memory, concentration, speed, pattern_recognition
+  duration: integer("duration").notNull(), // minutes
+  intensity: text("intensity").default("medium"), // easy, medium, hard
+  
+  // Exercise Data
+  exercises: jsonb("exercises").notNull(),
+  performanceMetrics: jsonb("performance_metrics").notNull(),
+  
+  // Scores
+  completionScore: integer("completion_score").default(0), // 0-100
+  timeSpent: integer("time_spent").default(0), // actual seconds
+  
+  // Status
+  status: text("status").default("completed"), // in_progress, completed, abandoned
+  
+  completedAt: timestamp("completed_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Additional comprehensive schemas
+export const memorySessionRecords = pgTable("memory_session_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionId: integer("session_id").notNull(),
+  
+  // Session Details
+  topicsCovered: text("topics_covered").array(),
+  techniqueUsed: text("technique_used"),
+  retentionScore: numeric("retention_score", { precision: 5, scale: 2 }).default("0"),
+  
+  // Engagement
+  engagementLevel: text("engagement_level"), // low, medium, high
+  focusQuality: numeric("focus_quality", { precision: 3, scale: 2 }).default("1.0"),
+  
+  // Learning Signals
+  learningSignals: jsonb("learning_signals"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const cognitivePerformanceMetrics = pgTable("cognitive_performance_metrics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  
+  // Performance Data
+  averageRetention: numeric("average_retention", { precision: 5, scale: 2 }).default("0"),
+  learningVelocity: numeric("learning_velocity", { precision: 5, scale: 2 }).default("0"),
+  efficiencyScore: numeric("efficiency_score", { precision: 5, scale: 2 }).default("0"),
+  
+  // Trends
+  retentionTrend: text("retention_trend"), // improving, stable, declining
+  velocityTrend: text("velocity_trend"), // accelerating, steady, decelerating
+  
+  // Comparison
+  improvementPercentage: numeric("improvement_percentage", { precision: 5, scale: 2 }).default("0"),
+  benchmarkComparison: text("benchmark_comparison"), // above_average, average, below_average
+  
+  // Period
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Step 8.2: Database Schema Insert Schemas
+export const insertCognitiveUserProfileSchema = createInsertSchema(cognitiveUserProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMemoryEnhancedCurriculumSchema = createInsertSchema(memoryEnhancedCurricula).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCognitiveTrainingSessionSchema = createInsertSchema(cognitiveTrainingSessions).omit({ id: true, createdAt: true });
+export const insertMemorySessionRecordSchema = createInsertSchema(memorySessionRecords).omit({ id: true, createdAt: true });
+export const insertCognitivePerformanceMetricSchema = createInsertSchema(cognitivePerformanceMetrics).omit({ id: true, updatedAt: true });
+
+// Step 8.2: Database Schema Types
+export type CognitiveUserProfile = typeof cognitiveUserProfiles.$inferSelect;
+export type MemoryEnhancedCurriculum = typeof memoryEnhancedCurricula.$inferSelect;
+export type CognitiveTrainingSession = typeof cognitiveTrainingSessions.$inferSelect;
+export type MemorySessionRecord = typeof memorySessionRecords.$inferSelect;
+export type CognitivePerformanceMetric = typeof cognitivePerformanceMetrics.$inferSelect;
+
+export type InsertCognitiveUserProfile = z.infer<typeof insertCognitiveUserProfileSchema>;
+export type InsertMemoryEnhancedCurriculum = z.infer<typeof insertMemoryEnhancedCurriculumSchema>;
+export type InsertCognitiveTrainingSession = z.infer<typeof insertCognitiveTrainingSessionSchema>;
+export type InsertMemorySessionRecord = z.infer<typeof insertMemorySessionRecordSchema>;
+export type InsertCognitivePerformanceMetric = z.infer<typeof insertCognitivePerformanceMetricSchema>;

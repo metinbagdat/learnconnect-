@@ -4387,6 +4387,77 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updated;
   }
+
+  // Step 6.1: AI Curriculum Generation Sessions
+  async createAiGenerationSession(session: any): Promise<any> {
+    const [created] = await db.insert(aiCurriculumGenerationSessions).values(session).returning();
+    return created;
+  }
+
+  async getGenerationSession(sessionId: string): Promise<any | undefined> {
+    const [session] = await db.select().from(aiCurriculumGenerationSessions)
+      .where(eq(aiCurriculumGenerationSessions.sessionId, sessionId));
+    return session;
+  }
+
+  async getUserGenerationSessions(userId: number, limit: number = 50): Promise<any[]> {
+    return await db.select().from(aiCurriculumGenerationSessions)
+      .where(eq(aiCurriculumGenerationSessions.userId, userId))
+      .orderBy(desc(aiCurriculumGenerationSessions.startedAt))
+      .limit(limit);
+  }
+
+  async updateGenerationSession(sessionId: string, data: any): Promise<any | undefined> {
+    const [updated] = await db.update(aiCurriculumGenerationSessions)
+      .set({ ...data, completedAt: new Date() })
+      .where(eq(aiCurriculumGenerationSessions.sessionId, sessionId))
+      .returning();
+    return updated;
+  }
+
+  // Curriculum Production Archives
+  async archiveProduction(archive: any): Promise<any> {
+    const [created] = await db.insert(curriculumProductionArchives).values(archive).returning();
+    return created;
+  }
+
+  async getProductionArchives(productionId: number): Promise<any[]> {
+    return await db.select().from(curriculumProductionArchives)
+      .where(eq(curriculumProductionArchives.productionId, productionId))
+      .orderBy(desc(curriculumProductionArchives.archivedAt));
+  }
+
+  async deleteExpiredArchives(daysThreshold: number = 90): Promise<number> {
+    const expiryDate = new Date(Date.now() - daysThreshold * 24 * 60 * 60 * 1000);
+    const result = await db.delete(curriculumProductionArchives)
+      .where(sql`${curriculumProductionArchives.archivedAt} < ${expiryDate}`);
+    return result.rowCount || 0;
+  }
+
+  // AI Learning Data
+  async saveLearningData(learningData: any): Promise<any> {
+    const [created] = await db.insert(aiLearningData).values(learningData).returning();
+    return created;
+  }
+
+  async getLearningDataBySession(sessionId: number): Promise<any[]> {
+    return await db.select().from(aiLearningData)
+      .where(eq(aiLearningData.generationSessionId, sessionId));
+  }
+
+  async getRecentLearningData(limit: number = 100): Promise<any[]> {
+    return await db.select().from(aiLearningData)
+      .orderBy(desc(aiLearningData.createdAt))
+      .limit(limit);
+  }
+
+  async updateLearningDataFeedback(id: number, feedback: any): Promise<any | undefined> {
+    const [updated] = await db.update(aiLearningData)
+      .set({ userFeedback: feedback })
+      .where(eq(aiLearningData.id, id))
+      .returning();
+    return updated;
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -1,0 +1,47 @@
+# integration/memory_enhanced_curriculum.py
+class MemoryEnhancedCurriculumEngine:
+    """Integrates DopingHafiza memory techniques into LearnConnect curriculum"""
+    
+    def __init__(self):
+        self.memory_techniques = {
+            'spaced_repetition': SpacedRepetitionEngine(),
+            'mnemonic_generator': MnemonicGenerator(),
+            'memory_palace': MemoryPalaceBuilder(),
+            'cognitive_optimizer': CognitiveOptimizer()
+        }
+        self.curriculum_integrator = CurriculumIntegrator()
+        self.performance_tracker = CognitivePerformanceTracker()
+    
+    def create_memory_enhanced_curriculum(self, user_id, base_curriculum, cognitive_profile):
+        """Create curriculum enhanced with memory techniques"""
+        
+        try:
+            # Analyze curriculum for memory optimization opportunities
+            memory_analysis = self._analyze_curriculum_memory_needs(base_curriculum)
+            
+            # Generate memory-enhanced learning path
+            enhanced_path = self._apply_memory_techniques(base_curriculum, memory_analysis, cognitive_profile)
+            
+            # Create cognitive training schedule
+            cognitive_training = self._generate_cognitive_training_schedule(cognitive_profile)
+            
+            # Build comprehensive learning ecosystem
+            learning_ecosystem = self._build_learning_ecosystem(enhanced_path, cognitive_training)
+            
+            # Save production with memory enhancements
+            saved_production = self._save_memory_enhanced_production(
+                user_id, base_curriculum, enhanced_path, cognitive_training
+            )
+            
+            return {
+                'status': 'success',
+                'memory_enhanced_curriculum': enhanced_path,
+                'cognitive_training_schedule': cognitive_training,
+                'memory_techniques_applied': memory_analysis['techniques_used'],
+                'expected_efficiency_gain': self._calculate_efficiency_gain(memory_analysis),
+                'saved_production_id': saved_production.id
+            }
+            
+        except Exception as e:
+            logger.error(f"Memory-enhanced curriculum creation failed: {e}")
+            return {'status': 'error', 'message': str(e)}

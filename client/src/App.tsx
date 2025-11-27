@@ -60,6 +60,7 @@ import { InteractionTracking } from "@/pages/interaction-tracking";
 import { StudentAIDashboard } from "@/pages/student-ai-dashboard";
 import { SystemHealth } from "@/pages/system-health";
 import { AdminAIDashboard } from "@/pages/admin-ai-dashboard";
+import { GoalSettingForm } from "@/pages/goal-setting-form";
 import AdaptiveLearning from "@/pages/adaptive-learning";
 import ControlPanel from "@/pages/control-panel";
 import { MonitoringPage } from "@/pages/monitoring";
@@ -105,6 +106,7 @@ function Router() {
       <ProtectedRoute path="/student-ai-dashboard" component={StudentAIDashboard} />
       <ProtectedRoute path="/system-health" component={SystemHealth} />
       <ProtectedRoute path="/admin-ai-dashboard" component={AdminAIDashboard} />
+      <ProtectedRoute path="/goal-setting" component={GoalSettingForm} />
       <ProtectedRoute path="/my-curriculum" component={MyCurriculumPage} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />

@@ -75,6 +75,7 @@ import ProductionHistoryList from "@/pages/production-history-list";
 import MemoryEnhancedDashboard from "@/pages/memory-enhanced-dashboard";
 import CognitiveAssessment from "@/pages/cognitive-assessment";
 import StudentCognitiveDashboard from "@/pages/student-cognitive-dashboard";
+import AdminCognitiveDashboard from "@/pages/admin-cognitive-dashboard";
 
 function Router() {
   return (
@@ -155,6 +156,7 @@ function Router() {
       <ProtectedRoute path="/memory-enhanced-dashboard" component={MemoryEnhancedDashboard} />
       <ProtectedRoute path="/cognitive-assessment" component={CognitiveAssessment} />
       <ProtectedRoute path="/student-cognitive-dashboard" component={StudentCognitiveDashboard} />
+      <ProtectedRoute path="/admin-cognitive-dashboard" component={AdminCognitiveDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

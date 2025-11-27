@@ -1,0 +1,48 @@
+# dashboard/cognitive_admin_dashboard.py
+class CognitiveAdminDashboard:
+    """Admin dashboard for cognitive feature management"""
+    
+    def get_cognitive_admin_data(self):
+        """Get comprehensive admin data for cognitive features"""
+        return {
+            'system_performance': self._get_system_performance(),
+            'user_engagement': self._get_user_engagement(),
+            'technique_effectiveness': self._get_technique_effectiveness(),
+            'cognitive_improvements': self._get_cognitive_improvements(),
+            'integration_analytics': self._get_integration_analytics()
+        }
+    
+    def _get_technique_effectiveness(self):
+        """Analyze effectiveness of different memory techniques"""
+        techniques = MemoryTechnique.objects.all()
+        
+        effectiveness_data = {}
+        for technique in techniques:
+            user_profiles = CognitiveUserProfile.objects.filter(
+                preferred_techniques__contains=[technique.name]
+            )
+            
+            if user_profiles.exists():
+                avg_effectiveness = sum(
+                    profile.technique_effectiveness.get(technique.name, 0) 
+                    for profile in user_profiles
+                ) / len(user_profiles)
+                
+                effectiveness_data[technique.name] = {
+                    'average_effectiveness': avg_effectiveness,
+                    'user_count': len(user_profiles),
+                    'improvement_trend': self._calculate_improvement_trend(technique.name)
+                }
+        
+        return effectiveness_data
+    
+    def _get_cognitive_improvements(self):
+        """Track cognitive improvements across user base"""
+        improvements = {
+            'memory_capacity_improvements': self._calculate_memory_improvements(),
+            'learning_efficiency_gains': self._calculate_efficiency_gains(),
+            'retention_rate_improvements': self._calculate_retention_improvements(),
+            'user_success_stories': self._get_success_stories()
+        }
+        
+        return improvements

@@ -1,0 +1,45 @@
+# dashboard/cognitive_student_dashboard.py
+class CognitiveStudentDashboard:
+    """Enhanced student dashboard with cognitive features"""
+    
+    def get_cognitive_dashboard_data(self, user_id):
+        """Get comprehensive cognitive-enhanced dashboard data"""
+        return {
+            'learning_analytics': self._get_learning_analytics(user_id),
+            'cognitive_insights': self._get_cognitive_insights(user_id),
+            'memory_enhanced_curricula': self._get_memory_enhanced_curricula(user_id),
+            'cognitive_training': self._get_cognitive_training(user_id),
+            'performance_predictions': self._get_performance_predictions(user_id)
+        }
+    
+    def _get_cognitive_insights(self, user_id):
+        """Get AI-powered cognitive insights"""
+        cognitive_profile = CognitiveUserProfile.objects.get(user_id=user_id)
+        
+        return {
+            'optimal_study_times': self._calculate_optimal_study_times(cognitive_profile),
+            'memory_technique_recommendations': self._get_technique_recommendations(cognitive_profile),
+            'focus_optimization': self._get_focus_optimization(cognitive_profile),
+            'learning_efficiency_tips': self._get_efficiency_tips(cognitive_profile)
+        }
+    
+    def _get_memory_enhanced_curricula(self, user_id):
+        """Get memory-enhanced curriculum options"""
+        curricula = MemoryEnhancedCurriculum.objects.filter(user_id=user_id)
+        
+        return {
+            'available_curricula': [
+                {
+                    'id': curriculum.id,
+                    'name': curriculum.base_curriculum.name,
+                    'enhancement_level': self._calculate_enhancement_level(curriculum),
+                    'expected_benefits': {
+                        'time_reduction': curriculum.expected_study_time_reduction,
+                        'retention_improvement': curriculum.predicted_retention_rate,
+                        'difficulty_adjustment': curriculum.difficulty_adjustments
+                    },
+                    'memory_techniques': curriculum.memory_techniques_applied
+                }
+                for curriculum in curricula
+            ]
+        }

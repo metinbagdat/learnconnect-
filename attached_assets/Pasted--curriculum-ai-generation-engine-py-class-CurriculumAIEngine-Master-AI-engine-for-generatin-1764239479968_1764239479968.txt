@@ -1,0 +1,49 @@
+# curriculum/ai_generation_engine.py
+class CurriculumAIEngine:
+    """Master AI engine for generating personalized curricula"""
+    
+    def __init__(self):
+        self.ai_models = {
+            'curriculum_generator': CurriculumGeneratorModel(),
+            'personalization_engine': PersonalizationEngine(),
+            'prerequisite_analyzer': PrerequisiteAnalyzer(),
+            'learning_path_optimizer': LearningPathOptimizer(),
+            'progress_predictor': ProgressPredictor()
+        }
+        self.production_saver = ProductionSaver()
+        self.interaction_tracker = InteractionTracker()
+    
+    def generate_personalized_curriculum(self, user_id, enrolled_courses, user_preferences):
+        """Generate AI-powered personalized curriculum"""
+        try:
+            # Track the generation process
+            generation_id = self.interaction_tracker.start_generation_session(user_id)
+            
+            # Analyze user context
+            user_context = self._analyze_user_context(user_id, enrolled_courses)
+            
+            # Generate curriculum options
+            curriculum_options = self._generate_curriculum_options(user_context, user_preferences)
+            
+            # Personalize based on AI insights
+            personalized_curriculum = self._personalize_curriculum(curriculum_options, user_context)
+            
+            # Save production for later use
+            saved_production = self.production_saver.save_curriculum_production(
+                generation_id, user_context, curriculum_options, personalized_curriculum
+            )
+            
+            # Log complete interaction
+            self.interaction_tracker.complete_generation_session(generation_id, saved_production)
+            
+            return {
+                'status': 'success',
+                'generation_id': generation_id,
+                'personalized_curriculum': personalized_curriculum,
+                'ai_confidence': self._calculate_ai_confidence(user_context),
+                'saved_production_id': saved_production.id
+            }
+            
+        except Exception as e:
+            logger.error(f"Curriculum generation failed: {e}")
+            return {'status': 'error', 'message': str(e)}

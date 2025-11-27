@@ -1,0 +1,57 @@
+# models/curriculum_models.py
+class CurriculumProduction(models.Model):
+    """Stores all AI-generated curriculum productions for later use"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    generation_session = models.CharField(max_length=100)
+    
+    # Input Data
+    enrolled_courses = models.JSONField()
+    user_preferences = models.JSONField()
+    user_context = models.JSONField()
+    
+    # AI Generation Data
+    curriculum_options = models.JSONField()
+    selected_curriculum = models.JSONField()
+    ai_model_versions = models.JSONField()
+    generation_parameters = models.JSONField()
+    
+    # Metadata
+    ai_confidence_score = models.FloatField()
+    generation_duration = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'curriculum_production'
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['ai_confidence_score']),
+        ]
+
+class PersonalizedCurriculum(models.Model):
+    """Stores finalized personalized curricula"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    production = models.ForeignKey(CurriculumProduction, on_delete=models.CASCADE)
+    
+    curriculum_structure = models.JSONField()  # Complete curriculum plan
+    learning_path = models.JSONField()         # Ordered learning sequence
+    estimated_duration = models.DurationField()
+    difficulty_progression = models.JSONField()
+    resource_mapping = models.JSONField()
+    
+    # AI Insights
+    ai_reasoning = models.JSONField()
+    success_probability = models.FloatField()
+    potential_challenges = models.JSONField()
+    optimization_suggestions = models.JSONField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class CurriculumInteraction(models.Model):
+    """Tracks all interactions with curriculum system"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    curriculum = models.ForeignKey(PersonalizedCurriculum, on_delete=models.CASCADE)
+    interaction_type = models.CharField(max_length=50)
+    interaction_data = models.JSONField()
+    ai_context_snapshot = models.JSONField()
+    timestamp = models.DateTimeField(auto_now_add=True)

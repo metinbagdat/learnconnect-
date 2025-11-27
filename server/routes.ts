@@ -21,6 +21,7 @@ import { registerAdminAIEndpoints } from "./smart-suggestions/admin-ai-endpoints
 import { registerGoalFormEndpoints } from "./smart-suggestions/goal-form-endpoints";
 import { registerAIDataFlowEndpoints } from "./smart-suggestions/ai-data-flow-endpoints";
 import { registerDataFlowEndpoints } from "./smart-suggestions/data-flow-endpoints";
+import { registerMLModelEndpoints } from "./smart-suggestions/ml-model-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
 import { alertSystem } from "./alert-system";
 import { predictiveMaintenanceEngine } from "./predictive-maintenance";
@@ -7379,6 +7380,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerGoalFormEndpoints(app);
   registerAIDataFlowEndpoints(app);
   registerDataFlowEndpoints(app);
+  registerMLModelEndpoints(app);
 
   // Real-time Monitoring Endpoints
   app.get("/api/study-planner/metrics", (app as any).ensureAuthenticated, async (req, res) => {

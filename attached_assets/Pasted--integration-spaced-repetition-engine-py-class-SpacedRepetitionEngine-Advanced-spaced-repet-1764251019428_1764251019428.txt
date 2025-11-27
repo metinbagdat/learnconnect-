@@ -1,0 +1,55 @@
+# integration/spaced_repetition_engine.py
+class SpacedRepetitionEngine:
+    """Advanced spaced repetition from DopingHafiza integrated into LearnConnect"""
+    
+    def __init__(self):
+        self.algorithm = SM2Algorithm()  # SuperMemo-2
+        self.performance_tracker = PerformanceTracker()
+    
+    def generate_optimal_review_schedule(self, user_id, curriculum, learning_sessions):
+        """Generate optimal spaced repetition schedule"""
+        
+        schedule = {
+            'immediate_reviews': [],
+            'short_term_reviews': [],
+            'long_term_reviews': [],
+            'mastery_reviews': []
+        }
+        
+        for session in learning_sessions:
+            # Calculate optimal review intervals
+            review_intervals = self._calculate_review_intervals(session, user_id)
+            
+            # Schedule reviews
+            schedule['immediate_reviews'].extend(
+                self._schedule_immediate_reviews(session, review_intervals['immediate'])
+            )
+            schedule['short_term_reviews'].extend(
+                self._schedule_short_term_reviews(session, review_intervals['short_term'])
+            )
+            schedule['long_term_reviews'].extend(
+                self._schedule_long_term_reviews(session, review_intervals['long_term'])
+            )
+        
+        return self._optimize_schedule(schedule, user_id)
+    
+    def _calculate_review_intervals(self, learning_session, user_id):
+        """Calculate optimal review intervals based on content and user performance"""
+        
+        user_performance = self.performance_tracker.get_user_performance(user_id)
+        content_difficulty = learning_session['difficulty_level']
+        content_type = learning_session['content_type']
+        
+        # Base intervals from SM2 algorithm
+        base_intervals = self.algorithm.calculate_intervals(
+            user_performance['retention_rate'],
+            content_difficulty
+        )
+        
+        # Adjust based on content type
+        adjusted_intervals = self._adjust_for_content_type(base_intervals, content_type)
+        
+        # Adjust based on user's cognitive profile
+        final_intervals = self._adjust_for_cognitive_profile(adjusted_intervals, user_id)
+        
+        return final_intervals

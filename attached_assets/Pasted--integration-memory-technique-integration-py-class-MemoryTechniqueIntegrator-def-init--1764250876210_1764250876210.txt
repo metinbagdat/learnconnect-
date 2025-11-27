@@ -1,0 +1,45 @@
+# integration/memory_technique_integration.py
+class MemoryTechniqueIntegrator:
+   
+    def __init__(self):
+        self.technique_mapper = TechniqueMapper()
+        self.content_analyzer = ContentAnalyzer()
+    
+    def apply_memory_techniques_to_course(self, course_content, user_profile):
+        """Apply appropriate memory techniques to course content"""
+        
+        techniques_applied = {}
+        
+        for module in course_content['modules']:
+            for lesson in module['lessons']:
+                # Analyze content type for appropriate technique
+                content_analysis = self.content_analyzer.analyze_content(lesson['content'])
+                
+                # Select best memory technique
+                best_technique = self._select_best_technique(content_analysis, user_profile)
+                
+                # Apply technique
+                enhanced_content = self._apply_technique(lesson['content'], best_technique)
+                
+                techniques_applied[lesson['id']] = {
+                    'technique': best_technique,
+                    'original_content': lesson['content'],
+                    'enhanced_content': enhanced_content,
+                    'expected_improvement': self._predict_improvement(best_technique, content_analysis)
+                }
+        
+        return techniques_applied
+    
+    def _select_best_technique(self, content_analysis, user_profile):
+        """Select the most effective memory technique for content and user"""
+        
+        technique_scores = {}
+        
+        for technique in user_profile.preferred_techniques:
+            effectiveness = user_profile.technique_effectiveness.get(technique, 0.5)
+            content_suitability = self._calculate_content_suitability(technique, content_analysis)
+            
+            # Weighted score
+            technique_scores[technique] = (effectiveness * 0.6) + (content_suitability * 0.4)
+        
+        return max(technique_scores.items(), key=lambda x: x[1])[0]

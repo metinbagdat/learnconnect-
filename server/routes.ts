@@ -29,6 +29,7 @@ import { registerSystemValidationEndpoints } from "./smart-suggestions/system-va
 import { registerMemoryEnhancementEndpoints } from "./smart-suggestions/memory-enhancement-endpoints";
 import { registerMemoryEnhancedCurriculumEndpoints } from "./smart-suggestions/memory-enhanced-curriculum-endpoints";
 import { registerCognitiveIntegrationEndpoints } from "./smart-suggestions/cognitive-integration-endpoints";
+import { registerMemoryTechniqueIntegrationEndpoints } from "./smart-suggestions/memory-technique-integration-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -7397,6 +7398,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerMemoryEnhancementEndpoints(app);
   registerMemoryEnhancedCurriculumEndpoints(app);
   registerCognitiveIntegrationEndpoints(app);
+  registerMemoryTechniqueIntegrationEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
   app.use('/api/production', productionRouter);
 

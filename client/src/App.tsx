@@ -74,6 +74,7 @@ import CurriculumGenerationForm from "@/pages/curriculum-generation-form";
 import ProductionHistoryList from "@/pages/production-history-list";
 import MemoryEnhancedDashboard from "@/pages/memory-enhanced-dashboard";
 import CognitiveAssessment from "@/pages/cognitive-assessment";
+import StudentCognitiveDashboard from "@/pages/student-cognitive-dashboard";
 
 function Router() {
   return (
@@ -153,6 +154,7 @@ function Router() {
       <ProtectedRoute path="/courses-control" component={CoursesControlPage} />
       <ProtectedRoute path="/memory-enhanced-dashboard" component={MemoryEnhancedDashboard} />
       <ProtectedRoute path="/cognitive-assessment" component={CognitiveAssessment} />
+      <ProtectedRoute path="/student-cognitive-dashboard" component={StudentCognitiveDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

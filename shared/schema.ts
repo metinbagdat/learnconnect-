@@ -1952,3 +1952,57 @@ export type InsertStudyPlan = z.infer<typeof insertStudyPlanSchema>;
 export type InsertStudyMilestone = z.infer<typeof insertStudyMilestoneSchema>;
 export type InsertCourseSuggestion = z.infer<typeof insertCourseSuggestionSchema>;
 export type InsertGoalSuggestion = z.infer<typeof insertGoalSuggestionSchema>;
+
+// Enhanced AI Profile & Suggestion Tables
+export const aiProfiles = pgTable("ai_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  aiProfileData: jsonb("ai_profile_data"),
+  learningStyle: text("learning_style"), // 'visual', 'auditory', 'kinesthetic', 'reading'
+  careerGoals: jsonb("career_goals").array(),
+  skillGaps: jsonb("skill_gaps").array(),
+  preferences: jsonb("preferences"),
+  modelVersion: text("model_version").default("v1"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const aiSuggestions = pgTable("ai_suggestions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  suggestionType: text("suggestion_type").notNull(), // 'goal', 'course', 'study_plan', 'intervention'
+  suggestionData: jsonb("suggestion_data").notNull(),
+  confidenceScore: numeric("confidence_score", { precision: 3, scale: 2 }).notNull(),
+  reasoning: text("reasoning"), // AI explanation for suggestion
+  accepted: boolean("accepted"),
+  implemented: boolean("implemented").default(false),
+  feedback: text("feedback"), // User feedback on suggestion
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const enhancedInteractionLogs = pgTable("enhanced_interaction_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  module: text("module").notNull(),
+  action: text("action").notNull(),
+  data: jsonb("data"),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  sessionId: text("session_id"),
+  aiContext: jsonb("ai_context"), // AI context at time of interaction
+  responseTime: integer("response_time"), // milliseconds
+  status: text("status").default("success"), // 'success', 'error', 'timeout'
+});
+
+// Insert schemas
+export const insertAiProfileSchema = createInsertSchema(aiProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAiSuggestionSchema = createInsertSchema(aiSuggestions).omit({ id: true, createdAt: true });
+export const insertEnhancedInteractionLogSchema = createInsertSchema(enhancedInteractionLogs).omit({ id: true, timestamp: true });
+
+// Types
+export type AiProfile = typeof aiProfiles.$inferSelect;
+export type AiSuggestion = typeof aiSuggestions.$inferSelect;
+export type EnhancedInteractionLog = typeof enhancedInteractionLogs.$inferSelect;
+
+export type InsertAiProfile = z.infer<typeof insertAiProfileSchema>;
+export type InsertAiSuggestion = z.infer<typeof insertAiSuggestionSchema>;
+export type InsertEnhancedInteractionLog = z.infer<typeof insertEnhancedInteractionLogSchema>;

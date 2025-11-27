@@ -71,6 +71,7 @@ import CurriculumCustomization from "@/pages/curriculum-customization";
 import StudentCurriculumDashboard from "@/pages/student-curriculum-dashboard";
 import AdminCurriculumDashboard from "@/pages/admin-curriculum-dashboard";
 import CurriculumGenerationForm from "@/pages/curriculum-generation-form";
+import ProductionHistoryList from "@/pages/production-history-list";
 
 function Router() {
   return (
@@ -118,6 +119,7 @@ function Router() {
       <ProtectedRoute path="/student-curriculum-dashboard" component={StudentCurriculumDashboard} />
       <ProtectedRoute path="/admin-curriculum-dashboard" component={AdminCurriculumDashboard} />
       <ProtectedRoute path="/curriculum-form" component={CurriculumGenerationForm} />
+      <ProtectedRoute path="/production-history" component={ProductionHistoryList} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />
       <ProtectedRoute path="/assessment" component={AssessmentPage} />

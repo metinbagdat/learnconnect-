@@ -1,0 +1,96 @@
+// production-history-list.js
+class ProductionHistoryList {
+    constructor(userId) {
+        this.userId = userId;
+        this.productions = [];
+        this.filters = {};
+        this.initializeList();
+    }
+    
+    async initializeList() {
+        await this.loadProductions();
+        this.renderList();
+        this.setupSearchAndFilter();
+    }
+    
+    async loadProductions() {
+        const response = await fetch(`/api/curriculum/productions/${this.userId}/`);
+        this.productions = await response.json();
+    }
+    
+    renderList() {
+        const listHTML = `
+        <div class="production-history-list" id="production-list">
+            <div class="list-header">
+                <h3>📊 Curriculum Production History</h3>
+                <div class="list-controls">
+                    <input type="text" id="production-search" placeholder="Search productions...">
+                    <select id="production-filter">
+                        <option value="all">All Productions</option>
+                        <option value="recent">Recent</option>
+                        <option value="high-confidence">High Confidence</option>
+                        <option value="implemented">Implemented</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="production-grid" id="production-grid">
+                ${this.renderProductionGrid()}
+            </div>
+            
+            <div class="list-pagination" id="production-pagination">
+                ${this.renderPagination()}
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('list-container').innerHTML = listHTML;
+    }
+    
+    renderProductionGrid() {
+        return this.productions.map(production => `
+            <div class="production-card" data-production-id="${production.id}">
+                <div class="production-header">
+                    <h4>${production.name}</h4>
+                    <span class="production-date">${this.formatDate(production.created_at)}</span>
+                </div>
+                
+                <div class="production-metrics">
+                    <div class="metric">
+                        <span class="metric-value">${production.ai_confidence}%</span>
+                        <span class="metric-label">AI Confidence</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">${production.estimated_duration}</span>
+                        <span class="metric-label">Duration</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">${production.course_count}</span>
+                        <span class="metric-label">Courses</span>
+                    </div>
+                </div>
+                
+                <div class="production-preview">
+                    <div class="preview-content">
+                        ${this.renderCurriculumPreview(production.curriculum_structure)}
+                    </div>
+                </div>
+                
+                <div class="production-actions">
+                    <button class="btn-action" onclick="loadProduction('${production.id}')">
+                        🔄 Load
+                    </button>
+                    <button class="btn-action" onclick="cloneProduction('${production.id}')">
+                        📋 Clone
+                    </button>
+                    <button class="btn-action" onclick="analyzeProduction('${production.id}')">
+                        📊 Analyze
+                    </button>
+                    <button class="btn-action" onclick="deleteProduction('${production.id}')">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+}

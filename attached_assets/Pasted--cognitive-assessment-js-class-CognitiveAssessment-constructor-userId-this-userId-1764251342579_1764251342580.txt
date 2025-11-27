@@ -1,0 +1,91 @@
+// cognitive-assessment.js
+class CognitiveAssessment {
+    constructor(userId) {
+        this.userId = userId;
+        this.assessmentData = {};
+        this.currentTest = null;
+        this.initializeAssessment();
+    }
+    
+    initializeAssessment() {
+        this.renderAssessmentInterface();
+        this.loadAssessmentTypes();
+    }
+    
+    renderAssessmentInterface() {
+        const assessmentHTML = `
+        <div class="cognitive-assessment" id="cognitive-assessment">
+            <div class="assessment-header">
+                <h3>🧠 Cognitive Performance Assessment</h3>
+                <p>Complete these assessments to personalize your learning experience</p>
+            </div>
+            
+            <div class="assessment-grid">
+                <!-- Memory Assessment -->
+                <div class="assessment-card" data-type="memory">
+                    <h4>🧩 Memory Capacity</h4>
+                    <div class="assessment-description">
+                        Test your short-term and long-term memory capacity
+                    </div>
+                    <div class="assessment-metrics">
+                        <span class="metric">Last Score: 85%</span>
+                        <span class="metric">Duration: 10 min</span>
+                    </div>
+                    <button class="btn-start-assessment" onclick="startMemoryAssessment()">
+                        Start Assessment
+                    </button>
+                </div>
+                
+                <!-- Focus Assessment -->
+                <div class="assessment-card" data-type="focus">
+                    <h4>🎯 Attention Span</h4>
+                    <div class="assessment-description">
+                        Measure your focus duration and distraction resistance
+                    </div>
+                    <div class="assessment-metrics">
+                        <span class="metric">Last Score: 78%</span>
+                        <span class="metric">Duration: 8 min</span>
+                    </div>
+                    <button class="btn-start-assessment" onclick="startFocusAssessment()">
+                        Start Assessment
+                    </button>
+                </div>
+                
+                <!-- Learning Style -->
+                <div class="assessment-card" data-type="learning_style">
+                    <h4>📚 Learning Style</h4>
+                    <div class="assessment-description">
+                        Discover your optimal learning style (Visual, Auditory, Kinesthetic)
+                    </div>
+                    <div class="assessment-metrics">
+                        <span class="metric">Current: Visual</span>
+                        <span class="metric">Duration: 5 min</span>
+                    </div>
+                    <button class="btn-start-assessment" onclick="startLearningStyleAssessment()">
+                        Start Assessment
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Assessment Progress -->
+            <div class="assessment-progress">
+                <h4>Overall Cognitive Profile</h4>
+                <div class="profile-completion">
+                    <div class="completion-bar">
+                        <div class="completion-fill" style="width: 65%"></div>
+                    </div>
+                    <span>65% Complete</span>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('assessment-container').innerHTML = assessmentHTML;
+    }
+    
+    async startMemoryAssessment() {
+        this.currentTest = new MemoryTest(this.userId);
+        await this.currentTest.initialize();
+        this.showTestInterface();
+    }
+}

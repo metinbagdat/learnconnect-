@@ -72,6 +72,7 @@ import StudentCurriculumDashboard from "@/pages/student-curriculum-dashboard";
 import AdminCurriculumDashboard from "@/pages/admin-curriculum-dashboard";
 import CurriculumGenerationForm from "@/pages/curriculum-generation-form";
 import ProductionHistoryList from "@/pages/production-history-list";
+import MemoryEnhancedDashboard from "@/pages/memory-enhanced-dashboard";
 
 function Router() {
   return (

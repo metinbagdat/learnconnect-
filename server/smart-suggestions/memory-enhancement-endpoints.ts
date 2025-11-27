@@ -90,6 +90,9 @@ export function registerMemoryEnhancementEndpoints(app: Express) {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
       const { topicId, quality } = req.body;
+      if (quality === undefined || quality < 0 || quality > 5) {
+        return res.status(400).json({ message: "Quality must be between 0 and 5" });
+      }
 
       // Calculate next review
       const nextReview = memoryEngine.calculateNextReviewDate(quality, 1, 2.5, 1);

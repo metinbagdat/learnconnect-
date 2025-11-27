@@ -2099,7 +2099,7 @@ export const spacedRepetitionSchedules = pgTable("spaced_repetition_schedules", 
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const userProgress = pgTable("user_progress", {
+export const memoryStudyProgress = pgTable("memory_study_progress", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   topicId: integer("topic_id").notNull(),
@@ -2145,7 +2145,7 @@ export const topicMemoryTechniques = pgTable("topic_memory_techniques", {
 export const insertLearningStyleAssessmentSchema = createInsertSchema(learningStyleAssessments).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMemoryTechniqueSchema = createInsertSchema(memoryTechniques).omit({ id: true, createdAt: true });
 export const insertSpacedRepetitionScheduleSchema = createInsertSchema(spacedRepetitionSchedules).omit({ id: true, createdAt: true });
-export const insertUserProgressSchema = createInsertSchema(userProgress).omit({ id: true, createdAt: true });
+export const insertMemoryStudyProgressSchema = createInsertSchema(memoryStudyProgress).omit({ id: true, createdAt: true });
 export const insertBrainTrainingExerciseSchema = createInsertSchema(brainTrainingExercises).omit({ id: true, createdAt: true });
 export const insertUserBrainTrainingSchema = createInsertSchema(userBrainTraining).omit({ id: true });
 export const insertTopicMemoryTechniqueSchema = createInsertSchema(topicMemoryTechniques).omit({ id: true });
@@ -2154,7 +2154,7 @@ export const insertTopicMemoryTechniqueSchema = createInsertSchema(topicMemoryTe
 export type LearningStyleAssessment = typeof learningStyleAssessments.$inferSelect;
 export type MemoryTechnique = typeof memoryTechniques.$inferSelect;
 export type SpacedRepetitionSchedule = typeof spacedRepetitionSchedules.$inferSelect;
-export type UserProgress = typeof userProgress.$inferSelect;
+export type MemoryStudyProgress = typeof memoryStudyProgress.$inferSelect;
 export type BrainTrainingExercise = typeof brainTrainingExercises.$inferSelect;
 export type UserBrainTraining = typeof userBrainTraining.$inferSelect;
 export type TopicMemoryTechnique = typeof topicMemoryTechniques.$inferSelect;
@@ -2162,7 +2162,7 @@ export type TopicMemoryTechnique = typeof topicMemoryTechniques.$inferSelect;
 export type InsertLearningStyleAssessment = z.infer<typeof insertLearningStyleAssessmentSchema>;
 export type InsertMemoryTechnique = z.infer<typeof insertMemoryTechniqueSchema>;
 export type InsertSpacedRepetitionSchedule = z.infer<typeof insertSpacedRepetitionScheduleSchema>;
-export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type InsertMemoryStudyProgress = z.infer<typeof insertMemoryStudyProgressSchema>;
 export type InsertBrainTrainingExercise = z.infer<typeof insertBrainTrainingExerciseSchema>;
 export type InsertUserBrainTraining = z.infer<typeof insertUserBrainTrainingSchema>;
 export type InsertTopicMemoryTechnique = z.infer<typeof insertTopicMemoryTechniqueSchema>;

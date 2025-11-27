@@ -39,3 +39,7 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_openai:1.0.0", "javascript_anthropic:1.0.0", "javascript_stripe:1.0.0", "javascript_anthropic_ai_integrations:1.0.0", "javascript_openrouter_ai_integrations:1.0.0"]
+
+[[ports]]
+localPort = 37975
+externalPort = 80

@@ -1,0 +1,83 @@
+// pre-course-ai-guidance.js
+class PreCourseAIGuidance {
+    constructor(userId) {
+        this.userId = userId;
+        this.aiSuggestions = [];
+        this.initializeGuidanceSystem();
+    }
+    
+    async initializeGuidanceSystem() {
+        // Load AI-generated suggestions
+        const response = await fetch(`/api/ai/suggestions/pre-course/${this.userId}`);
+        this.aiSuggestions = await response.json();
+        
+        this.renderAIGuidanceInterface();
+        this.setupAIIntegration();
+    }
+    
+    renderAIGuidanceInterface() {
+        const guidanceHTML = `
+        <div class="ai-guidance-panel" id="ai-guidance-panel">
+            <div class="ai-header">
+                <h3>🎯 AI-Powered Learning Path Guidance</h3>
+                <div class="ai-confidence" id="ai-confidence-score">
+                    AI Confidence: <span class="confidence-value">85%</span>
+                </div>
+            </div>
+            
+            <div class="ai-suggestions-container">
+                <div class="suggestion-category">
+                    <h4>📊 Recommended Goals Based on Your Profile</h4>
+                    <div class="goal-suggestions" id="goal-suggestions"></div>
+                </div>
+                
+                <div class="suggestion-category">
+                    <h4>🎓 Suggested Learning Paths</h4>
+                    <div class="path-suggestions" id="path-suggestions"></div>
+                </div>
+                
+                <div class="suggestion-category">
+                    <h4>⏱️ Personalized Study Plan</h4>
+                    <div class="study-suggestions" id="study-suggestions"></div>
+                </div>
+            </div>
+            
+            <div class="ai-controls">
+                <button class="btn-ai-accept" id="accept-ai-plan">Accept AI Recommendations</button>
+                <button class="btn-ai-customize" id="customize-ai-plan">Customize Recommendations</button>
+                <button class="btn-ai-explain" id="explain-ai-reasoning">Explain AI Reasoning</button>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('main-content').insertAdjacentHTML('afterbegin', guidanceHTML);
+        this.populateAISuggestions();
+    }
+    
+    populateAISuggestions() {
+        this.aiSuggestions.forEach(suggestion => {
+            const suggestionElement = this.createSuggestionElement(suggestion);
+            document.getElementById(`${suggestion.type}-suggestions`).appendChild(suggestionElement);
+        });
+    }
+    
+    createSuggestionElement(suggestion) {
+        return `
+        <div class="ai-suggestion" data-suggestion-id="${suggestion.id}">
+            <div class="suggestion-content">
+                <h5>${suggestion.title}</h5>
+                <p>${suggestion.description}</p>
+                <div class="suggestion-metrics">
+                    <span class="confidence">Confidence: ${suggestion.confidence}%</span>
+                    <span class="completion-time">Est: ${suggestion.estimated_time}</span>
+                </div>
+            </div>
+            <div class="suggestion-actions">
+                <button class="btn-accept" onclick="acceptAISuggestion('${suggestion.id}')">✓ Accept</button>
+                <button class="btn-modify" onclick="modifyAISuggestion('${suggestion.id}')">✎ Modify</button>
+                <button class="btn-reject" onclick="rejectAISuggestion('${suggestion.id}')">✗ Reject</button>
+            </div>
+        </div>
+        `;
+    }
+}

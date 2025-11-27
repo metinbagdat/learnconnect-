@@ -1,0 +1,129 @@
+// ai-goal-setting-form.js
+class AIGoalSettingForm {
+    constructor(userId) {
+        this.userId = userId;
+        this.aiSuggestions = [];
+        this.initializeForm();
+    }
+    
+    initializeForm() {
+        this.createFormInterface();
+        this.loadAISuggestions();
+        this.setupAIFormIntegration();
+    }
+    
+    createFormInterface() {
+        const formHTML = `
+        <div class="ai-goal-setting-form" id="ai-goal-setting-form">
+            <div class="form-header">
+                <h3>🎯 Set Your Learning Goals</h3>
+                <div class="ai-assistance-indicator">
+                    <span class="ai-active">AI Assistant Active</span>
+                </div>
+            </div>
+            
+            <form id="goal-form">
+                <!-- Basic Goal Information -->
+                <div class="form-section">
+                    <h4>Goal Details</h4>
+                    <div class="form-group">
+                        <label for="goal-title">Goal Title</label>
+                        <input type="text" id="goal-title" name="title" required 
+                               placeholder="What do you want to achieve?">
+                        <div class="ai-suggestions-box" id="title-suggestions"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="goal-description">Description</label>
+                        <textarea id="goal-description" name="description" 
+                                  placeholder="Describe your goal in detail..."></textarea>
+                        <div class="ai-description-helper" id="description-helper">
+                            <button type="button" onclick="generateAIDescription()">
+                                🤖 AI Generate Description
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Goal Recommendations -->
+                <div class="form-section ai-recommendations">
+                    <h4>🤖 AI Goal Recommendations</h4>
+                    <div class="ai-suggestions-container" id="ai-goal-suggestions-container">
+                        <!-- AI suggestions will be populated here -->
+                    </div>
+                    <div class="ai-controls">
+                        <button type="button" onclick="loadMoreAISuggestions()">
+                            Load More AI Suggestions
+                        </button>
+                        <button type="button" onclick="adjustAIPreferences()">
+                            Adjust AI Preferences
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Goal Configuration -->
+                <div class="form-section">
+                    <h4>Goal Configuration</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="goal-type">Goal Type</label>
+                            <select id="goal-type" name="type" onchange="updateAISuggestions()">
+                                <option value="academic">Academic</option>
+                                <option value="career">Career</option>
+                                <option value="skill">Skill Development</option>
+                                <option value="personal">Personal Growth</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="goal-deadline">Target Deadline</label>
+                            <input type="date" id="goal-deadline" name="deadline">
+                            <div class="ai-deadline-suggestion" id="deadline-suggestion"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="goal-priority">Priority Level</label>
+                        <select id="goal-priority" name="priority">
+                            <option value="1">Low</option>
+                            <option value="2">Medium</option>
+                            <option value="3">High</option>
+                            <option value="4">Critical</option>
+                        </select>
+                        <div class="ai-priority-recommendation" id="priority-recommendation"></div>
+                    </div>
+                </div>
+                
+                <!-- AI Confidence & Explanation -->
+                <div class="form-section ai-explanation">
+                    <h4>AI Analysis</h4>
+                    <div class="ai-confidence-meter">
+                        <label>AI Confidence in This Goal:</label>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
+                        </div>
+                        <span class="confidence-value" id="confidence-value">0%</span>
+                    </div>
+                    
+                    <div class="ai-reasoning" id="ai-reasoning">
+                        <p>AI will analyze your goal and provide insights...</p>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Create Goal</button>
+                    <button type="button" class="btn-secondary" onclick="saveAsDraft()">
+                        Save as Draft
+                    </button>
+                    <button type="button" class="btn-ai" onclick="getAIOptimization()">
+                        🤖 AI Optimize Goal
+                    </button>
+                </div>
+            </form>
+        </div>
+        `;
+        
+        document.getElementById('form-container').innerHTML = formHTML;
+        this.setupFormHandlers();
+    }
+}

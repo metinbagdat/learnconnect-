@@ -16,6 +16,7 @@ import { registerPreCourseAIEndpoints } from "./smart-suggestions/pre-course-ai-
 import { registerAIControlEndpoints } from "./smart-suggestions/ai-control-endpoints";
 import { registerInteractionTrackingEndpoints } from "./smart-suggestions/interaction-tracking-endpoints";
 import { registerStudentDashboardEndpoints } from "./smart-suggestions/student-dashboard-endpoints";
+import { registerHealthCheckEndpoints } from "./smart-suggestions/health-check-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
 import { alertSystem } from "./alert-system";
 import { predictiveMaintenanceEngine } from "./predictive-maintenance";
@@ -7369,6 +7370,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerAIControlEndpoints(app);
   registerInteractionTrackingEndpoints(app);
   registerStudentDashboardEndpoints(app);
+  registerHealthCheckEndpoints(app);
 
   // Real-time Monitoring Endpoints
   app.get("/api/study-planner/metrics", (app as any).ensureAuthenticated, async (req, res) => {

@@ -1858,3 +1858,97 @@ export const insertReminderSchema = createInsertSchema(reminders).omit({ id: tru
 
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 export type InsertReminder = z.infer<typeof insertReminderSchema>;
+
+// Smart Goals & Suggestions Tables
+export const userGoals = pgTable("user_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  goalText: text("goal_text").notNull(),
+  goalType: text("goal_type").notNull(), // 'career', 'skill', 'certification', 'personal'
+  priority: integer("priority").default(1), // 1-5 scale
+  deadline: date("deadline"),
+  status: text("status").default("active"), // 'active', 'completed', 'paused'
+  progress: integer("progress").default(0),
+  courseIds: integer("course_ids").array(), // Related courses
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const userInterests = pgTable("user_interests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  interestTag: text("interest_tag").notNull(),
+  level: text("level").notNull(), // 'beginner', 'intermediate', 'advanced'
+  relevanceScore: numeric("relevance_score", { precision: 3, scale: 2 }).default("0.5"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const studyPlans = pgTable("study_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  courseId: integer("course_id").notNull(),
+  goalId: integer("goal_id"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  weeklyHours: numeric("weekly_hours", { precision: 4, scale: 2 }).notNull().default("10"),
+  status: text("status").default("active"), // 'active', 'completed', 'paused'
+  generatedByAI: boolean("generated_by_ai").default(true),
+  aiMetadata: jsonb("ai_metadata"), // Store AI reasoning
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const studyMilestones = pgTable("study_milestones", {
+  id: serial("id").primaryKey(),
+  studyPlanId: integer("study_plan_id").notNull(),
+  milestoneText: text("milestone_text").notNull(),
+  dueDate: date("due_date").notNull(),
+  completed: boolean("completed").default(false),
+  order: integer("order").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const courseSuggestions = pgTable("course_suggestions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  courseId: integer("course_id").notNull(),
+  reason: text("reason").notNull(),
+  confidenceScore: numeric("confidence_score", { precision: 3, scale: 2 }).notNull(),
+  suggestionType: text("suggestion_type").default("ai"), // 'ai', 'manual', 'trending'
+  accepted: boolean("accepted"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"), // Suggestion expires after some time
+});
+
+export const goalSuggestions = pgTable("goal_suggestions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  suggestedGoal: text("suggested_goal").notNull(),
+  goalType: text("goal_type").notNull(),
+  confidenceScore: numeric("confidence_score", { precision: 3, scale: 2 }).notNull(),
+  relatedCourses: integer("related_courses").array(),
+  accepted: boolean("accepted"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Smart Goals & Suggestions schemas and types
+export const insertUserGoalSchema = createInsertSchema(userGoals).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertUserInterestSchema = createInsertSchema(userInterests).omit({ id: true, createdAt: true });
+export const insertStudyPlanSchema = createInsertSchema(studyPlans).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertStudyMilestoneSchema = createInsertSchema(studyMilestones).omit({ id: true, createdAt: true });
+export const insertCourseSuggestionSchema = createInsertSchema(courseSuggestions).omit({ id: true, createdAt: true });
+export const insertGoalSuggestionSchema = createInsertSchema(goalSuggestions).omit({ id: true, createdAt: true });
+
+export type UserGoal = typeof userGoals.$inferSelect;
+export type UserInterest = typeof userInterests.$inferSelect;
+export type StudyPlan = typeof studyPlans.$inferSelect;
+export type StudyMilestone = typeof studyMilestones.$inferSelect;
+export type CourseSuggestion = typeof courseSuggestions.$inferSelect;
+export type GoalSuggestion = typeof goalSuggestions.$inferSelect;
+
+export type InsertUserGoal = z.infer<typeof insertUserGoalSchema>;
+export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
+export type InsertStudyPlan = z.infer<typeof insertStudyPlanSchema>;
+export type InsertStudyMilestone = z.infer<typeof insertStudyMilestoneSchema>;
+export type InsertCourseSuggestion = z.infer<typeof insertCourseSuggestionSchema>;
+export type InsertGoalSuggestion = z.infer<typeof insertGoalSuggestionSchema>;

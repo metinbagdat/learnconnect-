@@ -2301,3 +2301,52 @@ export type InsertMemoryEnhancedCurriculum = z.infer<typeof insertMemoryEnhanced
 export type InsertCognitiveTrainingSession = z.infer<typeof insertCognitiveTrainingSessionSchema>;
 export type InsertMemorySessionRecord = z.infer<typeof insertMemorySessionRecordSchema>;
 export type InsertCognitivePerformanceMetric = z.infer<typeof insertCognitivePerformanceMetricSchema>;
+
+// Step 6.1: Enhanced Data Models for Comprehensive Database Integration
+export const memoryTechniqueEffectiveness = pgTable("memory_technique_effectiveness", {
+  id: serial("id").primaryKey(),
+  technique: text("technique").notNull(),
+  contentType: text("content_type").notNull(),
+  averageImprovement: numeric("average_improvement", { precision: 5, scale: 2 }).notNull(),
+  userCount: integer("user_count").notNull().default(0),
+  confidenceInterval: numeric("confidence_interval", { precision: 5, scale: 2 }).notNull(),
+  trend: numeric("trend", { precision: 5, scale: 2 }).default("0"),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+});
+
+export const cognitiveTrainingProgress = pgTable("cognitive_training_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  trainingType: text("training_type").notNull(),
+  startLevel: numeric("start_level", { precision: 5, scale: 2 }).notNull(),
+  currentLevel: numeric("current_level", { precision: 5, scale: 2 }).notNull(),
+  improvementRate: numeric("improvement_rate", { precision: 5, scale: 2 }).notNull(),
+  trainingSessions: integer("training_sessions").notNull().default(0),
+  lastTrainingDate: timestamp("last_training_date").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const learningEfficiencyMetrics = pgTable("learning_efficiency_metrics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  baselineEfficiency: numeric("baseline_efficiency", { precision: 5, scale: 2 }).notNull(),
+  currentEfficiency: numeric("current_efficiency", { precision: 5, scale: 2 }).notNull(),
+  improvementFactors: jsonb("improvement_factors").notNull().default({}),
+  trackedSince: timestamp("tracked_since").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Step 6.1: Insert Schemas for Enhanced Data Models
+export const insertMemoryTechniqueEffectivenessSchema = createInsertSchema(memoryTechniqueEffectiveness).omit({ id: true, lastUpdated: true });
+export const insertCognitiveTrainingProgressSchema = createInsertSchema(cognitiveTrainingProgress).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertLearningEfficiencyMetricsSchema = createInsertSchema(learningEfficiencyMetrics).omit({ id: true, trackedSince: true, updatedAt: true });
+
+// Step 6.1: Types for Enhanced Data Models
+export type MemoryTechniqueEffectiveness = typeof memoryTechniqueEffectiveness.$inferSelect;
+export type CognitiveTrainingProgress = typeof cognitiveTrainingProgress.$inferSelect;
+export type LearningEfficiencyMetrics = typeof learningEfficiencyMetrics.$inferSelect;
+
+export type InsertMemoryTechniqueEffectiveness = z.infer<typeof insertMemoryTechniqueEffectivenessSchema>;
+export type InsertCognitiveTrainingProgress = z.infer<typeof insertCognitiveTrainingProgressSchema>;
+export type InsertLearningEfficiencyMetrics = z.infer<typeof insertLearningEfficiencyMetricsSchema>;

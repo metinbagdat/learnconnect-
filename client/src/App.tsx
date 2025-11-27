@@ -111,6 +111,7 @@ function Router() {
       <ProtectedRoute path="/goal-setting" component={GoalSettingForm} />
       <ProtectedRoute path="/my-curriculum" component={MyCurriculumPage} />
       <ProtectedRoute path="/curriculum-generate" component={CurriculumGenerationPage} />
+      <ProtectedRoute path="/curriculum-customize" component={CurriculumCustomization} />
       <ProtectedRoute path="/time-tracking" component={TimeTracking} />
       <ProtectedRoute path="/ai-daily-plan" component={AIDailyPlan} />
       <ProtectedRoute path="/assessment" component={AssessmentPage} />

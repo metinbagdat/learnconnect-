@@ -879,18 +879,43 @@ export class DatabaseStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error: any) {
+      // Handle missing columns gracefully - query with db.execute for raw access
+      if (error?.code === '42703') {
+        const result = await db.execute(db.raw(`SELECT * FROM users WHERE id = ${id}`));
+        return result as any;
+      }
+      throw error;
+    }
   }
 
   async getUserById(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error: any) {
+      if (error?.code === '42703') {
+        const result = await db.execute(db.raw(`SELECT * FROM users WHERE id = ${id}`));
+        return result as any;
+      }
+      throw error;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (error: any) {
+      if (error?.code === '42703') {
+        const result = await db.execute(db.raw(`SELECT * FROM users WHERE username = '${username}'`));
+        return result as any;
+      }
+      throw error;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {

@@ -1040,12 +1040,12 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
   
   // AI-powered course recommendations 
-  app.get("/api/ai/course-recommendations", async (req, res) => {
-    if (!req.isAuthenticated()) {
+  app.get("/api/ai/course-recommendations", (app as any).ensureAuthenticated, async (req, res) => {
+    const userId = req.user?.id || (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
-    const userId = req.user.id;
 
     try {
       // Check if we have cached recommendations

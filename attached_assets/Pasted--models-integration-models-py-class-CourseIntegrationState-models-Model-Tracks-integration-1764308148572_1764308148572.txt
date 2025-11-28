@@ -1,0 +1,60 @@
+# models/integration_models.py
+class CourseIntegrationState(models.Model):
+    """Tracks integration state between courses and other modules"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    integration_id = models.CharField(max_length=100, unique=True)
+    
+    # Course Data
+    enrolled_courses = models.JSONField()
+    course_relationships = models.JSONField()
+    prerequisite_map = models.JSONField()
+    
+    # Integration States
+    curriculum_integrated = models.BooleanField(default=False)
+    study_plan_generated = models.BooleanField(default=False)
+    assignments_created = models.BooleanField(default=False)
+    targets_updated = models.BooleanField(default=False)
+    ai_recommendations_generated = models.BooleanField(default=False)
+    
+    # Integration Metadata
+    last_integration_at = models.DateTimeField(auto_now=True)
+    integration_version = models.CharField(max_length=50)
+    
+    class Meta:
+        db_table = 'course_integration_state'
+
+class ModuleIntegrationLog(models.Model):
+    """Logs all integration activities between modules"""
+    integration_state = models.ForeignKey(CourseIntegrationState, on_delete=models.CASCADE)
+    source_module = models.CharField(max_length=100)
+    target_module = models.CharField(max_length=100)
+    action = models.CharField(max_length=100)
+    data_sent = models.JSONField()
+    response_received = models.JSONField()
+    status = models.CharField(max_length=20)
+    error_message = models.TextField(null=True, blank=True)
+    executed_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'module_integration_log'
+
+class AIRecommendationState(models.Model):
+    """Tracks AI-generated recommendations based on course enrollment"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    integration_state = models.ForeignKey(CourseIntegrationState, on_delete=models.CASCADE)
+    
+    # AI Recommendations
+    suggested_subcourses = models.JSONField()
+    learning_path_recommendations = models.JSONField()
+    resource_suggestions = models.JSONField()
+    difficulty_adjustments = models.JSONField()
+    
+    # AI Analysis
+    confidence_scores = models.JSONField()
+    reasoning = models.JSONField()
+    alternative_paths = models.JSONField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'ai_recommendation_state'

@@ -2350,3 +2350,78 @@ export type LearningEfficiencyMetrics = typeof learningEfficiencyMetrics.$inferS
 export type InsertMemoryTechniqueEffectiveness = z.infer<typeof insertMemoryTechniqueEffectivenessSchema>;
 export type InsertCognitiveTrainingProgress = z.infer<typeof insertCognitiveTrainingProgressSchema>;
 export type InsertLearningEfficiencyMetrics = z.infer<typeof insertLearningEfficiencyMetricsSchema>;
+
+// Step 1.2: Comprehensive Integration Database Schema
+export const courseIntegrationState = pgTable("course_integration_state", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  integrationId: text("integration_id").notNull().unique(),
+  
+  // Course Data
+  enrolledCourses: jsonb("enrolled_courses").notNull().default({}),
+  courseRelationships: jsonb("course_relationships").notNull().default({}),
+  prerequisiteMap: jsonb("prerequisite_map").notNull().default({}),
+  
+  // Integration States
+  curriculumIntegrated: boolean("curriculum_integrated").notNull().default(false),
+  studyPlanGenerated: boolean("study_plan_generated").notNull().default(false),
+  assignmentsCreated: boolean("assignments_created").notNull().default(false),
+  targetsUpdated: boolean("targets_updated").notNull().default(false),
+  aiRecommendationsGenerated: boolean("ai_recommendations_generated").notNull().default(false),
+  
+  // Integration Metadata
+  lastIntegrationAt: timestamp("last_integration_at").notNull().defaultNow(),
+  integrationVersion: text("integration_version").notNull().default("1.0"),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const moduleIntegrationLog = pgTable("module_integration_log", {
+  id: serial("id").primaryKey(),
+  integrationStateId: integer("integration_state_id").notNull().references(() => courseIntegrationState.id, { onDelete: 'cascade' }),
+  sourceModule: text("source_module").notNull(),
+  targetModule: text("target_module").notNull(),
+  action: text("action").notNull(),
+  dataSent: jsonb("data_sent").notNull().default({}),
+  responseReceived: jsonb("response_received").notNull().default({}),
+  status: text("status").notNull(), // success, failed, pending
+  errorMessage: text("error_message"),
+  executedAt: timestamp("executed_at").notNull().defaultNow(),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const aiRecommendationState = pgTable("ai_recommendation_state", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  integrationStateId: integer("integration_state_id").notNull().references(() => courseIntegrationState.id, { onDelete: 'cascade' }),
+  
+  // AI Recommendations
+  suggestedSubcourses: jsonb("suggested_subcourses").notNull().default({}),
+  learningPathRecommendations: jsonb("learning_path_recommendations").notNull().default({}),
+  resourceSuggestions: jsonb("resource_suggestions").notNull().default({}),
+  difficultyAdjustments: jsonb("difficulty_adjustments").notNull().default({}),
+  
+  // AI Analysis
+  confidenceScores: jsonb("confidence_scores").notNull().default({}),
+  reasoning: jsonb("reasoning").notNull().default({}),
+  alternativePaths: jsonb("alternative_paths").notNull().default({}),
+  
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Step 1.2: Insert Schemas for Integration Database
+export const insertCourseIntegrationStateSchema = createInsertSchema(courseIntegrationState).omit({ id: true, createdAt: true, updatedAt: true, lastIntegrationAt: true });
+export const insertModuleIntegrationLogSchema = createInsertSchema(moduleIntegrationLog).omit({ id: true, createdAt: true, executedAt: true });
+export const insertAiRecommendationStateSchema = createInsertSchema(aiRecommendationState).omit({ id: true, createdAt: true, updatedAt: true });
+
+// Step 1.2: Types for Integration Database
+export type CourseIntegrationState = typeof courseIntegrationState.$inferSelect;
+export type ModuleIntegrationLog = typeof moduleIntegrationLog.$inferSelect;
+export type AiRecommendationState = typeof aiRecommendationState.$inferSelect;
+
+export type InsertCourseIntegrationState = z.infer<typeof insertCourseIntegrationStateSchema>;
+export type InsertModuleIntegrationLog = z.infer<typeof insertModuleIntegrationLogSchema>;
+export type InsertAiRecommendationState = z.infer<typeof insertAiRecommendationStateSchema>;

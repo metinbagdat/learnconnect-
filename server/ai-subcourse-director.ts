@@ -253,7 +253,7 @@ export class AISubcourseDirector {
         title: `Recommended Next Module`,
         description: `Based on your progress, this module builds on your current knowledge`,
         moduleCount: 4,
-        estimatedHours: userCourse.studyDuration || 60,
+        estimatedHours: 60,
         difficulty: learningState.currentDifficulty || 'intermediate',
         learningObjectives: ['Continue learning progression'],
         sequenceOrder: 1,

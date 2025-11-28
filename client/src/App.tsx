@@ -77,6 +77,7 @@ import CognitiveAssessment from "@/pages/cognitive-assessment";
 import StudentCognitiveDashboard from "@/pages/student-cognitive-dashboard";
 import AdminCognitiveDashboard from "@/pages/admin-cognitive-dashboard";
 import CognitivePreferenceForm from "@/pages/cognitive-preference-form";
+import IntegratedDashboard from "@/pages/integrated-dashboard";
 
 function Router() {
   return (
@@ -131,6 +132,7 @@ function Router() {
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/advanced-analytics" component={AdvancedAnalyticsDashboard} />
       <ProtectedRoute path="/gamification" component={GamificationDashboard} />
+      <ProtectedRoute path="/integrated-dashboard" component={IntegratedDashboard} />
       <ProtectedRoute path="/social" component={SocialPage} />
       <ProtectedRoute path="/learning-trails" component={LearningTrailsPage} />
       <ProtectedRoute path="/admin" component={AdminPanel} />

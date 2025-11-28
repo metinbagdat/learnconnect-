@@ -794,3 +794,58 @@ export type CurriculumDesignProcess = typeof curriculumDesignProcess.$inferSelec
 export const insertCurriculumFeedbackLoopsSchema = createInsertSchema(curriculumFeedbackLoops).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCurriculumFeedbackLoops = z.infer<typeof insertCurriculumFeedbackLoopsSchema>;
 export type CurriculumFeedbackLoops = typeof curriculumFeedbackLoops.$inferSelect;
+
+// ============================================================================
+// NOTIFICATIONS AND STUDY PLAN ADJUSTMENT
+// ============================================================================
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // "due_assignment", "study_plan_adjusted", "course_completed"
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  data: json("data"), // Additional data like assignmentId, dueDate
+  read: boolean("read").default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const studyPlanAdjustments = pgTable("study_plan_adjustments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  courseId: integer("course_id").notNull(),
+  originalPace: text("original_pace").notNull(), // "slow", "moderate", "fast"
+  newPace: text("new_pace").notNull(),
+  reason: text("reason"),
+  adjustmentDate: timestamp("adjustment_date").notNull().defaultNow(),
+  appliedAt: timestamp("applied_at"),
+});
+
+export const insertNotificationSchema = z.object({
+  userId: z.number(),
+  type: z.enum(["due_assignment", "study_plan_adjusted", "course_completed"]),
+  title: z.string().min(1).max(255),
+  message: z.string().min(1).max(1000),
+  data: z.record(z.any()).optional(),
+});
+
+export const insertStudyPlanAdjustmentSchema = z.object({
+  userId: z.number(),
+  courseId: z.number(),
+  originalPace: z.enum(["slow", "moderate", "fast"]),
+  newPace: z.enum(["slow", "moderate", "fast"]),
+  reason: z.string().max(500).optional(),
+});
+
+export const insertCurriculumGenerationSchema = z.object({
+  courseTitle: z.string().min(1).max(255),
+  courseDescription: z.string().min(10).max(5000),
+  durationWeeks: z.number().int().min(1).max(52).optional(),
+  targetAudience: z.string().max(255).optional(),
+  category: z.string().max(255).optional(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type StudyPlanAdjustment = typeof studyPlanAdjustments.$inferSelect;
+export type InsertStudyPlanAdjustment = z.infer<typeof insertStudyPlanAdjustmentSchema>;

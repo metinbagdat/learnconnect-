@@ -8387,8 +8387,13 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // ADMIN: AI-GENERATED CURRICULUM
   // ============================================================================
   // Generate curriculum for existing course
-  app.post("/api/generate-curriculum", async (req, res) => {
+  app.post("/api/generate-curriculum", (app as any).ensureAuthenticated, async (req, res) => {
     try {
+      // Admin authorization check
+      if (!req.isAuthenticated() || req.user.role !== "admin") {
+        return res.status(403).json({ message: "Only admins can generate curriculum" });
+      }
+
       const { courseId } = req.body;
 
       if (!courseId) {
@@ -8490,13 +8495,30 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create curriculum from scratch with new course
-  app.post("/api/admin/curriculum/generate", async (req, res) => {
+  app.post("/api/admin/curriculum/generate", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const { courseTitle, courseDescription, durationWeeks = 8, targetAudience = "General", category = "General", instructorId = 1 } = req.body;
-      
-      if (!courseTitle || !courseDescription) {
-        return res.status(400).json({ message: "Course title and description required" });
+      // Admin authorization check
+      if (!req.isAuthenticated() || req.user.role !== "admin") {
+        return res.status(403).json({ message: "Only admins can generate curriculum" });
       }
+
+      // Validate input using Zod schema
+      const validation = z.object({
+        courseTitle: z.string().min(1).max(255),
+        courseDescription: z.string().min(10).max(5000),
+        durationWeeks: z.number().int().min(1).max(52).optional(),
+        targetAudience: z.string().max(255).optional(),
+        category: z.string().max(255).optional(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: validation.error.errors 
+        });
+      }
+
+      const { courseTitle, courseDescription, durationWeeks = 8, targetAudience = "General", category = "General", instructorId = 1 } = validation.data;
 
       // Call Claude to generate curriculum
       const { generateCurriculum } = await import("./ai-integration.js");
@@ -8594,6 +8616,161 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     } catch (error) {
       console.error("Curriculum generation error:", error);
       res.status(500).json({ message: "Failed to generate curriculum", error: String(error) });
+    }
+  });
+
+  // ============================================================================
+  // NOTIFICATIONS & STUDY PLAN MANAGEMENT
+  // ============================================================================
+
+  // Get user notifications
+  app.get("/api/notifications", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const notifications = await db.select()
+        .from(schema.notifications)
+        .where(eq(schema.notifications.userId, req.user.id))
+        .orderBy((t) => t.createdAt)
+        .limit(50);
+
+      res.json(notifications);
+    } catch (error) {
+      console.error("Get notifications error:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/notifications/:id/read", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const notificationId = parseInt(req.params.id);
+      const [notification] = await db.select()
+        .from(schema.notifications)
+        .where(eq(schema.notifications.id, notificationId));
+
+      if (!notification || notification.userId !== req.user.id) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+
+      const [updated] = await db.update(schema.notifications)
+        .set({ read: true })
+        .where(eq(schema.notifications.id, notificationId))
+        .returning();
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Mark notification error:", error);
+      res.status(500).json({ message: "Failed to update notification" });
+    }
+  });
+
+  // Create notification (internal use for due assignments)
+  app.post("/api/notifications/create-due-assignment", async (req, res) => {
+    try {
+      const { userId, assignmentId, assignmentTitle, dueDate } = req.body;
+
+      if (!userId || !assignmentId) {
+        return res.status(400).json({ message: "userId and assignmentId required" });
+      }
+
+      const [notification] = await db.insert(schema.notifications).values({
+        userId,
+        type: "due_assignment",
+        title: `Assignment Due: ${assignmentTitle}`,
+        message: `Your assignment "${assignmentTitle}" is due on ${new Date(dueDate).toLocaleDateString()}`,
+        data: { assignmentId, dueDate },
+      }).returning();
+
+      res.json(notification);
+    } catch (error) {
+      console.error("Create notification error:", error);
+      res.status(500).json({ message: "Failed to create notification" });
+    }
+  });
+
+  // Adjust study plan pace
+  app.post("/api/study-plan/adjust-pace", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Validate input
+      const validation = z.object({
+        courseId: z.number(),
+        newPace: z.enum(["slow", "moderate", "fast"]),
+        reason: z.string().max(500).optional(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: validation.error.errors 
+        });
+      }
+
+      const { courseId, newPace, reason } = validation.data;
+
+      // Get current user's learning pace
+      const currentPace = req.user.learningPace || "moderate";
+
+      // Create adjustment record
+      const [adjustment] = await db.insert(schema.studyPlanAdjustments).values({
+        userId: req.user.id,
+        courseId,
+        originalPace: currentPace,
+        newPace,
+        reason,
+      }).returning();
+
+      // Update user's learning pace
+      await db.update(schema.users)
+        .set({ learningPace: newPace })
+        .where(eq(schema.users.id, req.user.id));
+
+      // Create notification
+      await db.insert(schema.notifications).values({
+        userId: req.user.id,
+        type: "study_plan_adjusted",
+        title: "Study Plan Adjusted",
+        message: `Your study pace has been adjusted from ${currentPace} to ${newPace}. ${reason ? `Reason: ${reason}` : ""}`,
+        data: { adjustmentId: adjustment.id, newPace, originalPace: currentPace },
+      });
+
+      res.json({
+        success: true,
+        adjustment,
+        message: `Study pace updated to ${newPace}`,
+      });
+    } catch (error) {
+      console.error("Study plan adjustment error:", error);
+      res.status(500).json({ message: "Failed to adjust study plan", error: String(error) });
+    }
+  });
+
+  // Get study plan adjustments for user
+  app.get("/api/study-plan/adjustments", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const adjustments = await db.select()
+        .from(schema.studyPlanAdjustments)
+        .where(eq(schema.studyPlanAdjustments.userId, req.user.id))
+        .orderBy((t) => t.adjustmentDate);
+
+      res.json(adjustments);
+    } catch (error) {
+      console.error("Get adjustments error:", error);
+      res.status(500).json({ message: "Failed to fetch study plan adjustments" });
     }
   });
 

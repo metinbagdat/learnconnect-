@@ -236,3 +236,51 @@ The platform features:
 **Status:** ✅ **PRODUCTION READY - READY FOR PUBLISHING**  
 **Last Updated:** November 28, 2025 - AUTHENTICATION FIXED, ALL FEATURES OPERATIONAL
 
+
+---
+
+## 🎓 **CURRICULUM DESIGN FRAMEWORK - SAVED TO DATABASE**
+
+### **User-Provided Core Parameters Framework (Session: Curriculum Data)**
+
+#### **A. Learner-Centric Parameters (The "Who")**
+- **Target Audience & Personas**: Career changers, professionals, ages 25-45
+- **Demographics**: Diverse professional backgrounds seeking upskilling
+- **Psychographics**: Goal = transition to data roles; Preference = hands-on, project-based learning
+- **Skill Gap Analysis**: Non-technical → Data-technical (Python, Statistics, ML fundamentals)
+- **Learning Objectives**: By course end: Build ML models, perform statistical analysis, manage databases
+- **Prerequisites**: Basic math/logic; willingness to code; 20+ hours/week availability
+- **Bloom's Taxonomy Levels**: APPLY (data analysis) → ANALYZE (model selection) → CREATE (capstone project)
+
+#### **B. Content & Pedagogy Parameters (The "What" and "How")**
+- **Content Scope**: 8 modules, 116 hours, 13 capstone projects
+- **Modularity**: 10-30 min micro-lessons; weekly sprint structure
+- **Logical Flow**: Fundamentals → Python → Statistics → EDA → SQL → ML → Deployment → Capstone
+- **Learning Modalities**: Video 40%, Interactive Exercises 40%, Text 15%, Projects 5%
+- **Pedagogical Approach**: Project-based (starts week 2), Mastery-gated progression, Peer learning
+- **Assessment Strategy**:
+  - Formative: Weekly quizzes, coding exercises, peer code reviews
+  - Summative: Capstone project, portfolio, industry certification
+- **Feedback Mechanism**: Instructor + AI tutor + peer community + office hours
+
+#### **C. Business & Operational Parameters (The "Reality")**
+- **Instructor Credentials**: PhD Data Science + 10 years industry experience
+- **Credibility**: Published research, 2000+ successful alumni, 85% job placement rate
+- **Platform Capabilities**: Live coding environment, project submissions, peer matching, certificates
+- **Business Model**: 150 students × $1500 = $225k revenue; target 90% completion
+- **Resource Constraints**: 3-month development cycle, high-production videos, weekly content updates
+- **Market Position**: Premium bootcamp, employer partnerships, job placement guarantees
+
+### **Feedback Loop System (Continuous Improvement)**
+- **Cycle 1**: Completion 65%→78%, Satisfaction 3.2→4.1 (+28%)
+  - Change: Early projects + increased mentorship
+  - Result: +24% average improvement
+- **Next Cycle Focus**: Peer learning expansion, gamification, cohort-based support
+
+### **Database Storage Structure**
+✅ All parameters saved in `curriculum_design_parameters` table  
+✅ Success metrics tracked in `curriculum_success_metrics` table  
+✅ Feedback loops recorded in `curriculum_feedback_loops` table  
+✅ Three-part framework fully normalized and queryable
+
+---

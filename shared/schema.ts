@@ -561,6 +561,8 @@ export type InsertUserChallengeStreak = z.infer<typeof insertUserChallengeStreak
 export type UserSkillChallengeAttempt = typeof userSkillChallengeAttempts.$inferSelect;
 export type InsertUserSkillChallengeAttempt = z.infer<typeof insertUserSkillChallengeAttemptSchema>;
 
+export const userChallengeProgress = userChallengeStreaks; // Alias for backward compatibility
+
 // ============================================================================
 // SCHEMAS & TYPES
 // ============================================================================
@@ -602,12 +604,25 @@ export type InsertLearningPath = z.infer<typeof insertLearningPathSchema>;
 export type LearningPath = typeof learningPaths.$inferSelect;
 
 export const insertStudyGoalSchema = createInsertSchema(studyGoals).omit({ id: true, createdAt: true });
+export const insertStudyGoal = insertStudyGoalSchema; // Alias for backward compatibility
 export type InsertStudyGoal = z.infer<typeof insertStudyGoalSchema>;
 export type StudyGoal = typeof studyGoals.$inferSelect;
 
 export const insertStudyScheduleSchema = createInsertSchema(studySchedules).omit({ id: true, createdAt: true });
+export const insertStudySchedule = insertStudyScheduleSchema; // Alias for backward compatibility
 export type InsertStudySchedule = z.infer<typeof insertStudyScheduleSchema>;
 export type StudySchedule = typeof studySchedules.$inferSelect;
+
+export const insertMentorSchema = createInsertSchema(mentors).omit({ id: true });
+export type InsertMentor = z.infer<typeof insertMentorSchema>;
+export const insertUserMentorSchema = createInsertSchema(userMentors).omit({ id: true });
+export type InsertUserMentor = z.infer<typeof insertUserMentorSchema>;
+export const insertStudyProgramSchema = createInsertSchema(studyPrograms).omit({ id: true });
+export type InsertStudyProgram = z.infer<typeof insertStudyProgramSchema>;
+export const insertProgramScheduleSchema = createInsertSchema(programSchedules).omit({ id: true });
+export type InsertProgramSchedule = z.infer<typeof insertProgramScheduleSchema>;
+export const insertStudySessionSchema = createInsertSchema(studySessions).omit({ id: true });
+export type InsertStudySession = z.infer<typeof insertStudySessionSchema>;
 
 export const insertLearningEcosystemStateSchema = createInsertSchema(learningEcosystemState).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertLearningEcosystemState = z.infer<typeof insertLearningEcosystemStateSchema>;

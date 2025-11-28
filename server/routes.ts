@@ -8163,15 +8163,28 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // COMPREHENSIVE ENROLLMENT → CURRICULUM → TASK PIPELINE
   // ============================================================================
   
-  // 1. ENROLLMENT - Create enrollment, study plan, and assignments
+  // 1. ENROLLMENT - Create enrollment, study plan, and assignments with cumulative due dates
   app.post("/api/enrollment/enroll", async (req, res) => {
     try {
       const { userId, courseId } = req.body;
+      
+      if (!userId || !courseId) {
+        return res.status(400).json({ message: "userId and courseId required" });
+      }
+      
       const { enrollUserInCourse } = await import("./enrollment-service.js");
       const result = await enrollUserInCourse(userId, courseId);
-      res.json({ success: true, ...result, message: "Enrolled and study plan created" });
+      
+      res.json({ 
+        success: true, 
+        enrollment: result.enrollment,
+        studyPlan: result.studyPlan,
+        assignments: result.assignments,
+        message: "Successfully enrolled! Study plan and assignments created." 
+      });
     } catch (error) {
-      res.status(500).json({ message: "Enrollment failed" });
+      console.error("Enrollment error:", error);
+      res.status(500).json({ message: "Enrollment failed", error: String(error) });
     }
   });
 

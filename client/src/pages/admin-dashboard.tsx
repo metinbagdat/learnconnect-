@@ -7,14 +7,31 @@ import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users, BookOpen, TrendingUp, AlertCircle } from "lucide-react";
 
+const mockEnrollmentTrend = [
+  { month: "Jan", enrollments: 120 },
+  { month: "Feb", enrollments: 145 },
+  { month: "Mar", enrollments: 168 },
+  { month: "Apr", enrollments: 195 },
+];
+
 export function AdminDashboard() {
-  const { data: dashboardData } = useQuery({
+  const { data: dashboardData = {} } = useQuery({
     queryKey: ["/api/admin/dashboard"],
   });
 
   const { data: courses = [] } = useQuery({
     queryKey: ["/api/admin/courses"],
   });
+
+  const { data: allStudents = [] } = useQuery({
+    queryKey: ["/api/admin/students"],
+  });
+
+  const mockCourseStats = (courses as any[]).map((c: any) => ({
+    name: c.title,
+    students: c.enrollmentCount,
+    completion: c.avgCompletion,
+  })).slice(0, 5) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-950 dark:to-slate-900 p-6">
@@ -127,10 +144,10 @@ export function AdminDashboard() {
 
           {/* COURSES */}
           <TabsContent value="courses" className="space-y-4">
-            {courses?.length === 0 ? (
+            {(courses as any[])?.length === 0 ? (
               <Card><CardContent className="pt-6 text-center text-muted-foreground">No courses yet</CardContent></Card>
             ) : (
-              courses.map((course: any) => (
+              (courses as any[]).map((course: any) => (
                 <Card key={course.id} data-testid={`card-course-${course.id}`}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -166,8 +183,8 @@ export function AdminDashboard() {
 
           {/* STUDENTS */}
           <TabsContent value="students" className="space-y-4">
-            <p className="text-sm text-muted-foreground">Total active students: {allStudents?.length || 628}</p>
-            {allStudents?.slice(0, 5).map((student: any) => (
+            <p className="text-sm text-muted-foreground">Total active students: {(allStudents as any[])?.length || 0}</p>
+            {(allStudents as any[])?.slice(0, 5).map((student: any) => (
               <Card key={student.id}>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">

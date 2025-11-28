@@ -14,50 +14,40 @@ export async function enrollUserInCourse(userId: number, courseId: number) {
       enrolledAt: new Date(),
     }).returning();
 
-    // 2. Get course curriculum (predefined modules and lessons)
+    // 2. Get the curriculum for the course
     const modules = await db.select().from(schema.modules).where(eq(schema.modules.courseId, courseId));
     
     if (modules.length === 0) {
       return { enrollment, studyPlan: null, assignments: [] };
     }
 
-    // 3. Calculate total duration
-    let totalDays = 0;
-    const lessons = await db.select().from(schema.lessons).where(
-      eq(schema.lessons.moduleId, modules[0].id)
-    );
-    lessons.forEach(l => {
-      totalDays += Math.ceil((l.durationMinutes || 30) / 60 / 5); // rough estimate: 5 hours per day
-    });
-
-    // 4. Create study plan
+    // 3. Create study plan
     const now = new Date();
-    const targetDate = new Date(now.getTime() + totalDays * 24 * 60 * 60 * 1000);
-    
     const [studyPlan] = await db.insert(schema.studyPlans).values({
       userId,
       courseId,
-      curriculum: { modules: modules.length, lessons: lessons.length },
-      duration: Math.ceil(totalDays / 7),
-      weeklyHoursRequired: 5,
       status: "active",
       startDate: now,
-      targetCompletionDate: targetDate,
       completionPercentage: 0,
     }).returning();
 
-    // 5. Create assignments for each lesson
+    // 4. Create assignments for each curriculum item with cumulative due dates
     const assignments = [];
-    let dayOffset = 0;
+    let cumulativeDays = 0;
     
     for (const module of modules) {
-      const moduleLessons = await db.select().from(schema.lessons).where(eq(schema.lessons.moduleId, module.id));
+      // Get lessons in this module
+      const lessons = await db.select().from(schema.lessons).where(eq(schema.lessons.moduleId, module.id));
       
-      for (let i = 0; i < moduleLessons.length; i++) {
-        const lesson = moduleLessons[i];
-        const dueDate = new Date(now.getTime() + dayOffset * 24 * 60 * 60 * 1000);
-        dayOffset += Math.ceil((lesson.durationMinutes || 30) / 60 / 5);
-
+      for (const lesson of lessons) {
+        // Add estimated duration (assuming duration is in days, convert if needed)
+        const estimatedDurationDays = lesson.durationMinutes ? Math.ceil(lesson.durationMinutes / 60 / 5) : 1;
+        cumulativeDays += estimatedDurationDays;
+        
+        // Calculate due date based on cumulative days
+        const dueDate = new Date(now);
+        dueDate.setDate(dueDate.getDate() + cumulativeDays);
+        
         const [assignment] = await db.insert(schema.userAssignments).values({
           userId,
           studyPlanId: studyPlan.id,
@@ -65,17 +55,28 @@ export async function enrollUserInCourse(userId: number, courseId: number) {
           title: lesson.title,
           description: `Complete lesson: ${lesson.title}`,
           moduleId: module.id,
-          type: i === moduleLessons.length - 1 ? "project" : "lesson",
+          type: "lesson",
           dueDate,
           status: "pending",
-          order: i + 1,
+          order: cumulativeDays,
         }).returning();
         
         assignments.push(assignment);
       }
     }
 
-    return { enrollment, studyPlan, assignments };
+    // Update study plan with target completion date
+    const targetCompletionDate = new Date(now);
+    targetCompletionDate.setDate(targetCompletionDate.getDate() + cumulativeDays);
+    
+    await db.update(schema.studyPlans)
+      .set({ 
+        targetCompletionDate,
+        duration: Math.ceil(cumulativeDays / 7),
+      })
+      .where(eq(schema.studyPlans.id, studyPlan.id));
+
+    return { enrollment, studyPlan: { ...studyPlan, targetCompletionDate }, assignments };
   } catch (error) {
     console.error("Enrollment error:", error);
     throw error;
@@ -88,6 +89,20 @@ export async function completeAssignment(userId: number, assignmentId: number, s
     .set({ status: "completed", completedAt: now, score: score || 100 })
     .where(eq(schema.userAssignments.id, assignmentId))
     .returning();
+  
+  // Update study plan progress
+  const assignment = await db.select().from(schema.userAssignments).where(eq(schema.userAssignments.id, assignmentId));
+  if (assignment.length > 0) {
+    const studyPlanId = assignment[0].studyPlanId;
+    const allAssignments = await db.select().from(schema.userAssignments).where(eq(schema.userAssignments.studyPlanId, studyPlanId));
+    const completedCount = allAssignments.filter(a => a.status === "completed").length;
+    const completionPercentage = Math.round((completedCount / allAssignments.length) * 100);
+    
+    await db.update(schema.studyPlans)
+      .set({ completionPercentage })
+      .where(eq(schema.studyPlans.id, studyPlanId));
+  }
+  
   return updated;
 }
 

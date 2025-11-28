@@ -9070,5 +9070,54 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // INTELLIGENT SUGGESTIONS ENGINE
+  app.get("/api/suggestions/generate/:userId", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { userId } = req.params;
+      const requestUserId = req.user.id;
+
+      // Only allow users to get their own suggestions or admins
+      if (parseInt(userId) !== requestUserId && req.user.role !== "admin") {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const { suggestionEngine } = await import("./suggestion-engine");
+      const suggestions = await suggestionEngine.generateSuggestions(parseInt(userId));
+
+      res.json({
+        success: true,
+        suggestions,
+        message: `Generated ${suggestions.length} personalized suggestions`,
+      });
+    } catch (error) {
+      console.error("Generate suggestions error:", error);
+      res.status(500).json({
+        message: "Failed to generate suggestions",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
+  // Endpoint for dashboard that returns AI suggestions
+  app.get("/api/ai/suggestions/smart", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { suggestionEngine } = await import("./suggestion-engine");
+      const suggestions = await suggestionEngine.generateSuggestions(req.user.id);
+
+      res.json(suggestions.slice(0, 5));
+    } catch (error) {
+      console.error("Get smart suggestions error:", error);
+      res.status(500).json({ message: "Failed to fetch suggestions" });
+    }
+  });
+
   return httpServer;
 }

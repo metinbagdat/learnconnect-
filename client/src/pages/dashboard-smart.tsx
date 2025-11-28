@@ -23,9 +23,9 @@ export function SmartStudentDashboard() {
     queryKey: [`/api/student/dashboard/${user?.id || 1}`],
   });
 
-  // Fetch AI suggestions
+  // Fetch AI suggestions from suggestion engine
   const { data: suggestions = [] } = useQuery({
-    queryKey: ["/api/ai/suggestions", user?.id],
+    queryKey: ["/api/ai/suggestions/smart", user?.id],
   });
 
   // Adjust pace mutation

@@ -577,11 +577,6 @@ export const insertCourseCategorySchema = z.object({ nameEn: z.string(), nameTr:
 export type InsertCourseCategory = z.infer<typeof insertCourseCategorySchema>;
 export type CourseCategory = typeof courseCategories.$inferSelect;
 
-export const insertStudyGoal = z.object({ userId: z.number(), title: z.string(), description: z.string().optional() });
-export const insertStudySchedule = z.object({ userId: z.number(), title: z.string() });
-export const insertLearningRecommendation = z.object({ userId: z.number(), courseId: z.number() });
-export const insertStudyProgress = z.object({ userId: z.number(), courseId: z.number() });
-
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

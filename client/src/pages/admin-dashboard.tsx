@@ -3,28 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users, BookOpen, TrendingUp, AlertCircle } from "lucide-react";
 
-const mockCourseStats = [
-  { name: "Data Science", students: 145, completion: 78 },
-  { name: "Web Dev", students: 123, completion: 82 },
-  { name: "Marketing", students: 98, completion: 71 },
-];
-
-const mockEnrollmentTrend = [
-  { month: "Jan", enrollments: 120 },
-  { month: "Feb", enrollments: 145 },
-  { month: "Mar", enrollments: 168 },
-  { month: "Apr", enrollments: 195 },
-];
-
 export function AdminDashboard() {
-  const { data: allStudents } = useQuery({
-    queryKey: ["/api/admin/students"],
+  const { data: dashboardData } = useQuery({
+    queryKey: ["/api/admin/dashboard"],
   });
 
-  const { data: courses } = useQuery({
+  const { data: courses = [] } = useQuery({
     queryKey: ["/api/admin/courses"],
   });
 
@@ -47,7 +35,7 @@ export function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">628</p>
+              <p className="text-3xl font-bold">{dashboardData?.totalStudents || 0}</p>
               <p className="text-xs text-green-600 mt-1">+15% this month</p>
             </CardContent>
           </Card>
@@ -60,8 +48,8 @@ export function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">12</p>
-              <p className="text-xs text-muted-foreground mt-1">5 planned</p>
+              <p className="text-3xl font-bold">{dashboardData?.totalCourses || 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">{dashboardData?.totalEnrollments || 0} enrollments</p>
             </CardContent>
           </Card>
 
@@ -73,8 +61,8 @@ export function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">77%</p>
-              <p className="text-xs text-muted-foreground mt-1">Up from 72%</p>
+              <p className="text-3xl font-bold">{Math.round(dashboardData?.avgCompletion || 0)}%</p>
+              <p className="text-xs text-muted-foreground mt-1">Platform-wide average</p>
             </CardContent>
           </Card>
 
@@ -82,12 +70,12 @@ export function AdminDashboard() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
-                At Risk
+                In Progress
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">23</p>
-              <p className="text-xs text-red-600 mt-1">Low completion rate</p>
+              <p className="text-3xl font-bold">{dashboardData?.totalEnrollments || 0}</p>
+              <p className="text-xs text-blue-600 mt-1">Active enrollments</p>
             </CardContent>
           </Card>
         </div>
@@ -139,35 +127,40 @@ export function AdminDashboard() {
 
           {/* COURSES */}
           <TabsContent value="courses" className="space-y-4">
-            {courses?.map((course: any) => (
-              <Card key={course.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle>{course.title}</CardTitle>
-                      <CardDescription>{course.description}</CardDescription>
+            {courses?.length === 0 ? (
+              <Card><CardContent className="pt-6 text-center text-muted-foreground">No courses yet</CardContent></Card>
+            ) : (
+              courses.map((course: any) => (
+                <Card key={course.id} data-testid={`card-course-${course.id}`}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle>{course.title}</CardTitle>
+                        <CardDescription>{course.description}</CardDescription>
+                      </div>
+                      <Button variant="outline" size="sm">Edit</Button>
                     </div>
-                    <Button variant="outline" size="sm">Edit</Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Enrolled Students</p>
-                      <p className="text-2xl font-bold">{course.enrollmentCount}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Enrolled Students</p>
+                        <p className="text-2xl font-bold">{course.enrollmentCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Avg Completion</p>
+                        <p className="text-2xl font-bold">{course.avgCompletion}%</p>
+                        <Progress value={course.avgCompletion} className="mt-2" />
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Assignments</p>
+                        <p className="text-2xl font-bold">{course.completedAssignments}/{course.totalAssignments}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Avg Completion</p>
-                      <p className="text-2xl font-bold">{course.avgCompletion}%</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Modules</p>
-                      <p className="text-2xl font-bold">{course.moduleCount}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
             <Button className="w-full">+ Create New Course</Button>
           </TabsContent>
 

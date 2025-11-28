@@ -123,6 +123,7 @@ import {
   generateAdaptiveInsights
 } from "./advanced-adaptive-service";
 import * as smartPlanning from "./smart-planning";
+import { aiCurriculumGenerator } from "./ai-curriculum-generator";
 import * as notificationService from "./notification-service";
 import * as aiSessionGenerator from "./ai-session-generator";
 import { analyzeProgressAndRecommend, getTopicResources, trackResourceEngagement } from "./resource-recommendation-service";
@@ -8490,6 +8491,125 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       });
     } catch (error) {
       console.error("Curriculum generation error:", error);
+      res.status(500).json({ message: "Failed to generate curriculum", error: String(error) });
+    }
+  });
+
+  // Smart curriculum generation with user level adaptation
+  app.post("/api/admin/curriculum/generate-smart", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== "admin") {
+        return res.status(403).json({ message: "Only admins can generate curriculum" });
+      }
+
+      const validation = z.object({
+        courseId: z.number(),
+        userLevel: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ message: "Validation error", errors: validation.error.errors });
+      }
+
+      const { courseId, userLevel = "beginner" } = validation.data;
+
+      // Generate curriculum using AI service
+      const curriculumStructure = await aiCurriculumGenerator.generateCurriculum(courseId, userLevel);
+
+      // Save curriculum structure
+      const [curriculum] = await db.insert(schema.curriculums).values({
+        courseId,
+        title: `${userLevel} Level Curriculum`,
+        structureJson: curriculumStructure,
+        aiGenerated: true,
+      }).returning();
+
+      // Create modules and lessons from AI-generated structure
+      const modulesWithLessons = await Promise.all(
+        curriculumStructure.modules.map(async (module: any, moduleIdx: number) => {
+          const [newModule] = await db.insert(schema.modules).values({
+            courseId,
+            title: module.title,
+            titleEn: module.title,
+            titleTr: module.title,
+            descriptionEn: module.objectives?.join(" ") || "",
+            descriptionTr: module.objectives?.join(" ") || "",
+            order: moduleIdx + 1,
+          }).returning();
+
+          const lessons = await Promise.all(
+            (module.lessons || []).map(async (lesson: any, lessonIdx: number) => {
+              const [newLesson] = await db.insert(schema.lessons).values({
+                moduleId: newModule.id,
+                title: lesson.title,
+                titleEn: lesson.title,
+                titleTr: lesson.title,
+                content: lesson.content,
+                contentEn: lesson.content,
+                contentTr: lesson.content,
+                descriptionEn: lesson.content,
+                descriptionTr: lesson.content,
+                durationMinutes: lesson.duration || 60,
+                order: lessonIdx + 1,
+              }).returning();
+
+              return newLesson;
+            })
+          );
+
+          return { module: newModule, lessons };
+        })
+      );
+
+      res.json({
+        success: true,
+        curriculum,
+        curriculumStructure,
+        modules: modulesWithLessons,
+        metadata: {
+          totalModules: curriculumStructure.modules.length,
+          totalLessons: modulesWithLessons.reduce((sum: number, m: any) => sum + m.lessons.length, 0),
+          estimatedHours: curriculumStructure.totalHours,
+          difficultyProgression: curriculumStructure.difficultyPath,
+          learningOutcomes: curriculumStructure.learningOutcomes,
+        },
+      });
+    } catch (error) {
+      console.error("Smart curriculum generation error:", error);
+      res.status(500).json({ message: "Failed to generate curriculum", error: String(error) });
+    }
+  });
+
+  // Generate user-adapted curriculum based on user level
+  app.post("/api/curriculum/generate-for-user", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const validation = z.object({
+        courseId: z.number(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ message: "Validation error" });
+      }
+
+      const { courseId } = validation.data;
+
+      // Generate curriculum adapted to user's learning pace
+      const curriculumStructure = await aiCurriculumGenerator.generateUserAdaptedCurriculum(
+        courseId,
+        req.user.id
+      );
+
+      res.json({
+        success: true,
+        curriculum: curriculumStructure,
+        message: "Curriculum generated based on your learning pace",
+      });
+    } catch (error) {
+      console.error("User curriculum generation error:", error);
       res.status(500).json({ message: "Failed to generate curriculum", error: String(error) });
     }
   });

@@ -1,295 +1,190 @@
-// AI-Powered Curriculum Generator Service
-// Generates personalized curriculum based on enrolled courses
-
-import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { userCourses, courses, memoryEnhancedCurricula, users } from "@shared/schema";
-import { parseAIJSON } from "./ai-provider-service";
 import Anthropic from "@anthropic-ai/sdk";
+import { db } from "./db";
+import * as schema from "@shared/schema";
+import { eq } from "drizzle-orm";
 
-export interface CurriculumGenerationRequest {
-  userId: number;
-  enrolledCourseIds: number[];
-  userPreferences?: {
-    studyHoursPerDay?: number;
-    preferredLearningStyle?: string;
-    targetCompletionDate?: Date;
-  };
+const client = new Anthropic();
+
+interface LearningObjective {
+  title: string;
+  description: string;
 }
 
-export interface GeneratedCurriculum {
-  structure: any;
-  studyPlan: any;
-  assignments: any[];
-  targets: any[];
-  aiAnalysis: any;
+interface Module {
+  title: string;
+  objectives: string[];
+  lessons: Lesson[];
+  estimatedHours: number;
+  difficulty: "beginner" | "intermediate" | "advanced";
+}
+
+interface Lesson {
+  title: string;
+  content: string;
+  duration: number;
+  contentType: string;
+}
+
+interface CurriculumStructure {
+  modules: Module[];
+  totalHours: number;
+  difficultyPath: string[];
+  learningOutcomes: string[];
 }
 
 export class AICurriculumGenerator {
-  private client: Anthropic;
-
-  constructor() {
-    this.client = new Anthropic();
-  }
-
-  /**
-   * Main curriculum generation method
-   */
-  async generateCurriculum(request: CurriculumGenerationRequest): Promise<GeneratedCurriculum> {
-    console.log(`[CurriculumGenerator] Generating curriculum for user ${request.userId}`);
-
+  async generateCurriculum(
+    courseId: number,
+    userLevel: "beginner" | "intermediate" | "advanced" = "beginner"
+  ): Promise<CurriculumStructure> {
     try {
-      // Step 1: Analyze enrolled courses
-      const courseAnalysis = await this.analyzeCourses(request.enrolledCourseIds);
+      // Get course details
+      const [course] = await db.select()
+        .from(schema.courses)
+        .where(eq(schema.courses.id, courseId));
 
-      // Step 2: Get user's learning history
-      const user = await this.getUserProfile(request.userId);
-      const userLearningHistory = await this.getUserLearningHistory(request.userId);
+      if (!course) {
+        throw new Error("Course not found");
+      }
 
-      // Step 3: Build curriculum structure
-      const curriculumStructure = await this.buildCurriculumStructure(
-        courseAnalysis,
-        userLearningHistory,
-        request.userPreferences
+      // Analyze learning objectives using AI
+      const objectives = course.description || "Learn the fundamentals";
+      const curriculumStructure = await this.analyzeLearningObjectives(
+        objectives,
+        userLevel,
+        course.title
       );
 
-      // Step 4: Create study plan
-      const studyPlan = await this.createStudyPlan(request.userId, curriculumStructure, request.userPreferences);
-
-      // Step 5: Generate assignments
-      const assignments = await this.generateAssignments(studyPlan, curriculumStructure);
-
-      // Step 6: Generate targets
-      const targets = await this.generateTargets(studyPlan, curriculumStructure);
-
-      // Step 7: AI analysis
-      const aiAnalysis = await this.analyzeForOptimization(courseAnalysis, user, curriculumStructure);
+      // Calculate and optimize
+      const totalHours = this.calculateDuration(curriculumStructure);
+      const difficultyPath = this.optimizeLearningPath(curriculumStructure);
 
       return {
-        structure: curriculumStructure,
-        studyPlan,
-        assignments,
-        targets,
-        aiAnalysis
+        modules: curriculumStructure,
+        totalHours,
+        difficultyPath,
+        learningOutcomes: this.extractLearningOutcomes(curriculumStructure),
       };
     } catch (error) {
-      console.error(`[CurriculumGenerator] Error:`, error);
+      console.error("Curriculum generation error:", error);
       throw error;
     }
   }
 
-  /**
-   * Analyze enrolled courses
-   */
-  private async analyzeCourses(courseIds: number[]): Promise<any> {
-    const courseRecords = await db
-      .select()
-      .from(courses)
-      .where((courses as any).id.inArray(courseIds));
+  async analyzeLearningObjectives(
+    objectives: string,
+    userLevel: string,
+    courseTitle: string
+  ): Promise<Module[]> {
+    try {
+      const prompt = `You are an expert curriculum designer. Break down these learning objectives into a structured curriculum.
 
-    if (courseRecords.length === 0) {
-      return { courses: [], analysis: {} };
+Course: ${courseTitle}
+User Level: ${userLevel}
+Objectives: ${objectives}
+
+Create a detailed curriculum with:
+1. 3-5 modules, each with clear learning objectives
+2. Each module contains 2-4 lessons
+3. Estimated hours per module (30-120 min per lesson)
+4. Difficulty progression (beginner → intermediate → advanced)
+
+Return ONLY valid JSON with this exact structure:
+{
+  "modules": [
+    {
+      "title": "Module Title",
+      "objectives": ["objective 1", "objective 2"],
+      "difficulty": "beginner|intermediate|advanced",
+      "estimatedHours": number,
+      "lessons": [
+        {
+          "title": "Lesson Title",
+          "content": "Brief description",
+          "duration": 60,
+          "contentType": "video|reading|exercise|quiz"
+        }
+      ]
     }
+  ]
+}`;
 
-    const courseList = courseRecords
-      .map((c: any) => `${c.titleEn || c.title} (${c.level || "intermediate"})`)
-      .join(", ");
-
-    const prompt = `Analyze these enrolled courses and provide:
-${courseList}
-
-Return JSON with:
-- courseRelationships: how courses relate to each other
-- prerequisites: suggested prerequisites
-- skillProgression: skill progression path
-- contentGaps: any content gaps to fill
-- totalEstimatedHours: estimated study hours`;
-
-    const response = await this.client.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }]
-    });
-
-    return {
-      courses: courseRecords,
-      analysis: parseAIJSON(response.content[0].type === 'text' ? response.content[0].text : '{}')
-    };
-  }
-
-  /**
-   * Get user profile
-   */
-  private async getUserProfile(userId: number): Promise<any> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId));
-    return user || {};
-  }
-
-  /**
-   * Get user's learning history
-   */
-  private async getUserLearningHistory(userId: number): Promise<any> {
-    const userCourseRecords = await db
-      .select()
-      .from(userCourses)
-      .where(eq(userCourses.userId, userId));
-
-    return {
-      completedCourses: userCourseRecords.filter((uc: any) => uc.completed).length,
-      averageProgress: Math.round(
-        userCourseRecords.reduce((sum: number, uc: any) => sum + uc.progress, 0) /
-          (userCourseRecords.length || 1)
-      ),
-      learningPace: userCourseRecords.length > 0 ? "consistent" : "new_learner"
-    };
-  }
-
-  /**
-   * Build curriculum structure
-   */
-  private async buildCurriculumStructure(courseAnalysis: any, learningHistory: any, preferences?: any): Promise<any> {
-    const prompt = `Build a curriculum structure considering:
-Courses: ${courseAnalysis.courses.map((c: any) => c.titleEn || c.title).join(", ")}
-User pace: ${learningHistory.learningPace}
-Daily hours: ${preferences?.studyHoursPerDay || 2}
-
-Return JSON with:
-- phases: curriculum phases with duration
-- topics: ordered topics
-- learningOutcomes: expected outcomes
-- milestones: achievement milestones`;
-
-    const response = await this.client.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }]
-    });
-
-    return parseAIJSON(response.content[0].type === 'text' ? response.content[0].text : '{}');
-  }
-
-  /**
-   * Create study plan
-   */
-  private async createStudyPlan(userId: number, structure: any, preferences?: any): Promise<any> {
-    const dailyHours = preferences?.studyHoursPerDay || 2;
-    const startDate = new Date();
-    const totalDays = structure.totalEstimatedHours ? Math.ceil(structure.totalEstimatedHours / dailyHours) : 30;
-    const endDate = new Date(startDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
-
-    return {
-      userId,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-      dailyTarget: `${dailyHours} hours per day`,
-      totalDays,
-      topics: structure.topics || [],
-      phases: structure.phases || [],
-      status: "active",
-      weeklyCheckpoints: Math.ceil(totalDays / 7)
-    };
-  }
-
-  /**
-   * Generate assignments from curriculum
-   */
-  private async generateAssignments(studyPlan: any, structure: any): Promise<any[]> {
-    const phases = (structure.phases as any) || [{ name: "General" }];
-    const assignments = [];
-
-    for (let i = 0; i < Math.min(phases.length, 3); i++) {
-      const phase = phases[i];
-      const prompt = `Create 2 assignments for curriculum phase: ${phase.name || `Phase ${i + 1}`}
-Topics: ${structure.topics?.slice(i * 2, (i + 1) * 2).join(", ") || "various"}
-
-Return JSON array with: title, description, type, estimatedTime, points`;
-
-      const response = await this.client.messages.create({
+      const message = await client.messages.create({
         model: "claude-3-5-sonnet-20241022",
-        max_tokens: 500,
-        messages: [{ role: "user", content: prompt }]
+        max_tokens: 2048,
+        messages: [{ role: "user", content: prompt }],
       });
 
-      const phaseAssignments = parseAIJSON(response.content[0].type === 'text' ? response.content[0].text : '[]');
-      const assignmentList = Array.isArray(phaseAssignments) ? phaseAssignments : [];
-
-      for (const assignment of assignmentList) {
-        assignments.push({
-          ...assignment,
-          phase: phase.name || `Phase ${i + 1}`,
-          dueDate: new Date(
-            new Date(studyPlan.startDate).getTime() +
-              ((i + 1) * studyPlan.totalDays) / phases.length * 24 * 60 * 60 * 1000
-          )
-            .toISOString()
-            .split('T')[0]
-        });
+      const content = message.content[0];
+      if (content.type !== "text") {
+        throw new Error("Unexpected response type");
       }
+
+      // Extract JSON from response
+      const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("Could not parse AI response");
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return parsed.modules;
+    } catch (error) {
+      console.error("AI analysis error:", error);
+      throw error;
     }
-
-    return assignments;
   }
 
-  /**
-   * Generate learning targets
-   */
-  private async generateTargets(studyPlan: any, structure: any): Promise<any[]> {
-    return [
-      {
-        type: "completion",
-        target: "Complete all curriculum phases",
-        deadline: studyPlan.endDate,
-        priority: "high",
-        expectedOutcome: "100% course completion"
-      },
-      {
-        type: "retention",
-        target: `Master ${structure.topics?.length || 10} key topics`,
-        deadline: new Date(new Date(studyPlan.endDate).getTime() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split('T')[0],
-        priority: "high",
-        expectedOutcome: "85%+ retention rate"
-      },
-      {
-        type: "assignments",
-        target: `Complete all ${studyPlan.phases?.length || 3} phase assignments`,
-        deadline: studyPlan.endDate,
-        priority: "medium",
-        expectedOutcome: "70%+ assignment average"
-      }
-    ];
+  calculateDuration(modules: Module[]): number {
+    return modules.reduce((total, module) => {
+      const moduleDuration = module.lessons.reduce(
+        (sum, lesson) => sum + (lesson.duration || 60),
+        0
+      );
+      return total + moduleDuration;
+    }, 0) / 60; // Convert to hours
   }
 
-  /**
-   * AI-powered optimization analysis
-   */
-  private async analyzeForOptimization(courseAnalysis: any, user: any, structure: any): Promise<any> {
-    return {
-      userProfile: {
-        name: user.displayName || "Student",
-        role: user.role || "student"
-      },
-      courseSummary: {
-        totalCourses: courseAnalysis.courses.length,
-        estimatedHours: courseAnalysis.analysis.totalEstimatedHours || 60
-      },
-      recommendations: [
-        "Use spaced repetition for key topics",
-        `Allocate ${courseAnalysis.analysis.totalEstimatedHours || 60} hours total`,
-        "Weekly review sessions for retention",
-        "Track progress against milestones"
-      ],
-      expectedOutcomes: {
-        completionRate: "90-95%",
-        retentionImprovement: "+40%",
-        studyEfficiency: "+35%"
-      },
-      adaptationTriggers: ["Weekly performance review", "Monthly milestone check", "Content difficulty adjustment"]
-    };
+  optimizeLearningPath(modules: Module[]): string[] {
+    // Sort by difficulty and return progression path
+    const sorted = [...modules].sort((a, b) => {
+      const difficultyOrder = { beginner: 1, intermediate: 2, advanced: 3 };
+      return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+    });
+
+    return sorted.map(m => `${m.title} (${m.difficulty})`);
+  }
+
+  extractLearningOutcomes(modules: Module[]): string[] {
+    const outcomes: string[] = [];
+    modules.forEach(module => {
+      outcomes.push(...(module.objectives || []));
+    });
+    return outcomes.slice(0, 10); // Top 10 outcomes
+  }
+
+  async generateUserAdaptedCurriculum(
+    courseId: number,
+    userId: number
+  ): Promise<CurriculumStructure> {
+    try {
+      // Get user profile for level
+      const [user] = await db.select()
+        .from(schema.users)
+        .where(eq(schema.users.id, userId));
+
+      const userLevel = (user?.learningPace || "moderate") as any;
+      const levelMap: Record<string, "beginner" | "intermediate" | "advanced"> =
+      {
+        slow: "beginner",
+        moderate: "intermediate",
+        fast: "advanced",
+      };
+
+      return this.generateCurriculum(courseId, levelMap[userLevel] || "beginner");
+    } catch (error) {
+      console.error("User-adapted curriculum error:", error);
+      throw error;
+    }
   }
 }
 

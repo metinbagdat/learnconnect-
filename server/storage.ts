@@ -283,6 +283,26 @@ class DatabaseStorage implements IStorage {
     return db.select().from(modules).where(eq(modules.courseId, courseId));
   }
 
+  // Lesson methods
+  async getLessons(moduleId: number) {
+    try {
+      return db.select().from(lessons).where(eq(lessons.moduleId, moduleId));
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+      return [];
+    }
+  }
+
+  async getLesson(lessonId: number) {
+    try {
+      const [lesson] = await db.select().from(lessons).where(eq(lessons.id, lessonId));
+      return lesson;
+    } catch (error) {
+      console.error('Error fetching lesson:', error);
+      return null;
+    }
+  }
+
   // Assignment methods
   async createAssignment(assignmentData: any) {
     const [created] = await db.insert(assignments).values(assignmentData).returning();

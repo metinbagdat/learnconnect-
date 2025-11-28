@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, FileText } from "lucide-react";
+import { ChevronRight, FileText, BookOpen } from "lucide-react";
 import { Assignment } from "@shared/schema";
+import { useLocation } from "wouter";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -14,6 +15,8 @@ export function AssignmentList({
   onViewAll,
   onViewAssignment
 }: AssignmentListProps) {
+  const [, navigate] = useLocation();
+  
   // Function to format due date
   const getDueStatus = (dueDate: Date | null | undefined) => {
     if (!dueDate) return { label: "No deadline", color: "bg-neutral-100 text-neutral-600" };
@@ -66,6 +69,18 @@ export function AssignmentList({
                 <p className="text-xs text-muted-foreground mt-1">
                   Keep learning! New assignments will be posted by your instructors.
                 </p>
+                <div className="mt-4">
+                  <Button 
+                    onClick={() => navigate('/courses')}
+                    variant="default"
+                    size="sm"
+                    className="gap-2"
+                    data-testid="enroll-lesson-button-assignments"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Enroll a Lesson
+                  </Button>
+                </div>
               </div>
             </li>
           ) : (

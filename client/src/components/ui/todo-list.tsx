@@ -15,8 +15,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/contexts/consolidated-language-context';
-import { CheckCircle2, Circle, Plus, Clock, AlertCircle, Calendar, Trash2, Target } from 'lucide-react';
-import { Link } from 'wouter';
+import { CheckCircle2, Circle, Plus, Clock, AlertCircle, Calendar, Trash2, Target, BookOpen } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,6 +67,7 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
   const { user } = useAuth();
   const { language } = useLanguage();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(date || format(new Date(), 'yyyy-MM-dd'));
 
@@ -414,6 +415,18 @@ export function TodoList({ compact = false, showAddButton = true, maxHeight = "5
           <div className="text-center py-8 text-muted-foreground">
             <Circle className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>{translations.noTasks}</p>
+            <div className="mt-4">
+              <Button 
+                onClick={() => navigate('/courses')}
+                variant="default"
+                size="sm"
+                className="gap-2"
+                data-testid="enroll-lesson-button"
+              >
+                <BookOpen className="h-4 w-4" />
+                {language === 'tr' ? 'Ders Kaydol' : 'Enroll a Lesson'}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

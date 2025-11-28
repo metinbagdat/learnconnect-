@@ -539,6 +539,28 @@ export type InsertSkillChallenge = z.infer<typeof insertSkillChallengeSchema>;
 export type Reminder = typeof reminders.$inferSelect;
 export type InsertReminder = z.infer<typeof insertReminderSchema>;
 
+// Challenge & Skill system tables
+export const challengeLearningPaths = pgTable("challenge_learning_paths", { id: serial("id").primaryKey(), title: text("title").notNull(), isActive: boolean("is_active").default(true), category: text("category"), difficulty: text("difficulty") });
+export const challengePathSteps = pgTable("challenge_path_steps", { id: serial("id").primaryKey(), pathId: integer("path_id").notNull(), stepOrder: integer("step_order").notNull() });
+export const userChallengeStreaks = pgTable("user_challenge_streaks", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), streakCount: integer("streak_count").default(0) });
+export const userSkillChallengeAttempts = pgTable("user_skill_challenge_attempts", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), challengeId: integer("challenge_id").notNull() });
+
+// Schemas for challenge tables
+export const insertChallengeLearningPathSchema = z.object({ title: z.string(), isActive: z.boolean().optional(), category: z.string().optional(), difficulty: z.string().optional() });
+export const insertChallengePathStepSchema = z.object({ pathId: z.number(), stepOrder: z.number() });
+export const insertUserChallengeStreakSchema = z.object({ userId: z.number(), streakCount: z.number().optional() });
+export const insertUserSkillChallengeAttemptSchema = z.object({ userId: z.number(), challengeId: z.number() });
+
+// Types for challenge tables
+export type ChallengeLearningPath = typeof challengeLearningPaths.$inferSelect;
+export type InsertChallengeLearningPath = z.infer<typeof insertChallengeLearningPathSchema>;
+export type ChallengePathStep = typeof challengePathSteps.$inferSelect;
+export type InsertChallengePathStep = z.infer<typeof insertChallengePathStepSchema>;
+export type UserChallengeStreak = typeof userChallengeStreaks.$inferSelect;
+export type InsertUserChallengeStreak = z.infer<typeof insertUserChallengeStreakSchema>;
+export type UserSkillChallengeAttempt = typeof userSkillChallengeAttempts.$inferSelect;
+export type InsertUserSkillChallengeAttempt = z.infer<typeof insertUserSkillChallengeAttemptSchema>;
+
 // ============================================================================
 // SCHEMAS & TYPES
 // ============================================================================
@@ -546,6 +568,19 @@ export type InsertReminder = z.infer<typeof insertReminderSchema>;
 export const insertCourseSchema = createInsertSchema(courses).omit({ id: true, createdAt: true });
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Course = typeof courses.$inferSelect;
+
+export const insertLearningPathStepSchema = z.object({ pathId: z.number(), stepOrder: z.number(), courseId: z.number().optional(), title: z.string(), description: z.string().optional() });
+export type InsertLearningPathStep = z.infer<typeof insertLearningPathStepSchema>;
+export type LearningPathStep = typeof learningPathSteps.$inferSelect;
+
+export const insertCourseCategorySchema = z.object({ nameEn: z.string(), nameTr: z.string(), descriptionEn: z.string().optional(), descriptionTr: z.string().optional(), order: z.number().optional() });
+export type InsertCourseCategory = z.infer<typeof insertCourseCategorySchema>;
+export type CourseCategory = typeof courseCategories.$inferSelect;
+
+export const insertStudyGoal = z.object({ userId: z.number(), title: z.string(), description: z.string().optional() });
+export const insertStudySchedule = z.object({ userId: z.number(), title: z.string() });
+export const insertLearningRecommendation = z.object({ userId: z.number(), courseId: z.number() });
+export const insertStudyProgress = z.object({ userId: z.number(), courseId: z.number() });
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;

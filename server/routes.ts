@@ -7804,7 +7804,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // ============================================================================
 
   // Get user's curriculum designs
-  app.get("/api/curriculum-designs", authenticateUser, async (req, res) => {
+  app.get("/api/curriculum-designs", async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const designs = await storage.getUserDesignProcesses(req.user.id);
@@ -7816,7 +7816,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Create new curriculum design (starting point for parameters)
-  app.post("/api/curriculum-designs", authenticateUser, async (req, res) => {
+  app.post("/api/curriculum-designs", async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       
@@ -7857,7 +7857,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Get specific design with all three parts
-  app.get("/api/curriculum-designs/:id", authenticateUser, async (req, res) => {
+  app.get("/api/curriculum-designs/:id", async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       
@@ -7882,7 +7882,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update design parameters (Part 1)
-  app.patch("/api/curriculum-designs/:id/parameters", authenticateUser, async (req, res) => {
+  app.patch("/api/curriculum-designs/:id/parameters", async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       
@@ -7900,7 +7900,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Update success metrics (Part 2)
-  app.patch("/api/curriculum-designs/:id/metrics", authenticateUser, async (req, res) => {
+  app.patch("/api/curriculum-designs/:id/metrics", async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       
@@ -7928,7 +7928,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // Advance design stage (Part 3 - Process Flow)
-  app.patch("/api/curriculum-designs/:id/stage", authenticateUser, async (req, res) => {
+  app.patch("/api/curriculum-designs/:id/stage", async (req, res) => {
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       

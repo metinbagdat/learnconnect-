@@ -849,3 +849,51 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type StudyPlanAdjustment = typeof studyPlanAdjustments.$inferSelect;
 export type InsertStudyPlanAdjustment = z.infer<typeof insertStudyPlanAdjustmentSchema>;
+
+// ============================================================================
+// ENHANCED PIPELINE TABLES - ALIGNED WITH DESIGN SPECIFICATION
+// ============================================================================
+
+export const curriculums = pgTable("curriculums", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull(),
+  title: text("title").notNull(),
+  structureJson: json("structure_json"), // { modules: [...], lessons: [...] }
+  aiGenerated: boolean("ai_generated").default(false),
+  version: text("version").default("1.0"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  assignmentId: integer("assignment_id").notNull(),
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed
+  completedAt: timestamp("completed_at"),
+  score: integer("score"),
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCurriculumSchema = z.object({
+  courseId: z.number(),
+  title: z.string().min(1).max(255),
+  structureJson: z.record(z.any()).optional(),
+  aiGenerated: z.boolean().optional(),
+  version: z.string().optional(),
+});
+
+export const insertUserProgressSchema = z.object({
+  userId: z.number(),
+  assignmentId: z.number(),
+  status: z.enum(["pending", "in_progress", "completed"]).optional(),
+  completedAt: z.date().optional(),
+  score: z.number().min(0).max(100).optional(),
+  feedback: z.string().optional(),
+});
+
+export type Curriculum = typeof curriculums.$inferSelect;
+export type InsertCurriculum = z.infer<typeof insertCurriculumSchema>;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;

@@ -8774,5 +8774,188 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // ============================================================================
+  // USER PROGRESS TRACKING
+  // ============================================================================
+
+  // Get user progress for assignment
+  app.get("/api/user-progress/:assignmentId", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const assignmentId = parseInt(req.params.assignmentId);
+      const [progress] = await db.select()
+        .from(schema.userProgress)
+        .where(eq(schema.userProgress.assignmentId, assignmentId));
+
+      res.json(progress || { status: "pending", score: 0 });
+    } catch (error) {
+      console.error("Get progress error:", error);
+      res.status(500).json({ message: "Failed to fetch progress" });
+    }
+  });
+
+  // Update assignment progress and score
+  app.post("/api/user-progress/update", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const validation = z.object({
+        assignmentId: z.number(),
+        status: z.enum(["pending", "in_progress", "completed"]),
+        score: z.number().min(0).max(100).optional(),
+        feedback: z.string().optional(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ message: "Validation error", errors: validation.error.errors });
+      }
+
+      const { assignmentId, status, score, feedback } = validation.data;
+      const completedAt = status === "completed" ? new Date() : null;
+
+      const [progress] = await db.insert(schema.userProgress).values({
+        userId: req.user.id,
+        assignmentId,
+        status,
+        completedAt: completedAt as any,
+        score,
+        feedback,
+      }).onConflictDoUpdate({
+        target: [schema.userProgress.assignmentId],
+        set: { status, score, completedAt: completedAt as any, feedback },
+      }).returning();
+
+      // Create completion notification if status changed to completed
+      if (status === "completed") {
+        await db.insert(schema.notifications).values({
+          userId: req.user.id,
+          type: "course_completed",
+          title: "Assignment Completed!",
+          message: `You have completed assignment #${assignmentId}. ${score ? `Score: ${score}%` : ""}`,
+          data: { assignmentId, score },
+        });
+      }
+
+      res.json({ success: true, progress });
+    } catch (error) {
+      console.error("Update progress error:", error);
+      res.status(500).json({ message: "Failed to update progress", error: String(error) });
+    }
+  });
+
+  // Get curriculum structure for course
+  app.get("/api/curriculum/:courseId", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const [curriculum] = await db.select()
+        .from(schema.curriculums)
+        .where(eq(schema.curriculums.courseId, courseId));
+
+      if (!curriculum) {
+        return res.status(404).json({ message: "Curriculum not found" });
+      }
+
+      res.json(curriculum);
+    } catch (error) {
+      console.error("Get curriculum error:", error);
+      res.status(500).json({ message: "Failed to fetch curriculum" });
+    }
+  });
+
+  // PIPELINE: Enrollment → Curriculum → StudyPlan → Assignments → Progress
+  app.post("/api/pipeline/enroll-and-generate", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const validation = z.object({
+        courseId: z.number(),
+      }).safeParse(req.body);
+
+      if (!validation.success) {
+        return res.status(400).json({ message: "Validation error" });
+      }
+
+      const { courseId } = validation.data;
+      const userId = req.user.id;
+
+      // Step 1: Get course
+      const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, courseId));
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Step 2: Create enrollment
+      const [enrollment] = await db.insert(schema.userCourses).values({
+        userId,
+        courseId,
+      }).onConflictDoNothing().returning();
+
+      if (!enrollment) {
+        return res.status(409).json({ message: "Already enrolled in this course" });
+      }
+
+      // Step 3: Get or create curriculum
+      let [curriculum] = await db.select()
+        .from(schema.curriculums)
+        .where(eq(schema.curriculums.courseId, courseId));
+
+      if (!curriculum) {
+        const [newCurriculum] = await db.insert(schema.curriculums).values({
+          courseId,
+          title: course.title,
+          aiGenerated: course.isAiGenerated || false,
+        }).returning();
+        curriculum = newCurriculum;
+      }
+
+      // Step 4: Create study plan
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      const [studyPlan] = await db.insert(schema.studyPlans).values({
+        userId,
+        title: `${course.title} Study Plan`,
+      }).returning();
+
+      // Step 5: Create assignments from modules/lessons
+      const modules = await db.select()
+        .from(schema.modules)
+        .where(eq(schema.modules.courseId, courseId));
+
+      for (const module of modules) {
+        const lessons = await db.select()
+          .from(schema.lessons)
+          .where(eq(schema.lessons.moduleId, module.id));
+
+        for (const lesson of lessons) {
+          const dueDate = new Date(startDate.getTime() + (lesson.durationMinutes || 60) * 60 * 1000);
+          
+          await db.insert(schema.assignments).values({
+            title: lesson.title,
+            description: lesson.content || lesson.title,
+            courseId,
+            dueDate: dueDate as any,
+          }).returning();
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Pipeline completed: enrolled, curriculum loaded, study plan created, assignments generated",
+        data: { enrollment, curriculum, studyPlan },
+      });
+    } catch (error) {
+      console.error("Pipeline error:", error);
+      res.status(500).json({ message: "Pipeline failed", error: String(error) });
+    }
+  });
+
   return httpServer;
 }

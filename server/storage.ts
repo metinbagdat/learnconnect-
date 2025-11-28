@@ -222,7 +222,10 @@ class DatabaseStorage implements IStorage {
   }
 
   async getUserStudyPrograms(userId: number) {
-    return db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
+    const userEnrollments = await db.select().from(userCourses).where(eq(userCourses.userId, userId));
+    if (!userEnrollments.length) return [];
+    const courseIds = userEnrollments.map(e => e.courseId);
+    return db.select().from(courses).where(inArray(courses.id, courseIds));
   }
 
   async getUserWeeklyStats(userId: number) {
@@ -234,7 +237,8 @@ class DatabaseStorage implements IStorage {
   }
 
   async getUserAchievements(userId: number) {
-    return db.select().from(userAchievements).where(eq(userAchievements.userId, userId)).innerJoin(achievements, eq(userAchievements.achievementId, achievements.id));
+    const result = await db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
+    return result || [];
   }
 }
 

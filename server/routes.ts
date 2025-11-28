@@ -5281,12 +5281,12 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       
       // Get curriculum context for tasks
       const taskIds = tasks.map(t => t.id);
-      const curriculumContext = await storage.getCurriculumContextForDailyTasks(req.user.id, taskIds);
+      const curriculumContext = await storage.getCurriculumContextForDailyTasks(userId, taskIds);
       
       // Merge curriculum context with tasks
-      const tasksWithContext = tasks.map(task => ({
+      const tasksWithContext = (Array.isArray(tasks) ? tasks : []).map(task => ({
         ...task,
-        curriculumContext: curriculumContext.get(task.id) || null
+        curriculumContext: curriculumContext && curriculumContext.get ? curriculumContext.get(task.id) || null : null
       }));
       
       res.json(tasksWithContext);

@@ -34,6 +34,8 @@ import { registerSpacedRepetitionEndpoints } from "./smart-suggestions/spaced-re
 import { registerAIIntegrationEndpoints } from "./smart-suggestions/ai-integration-endpoints";
 import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unified-orchestration-endpoints";
 import { handleCourseEnrollment } from "./enrollment-event-handler";
+import { registerDashboardEndpoints } from "./smart-suggestions/dashboard-endpoints";
+import { registerFormsAndListsEndpoints } from "./smart-suggestions/forms-and-lists-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -7414,6 +7416,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerSpacedRepetitionEndpoints(app);
   registerAIIntegrationEndpoints(app);
   registerUnifiedOrchestrationEndpoints(app);
+  registerDashboardEndpoints(app);
+  registerFormsAndListsEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
   app.use('/api/production', productionRouter);
 

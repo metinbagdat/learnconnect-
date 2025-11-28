@@ -175,24 +175,14 @@ export function StudentDashboard() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(dashboardCourses as any[]).map((item: any) => (
-                    <div key={item.course?.id} className="space-y-1">
+                    <div key={item.course?.id} className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>{item.course?.title}</span>
                         <span className="font-semibold">{item.studyPlan?.completionPercentage || 0}%</span>
                       </div>
                       <Progress value={item.studyPlan?.completionPercentage || 0} />
-                      <span>Module 1: Basics</span>
-                      <span>100%</span>
                     </div>
-                    <Progress value={100} />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Module 2: Advanced</span>
-                      <span>65%</span>
-                    </div>
-                    <Progress value={65} />
-                  </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>

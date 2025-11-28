@@ -8383,6 +8383,85 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   app.post("/api/ai/generate-curriculum", async (req, res) => { res.json({ success: true, curriculum: {} }); });
   app.post("/api/ai/analyze-learning-gaps", async (req, res) => { res.json({ success: true, analysis: {} }); });
 
+  // ============================================================================
+  // ADMIN: AI-GENERATED CURRICULUM
+  // ============================================================================
+  app.post("/api/admin/curriculum/generate", async (req, res) => {
+    try {
+      const { courseTitle, courseDescription, durationWeeks, targetAudience } = req.body;
+      
+      if (!courseTitle || !courseDescription) {
+        return res.status(400).json({ message: "Course title and description required" });
+      }
+
+      // Call Claude to generate curriculum
+      const { generateCurriculum } = await import("./ai-integration.js");
+      const curriculum = await generateCurriculum({
+        courseTitle,
+        description: courseDescription,
+        targetAudience: targetAudience || "General",
+        durationWeeks: durationWeeks || 8,
+        skillLevel: "intermediate"
+      });
+
+      if (!curriculum.modules) {
+        return res.status(500).json({ message: "Failed to generate curriculum" });
+      }
+
+      // Save curriculum to database
+      const [course] = await db.insert(schema.courses).values({
+        title: courseTitle,
+        description: courseDescription,
+        moduleCount: curriculum.modules.length,
+      }).returning();
+
+      // Create modules and lessons
+      const modulesWithLessons = await Promise.all(
+        curriculum.modules.map(async (module: any, moduleIdx: number) => {
+          const [newModule] = await db.insert(schema.modules).values({
+            courseId: course.id,
+            title: module.title || `Module ${moduleIdx + 1}`,
+            description: module.objectives || "",
+            order: moduleIdx + 1,
+          }).returning();
+
+          const lessons = await Promise.all(
+            (module.lessons || []).map(async (lesson: any, lessonIdx: number) => {
+              const durationMatch = lesson.duration?.match(/\d+/);
+              const durationMinutes = durationMatch ? parseInt(durationMatch[0]) * 60 : 60;
+
+              const [newLesson] = await db.insert(schema.lessons).values({
+                moduleId: newModule.id,
+                title: lesson.title || `Lesson ${lessonIdx + 1}`,
+                description: `${lesson.title}`,
+                durationMinutes,
+                order: lessonIdx + 1,
+                contentType: lesson.contentType || "video",
+              }).returning();
+
+              return newLesson;
+            })
+          );
+
+          return { module: newModule, lessons };
+        })
+      );
+
+      res.json({
+        success: true,
+        course,
+        curriculum: {
+          modules: modulesWithLessons,
+          totalModules: curriculum.modules.length,
+          totalLessons: modulesWithLessons.reduce((sum: number, m: any) => sum + m.lessons.length, 0),
+        },
+        message: "Curriculum generated and saved successfully",
+      });
+    } catch (error) {
+      console.error("Curriculum generation error:", error);
+      res.status(500).json({ message: "Failed to generate curriculum", error: String(error) });
+    }
+  });
 
   return httpServer;
 }

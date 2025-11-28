@@ -89,6 +89,7 @@ import { ProgramPlan } from "@/pages/program-plan";
 import { StudentDashboard } from "@/pages/student-dashboard";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { AiRecommendations } from "@/pages/ai-recommendations";
+import { AdminCurriculumGenerator } from "@/pages/admin-curriculum-generator";
 
 function Router() {
   return (
@@ -183,6 +184,7 @@ function Router() {
       <ProtectedRoute path="/student-dashboard" component={StudentDashboard} />
       <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
       <ProtectedRoute path="/ai-recommendations" component={AiRecommendations} />
+      <ProtectedRoute path="/admin/curriculum-generator" component={AdminCurriculumGenerator} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1969,8 +1969,18 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         filters.active = query.active === 'true';
       }
       
-      const challenges = await storage.getChallenges(filters);
-      res.json(challenges);
+      try {
+        const challenges = await storage.getChallenges(filters);
+        res.json(challenges);
+      } catch (dbError: any) {
+        // Return empty array if challenges table doesn't exist or has schema issues
+        if (dbError?.code === '42703' || dbError?.code === '42P01') {
+          console.warn("Challenges table not available or has schema issues, returning empty array");
+          res.json([]);
+        } else {
+          throw dbError;
+        }
+      }
     } catch (error) {
       console.error("Error fetching challenges:", error);
       res.status(500).json({ message: "Failed to fetch challenges" });

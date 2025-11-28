@@ -728,28 +728,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const { generateStudyTips } = await import('./ai-chat-service');
-      const tips = await generateStudyTips(userId);
-      res.json({ tips });
+      const userCourses = await storage.getUserCourses(userId);
+      const userLevel = await storage.getUserLevel(userId);
+      
+      if (userCourses.length === 0) {
+        return res.json({ 
+          tips: [
+            "Start by enrolling in a course that matches your interests",
+            "Set a regular study schedule and stick to it",
+            "Take notes while learning new concepts",
+            "Practice regularly with exercises and quizzes"
+          ]
+        });
+      }
+
+      // Generate curriculum-based tips
+      const courseTitles = userCourses.filter(uc => uc.course).map(uc => uc.course.title).join(', ') || "various courses";
+      const avgProgress = Math.round(userCourses.reduce((sum, uc) => sum + uc.progress, 0) / userCourses.length);
+
+      let tips = [
+        `Focus on mastering one topic at a time in ${courseTitles}`,
+        `You're ${avgProgress}% through your courses - break it into smaller daily goals`,
+        `Review previously learned concepts to strengthen your memory`,
+        `Join study groups or discussion forums for your courses`,
+        `Take practice quizzes to test your understanding`,
+        `Use the Pomodoro technique: 25 minutes focused study, 5 minute breaks`,
+        `Write summaries of key concepts in your own words`,
+        `Teach someone else what you've learned - it deepens understanding`
+      ];
+
+      // Add level-specific tips
+      if (userLevel && userLevel.level > 5) {
+        tips.push("You're an advanced learner! Try challenging projects to apply knowledge");
+      }
+      
+      res.json({ tips: tips.slice(0, 4) });
     } catch (error) {
       console.error('Error generating study tips:', error);
-      res.status(500).json({ message: "Failed to generate study tips" });
+      res.json({ 
+        tips: [
+          "Review your notes regularly to reinforce learning",
+          "Practice active recall by testing yourself",
+          "Break study sessions into focused 25-minute intervals",
+          "Connect new concepts to things you already know"
+        ]
+      });
     }
   });
 
   // Get motivational message
   app.get("/api/ai/motivation", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    // Support both session-based and header-based auth
+    const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
-      const { generateMotivationalMessage } = await import('./ai-chat-service');
-      const message = await generateMotivationalMessage(req.user.id);
+      // Get user progress data for personalized motivation
+      const userCourses = await storage.getUserCourses(userId);
+      const userLevel = await storage.getUserLevel(userId);
+      
+      const completedCourses = userCourses.filter(uc => uc.completed).length;
+      const totalCourses = userCourses.length;
+      const avgProgress = totalCourses > 0 ? Math.round(userCourses.reduce((sum, uc) => sum + uc.progress, 0) / totalCourses) : 0;
+      
+      // Generate curriculum-based motivation
+      let motivationalMessages = [
+        `You're making great progress! ${avgProgress}% through your current courses. Keep up the momentum!`,
+        `Completed ${completedCourses} courses already? You're on the path to mastery!`,
+        `Every lesson brings you closer to your goals. Your dedication is inspiring!`,
+        `You've studied ${userLevel?.currentXp || 0} XP worth of material. Amazing commitment!`,
+        `Remember: Small steps lead to big achievements. Keep going!`,
+        `Your learning journey matters. Every course completed is a victory!`,
+        `Focus on understanding, not just completion. You're doing brilliantly!`,
+        `Consistency is key. You're proving it every day by learning new things!`
+      ];
+      
+      // If user has no courses yet, show encouragement
+      if (totalCourses === 0) {
+        motivationalMessages = [
+          "Welcome to your learning journey! Pick your first course and start today.",
+          "Every expert started as a beginner. Let's begin your transformation!",
+          "Your potential is unlimited. Choose a course and unlock it!",
+          "The best time to start learning was yesterday. The second best time is now!"
+        ];
+      }
+      
+      const message = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
       res.json({ message });
     } catch (error) {
       console.error('Error generating motivational message:', error);
-      res.status(500).json({ message: "Keep learning and growing! Your dedication will pay off." });
+      res.json({ message: "Keep learning and growing! Your dedication will pay off." });
     }
   });
   

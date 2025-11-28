@@ -88,6 +88,7 @@ import { KPIDashboard } from "@/pages/kpi-dashboard";
 import { ProgramPlan } from "@/pages/program-plan";
 import { StudentDashboard } from "@/pages/student-dashboard";
 import { AdminDashboard } from "@/pages/admin-dashboard";
+import { AiRecommendations } from "@/pages/ai-recommendations";
 
 function Router() {
   return (
@@ -181,6 +182,7 @@ function Router() {
       <ProtectedRoute path="/program-plan" component={ProgramPlan} />
       <ProtectedRoute path="/student-dashboard" component={StudentDashboard} />
       <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
+      <ProtectedRoute path="/ai-recommendations" component={AiRecommendations} />
       <Route component={NotFound} />
     </Switch>
   );

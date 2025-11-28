@@ -14,6 +14,7 @@ import {
 } from "@shared/schema";
 import Anthropic from "@anthropic-ai/sdk";
 import { parseAIJSON } from "./ai-provider-service";
+import { CurriculumConnector } from "./curriculum-connector";
 
 interface CourseAnalysis {
   courses: any[];
@@ -33,9 +34,11 @@ interface ModuleConnectorResult {
 
 export class CourseIntegrationEngine {
   private client: Anthropic;
+  private curriculumConnector: CurriculumConnector;
 
   constructor() {
     this.client = new Anthropic();
+    this.curriculumConnector = new CurriculumConnector();
   }
 
   /**
@@ -120,6 +123,7 @@ export class CourseIntegrationEngine {
 
   /**
    * Integrate with curriculum module
+   * Uses CurriculumConnector to apply course recommendations automatically
    */
   private async integrateWithCurriculum(
     userId: number,
@@ -127,43 +131,30 @@ export class CourseIntegrationEngine {
     events: any
   ): Promise<ModuleConnectorResult> {
     try {
-      // Check if curriculum already exists
-      const existing = await db
-        .select()
-        .from(memoryEnhancedCurricula)
-        .where(and(
-          eq(memoryEnhancedCurricula.userId, userId),
-          inArray(memoryEnhancedCurricula.baseCurriculumId, analysis.courses.map(c => c.id))
-        ));
+      // Generate unique integration ID
+      const integrationId = this.generateIntegrationId();
 
-      if (existing.length === 0) {
-        // Create new curricula for each course
-        const curriculumValues = analysis.courses.map((course: any) => ({
-          userId: userId,
-          baseCurriculumId: course.id,
-          modules: JSON.stringify(this.generateModules(course)),
-          memoryTechniquesApplied: JSON.stringify(["spaced-repetition", "active-recall"]),
-          predictedRetentionRate: 0.75,
-          studyDuration: 60,
-        }));
+      // Use CurriculumConnector to integrate courses and apply recommendations
+      const curriculumResult = await this.curriculumConnector.integrate(
+        userId,
+        analysis,
+        integrationId
+      );
 
-        if (curriculumValues.length > 0) {
-          await db.insert(memoryEnhancedCurricula).values(curriculumValues);
-        }
-
+      if (curriculumResult.status === 'success') {
         return {
           success: true,
           module: "curriculum",
-          itemsCreated: curriculumValues.length,
-          details: "Curricula created for enrolled courses",
+          itemsCreated: curriculumResult.subcoursesCreated,
+          details: `${curriculumResult.message} | AI Confidence: ${curriculumResult.aiConfidence}`,
         };
       }
 
       return {
-        success: true,
+        success: false,
         module: "curriculum",
-        itemsCreated: existing.length,
-        details: "Curricula already exist",
+        itemsCreated: 0,
+        details: curriculumResult.message,
       };
     } catch (error) {
       console.error("[CourseIntegrationEngine] Curriculum integration failed:", error);

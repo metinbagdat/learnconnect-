@@ -642,58 +642,107 @@ export type AIIntegrationLog = typeof aiIntegrationLog.$inferSelect;
 // CURRICULUM DESIGN SYSTEM - Three-Part Architecture
 // ============================================================================
 
-// PART 1: INPUT PARAMETERS (What goes into course design)
+// PART 1: INPUT PARAMETERS (Three Dimensions: Learner, Content, Business)
 export const curriculumDesignParameters = pgTable("curriculum_design_parameters", {
   id: serial("id").primaryKey(),
   designId: integer("design_id").notNull(),
-  // Core Parameters
+  
+  // ========== LEARNER DIMENSION ==========
+  // Who is learning and what are their characteristics
+  targetAudience: text("target_audience").array().default([]), // ["beginners", "professionals", "experts"]
+  averageAge: integer("average_age"),
+  priorKnowledge: text("prior_knowledge").array().default([]),
+  learningStyle: text("learning_style").array().default(["visual", "auditory", "kinesthetic"]),
+  learningPace: text("learning_pace").default("moderate"), // slow, moderate, fast
+  motivationFactors: json("motivation_factors").default({}), // { intrinsic: [], extrinsic: [] }
+  accessibilityNeeds: json("accessibility_needs").default([]),
+  
+  // ========== CONTENT DIMENSION ==========
+  // What is being taught and how
   courseTitle: text("course_title").notNull(),
   description: text("description"),
-  targetAudience: text("target_audience").array().default([]), // ["beginners", "professionals", "experts"]
-  difficultyLevel: text("difficulty_level").notNull().default("intermediate"), // beginner, intermediate, advanced
-  estimatedHours: integer("estimated_hours").notNull().default(40),
-  // Content Structure
   topics: json("topics"), // { name, subtopics, priority, depth }
   prerequisites: json("prerequisites").array().default([]),
   learningObjectives: json("learning_objectives").array().default([]),
-  // Pedagogical Approach
-  learningStyle: text("learning_style").array().default(["visual", "auditory", "kinesthetic"]),
+  keyCompetencies: json("key_competencies").array().default([]),
   instructionalMethod: text("instructional_method").notNull().default("mixed"), // lecture, project, case-study, mixed
   assessmentType: text("assessment_type").array().default(["quiz", "project", "discussion"]),
-  // Practical Elements
   practicalExercisesPercent: integer("practical_exercises_percent").default(30),
   projectBasedLearning: boolean("project_based_learning").default(true),
   realWorldApplications: json("real_world_applications").array().default([]),
+  contentComplexity: text("content_complexity").default("intermediate"), // low, moderate, high
+  
+  // ========== BUSINESS DIMENSION ==========
+  // Why the course exists and its business metrics
+  targetCompletion: integer("target_completion").default(90), // percentage
+  businessGoals: json("business_goals").array().default([]), // revenue, enrollment, engagement
+  estimatedHours: integer("estimated_hours").notNull().default(40),
+  targetStudents: integer("target_students"),
+  costPerStudent: numeric("cost_per_student", { precision: 10, scale: 2 }),
+  revenuePerStudent: numeric("revenue_per_student", { precision: 10, scale: 2 }),
+  marketDemand: text("market_demand").default("moderate"), // low, moderate, high
+  competitiveAdvantage: text("competitive_advantage"),
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// PART 2: SUCCESS METRICS (How to measure effectiveness)
+// PART 2: SUCCESS METRICS (Quantitative & Qualitative)
 export const curriculumSuccessMetrics = pgTable("curriculum_success_metrics", {
   id: serial("id").primaryKey(),
   designId: integer("design_id").notNull(),
-  // Engagement Metrics
-  completionRate: numeric("completion_rate", { precision: 5, scale: 2 }).default("0.00"),
+  
+  // ========== QUANTITATIVE METRICS ==========
+  completionRate: numeric("completion_rate", { precision: 5, scale: 2 }).default("0.00"), // %
   engagementScore: numeric("engagement_score", { precision: 5, scale: 2 }).default("0.00"), // 0-100
-  averageTimeToComplete: integer("average_time_to_complete"), // in minutes
-  moduleCompletionRate: json("module_completion_rate").default({}), // { moduleId: percent }
-  // Learning Effectiveness
+  averageTimeToComplete: integer("average_time_to_complete"), // minutes
+  moduleCompletionRate: json("module_completion_rate").default({}),
   masteryLevel: numeric("mastery_level", { precision: 5, scale: 2 }).default("0.00"), // 0-100
-  skillAcquisition: json("skill_acquisition").default({}), // { skill: proficiency }
-  conceptUnderstanding: numeric("concept_understanding", { precision: 5, scale: 2 }).default("0.00"),
-  retentionRate: numeric("retention_rate", { precision: 5, scale: 2 }).default("0.00"), // weeks after completion
-  // Satisfaction & Quality
+  conceptUnderstanding: numeric("concept_understanding", { precision: 5, scale: 2 }).default("0.00"), // 0-100
+  retentionRate: numeric("retention_rate", { precision: 5, scale: 2 }).default("0.00"), // %
+  averageScore: numeric("average_score", { precision: 5, scale: 2 }).default("0.00"), // points
+  passRate: numeric("pass_rate", { precision: 5, scale: 2 }).default("0.00"), // %
+  improvementRate: numeric("improvement_rate", { precision: 5, scale: 2 }).default("0.00"), // %
+  enrollmentCount: integer("enrollment_count").default(0),
+  activeStudentCount: integer("active_student_count").default(0),
+  revenueGenerated: numeric("revenue_generated", { precision: 10, scale: 2 }).default("0.00"),
+  costPerCompletion: numeric("cost_per_completion", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // ========== QUALITATIVE METRICS ==========
   satisfactionRating: numeric("satisfaction_rating", { precision: 3, scale: 2 }).default("0.00"), // 1-5
-  courseQualityScore: numeric("course_quality_score", { precision: 5, scale: 2 }).default("0.00"), // 0-100
-  studentFeedback: json("student_feedback").array().default([]),
-  // Performance Indicators
-  averageScore: numeric("average_score", { precision: 5, scale: 2 }).default("0.00"),
-  passRate: numeric("pass_rate", { precision: 5, scale: 2 }).default("0.00"),
-  targetAchievementRate: numeric("target_achievement_rate", { precision: 5, scale: 2 }).default("0.00"),
-  // Adaptive Learning
-  improvementRate: numeric("improvement_rate", { precision: 5, scale: 2 }).default("0.00"),
+  courseQualityScore: numeric("course_quality_score", { precision: 5, scale: 2 }).default("0.00"), // 1-100
+  studentFeedback: json("student_feedback").array().default([]), // { comment, rating, theme }
+  commonChallenges: json("common_challenges").array().default([]),
+  skillAcquisition: json("skill_acquisition").default({}), // { skill: description }
+  learnerTestimonials: json("learner_testimonials").array().default([]),
+  instructorObservations: text("instructor_observations"),
   personalizedLearningScore: numeric("personalized_learning_score", { precision: 5, scale: 2 }).default("0.00"),
+  
   measurementDate: timestamp("measurement_date").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// FEEDBACK LOOP TABLE (For iterative improvement)
+export const curriculumFeedbackLoops = pgTable("curriculum_feedback_loops", {
+  id: serial("id").primaryKey(),
+  designId: integer("design_id").notNull(),
+  cycleNumber: integer("cycle_number").notNull().default(1),
+  // What was measured
+  metricsBeforeSnapshot: json("metrics_before_snapshot"),
+  metricsAfterSnapshot: json("metrics_after_snapshot"),
+  // What was changed
+  parametersChanged: json("parameters_changed"), // { field: oldValue, newValue }
+  contentAdjustments: json("content_adjustments").array().default([]),
+  pedagogyAdjustments: json("pedagogy_adjustments").array().default([]),
+  // Impact analysis
+  improvementAreas: json("improvement_areas").array().default([]), // { area, percentageChange }
+  regressionAreas: json("regression_areas").array().default([]),
+  overallImpact: numeric("overall_impact", { precision: 5, scale: 2 }).default("0.00"), // % change
+  // Recommendations for next cycle
+  nextCycleRecommendations: json("next_cycle_recommendations").array().default([]),
+  confidenceScore: numeric("confidence_score", { precision: 5, scale: 2 }).default("0.00"), // 0-100
+  cycleStatus: text("cycle_status").default("completed"), // in-progress, completed, pending-review
+  createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
@@ -741,3 +790,7 @@ export type CurriculumSuccessMetrics = typeof curriculumSuccessMetrics.$inferSel
 export const insertCurriculumDesignProcessSchema = createInsertSchema(curriculumDesignProcess).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCurriculumDesignProcess = z.infer<typeof insertCurriculumDesignProcessSchema>;
 export type CurriculumDesignProcess = typeof curriculumDesignProcess.$inferSelect;
+
+export const insertCurriculumFeedbackLoopsSchema = createInsertSchema(curriculumFeedbackLoops).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCurriculumFeedbackLoops = z.infer<typeof insertCurriculumFeedbackLoopsSchema>;
+export type CurriculumFeedbackLoops = typeof curriculumFeedbackLoops.$inferSelect;

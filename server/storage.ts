@@ -300,6 +300,7 @@ import {
   insertAiCurriculumGenerationSessionSchema,
   insertCurriculumProductionArchiveSchema,
   insertAiLearningDataSchema
+  curriculumFeedbackLoops,
 } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
@@ -4486,9 +4487,149 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLearningDataFeedback(id: number, feedback: any): Promise<any | undefined> {
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
+      .returning();
+    return updated;
+  }
     const [updated] = await db.update(aiLearningData)
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
+      .returning();
+    return updated;
+  }
       .set({ userFeedback: feedback })
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
+      .returning();
+    return updated;
+  }
       .where(eq(aiLearningData.id, id))
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
+      .returning();
+    return updated;
+  }
+      .returning();
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
+      .returning();
+    return updated;
+  }
+    return updated;
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
+      .returning();
+    return updated;
+  }
+  }
+
+  // Feedback Loop Operations
+  async createFeedbackLoop(loop: any): Promise<any> {
+    const [created] = await db.insert(curriculumFeedbackLoops).values(loop).returning();
+    return created;
+  }
+
+  async getFeedbackLoops(designId: number): Promise<any[]> {
+    return db.select().from(curriculumFeedbackLoops)
+      .where(eq(curriculumFeedbackLoops.designId, designId))
+      .orderBy(desc(curriculumFeedbackLoops.cycleNumber));
+  }
+
+  async updateFeedbackLoop(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumFeedbackLoops)
+      .set(updates)
+      .where(eq(curriculumFeedbackLoops.id, id))
       .returning();
     return updated;
   }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { AchievementUnlockModal } from "@/components/gamification/achievement-unlock-modal";
@@ -9,7 +9,7 @@ interface GamificationContextType {
   showXpGain: (amount: number) => void;
   checkAndUnlockAchievements: (userId: number) => void;
   celebrateLevelUp: (newLevel: number) => void;
-  triggerAchievementUnlock: (achievement: Achievement) => void;
+  triggerAchievementUnlock: (achievement: any) => void;
 }
 
 const GamificationContext = createContext<GamificationContextType | null>(null);
@@ -17,8 +17,10 @@ const GamificationContext = createContext<GamificationContextType | null>(null);
 export function GamificationProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
+  const [unlockedAchievement, setUnlockedAchievement] = useState<any | null>(null);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastCheckTimeRef = useRef<number>(0);
 
   // XP gain notification
   const showXpGain = useCallback((amount: number) => {
@@ -55,7 +57,7 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // Check for new achievements
+  // Check for new achievements with debouncing to prevent infinite loops
   const achievementCheckMutation = useMutation({
     mutationFn: async (userId: number) => {
       const response = await apiRequest("POST", "/api/user/check-achievements", { userId });
@@ -68,7 +70,7 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
         triggerAchievementUnlock(firstAchievement);
         
         // Queue remaining achievements with delay
-        remainingAchievements.forEach((achievement: Achievement, index: number) => {
+        remainingAchievements.forEach((achievement: any, index: number) => {
           setTimeout(() => {
             triggerAchievementUnlock(achievement);
           }, (index + 1) * 3000);
@@ -78,17 +80,42 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
       // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/user/achievements"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/level"] });
+      
+      lastCheckTimeRef.current = Date.now();
     },
   });
 
   const checkAndUnlockAchievements = useCallback((userId: number) => {
-    achievementCheckMutation.mutate(userId);
+    // Prevent rapid-fire calls (debounce to 2 second minimum between checks)
+    const now = Date.now();
+    if (now - lastCheckTimeRef.current < 2000) {
+      return;
+    }
+    
+    // Clear any pending timeouts
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+    
+    // Queue the mutation check
+    checkTimeoutRef.current = setTimeout(() => {
+      achievementCheckMutation.mutate(userId);
+    }, 100);
   }, [achievementCheckMutation]);
 
   const handleAchievementModalClose = () => {
     setShowAchievementModal(false);
     setUnlockedAchievement(null);
   };
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <GamificationContext.Provider

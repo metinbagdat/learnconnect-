@@ -1,0 +1,74 @@
+# integration/course_integration_engine.py
+class CourseIntegrationEngine:
+    """Master engine that connects courses to all other modules"""
+    
+    def __init__(self):
+        self.module_connectors = {
+            'curriculum': CurriculumConnector(),
+            'study_planner': StudyPlannerConnector(),
+            'assignment': AssignmentConnector(),
+            'target': TargetConnector(),
+            'progress': ProgressConnector(),
+            'ai_recommender': AIRecommenderConnector()
+        }
+        self.event_bus = IntegrationEventBus()
+        self.course_analyzer = CourseAnalyzer()
+    
+    def handle_course_enrollment(self, user_id, course_ids):
+        """Trigger comprehensive integration when user enrolls in courses"""
+        try:
+            # Analyze enrolled courses
+            course_analysis = self.course_analyzer.analyze_enrolled_courses(user_id, course_ids)
+            
+            # Generate integration events
+            integration_events = self._generate_integration_events(user_id, course_analysis)
+            
+            # Execute integrations across all modules
+            integration_results = {}
+            for module, connector in self.module_connectors.items():
+                result = connector.integrate_courses(user_id, course_analysis, integration_events)
+                integration_results[module] = result
+            
+            # Save integration state
+            self._save_integration_state(user_id, course_analysis, integration_results)
+            
+            return {
+                'status': 'success',
+                'integrated_modules': list(self.module_connectors.keys()),
+                'results': integration_results,
+                'integration_id': self._generate_integration_id()
+            }
+            
+        except Exception as e:
+            logger.error(f"Course integration failed: {e}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _generate_integration_events(self, user_id, course_analysis):
+        """Generate events to trigger across all modules"""
+        return {
+            'curriculum_update': {
+                'type': 'CURRICULUM_REFRESH',
+                'user_id': user_id,
+                'courses': course_analysis['courses'],
+                'prerequisites': course_analysis['prerequisites'],
+                'learning_paths': course_analysis['suggested_paths']
+            },
+            'study_plan_trigger': {
+                'type': 'STUDY_PLAN_GENERATE',
+                'user_id': user_id,
+                'courses': course_analysis['courses'],
+                'time_commitment': course_analysis['total_commitment']
+            },
+            'assignment_sync': {
+                'type': 'ASSIGNMENT_SYNC',
+                'user_id': user_id,
+                'courses': course_analysis['courses'],
+                'due_dates': course_analysis['upcoming_milestones']
+            },
+            'target_adjustment': {
+                'type': 'TARGET_ADJUST',
+                'user_id': user_id,
+                'new_courses': course_analysis['courses'],
+                'impact_assessment': course_analysis['goal_impact']
+            }
+        }

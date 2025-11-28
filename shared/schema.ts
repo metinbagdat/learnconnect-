@@ -10,8 +10,10 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  email: text("email"),
+  password: text("password").notNull(),
+  passwordHash: text("password_hash"),
+  displayName: text("display_name"),
   role: text("role").notNull().default("student"), // student, instructor, admin
   interests: text("interests").array().default([]),
   learningPace: text("learning_pace").default("moderate"), // slow, moderate, fast

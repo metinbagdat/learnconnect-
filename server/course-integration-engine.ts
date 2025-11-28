@@ -17,6 +17,7 @@ import { parseAIJSON } from "./ai-provider-service";
 import { CurriculumConnector } from "./curriculum-connector";
 import { StudyPlannerConnector } from "./study-planner-connector";
 import { AssignmentConnector } from "./assignment-connector";
+import { AISubcourseDirector } from "./ai-subcourse-director";
 
 interface CourseAnalysis {
   courses: any[];
@@ -39,12 +40,14 @@ export class CourseIntegrationEngine {
   private curriculumConnector: CurriculumConnector;
   private studyPlannerConnector: StudyPlannerConnector;
   private assignmentConnector: AssignmentConnector;
+  private aiSubcourseDirector: AISubcourseDirector;
 
   constructor() {
     this.client = new Anthropic();
     this.curriculumConnector = new CurriculumConnector();
     this.studyPlannerConnector = new StudyPlannerConnector();
     this.assignmentConnector = new AssignmentConnector();
+    this.aiSubcourseDirector = new AISubcourseDirector();
   }
 
   /**

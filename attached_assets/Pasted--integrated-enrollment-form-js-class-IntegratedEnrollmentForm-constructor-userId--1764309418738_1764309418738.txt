@@ -1,0 +1,177 @@
+// integrated-enrollment-form.js
+class IntegratedEnrollmentForm {
+    constructor(userId) {
+        this.userId = userId;
+        this.selectedCourses = [];
+        this.integrationPreview = {};
+        this.initializeForm();
+    }
+    
+    initializeForm() {
+        this.createEnrollmentForm();
+        this.setupIntegrationPreview();
+        this.setupAIAnalysis();
+    }
+    
+    createEnrollmentForm() {
+        const formHTML = `
+        <div class="integrated-enrollment-form" id="enrollment-form">
+            <div class="form-header">
+                <h3>🎓 Course Enrollment with AI Integration</h3>
+                <p>Enroll in courses and see how they'll integrate across your learning ecosystem</p>
+            </div>
+            
+            <form id="enrollment-form">
+                <!-- Course Selection -->
+                <div class="form-section">
+                    <h4>📚 Select Courses</h4>
+                    <div class="course-selection-grid" id="course-selection-grid">
+                        ${this.renderCourseSelection()}
+                    </div>
+                </div>
+                
+                <!-- Integration Preview -->
+                <div class="form-section integration-preview">
+                    <h4>🔄 Integration Impact Preview</h4>
+                    <div class="preview-container" id="integration-preview">
+                        <div class="preview-loading">Analyzing integration impact...</div>
+                    </div>
+                </div>
+                
+                <!-- AI Recommendations -->
+                <div class="form-section ai-recommendations">
+                    <h4>💡 AI Suggestions</h4>
+                    <div class="ai-suggestions-container" id="ai-suggestions-container">
+                        <div class="suggestion-item">
+                            <div class="suggestion-content">
+                                <strong>Optimal Course Combination</strong>
+                                <p>AI suggests these courses work well together based on your goals</p>
+                            </div>
+                            <div class="suggestion-confidence">
+                                <span class="confidence-score">85%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Integration Settings -->
+                <div class="form-section integration-settings">
+                    <h4>⚙️ Integration Settings</h4>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" name="auto_generate_curriculum" checked>
+                                Auto-generate personalized curriculum
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" name="auto_create_study_plan" checked>
+                                Auto-create study plan
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" name="auto_generate_assignments" checked>
+                                Auto-generate assignments
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" name="auto_adjust_targets" checked>
+                                Auto-adjust learning targets
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" name="enable_ai_direction" checked>
+                                Enable AI learning direction
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        🚀 Enroll & Integrate
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="saveForLater()">
+                        💾 Save Selection
+                    </button>
+                    <button type="button" class="btn-ai" onclick="getAIOptimization()">
+                        🤖 AI Optimize Selection
+                    </button>
+                </div>
+            </form>
+        </div>
+        `;
+        
+        document.getElementById('form-container').innerHTML = formHTML;
+        this.setupCourseSelection();
+    }
+    
+    async setupIntegrationPreview() {
+        // When courses are selected, show integration preview
+        document.addEventListener('courseSelectionChanged', async (event) => {
+            this.selectedCourses = event.detail.courses;
+            await this.updateIntegrationPreview();
+        });
+    }
+    
+    async updateIntegrationPreview() {
+        if (this.selectedCourses.length === 0) return;
+        
+        const previewData = await this.fetchIntegrationPreview(this.selectedCourses);
+        this.renderIntegrationPreview(previewData);
+    }
+    
+    renderIntegrationPreview(previewData) {
+        const previewHTML = `
+        <div class="integration-impact">
+            <div class="impact-section">
+                <h5>Curriculum Impact</h5>
+                <div class="impact-metrics">
+                    <div class="metric">
+                        <span class="metric-value">+${previewData.curriculum.new_courses} courses</span>
+                        <span class="metric-label">Added to curriculum</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">${previewData.curriculum.total_weeks} weeks</span>
+                        <span class="metric-label">Updated timeline</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="impact-section">
+                <h5>Study Plan Impact</h5>
+                <div class="impact-metrics">
+                    <div class="metric">
+                        <span class="metric-value">+${previewData.study_plan.weekly_hours}h/w</span>
+                        <span class="metric-label">Weekly commitment</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">${previewData.study_plan.total_hours}h</span>
+                        <span class="metric-label">Total study time</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="impact-section">
+                <h5>Assignment Impact</h5>
+                <div class="impact-metrics">
+                    <div class="metric">
+                        <span class="metric-value">${previewData.assignments.total_assignments}</span>
+                        <span class="metric-label">New assignments</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value">${previewData.assignments.weekly_assignments}/w</span>
+                        <span class="metric-label">Weekly assignments</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('integration-preview').innerHTML = previewHTML;
+    }
+}

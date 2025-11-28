@@ -105,10 +105,11 @@ export default function Courses() {
     if (!user) return;
     
     try {
-      await apiRequest("POST", "/api/user/courses", { courseId });
+      console.log(`[UI] Triggering enrollment pipeline for course ${courseId}`);
+      await apiRequest("POST", "/api/pipeline/enroll-and-generate", { courseId });
       toast({
         title: t('enrollmentSuccessful'),
-        description: t('enrollmentSuccessDescription'),
+        description: "Study plan and assignments are being generated for you!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses/tree"] });
       queryClient.invalidateQueries({ queryKey: ["/api/courses/tree"] });

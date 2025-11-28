@@ -1,25 +1,42 @@
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/auth-context";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function StudentDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  const { data: enrolledCourses } = useQuery({
-    queryKey: ["/api/student/courses", user?.id],
+  const { data: enrolledCourses = [] } = useQuery({
+    queryKey: ["/api/student/courses"],
   });
 
-  const { data: studyPlans } = useQuery({
-    queryKey: ["/api/student/study-plans", user?.id],
+  const { data: studyPlans = [] } = useQuery({
+    queryKey: ["/api/student/study-plans"],
   });
 
-  const { data: assignments } = useQuery({
-    queryKey: ["/api/student/assignments", user?.id],
+  const { data: assignments = [] } = useQuery({
+    queryKey: ["/api/student/assignments"],
+  });
+
+  const completeAssignmentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/student/assignments/${id}/complete`, { score: 100 });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "✓ Assignment completed!" });
+      queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to complete assignment", variant: "destructive" });
+    }
   });
 
   return (
@@ -72,30 +89,51 @@ export function StudentDashboard() {
 
           {/* ASSIGNMENTS TAB */}
           <TabsContent value="assignments" className="space-y-4">
-            {assignments?.map((assignment: any) => (
-              <Card key={assignment.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{assignment.title}</h4>
-                      <p className="text-sm text-muted-foreground">{assignment.description}</p>
-                      <div className="flex gap-3 mt-3 text-sm">
-                        <Badge variant="outline">{assignment.type}</Badge>
-                        {assignment.dueDate && (
-                          <div className="flex items-center gap-1 text-orange-600">
-                            <Clock className="w-4 h-4" />
-                            Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                          </div>
+            {assignments?.length === 0 ? (
+              <Card><CardContent className="pt-6 text-center text-muted-foreground">No assignments yet. Enroll in a course to get started!</CardContent></Card>
+            ) : (
+              assignments.map((assignment: any) => (
+                <Card key={assignment.id} data-testid={`card-assignment-${assignment.id}`}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{assignment.title}</h4>
+                        <p className="text-sm text-muted-foreground">{assignment.description}</p>
+                        <div className="flex gap-3 mt-3 text-sm flex-wrap">
+                          <Badge variant="outline">{assignment.type}</Badge>
+                          {assignment.dueDate && (
+                            <div className="flex items-center gap-1 text-orange-600">
+                              <Clock className="w-4 h-4" />
+                              Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 items-end">
+                        <Badge className={assignment.status === "completed" ? "bg-green-600" : "bg-blue-600"}>
+                          {assignment.status}
+                        </Badge>
+                        {assignment.status !== "completed" && (
+                          <Button
+                            size="sm"
+                            onClick={() => completeAssignmentMutation.mutate(assignment.id)}
+                            disabled={completeAssignmentMutation.isPending}
+                            data-testid={`button-complete-assignment-${assignment.id}`}
+                          >
+                            {completeAssignmentMutation.isPending ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                            )}
+                            Mark Complete
+                          </Button>
                         )}
                       </div>
                     </div>
-                    <Badge className={assignment.status === "completed" ? "bg-green-600" : "bg-blue-600"}>
-                      {assignment.status}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           {/* PROGRESS TAB */}

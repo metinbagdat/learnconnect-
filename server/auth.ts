@@ -210,38 +210,32 @@ export function setupAuth(app: Express) {
   });
 
   // Global authentication middleware with proper async handling
-  // This middleware properly handles async operations and waits before continuing
-  const ensureAuthenticated = (req: any, res: any, next: any) => {
-    // First try standard session-based authentication (synchronous)
-    if (req.isAuthenticated()) {
-      console.log('[MIDDLEWARE] User authenticated via session:', req.user?.id);
-      return next();
-    }
-    
-    // If session auth fails, check for user ID in custom header
-    const userId = req.headers['x-user-id'];
-    if (userId) {
-      console.log('[MIDDLEWARE] Checking x-user-id header:', userId);
-      // This is async, so we need to handle it properly
-      storage.getUser(Number(userId))
-        .then(user => {
-          if (user) {
-            console.log('[MIDDLEWARE] User found via header ID:', user.id);
-            req.user = user;
-            next();
-          } else {
-            console.log('[MIDDLEWARE] User not found for header ID:', userId);
-            res.status(401).json({ message: "Unauthorized" });
-          }
-        })
-        .catch(error => {
-          console.error("[MIDDLEWARE] Error retrieving user from header ID:", error);
-          res.status(401).json({ message: "Unauthorized" });
-        });
-    } else {
+  const ensureAuthenticated = async (req: any, res: any, next: any) => {
+    try {
+      // First try standard session-based authentication
+      if (req.isAuthenticated() && req.user) {
+        console.log('[MIDDLEWARE] User authenticated via session:', req.user?.id);
+        return next();
+      }
+      
+      // If session auth fails, check for user ID in custom header
+      const userId = req.headers['x-user-id'];
+      if (userId) {
+        console.log('[MIDDLEWARE] Checking x-user-id header:', userId);
+        const user = await storage.getUser(Number(userId));
+        if (user) {
+          console.log('[MIDDLEWARE] User found via header ID:', user.id);
+          req.user = user;
+          return next();
+        }
+      }
+      
       // No authentication succeeded
-      console.log('[MIDDLEWARE] No authentication found - no session, no header');
-      res.status(401).json({ message: "Unauthorized" });
+      console.log('[MIDDLEWARE] No authentication found - session:', req.isAuthenticated(), 'header:', req.headers['x-user-id']);
+      return res.status(401).json({ message: "Unauthorized" });
+    } catch (error) {
+      console.error("[MIDDLEWARE] Authentication error:", error);
+      return res.status(401).json({ message: "Unauthorized" });
     }
   };
 

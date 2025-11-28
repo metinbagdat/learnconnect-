@@ -125,12 +125,7 @@ export class EnrollmentPipeline {
 
       const [studyPlan] = await db.insert(schema.studyPlans).values({
         userId,
-        courseId,
         title: `Study Plan - Course ${courseId}`,
-        description: `30-day personalized study plan for course ${courseId}`,
-        startDate: startDate as any,
-        endDate: endDate as any,
-        status: "active",
       }).returning();
 
       console.log(`[EnrollmentPipeline] Study plan created: ${studyPlan.id}`);
@@ -159,11 +154,8 @@ export class EnrollmentPipeline {
         // Create modules from curriculum
         for (const mod of curriculum.structureJson.modules.slice(0, 3)) {
           const [newModule] = await db.insert(schema.modules).values({
-            courseId,
             title: mod.title || `Module ${modules.length + 1}`,
-            description: mod.description || "",
             order: modules.length,
-            durationMinutes: mod.duration || 60,
           }).returning();
           modules.push(newModule);
         }

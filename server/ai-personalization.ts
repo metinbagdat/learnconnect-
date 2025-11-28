@@ -1,6 +1,7 @@
 import { db } from "./db";
 import * as schema from "@shared/schema";
 import Anthropic from "@anthropic-ai/sdk";
+import { eq } from "drizzle-orm";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -20,7 +21,8 @@ export class AIPersonalization {
   ): Promise<PersonalizationResult> {
     try {
       // Get user profile for personalization
-      const [user] = await db.select().from(schema.users).where(u => u.id === userId);
+      const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
+      const user = users[0];
       const learningPace = user?.learningPace || "moderate";
 
       // Generate personalized modules using AI
@@ -36,7 +38,7 @@ export class AIPersonalization {
         personalizedContent[module.id] = await this.generateAIContent(
           module,
           learningPace,
-          user?.preferredLanguage || "en"
+          "en"
         );
       }
 

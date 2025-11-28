@@ -893,8 +893,8 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db.select().from(users).where(eq(users.username, username));
       return user;
     } catch (error: any) {
-      console.log('getUserByUsername error:', error);
-      throw error;
+      console.log('getUserByUsername error:', error?.message);
+      return undefined;
     }
   }
 
@@ -983,33 +983,37 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserAssignments(userId: number): Promise<(Assignment & { course: Course })[]> {
-    // Get courses the user is enrolled in
-    const userCoursesResult = await db
-      .select({ courseId: userCourses.courseId })
-      .from(userCourses)
-      .where(eq(userCourses.userId, userId));
-    
-    const courseIds = userCoursesResult.map(row => row.courseId);
-    
-    if (courseIds.length === 0) {
+    try {
+      // Get courses the user is enrolled in
+      const userCoursesResult = await db
+        .select({ courseId: userCourses.courseId })
+        .from(userCourses)
+        .where(eq(userCourses.userId, userId));
+      
+      const courseIds = userCoursesResult.map(row => row.courseId);
+      
+      if (courseIds.length === 0) {
+        return [];
+      }
+      
+      // Get assignments for these courses with course details
+      const assignmentsResult = await db
+        .select({
+          assignment: assignments,
+          course: courses
+        })
+        .from(assignments)
+        .leftJoin(courses, eq(assignments.courseId, courses.id))
+        .where(inArray(assignments.courseId, courseIds));
+      
+      return assignmentsResult.map(({ assignment, course }) => ({
+        ...assignment,
+        course: course as Course
+      })) as (Assignment & { course: Course })[];
+    } catch (error: any) {
+      console.warn('Error fetching user assignments:', error?.message);
       return [];
     }
-    
-    // Get assignments for these courses with course details
-    const assignmentsResult = await db
-      .select({
-        assignment: assignments,
-        course: courses
-      })
-      .from(assignments)
-      .leftJoin(courses, eq(assignments.courseId, courses.id))
-      .where(inArray(assignments.courseId, courseIds))
-      .orderBy(desc(assignments.dueDate));
-    
-    return assignmentsResult.map(({ assignment, course }) => ({
-      ...assignment,
-      course: course as Course // Type cast to handle potential null
-    })) as (Assignment & { course: Course })[];
   }
   
   async createAssignment(assignment: InsertAssignment): Promise<Assignment> {
@@ -1247,15 +1251,19 @@ export class DatabaseStorage implements IStorage {
   }
   
   async saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation> {
-    const [newRecommendation] = await db
-      .insert(courseRecommendations)
-      .values({
-        userId,
-        recommendations: recommendations,
-      })
-      .returning();
-    
-    return newRecommendation;
+    try {
+      const [newRecommendation] = await db
+        .insert(courseRecommendations)
+        .values({
+          userId,
+          recommendations: Array.isArray(recommendations) ? recommendations : [recommendations],
+        })
+        .returning();
+      return newRecommendation;
+    } catch (error: any) {
+      console.warn('Error saving course recommendations:', error?.message);
+      throw error;
+    }
   }
   
   // Learning Path operations

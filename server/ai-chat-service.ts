@@ -294,20 +294,27 @@ export async function generateStudyTips(userId: number): Promise<string[]> {
     Focus on practical, actionable advice that will help them succeed in these specific subjects.
     Return as a JSON array of strings.`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-    });
+    try {
+      if (!openai) {
+        throw new Error('OpenAI client not initialized');
+      }
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are an expert study advisor. Provide practical, personalized study tips." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+      });
 
-    const response = completion.choices[0]?.message?.content;
-    if (response) {
-      const parsed = JSON.parse(response);
-      return parsed.tips || parsed.study_tips || [];
+      const response = completion.choices[0]?.message?.content;
+      if (response) {
+        const parsed = JSON.parse(response);
+        return parsed.tips || parsed.study_tips || [];
+      }
+    } catch (aiError) {
+      console.warn('AI service unavailable, using fallback tips');
     }
 
     return [];

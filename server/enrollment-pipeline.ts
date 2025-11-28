@@ -154,6 +154,7 @@ export class EnrollmentPipeline {
         // Create modules from curriculum
         for (const mod of curriculum.structureJson.modules.slice(0, 3)) {
           const [newModule] = await db.insert(schema.modules).values({
+            courseId: courseId,
             title: mod.title || `Module ${modules.length + 1}`,
             order: modules.length,
           }).returning();

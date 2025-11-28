@@ -54,11 +54,12 @@ export class EnrollmentPipeline {
 
   private async createEnrollment(userId: number, courseId: number) {
     try {
-      const [existing] = await db.select()
+      const existing = await db.select()
         .from(schema.userCourses)
-        .where(eq(schema.userCourses.userId, userId));
+        .where(eq(schema.userCourses.userId, userId))
+        .limit(1);
 
-      if (existing) {
+      if (existing.length > 0 && existing[0].courseId === courseId) {
         throw new Error("User already enrolled in this course");
       }
 
@@ -113,7 +114,12 @@ export class EnrollmentPipeline {
 
       const [studyPlan] = await db.insert(schema.studyPlans).values({
         userId,
+        courseId,
         title: `Study Plan - Course ${courseId}`,
+        description: `30-day personalized study plan for course ${courseId}`,
+        startDate: startDate as any,
+        endDate: endDate as any,
+        status: "active",
       }).returning();
 
       console.log(`[EnrollmentPipeline] Study plan created: ${studyPlan.id}`);
@@ -132,17 +138,50 @@ export class EnrollmentPipeline {
   ) {
     try {
       const assignments: any[] = [];
-      const modules = await db.select()
+      
+      // Get or create modules
+      let modules = await db.select()
         .from(schema.modules)
         .where(eq(schema.modules.courseId, courseId));
+
+      if (modules.length === 0 && curriculum?.structureJson?.modules) {
+        // Create modules from curriculum
+        for (const mod of curriculum.structureJson.modules.slice(0, 3)) {
+          const [newModule] = await db.insert(schema.modules).values({
+            courseId,
+            title: mod.title || `Module ${modules.length + 1}`,
+            description: mod.description || "",
+            order: modules.length,
+            durationMinutes: mod.duration || 60,
+          }).returning();
+          modules.push(newModule);
+        }
+      }
 
       const startDate = new Date();
       let cumulativeDuration = 0;
 
       for (const module of modules) {
-        const lessons = await db.select()
+        let lessons = await db.select()
           .from(schema.lessons)
           .where(eq(schema.lessons.moduleId, module.id));
+
+        if (lessons.length === 0 && curriculum?.structureJson?.modules) {
+          // Create lessons from curriculum
+          const curModule = curriculum.structureJson.modules.find((m: any) => m.title === module.title);
+          if (curModule?.lessons) {
+            for (const les of curModule.lessons.slice(0, 2)) {
+              const [newLesson] = await db.insert(schema.lessons).values({
+                moduleId: module.id,
+                title: les.title || `Lesson ${lessons.length + 1}`,
+                content: les.content || les.title || "",
+                durationMinutes: les.duration || 30,
+                order: lessons.length,
+              }).returning();
+              lessons.push(newLesson);
+            }
+          }
+        }
 
         for (const lesson of lessons) {
           cumulativeDuration += lesson.durationMinutes || 60;

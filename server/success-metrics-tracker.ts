@@ -121,13 +121,14 @@ export class SuccessMetricsTracker {
 
     const retentionRate = curriculum?.predictedRetentionRate || 70;
 
-    const progress = typeof userCourse.progress === "number" ? userCourse.progress : parseInt(userCourse.progress) || 0;
+    const progress = typeof userCourse.progress === "number" ? userCourse.progress : parseInt(userCourse.progress as any) || 0;
+    const progressRounded = Math.round(progress) || 0;
 
     return {
       userId,
       courseId,
-      targetAchievementRate: Math.round(progress) || 0,
-      courseCompletionPercentage: userCourse.completed ? 100 : Math.round(progress),
+      targetAchievementRate: progressRounded,
+      courseCompletionPercentage: userCourse.completed ? 100 : progressRounded,
       assignmentSubmissionRate: Math.round(assignmentSubmissionRate),
       averageGrade,
       retentionRate

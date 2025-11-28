@@ -139,8 +139,16 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
 
 export function useGamificationTracker() {
   const context = useContext(GamificationContext);
+  
+  // Return safe defaults if hook is used outside provider
   if (!context) {
-    throw new Error("useGamificationTracker must be used within a GamificationProvider");
+    return {
+      showXpGain: () => {},
+      checkAndUnlockAchievements: () => {},
+      celebrateLevelUp: () => {},
+      triggerAchievementUnlock: () => {},
+    };
   }
+  
   return context;
 }

@@ -637,3 +637,107 @@ export type ModuleDependencyGraph = typeof moduleDependencyGraph.$inferSelect;
 export const insertAIIntegrationLogSchema = createInsertSchema(aiIntegrationLog).omit({ id: true, createdAt: true });
 export type InsertAIIntegrationLog = z.infer<typeof insertAIIntegrationLogSchema>;
 export type AIIntegrationLog = typeof aiIntegrationLog.$inferSelect;
+
+// ============================================================================
+// CURRICULUM DESIGN SYSTEM - Three-Part Architecture
+// ============================================================================
+
+// PART 1: INPUT PARAMETERS (What goes into course design)
+export const curriculumDesignParameters = pgTable("curriculum_design_parameters", {
+  id: serial("id").primaryKey(),
+  designId: integer("design_id").notNull(),
+  // Core Parameters
+  courseTitle: text("course_title").notNull(),
+  description: text("description"),
+  targetAudience: text("target_audience").array().default([]), // ["beginners", "professionals", "experts"]
+  difficultyLevel: text("difficulty_level").notNull().default("intermediate"), // beginner, intermediate, advanced
+  estimatedHours: integer("estimated_hours").notNull().default(40),
+  // Content Structure
+  topics: json("topics"), // { name, subtopics, priority, depth }
+  prerequisites: json("prerequisites").array().default([]),
+  learningObjectives: json("learning_objectives").array().default([]),
+  // Pedagogical Approach
+  learningStyle: text("learning_style").array().default(["visual", "auditory", "kinesthetic"]),
+  instructionalMethod: text("instructional_method").notNull().default("mixed"), // lecture, project, case-study, mixed
+  assessmentType: text("assessment_type").array().default(["quiz", "project", "discussion"]),
+  // Practical Elements
+  practicalExercisesPercent: integer("practical_exercises_percent").default(30),
+  projectBasedLearning: boolean("project_based_learning").default(true),
+  realWorldApplications: json("real_world_applications").array().default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// PART 2: SUCCESS METRICS (How to measure effectiveness)
+export const curriculumSuccessMetrics = pgTable("curriculum_success_metrics", {
+  id: serial("id").primaryKey(),
+  designId: integer("design_id").notNull(),
+  // Engagement Metrics
+  completionRate: numeric("completion_rate", { precision: 5, scale: 2 }).default("0.00"),
+  engagementScore: numeric("engagement_score", { precision: 5, scale: 2 }).default("0.00"), // 0-100
+  averageTimeToComplete: integer("average_time_to_complete"), // in minutes
+  moduleCompletionRate: json("module_completion_rate").default({}), // { moduleId: percent }
+  // Learning Effectiveness
+  masteryLevel: numeric("mastery_level", { precision: 5, scale: 2 }).default("0.00"), // 0-100
+  skillAcquisition: json("skill_acquisition").default({}), // { skill: proficiency }
+  conceptUnderstanding: numeric("concept_understanding", { precision: 5, scale: 2 }).default("0.00"),
+  retentionRate: numeric("retention_rate", { precision: 5, scale: 2 }).default("0.00"), // weeks after completion
+  // Satisfaction & Quality
+  satisfactionRating: numeric("satisfaction_rating", { precision: 3, scale: 2 }).default("0.00"), // 1-5
+  courseQualityScore: numeric("course_quality_score", { precision: 5, scale: 2 }).default("0.00"), // 0-100
+  studentFeedback: json("student_feedback").array().default([]),
+  // Performance Indicators
+  averageScore: numeric("average_score", { precision: 5, scale: 2 }).default("0.00"),
+  passRate: numeric("pass_rate", { precision: 5, scale: 2 }).default("0.00"),
+  targetAchievementRate: numeric("target_achievement_rate", { precision: 5, scale: 2 }).default("0.00"),
+  // Adaptive Learning
+  improvementRate: numeric("improvement_rate", { precision: 5, scale: 2 }).default("0.00"),
+  personalizedLearningScore: numeric("personalized_learning_score", { precision: 5, scale: 2 }).default("0.00"),
+  measurementDate: timestamp("measurement_date").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// PART 3: CURRICULUM DESIGN PROCESS (The actual program design)
+export const curriculumDesignProcess = pgTable("curriculum_design_process", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  courseId: integer("course_id"),
+  // Design Metadata
+  designName: text("design_name").notNull(),
+  status: text("status").notNull().default("draft"), // draft, designing, review, active, archived
+  stage: text("stage").notNull().default("parameters"), // parameters, content, delivery, validation, deployment
+  progressPercent: integer("progress_percent").default(0),
+  // Dynamic Interconnection
+  parameters: json("parameters"), // Reference to input parameters
+  successMetrics: json("success_metrics"), // Reference to success metrics
+  // Generated Curriculum
+  generatedCurriculum: json("generated_curriculum"), // { modules: [], lessons: [], assessments: [] }
+  moduleStructure: json("module_structure").default([]),
+  lessonSequence: json("lesson_sequence").default([]),
+  assessmentPlan: json("assessment_plan").default([]),
+  // Effectiveness Tracking
+  currentEffectiveness: numeric("current_effectiveness", { precision: 5, scale: 2 }).default("0.00"),
+  targetEffectiveness: numeric("target_effectiveness", { precision: 5, scale: 2 }).default("85.00"),
+  adjustmentHistory: json("adjustment_history").array().default([]),
+  // AI Insights
+  aiRecommendations: json("ai_recommendations").array().default([]),
+  optimizationSuggestions: json("optimization_suggestions").array().default([]),
+  // Versioning
+  version: integer("version").default(1),
+  previousVersions: json("previous_versions").array().default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for Zod validation
+export const insertCurriculumDesignParametersSchema = createInsertSchema(curriculumDesignParameters).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCurriculumDesignParameters = z.infer<typeof insertCurriculumDesignParametersSchema>;
+export type CurriculumDesignParameters = typeof curriculumDesignParameters.$inferSelect;
+
+export const insertCurriculumSuccessMetricsSchema = createInsertSchema(curriculumSuccessMetrics).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCurriculumSuccessMetrics = z.infer<typeof insertCurriculumSuccessMetricsSchema>;
+export type CurriculumSuccessMetrics = typeof curriculumSuccessMetrics.$inferSelect;
+
+export const insertCurriculumDesignProcessSchema = createInsertSchema(curriculumDesignProcess).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCurriculumDesignProcess = z.infer<typeof insertCurriculumDesignProcessSchema>;
+export type CurriculumDesignProcess = typeof curriculumDesignProcess.$inferSelect;

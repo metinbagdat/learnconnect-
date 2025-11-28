@@ -7799,5 +7799,373 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     });
   });
 
+  // ============================================================================
+  // CURRICULUM DESIGN ENDPOINTS - Three-Part Architecture
+  // ============================================================================
+
+  // Get user's curriculum designs
+  app.get("/api/curriculum-designs", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const designs = await storage.getUserDesignProcesses(req.user.id);
+      res.json(designs);
+    } catch (error) {
+      console.error("Error fetching curriculum designs:", error);
+      res.status(500).json({ message: "Failed to fetch designs" });
+    }
+  });
+
+  // Create new curriculum design (starting point for parameters)
+  app.post("/api/curriculum-designs", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const { designName, parameters, successMetrics } = req.body;
+
+      // Create design process with initial parameters
+      const design = await storage.createDesignProcess({
+        userId: req.user.id,
+        designName,
+        parameters: parameters || {},
+        successMetrics: successMetrics || {},
+        status: "draft",
+        stage: "parameters",
+        progressPercent: 10,
+      });
+
+      // Create design parameters
+      if (parameters) {
+        await storage.createDesignParameters({
+          designId: design.id,
+          ...parameters,
+        });
+      }
+
+      // Create success metrics
+      if (successMetrics) {
+        await storage.createSuccessMetrics({
+          designId: design.id,
+          ...successMetrics,
+        });
+      }
+
+      res.json(design);
+    } catch (error) {
+      console.error("Error creating curriculum design:", error);
+      res.status(500).json({ message: "Failed to create design" });
+    }
+  });
+
+  // Get specific design with all three parts
+  app.get("/api/curriculum-designs/:id", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const [design] = await storage.getDesignProcess(designId);
+      const parameters = await storage.getDesignParameters(designId);
+      const metrics = await storage.getSuccessMetrics(designId);
+
+      if (!design || design.userId !== req.user.id) {
+        return res.status(404).json({ message: "Design not found" });
+      }
+
+      res.json({
+        design,
+        parameters: parameters[0] || null,
+        metrics: metrics[0] || null,
+      });
+    } catch (error) {
+      console.error("Error fetching curriculum design:", error);
+      res.status(500).json({ message: "Failed to fetch design" });
+    }
+  });
+
+  // Update design parameters (Part 1)
+  app.patch("/api/curriculum-designs/:id/parameters", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const updates = req.body;
+
+      await storage.updateDesignParameters(designId, updates);
+      await storage.updateDesignProcess(designId, { progressPercent: 25 });
+
+      res.json({ message: "Parameters updated", progressPercent: 25 });
+    } catch (error) {
+      console.error("Error updating parameters:", error);
+      res.status(500).json({ message: "Failed to update parameters" });
+    }
+  });
+
+  // Update success metrics (Part 2)
+  app.patch("/api/curriculum-designs/:id/metrics", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const metrics = req.body;
+
+      await storage.updateSuccessMetrics(designId, metrics);
+      const currentEffectiveness = (
+        (metrics.completionRate || 0) * 0.25 +
+        (metrics.masteryLevel || 0) * 0.35 +
+        (metrics.satisfactionRating || 0) * 20 +
+        (metrics.engagementScore || 0) * 0.2
+      ) / 100;
+
+      await storage.updateDesignProcess(designId, { 
+        currentEffectiveness: Math.round(currentEffectiveness * 100) / 100,
+        progressPercent: 50 
+      });
+
+      res.json({ message: "Metrics updated", currentEffectiveness });
+    } catch (error) {
+      console.error("Error updating metrics:", error);
+      res.status(500).json({ message: "Failed to update metrics" });
+    }
+  });
+
+  // Advance design stage (Part 3 - Process Flow)
+  app.patch("/api/curriculum-designs/:id/stage", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const { stage, curriculum, recommendations } = req.body;
+
+      const stageProgress: Record<string, number> = {
+        parameters: 25,
+        content: 45,
+        delivery: 65,
+        validation: 80,
+        deployment: 100,
+      };
+
+      await storage.updateDesignProcess(designId, {
+        stage,
+        generatedCurriculum: curriculum,
+        aiRecommendations: recommendations || [],
+        progressPercent: stageProgress[stage] || 0,
+      });
+
+      res.json({ message: `Design advanced to ${stage}`, progressPercent: stageProgress[stage] });
+    } catch (error) {
+      console.error("Error advancing design stage:", error);
+      res.status(500).json({ message: "Failed to advance stage" });
+    }
+  });
+
   return httpServer;
 }
+
+  // ============================================================================
+  // CURRICULUM DESIGN ENDPOINTS - Three-Part Architecture
+  // ============================================================================
+
+  // Get user's curriculum designs
+  app.get("/api/curriculum-designs", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const designs = await storage.getUserDesignProcesses(req.user.id);
+      res.json(designs);
+    } catch (error) {
+      console.error("Error fetching curriculum designs:", error);
+      res.status(500).json({ message: "Failed to fetch designs" });
+    }
+  });
+
+  // Create new curriculum design (starting point for parameters)
+  app.post("/api/curriculum-designs", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const { designName, parameters, successMetrics } = req.body;
+
+      // Create design process with initial parameters
+      const design = await storage.createDesignProcess({
+        userId: req.user.id,
+        designName,
+        parameters: parameters || {},
+        successMetrics: successMetrics || {},
+        status: "draft",
+        stage: "parameters",
+        progressPercent: 10,
+      });
+
+      // Create design parameters
+      if (parameters) {
+        await storage.createDesignParameters({
+          designId: design.id,
+          ...parameters,
+        });
+      }
+
+      // Create success metrics
+      if (successMetrics) {
+        await storage.createSuccessMetrics({
+          designId: design.id,
+          ...successMetrics,
+        });
+      }
+
+      res.json(design);
+    } catch (error) {
+      console.error("Error creating curriculum design:", error);
+      res.status(500).json({ message: "Failed to create design" });
+    }
+  });
+
+  // Get specific design with all three parts
+  app.get("/api/curriculum-designs/:id", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const [design] = await storage.getDesignProcess(designId);
+      const parameters = await storage.getDesignParameters(designId);
+      const metrics = await storage.getSuccessMetrics(designId);
+
+      if (!design || design.userId !== req.user.id) {
+        return res.status(404).json({ message: "Design not found" });
+      }
+
+      res.json({
+        design,
+        parameters: parameters[0] || null,
+        metrics: metrics[0] || null,
+      });
+    } catch (error) {
+      console.error("Error fetching curriculum design:", error);
+      res.status(500).json({ message: "Failed to fetch design" });
+    }
+  });
+
+  // Update design parameters (Part 1)
+  app.patch("/api/curriculum-designs/:id/parameters", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const updates = req.body;
+
+      await storage.updateDesignParameters(designId, updates);
+      await storage.updateDesignProcess(designId, { progressPercent: 25 });
+
+      res.json({ message: "Parameters updated", progressPercent: 25 });
+    } catch (error) {
+      console.error("Error updating parameters:", error);
+      res.status(500).json({ message: "Failed to update parameters" });
+    }
+  });
+
+  // Update success metrics (Part 2)
+  app.patch("/api/curriculum-designs/:id/metrics", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const metrics = req.body;
+
+      await storage.updateSuccessMetrics(designId, metrics);
+      const currentEffectiveness = (
+        (metrics.completionRate || 0) * 0.25 +
+        (metrics.masteryLevel || 0) * 0.35 +
+        (metrics.satisfactionRating || 0) * 20 +
+        (metrics.engagementScore || 0) * 0.2
+      ) / 100;
+
+      await storage.updateDesignProcess(designId, { 
+        currentEffectiveness: Math.round(currentEffectiveness * 100) / 100,
+        progressPercent: 50 
+      });
+
+      res.json({ message: "Metrics updated", currentEffectiveness });
+    } catch (error) {
+      console.error("Error updating metrics:", error);
+      res.status(500).json({ message: "Failed to update metrics" });
+    }
+  });
+
+  // Advance design stage (Part 3 - Process Flow)
+  app.patch("/api/curriculum-designs/:id/stage", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const { stage, curriculum, recommendations } = req.body;
+
+      const stageProgress: Record<string, number> = {
+        parameters: 25,
+        content: 45,
+        delivery: 65,
+        validation: 80,
+        deployment: 100,
+      };
+
+      await storage.updateDesignProcess(designId, {
+        stage,
+        generatedCurriculum: curriculum,
+        aiRecommendations: recommendations || [],
+        progressPercent: stageProgress[stage] || 0,
+      });
+
+      res.json({ message: `Design advanced to ${stage}`, progressPercent: stageProgress[stage] });
+    } catch (error) {
+      console.error("Error advancing design stage:", error);
+      res.status(500).json({ message: "Failed to advance stage" });
+    }
+  });
+
+  // Generate curriculum with AI (interconnecting all three parts)
+  app.post("/api/curriculum-designs/:id/generate", authenticateUser, async (req, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      
+      const designId = parseInt(req.params.id);
+      const [design] = await storage.getDesignProcess(designId);
+      const [params] = await storage.getDesignParameters(designId);
+
+      if (!design || design.userId !== req.user.id) {
+        return res.status(404).json({ message: "Design not found" });
+      }
+
+      // AI Generation using Claude
+      const message = await client.messages.create({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 2000,
+        messages: [{
+          role: "user",
+          content: `Generate a detailed curriculum for: ${params?.courseTitle || 'Course'}
+Difficulty: ${params?.difficultyLevel || 'intermediate'}
+Hours: ${params?.estimatedHours || 40}
+Topics: ${params?.topics ? JSON.stringify(params.topics) : 'Not specified'}
+
+Provide JSON with:
+{ 
+  "modules": [{"title": "...", "duration": number, "topics": [...]}],
+  "learningOutcomes": [...],
+  "assessments": [...],
+  "recommendations": [...recommendations for optimization]
+}`
+        }]
+      });
+
+      const textContent = message.content[0];
+      if (textContent.type !== 'text') throw new Error('Unexpected response type');
+      const generatedContent = JSON.parse(textContent.text);
+
+      await storage.updateDesignProcess(designId, {
+        generatedCurriculum: generatedContent,
+        stage: "content",
+        progressPercent: 45,
+        aiRecommendations: generatedContent.recommendations,
+      });
+
+      res.json({ curriculum: generatedContent, stage: "content" });
+    } catch (error) {
+      console.error("Error generating curriculum:", error);
+      res.status(500).json({ message: "Failed to generate curriculum" });
+    }
+  });

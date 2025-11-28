@@ -4492,6 +4492,78 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updated;
   }
+
+  // ============================================================================
+  // CURRICULUM DESIGN OPERATIONS
+  // ============================================================================
+
+  // Input Parameters Management
+  async createDesignParameters(params: any): Promise<any> {
+    const [created] = await db.insert(curriculumDesignParameters).values(params).returning();
+    return created;
+  }
+
+  async getDesignParameters(designId: number): Promise<any> {
+    return db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.designId, designId));
+  }
+
+  async updateDesignParameters(designId: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumDesignParameters)
+      .set(updates)
+      .where(eq(curriculumDesignParameters.designId, designId))
+      .returning();
+    return updated;
+  }
+
+  // Success Metrics Management
+  async createSuccessMetrics(metrics: any): Promise<any> {
+    const [created] = await db.insert(curriculumSuccessMetrics).values(metrics).returning();
+    return created;
+  }
+
+  async getSuccessMetrics(designId: number): Promise<any> {
+    return db.select().from(curriculumSuccessMetrics).where(eq(curriculumSuccessMetrics.designId, designId)).orderBy(desc(curriculumSuccessMetrics.measurementDate));
+  }
+
+  async updateSuccessMetrics(designId: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumSuccessMetrics)
+      .set(updates)
+      .where(eq(curriculumSuccessMetrics.designId, designId))
+      .returning();
+    return updated;
+  }
+
+  // Curriculum Design Process Management
+  async createDesignProcess(process: any): Promise<any> {
+    const [created] = await db.insert(curriculumDesignProcess).values(process).returning();
+    return created;
+  }
+
+  async getDesignProcess(id: number): Promise<any> {
+    return db.select().from(curriculumDesignProcess).where(eq(curriculumDesignProcess.id, id));
+  }
+
+  async getUserDesignProcesses(userId: number): Promise<any[]> {
+    return db.select().from(curriculumDesignProcess)
+      .where(eq(curriculumDesignProcess.userId, userId))
+      .orderBy(desc(curriculumDesignProcess.updatedAt));
+  }
+
+  async updateDesignProcess(id: number, updates: any): Promise<any> {
+    const [updated] = await db.update(curriculumDesignProcess)
+      .set(updates)
+      .where(eq(curriculumDesignProcess.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateDesignStage(id: number, stage: string, progressPercent: number): Promise<any> {
+    const [updated] = await db.update(curriculumDesignProcess)
+      .set({ stage, progressPercent, updatedAt: new Date() })
+      .where(eq(curriculumDesignProcess.id, id))
+      .returning();
+    return updated;
+  }
 }
 
 export const storage = new DatabaseStorage();

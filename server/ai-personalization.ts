@@ -24,22 +24,28 @@ export class AIPersonalization {
       const users = await db.select().from(schema.users).where(eq(schema.users.id, userId));
       const user = users[0];
       const learningPace = user?.learningPace || "moderate";
+      
+      console.log(`   [AI-Personalization] User learning pace: ${learningPace}`);
 
       // Generate personalized modules using AI
+      console.log(`   [AI-Personalization] Generating AI-powered modules based on curriculum...`);
       const personalizedModules = await this.generateAIModules(
         curriculum,
         learningPace,
         userId
       );
+      console.log(`   [AI-Personalization] ✨ Generated ${personalizedModules.length} AI-powered modules`);
 
       // Generate personalized content for each module
       const personalizedContent: Record<string, any> = {};
+      console.log(`   [AI-Personalization] Generating personalized content for modules...`);
       for (const module of personalizedModules.slice(0, 3)) {
         personalizedContent[module.id] = await this.generateAIContent(
           module,
           learningPace,
           "en"
         );
+        console.log(`   [AI-Personalization] ✓ Module "${module.title}" content generated`);
       }
 
       return {

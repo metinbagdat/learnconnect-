@@ -19,31 +19,39 @@ interface EnrollmentResult {
 export class EnrollmentPipeline {
   async processEnrollment(userId: number, courseId: number): Promise<EnrollmentResult> {
     try {
-      console.log(`[EnrollmentPipeline] Starting enrollment process for user ${userId}, course ${courseId}`);
+      console.log(`\n✅ [ENROLLMENT EVENT TRIGGERED] User ${userId} enrolling in Course ${courseId}`);
+      console.log(`[EnrollmentPipeline] Starting 5-step automation pipeline...\n`);
 
       // Step 1: Create enrollment
       const enrollment = await this.createEnrollment(userId, courseId);
-      console.log(`[EnrollmentPipeline] Step 1 - Enrollment created: ${enrollment.id}`);
+      console.log(`📝 [STEP 1 COMPLETE] Enrollment created: ${enrollment.id}`);
 
       // Step 2: Get or generate curriculum
       const curriculum = await this.getOrGenerateCurriculum(courseId);
-      console.log(`[EnrollmentPipeline] Step 2 - Curriculum obtained: ${curriculum.id}`);
+      console.log(`📚 [STEP 2 COMPLETE] Curriculum obtained: ${curriculum.id}`);
 
       // Step 2.5: Generate AI personalization
+      console.log(`🤖 [STEP 2.5 STARTING] Generating AI-powered personalization...`);
       const personalization = await aiPersonalization.generatePersonalizedContent(userId, courseId, curriculum);
-      console.log(`[EnrollmentPipeline] Step 2.5 - AI Personalization generated: ${personalization.aiPoweredModules.length} modules`);
+      console.log(`🎯 [STEP 2.5 COMPLETE - AI PERSONALIZATION EVENT] Generated ${personalization.aiPoweredModules.length} AI-powered modules`);
+      console.log(`   - aiPersonalized: ${personalization.aiPersonalized}`);
+      console.log(`   - aiPoweredModules: ${personalization.aiPoweredModules.length} modules`);
+      console.log(`   - personalizedContent: ${Object.keys(personalization.personalizedContent).length} modules with content\n`);
 
       // Step 3: Create personalized study plan
       const studyPlan = await this.createStudyPlan(userId, courseId, curriculum);
-      console.log(`[EnrollmentPipeline] Step 3 - Study plan created: ${studyPlan.id}`);
+      console.log(`📋 [STEP 3 COMPLETE] Study plan created: ${studyPlan.id}`);
 
       // Step 4: Generate initial assignments
       const assignments = await this.generateAssignments(userId, studyPlan, curriculum, courseId);
-      console.log(`[EnrollmentPipeline] Step 4 - Assignments generated: ${assignments.length} total`);
+      console.log(`✏️  [STEP 4 COMPLETE] Assignments generated: ${assignments.length} assignments`);
 
       // Step 5: Trigger welcome package
       const notifications = await this.sendWelcomePackage(userId, courseId, studyPlan);
-      console.log(`[EnrollmentPipeline] Step 5 - Welcome notifications sent: ${notifications.length}`);
+      console.log(`📧 [STEP 5 COMPLETE] Welcome notifications sent: ${notifications.length} notifications`);
+
+      console.log(`\n✨ [ENROLLMENT PIPELINE COMPLETE] All 5 steps finished successfully!`);
+      console.log(`📊 Summary: Enrollment(${enrollment.id}), StudyPlan(${studyPlan.id}), Assignments(${assignments.length}), AIModules(${personalization.aiPoweredModules.length})\n`);
 
       return {
         success: true,

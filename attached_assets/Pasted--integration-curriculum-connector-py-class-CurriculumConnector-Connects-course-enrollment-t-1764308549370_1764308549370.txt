@@ -1,0 +1,62 @@
+# integration/curriculum_connector.py
+class CurriculumConnector:
+    """Connects course enrollment to curriculum generation"""
+    
+    def integrate_courses(self, user_id, course_analysis, integration_events):
+        """Integrate enrolled courses into personalized curriculum"""
+        
+        try:
+            # Get current curriculum state
+            current_curriculum = self._get_current_curriculum(user_id)
+            
+            # Generate AI-powered curriculum based on enrolled courses
+            new_curriculum = self._generate_ai_curriculum(user_id, course_analysis, current_curriculum)
+            
+            # Update curriculum structure
+            updated_curriculum = self._update_curriculum_structure(user_id, new_curriculum)
+            
+            # Generate subcourses and learning paths
+            learning_paths = self._generate_learning_paths(updated_curriculum, course_analysis)
+            
+            # Save integration state
+            self._save_curriculum_integration(user_id, updated_curriculum, learning_paths)
+            
+            return {
+                'status': 'success',
+                'curriculum_updated': True,
+                'learning_paths_generated': len(learning_paths),
+                'subcourses_created': len(new_curriculum.get('subcourses', [])),
+                'ai_confidence': new_curriculum.get('ai_confidence', 0)
+            }
+            
+        except Exception as e:
+            logger.error(f"Curriculum integration failed: {e}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _generate_ai_curriculum(self, user_id, course_analysis, current_curriculum):
+        """Generate AI-powered curriculum based on enrolled courses"""
+        
+        ai_engine = AICurriculumEngine()
+        
+        curriculum_data = {
+            'user_id': user_id,
+            'enrolled_courses': course_analysis['courses'],
+            'prerequisites': course_analysis['prerequisites'],
+            'current_level': self._assess_user_level(user_id),
+            'learning_goals': self._get_user_goals(user_id),
+            'time_availability': self._get_user_availability(user_id)
+        }
+        
+        return ai_engine.generate_personalized_curriculum(curriculum_data)
+    
+    def _generate_learning_paths(self, curriculum, course_analysis):
+        """Generate optimal learning paths through the curriculum"""
+        
+        path_generator = LearningPathGenerator()
+        
+        return path_generator.generate_paths({
+            'curriculum_structure': curriculum['structure'],
+            'course_dependencies': course_analysis['prerequisites'],
+            'user_preferences': self._get_user_preferences(curriculum['user_id']),
+            'completion_goals': curriculum['completion_timeline']
+        })

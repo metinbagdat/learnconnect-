@@ -138,6 +138,30 @@ class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getUserDesignProcesses(userId: number) {
+    return db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.designId, userId));
+  }
+
+  async getDesignParameters(designId: number) {
+    const [params] = await db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.designId, designId));
+    return params;
+  }
+
+  async getSuccessMetrics(designId: number) {
+    const [metrics] = await db.select().from(curriculumSuccessMetrics).where(eq(curriculumSuccessMetrics.designId, designId));
+    return metrics;
+  }
+
+  async updateDesignParameters(designId: number, updates: any) {
+    const [updated] = await db.update(curriculumDesignParameters).set(updates).where(eq(curriculumDesignParameters.designId, designId)).returning();
+    return updated;
+  }
+
+  async updateSuccessMetrics(designId: number, updates: any) {
+    const [updated] = await db.update(curriculumSuccessMetrics).set(updates).where(eq(curriculumSuccessMetrics.designId, designId)).returning();
+    return updated;
+  }
+
   // Dashboard & Learning Methods
   async getChallenges() {
     return db.select().from(challenges);

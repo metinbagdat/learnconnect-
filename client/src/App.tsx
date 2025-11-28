@@ -80,6 +80,8 @@ import CognitivePreferenceForm from "@/pages/cognitive-preference-form";
 import IntegratedDashboard from "@/pages/integrated-dashboard";
 import AdminIntegrationDashboard from "@/pages/admin-integration-dashboard";
 import IntegratedEnrollment from "@/pages/integrated-enrollment";
+import { CurriculumDesigner } from "@/pages/curriculum-designer";
+import { SuccessMetricsDashboard } from "@/pages/success-metrics-dashboard";
 
 function Router() {
   return (
@@ -165,6 +167,8 @@ function Router() {
       <ProtectedRoute path="/student-cognitive-dashboard" component={StudentCognitiveDashboard} />
       <ProtectedRoute path="/admin-cognitive-dashboard" component={AdminCognitiveDashboard} />
       <ProtectedRoute path="/cognitive-preferences" component={CognitivePreferenceForm} />
+      <ProtectedRoute path="/curriculum-designer" component={CurriculumDesigner} />
+      <ProtectedRoute path="/success-metrics" component={SuccessMetricsDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

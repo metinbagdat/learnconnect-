@@ -32,6 +32,7 @@ import { registerCognitiveIntegrationEndpoints } from "./smart-suggestions/cogni
 import { registerMemoryTechniqueIntegrationEndpoints } from "./smart-suggestions/memory-technique-integration-endpoints";
 import { registerSpacedRepetitionEndpoints } from "./smart-suggestions/spaced-repetition-endpoints";
 import { registerAIIntegrationEndpoints } from "./smart-suggestions/ai-integration-endpoints";
+import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unified-orchestration-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -7403,6 +7404,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerMemoryTechniqueIntegrationEndpoints(app);
   registerSpacedRepetitionEndpoints(app);
   registerAIIntegrationEndpoints(app);
+  registerUnifiedOrchestrationEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
   app.use('/api/production', productionRouter);
 

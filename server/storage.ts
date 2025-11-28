@@ -40,6 +40,7 @@ const {
 
 export interface IStorage {
   getUser(id: number): Promise<any>;
+  getUserByUsername(username: string): Promise<any>;
   createUser(user: any): Promise<any>;
   getCourses(): Promise<any[]>;
   getCourse(id: number): Promise<any>;
@@ -57,6 +58,11 @@ export interface IStorage {
 class DatabaseStorage implements IStorage {
   async getUser(id: number) {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string) {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
 

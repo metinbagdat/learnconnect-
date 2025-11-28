@@ -879,30 +879,13 @@ export class DatabaseStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
-      return user;
-    } catch (error: any) {
-      // Handle missing columns gracefully - query with db.execute for raw access
-      if (error?.code === '42703') {
-        const result = await db.execute(db.raw(`SELECT * FROM users WHERE id = ${id}`));
-        return result as any;
-      }
-      throw error;
-    }
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserById(id: number): Promise<User | undefined> {
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
-      return user;
-    } catch (error: any) {
-      if (error?.code === '42703') {
-        const result = await db.execute(db.raw(`SELECT * FROM users WHERE id = ${id}`));
-        return result as any;
-      }
-      throw error;
-    }
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
@@ -910,10 +893,7 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db.select().from(users).where(eq(users.username, username));
       return user;
     } catch (error: any) {
-      if (error?.code === '42703') {
-        const result = await db.execute(db.raw(`SELECT * FROM users WHERE username = '${username}'`));
-        return result as any;
-      }
+      console.log('getUserByUsername error:', error);
       throw error;
     }
   }
@@ -1254,13 +1234,16 @@ export class DatabaseStorage implements IStorage {
   
   // Course Recommendation operations
   async getCourseRecommendations(userId: number): Promise<CourseRecommendation | undefined> {
-    const [recommendation] = await db
-      .select()
-      .from(courseRecommendations)
-      .where(eq(courseRecommendations.userId, userId))
-      .orderBy(desc(courseRecommendations.createdAt));
-    
-    return recommendation;
+    try {
+      const recommendations = await db
+        .select()
+        .from(courseRecommendations)
+        .where(eq(courseRecommendations.userId, userId));
+      return recommendations[0];
+    } catch (error: any) {
+      console.warn('Error fetching course recommendations:', error?.message);
+      return undefined;
+    }
   }
   
   async saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation> {
@@ -3090,14 +3073,10 @@ export class DatabaseStorage implements IStorage {
       if (date) {
         query = query.where(eq(dailyStudyTasks.scheduledDate, date));
       }
-      return await query.orderBy(dailyStudyTasks.scheduledDate, dailyStudyTasks.scheduledTime);
+      return await query;
     } catch (error: any) {
-      // Table may not exist yet - return empty array gracefully
-      if (error?.code === '42P01' || error?.message?.includes('does not exist')) {
-        console.warn('Daily study tasks table does not exist yet');
-        return [];
-      }
-      throw error;
+      console.warn('Error fetching daily study tasks:', error?.message);
+      return [];
     }
   }
 

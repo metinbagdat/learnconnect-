@@ -477,6 +477,68 @@ export type InsertCurriculumProductionArchive = z.infer<typeof insertCurriculumP
 export type AiLearningDataRecord = typeof aiLearningData.$inferSelect;
 export type InsertAiLearningData = z.infer<typeof insertAiLearningDataSchema>;
 
+// Missing system tables - Subscription & Goals
+export const subscriptionPlans = pgTable("subscription_plans", { id: serial("id").primaryKey(), name: text("name").notNull() });
+export const userSubscriptions = pgTable("user_subscriptions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const userUsageTracking = pgTable("user_usage_tracking", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const userGoals = pgTable("user_goals", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), goalText: text("goal_text").notNull() });
+export const userInterests = pgTable("user_interests", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), interest: text("interest").notNull() });
+export const studyPlans = pgTable("study_plans", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), title: text("title").notNull() });
+export const studyMilestones = pgTable("study_milestones", { id: serial("id").primaryKey(), planId: integer("plan_id").notNull() });
+export const courseSuggestions = pgTable("course_suggestions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const goalSuggestions = pgTable("goal_suggestions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const aiProfiles = pgTable("ai_profiles", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const aiSuggestions = pgTable("ai_suggestions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const enhancedInteractionLogs = pgTable("enhanced_interaction_logs", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const skillChallenges = pgTable("skill_challenges", { id: serial("id").primaryKey(), title: text("title").notNull() });
+export const reminders = pgTable("reminders", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+
+// Insert schemas for missing tables
+export const insertSubscriptionPlanSchema = z.object({ name: z.string() });
+export const insertUserSubscriptionSchema = z.object({ userId: z.number() });
+export const insertUserUsageTrackingSchema = z.object({ userId: z.number() });
+export const insertUserGoalSchema = z.object({ userId: z.number(), goalText: z.string() });
+export const insertUserInterestSchema = z.object({ userId: z.number(), interest: z.string() });
+export const insertStudyPlanSchema = z.object({ userId: z.number(), title: z.string() });
+export const insertStudyMilestoneSchema = z.object({ planId: z.number() });
+export const insertCourseSuggestionSchema = z.object({ userId: z.number() });
+export const insertGoalSuggestionSchema = z.object({ userId: z.number() });
+export const insertAiProfileSchema = z.object({ userId: z.number() });
+export const insertAiSuggestionSchema = z.object({ userId: z.number() });
+export const insertEnhancedInteractionLogSchema = z.object({ userId: z.number() });
+export const insertSkillChallengeSchema = z.object({ title: z.string() });
+export const insertReminderSchema = z.object({ userId: z.number() });
+
+// Types for missing tables
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+export type UserUsageTracking = typeof userUsageTracking.$inferSelect;
+export type InsertUserUsageTracking = z.infer<typeof insertUserUsageTrackingSchema>;
+export type UserGoal = typeof userGoals.$inferSelect;
+export type InsertUserGoal = z.infer<typeof insertUserGoalSchema>;
+export type UserInterest = typeof userInterests.$inferSelect;
+export type InsertUserInterest = z.infer<typeof insertUserInterestSchema>;
+export type StudyPlan = typeof studyPlans.$inferSelect;
+export type InsertStudyPlan = z.infer<typeof insertStudyPlanSchema>;
+export type StudyMilestone = typeof studyMilestones.$inferSelect;
+export type InsertStudyMilestone = z.infer<typeof insertStudyMilestoneSchema>;
+export type CourseSuggestion = typeof courseSuggestions.$inferSelect;
+export type InsertCourseSuggestion = z.infer<typeof insertCourseSuggestionSchema>;
+export type GoalSuggestion = typeof goalSuggestions.$inferSelect;
+export type InsertGoalSuggestion = z.infer<typeof insertGoalSuggestionSchema>;
+export type AiProfile = typeof aiProfiles.$inferSelect;
+export type InsertAiProfile = z.infer<typeof insertAiProfileSchema>;
+export type AiSuggestion = typeof aiSuggestions.$inferSelect;
+export type InsertAiSuggestion = z.infer<typeof insertAiSuggestionSchema>;
+export type EnhancedInteractionLog = typeof enhancedInteractionLogs.$inferSelect;
+export type InsertEnhancedInteractionLog = z.infer<typeof insertEnhancedInteractionLogSchema>;
+export type SkillChallenge = typeof skillChallenges.$inferSelect;
+export type InsertSkillChallenge = z.infer<typeof insertSkillChallengeSchema>;
+export type Reminder = typeof reminders.$inferSelect;
+export type InsertReminder = z.infer<typeof insertReminderSchema>;
+
 // ============================================================================
 // SCHEMAS & TYPES
 // ============================================================================

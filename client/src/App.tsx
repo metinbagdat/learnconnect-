@@ -82,6 +82,7 @@ import AdminIntegrationDashboard from "@/pages/admin-integration-dashboard";
 import IntegratedEnrollment from "@/pages/integrated-enrollment";
 import { CurriculumDesigner } from "@/pages/curriculum-designer";
 import { SuccessMetricsDashboard } from "@/pages/success-metrics-dashboard";
+import { CurriculumFrameworkDisplay } from "@/pages/curriculum-framework-display";
 
 function Router() {
   return (
@@ -169,6 +170,7 @@ function Router() {
       <ProtectedRoute path="/cognitive-preferences" component={CognitivePreferenceForm} />
       <ProtectedRoute path="/curriculum-designer" component={CurriculumDesigner} />
       <ProtectedRoute path="/success-metrics" component={SuccessMetricsDashboard} />
+      <ProtectedRoute path="/curriculum-framework" component={CurriculumFrameworkDisplay} />
       <Route component={NotFound} />
     </Switch>
   );

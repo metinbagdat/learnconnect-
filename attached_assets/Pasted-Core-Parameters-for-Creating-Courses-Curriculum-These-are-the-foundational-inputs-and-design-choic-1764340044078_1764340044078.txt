@@ -1,0 +1,75 @@
+Core Parameters for Creating Courses & Curriculum
+These are the foundational inputs and design choices you must make.
+
+A. Learner-Centric Parameters (The "Who")
+Target Audience & Personas:
+
+Demographics: Age, profession, educational background.
+
+Psychographics: Goals (career change, promotion, hobby), learning preferences (visual, auditory, kinesthetic), motivation level.
+
+Skill Gap: What do they know now vs. what they need to know? (e.g., "A marketing manager needs to learn data analysis.")
+
+Learning Objectives & Outcomes (The "Why"):
+
+Bloom's Taxonomy: Are you teaching them to remember, understand, apply, analyze, evaluate, or create? The verb matters.
+
+Specificity: "By the end of this course, you will be able to build a responsive website using HTML5 and CSS3" is better than "You will learn web development."
+
+Prerequisites:
+
+What knowledge, skills, or tools must the learner have before starting? This sets clear expectations and prevents drop-offs.
+
+B. Content & Pedagogy Parameters (The "What" and "How")
+Content Scope & Sequence:
+
+Modularity: Is the content broken into digestible modules (5-15 minutes each)?
+
+Logical Flow: Does the sequence of topics build understanding progressively (e.g., Concept A -> Concept B -> Project combining A&B)?
+
+Learning Modalities:
+
+Video: Lectures, screencasts, demonstrations.
+
+Text: Articles, PDFs, eBooks.
+
+Interactive: Quizzes, simulations, coding exercises.
+
+Audio: Podcasts, interviews.
+
+The mix should cater to different learning styles and prevent monotony.
+
+Pedagogical Approach:
+
+Project-Based Learning: Learning by doing a real-world project.
+
+Microlearning: Very short, focused learning bursts.
+
+Social Learning: Forums, peer reviews, group projects.
+
+Mastery-Based: Learner must pass one module before unlocking the next.
+
+Assessment & Feedback:
+
+Formative (In-progress): Quizzes, knowledge checks, interactive exercises.
+
+Summative (End-goal): Final project, capstone, proctored exam, certification.
+
+Feedback Mechanism: How do learners get help? (Instructor Q&A, AI tutor, community forums).
+
+C. Business & Operational Parameters (The "Reality")
+Expertise & Credibility:
+
+Who is the instructor/creator? What are their credentials and teaching ability?
+
+Is the content vetted by industry experts or academic institutions?
+
+Platform Capabilities:
+
+What can LearnConnect.net's technology support? (e.g., video hosting, interactive coding windows, live sessions, peer matching).
+
+Resource Constraints:
+
+Development Time & Budget: High-production video vs. screencast.
+
+Update Cadence: How often will the content be updated to stay relevant?

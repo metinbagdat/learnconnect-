@@ -83,6 +83,7 @@ import IntegratedEnrollment from "@/pages/integrated-enrollment";
 import { CurriculumDesigner } from "@/pages/curriculum-designer";
 import { SuccessMetricsDashboard } from "@/pages/success-metrics-dashboard";
 import { CurriculumFrameworkDisplay } from "@/pages/curriculum-framework-display";
+import { CurriculumParametersForm } from "@/pages/curriculum-parameters-form";
 
 function Router() {
   return (
@@ -171,6 +172,7 @@ function Router() {
       <ProtectedRoute path="/curriculum-designer" component={CurriculumDesigner} />
       <ProtectedRoute path="/success-metrics" component={SuccessMetricsDashboard} />
       <ProtectedRoute path="/curriculum-framework" component={CurriculumFrameworkDisplay} />
+      <ProtectedRoute path="/curriculum-parameters" component={CurriculumParametersForm} />
       <Route component={NotFound} />
     </Switch>
   );

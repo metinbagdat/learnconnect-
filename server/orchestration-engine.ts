@@ -7,6 +7,18 @@ import { userCourses, courses, memoryEnhancedCurricula, assignments as assignmen
 import { parseAIJSON } from "./ai-provider-service";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Type definitions
+type MemoryEnhancedCurriculumInsert = {
+  userId: number;
+  baseCurriculumId: number;
+  memoryTechniquesApplied: any;
+  spacedRepetitionSchedule: any;
+  mnemonicMappings: any;
+  cognitiveBreakPoints: any;
+  predictedRetentionRate: number;
+  expectedStudyTimeReduction: number;
+};
+
 export interface OrchestrationEvent {
   userId: number;
   courseId: number;
@@ -97,18 +109,20 @@ Return JSON with:
     const parsed = parseAIJSON(response.content[0].type === 'text' ? response.content[0].text : '{}');
 
     // Save curriculum to database
+    const curriculumValues: MemoryEnhancedCurriculumInsert = {
+      userId: user.id,
+      baseCurriculumId: course.id,
+      memoryTechniquesApplied: parsed.memoryTechniques || [],
+      spacedRepetitionSchedule: parsed.spacedRepetition || {},
+      mnemonicMappings: {},
+      cognitiveBreakPoints: {},
+      predictedRetentionRate: 85,
+      expectedStudyTimeReduction: 35
+    };
+
     const curriculumResults = await db
       .insert(memoryEnhancedCurricula)
-      .values({
-        userId: user.id,
-        baseCurriculumId: course.id,
-        memoryTechniquesApplied: parsed.memoryTechniques || [],
-        spacedRepetitionSchedule: parsed.spacedRepetition || {},
-        mnemonicMappings: {},
-        cognitiveBreakPoints: {},
-        predictedRetentionRate: 85,
-        expectedStudyTimeReduction: 35
-      })
+      .values([curriculumValues as any])
       .returning();
 
     const curriculum = Array.isArray(curriculumResults) ? curriculumResults[0] : curriculumResults;

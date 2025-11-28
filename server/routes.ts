@@ -33,6 +33,7 @@ import { registerMemoryTechniqueIntegrationEndpoints } from "./smart-suggestions
 import { registerSpacedRepetitionEndpoints } from "./smart-suggestions/spaced-repetition-endpoints";
 import { registerAIIntegrationEndpoints } from "./smart-suggestions/ai-integration-endpoints";
 import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unified-orchestration-endpoints";
+import { handleCourseEnrollment } from "./enrollment-event-handler";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -544,11 +545,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail enrollment if assignment creation fails
       }
       
-      // Respond to user
+      // Respond to user immediately
       res.status(201).json(userCourse);
       
-      // AI curriculum generation is optional and happens asynchronously
-      // Skipped when API credits unavailable to ensure core functionality works
+      // Trigger system-wide enrollment orchestration asynchronously
+      // This generates curriculum, study plans, targets, and memory enhancement
+      try {
+        handleCourseEnrollment(userId, validatedData.courseId).catch((error: any) => {
+          console.error('[Enrollment Signal] Error in orchestration:', error);
+        });
+      } catch (orchestrationError) {
+        console.error('[Enrollment Signal] Failed to trigger orchestration:', orchestrationError);
+        // Don't fail enrollment if orchestration fails
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid enrollment data", errors: error.errors });

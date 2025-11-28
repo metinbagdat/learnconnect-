@@ -36,6 +36,7 @@ const {
   moduleIntegrationLog,
   aiRecommendationState,
   learningEcosystemState,
+  userCourses,
 } = schema;
 
 export interface IStorage {

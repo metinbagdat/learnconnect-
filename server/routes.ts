@@ -9119,5 +9119,186 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // ADAPTIVE LEARNING SYSTEM
+  app.post("/api/adaptive/adjust-curriculum", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { courseId, performanceData } = req.body;
+      if (!courseId || !performanceData || !Array.isArray(performanceData)) {
+        return res.status(400).json({ message: "Missing or invalid courseId or performanceData" });
+      }
+
+      const { adaptiveLearningSystem } = await import("./adaptive-learning-system");
+      const result = await adaptiveLearningSystem.adjustCurriculum(req.user.id, courseId, performanceData);
+
+      res.json({
+        success: true,
+        message: "Curriculum analysis complete",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Adaptive curriculum error:", error);
+      res.status(500).json({
+        message: "Failed to adjust curriculum",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
+  app.post("/api/adaptive/auto-check", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const userId = req.user.id;
+      const userProgress = await db.select()
+        .from(schema.userProgress)
+        .where(eq(schema.userProgress.userId, userId));
+
+      if (userProgress.length < 3) {
+        return res.json({
+          success: true,
+          adjusted: false,
+          message: "Not enough data for adaptation (need 3+ assignments)",
+        });
+      }
+
+      const enrollments = await db.select()
+        .from(schema.userCourses)
+        .where(eq(schema.userCourses.userId, userId));
+
+      if (enrollments.length === 0) {
+        return res.json({
+          success: true,
+          adjusted: false,
+          message: "No active courses",
+        });
+      }
+
+      const performanceData = userProgress
+        .filter((p: any) => p.score !== null)
+        .slice(-10)
+        .map((p: any) => ({
+          assignmentId: p.assignmentId,
+          score: p.score || 0,
+          timeSpent: 60,
+          completedDate: p.createdAt || new Date().toISOString(),
+        }));
+
+      const { adaptiveLearningSystem } = await import("./adaptive-learning-system");
+      const result = await adaptiveLearningSystem.adjustCurriculum(
+        userId,
+        enrollments[0].courseId,
+        performanceData
+      );
+
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Auto-check adaptation error:", error);
+      res.status(500).json({
+        message: "Failed to run adaptation check",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
   return httpServer;
 }
+
+  // ============================================================================
+  // ADAPTIVE LEARNING SYSTEM
+  // ============================================================================
+  app.post("/api/adaptive/adjust-curriculum", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { courseId, performanceData } = req.body;
+      if (!courseId || !performanceData || !Array.isArray(performanceData)) {
+        return res.status(400).json({ message: "Missing or invalid courseId or performanceData" });
+      }
+
+      const { adaptiveLearningSystem } = await import("./adaptive-learning-system");
+      const result = await adaptiveLearningSystem.adjustCurriculum(req.user.id, courseId, performanceData);
+
+      res.json({
+        success: true,
+        message: "Curriculum analysis complete",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Adaptive curriculum error:", error);
+      res.status(500).json({
+        message: "Failed to adjust curriculum",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
+  // Auto-trigger adaptation check
+  app.post("/api/adaptive/auto-check", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const userId = req.user.id;
+
+      // Get all user's progress data
+      const userProgress = await db.select()
+        .from(schema.userProgress)
+        .where(eq(schema.userProgress.userId, userId));
+
+      if (userProgress.length < 3) {
+        return res.json({
+          success: true,
+          adjusted: false,
+          message: "Not enough data for adaptation (need 3+ assignments)",
+        });
+      }
+
+      // Get user's active course
+      const enrollments = await db.select()
+        .from(schema.userCourses)
+        .where(eq(schema.userCourses.userId, userId));
+
+      if (enrollments.length === 0) {
+        return res.json({
+          success: true,
+          adjusted: false,
+          message: "No active courses",
+        });
+      }
+
+      // Prepare performance data
+      const performanceData = userProgress
+        .filter((p: any) => p.score !== null)
+        .slice(-10)
+        .map((p: any) => ({
+          assignmentId: p.assignmentId,
+          score: p.score || 0,
+          timeSpent: 60,
+          completedDate: p.createdAt || new Date().toISOString(),
+        }));
+
+      const { adaptiveLearningSystem } = await import("./adaptive-learning-system");
+      const result = await adaptiveLearningSystem.adjustCurriculum(
+        userId,
+        enrollments[0].courseId,
+        performanceData
+      );
+
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Auto-check adaptation error:", error);
+      res.status(500).json({
+        message: "Failed to run adaptation check",
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });

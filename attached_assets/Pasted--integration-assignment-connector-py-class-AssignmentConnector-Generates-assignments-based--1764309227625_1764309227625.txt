@@ -1,0 +1,49 @@
+# integration/assignment_connector.py
+class AssignmentConnector:
+    """Generates assignments based on curriculum and courses"""
+    
+    def integrate_courses(self, user_id, course_analysis, integration_events):
+        """Create assignments based on enrolled courses and curriculum"""
+        
+        try:
+            # Get user's curriculum
+            curriculum = self._get_user_curriculum(user_id)
+            
+            # Generate assignments for each course in curriculum
+            assignments = self._generate_course_assignments(user_id, curriculum, course_analysis)
+            
+            # Schedule assignments based on study plan
+            scheduled_assignments = self._schedule_assignments(user_id, assignments)
+            
+            # Set up assignment tracking
+            tracking_system = self._setup_assignment_tracking(user_id, scheduled_assignments)
+            
+            return {
+                'status': 'success',
+                'assignments_created': len(assignments),
+                'scheduled_assignments': len(scheduled_assignments),
+                'total_assignment_hours': sum(a['estimated_hours'] for a in assignments),
+                'next_assignment_due': self._get_next_due_date(scheduled_assignments)
+            }
+            
+        except Exception as e:
+            logger.error(f"Assignment integration failed: {e}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _generate_course_assignments(self, user_id, curriculum, course_analysis):
+        """Generate assignments for each course in curriculum"""
+        
+        assignment_generator = AIAssignmentGenerator()
+        
+        assignments = []
+        for course in curriculum['courses']:
+            course_assignments = assignment_generator.generate_assignments({
+                'user_id': user_id,
+                'course': course,
+                'curriculum_position': course['position_in_curriculum'],
+                'difficulty_level': course['difficulty'],
+                'learning_objectives': course['learning_objectives']
+            })
+            assignments.extend(course_assignments)
+        
+        return assignments

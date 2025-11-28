@@ -16,6 +16,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { parseAIJSON } from "./ai-provider-service";
 import { CurriculumConnector } from "./curriculum-connector";
 import { StudyPlannerConnector } from "./study-planner-connector";
+import { AssignmentConnector } from "./assignment-connector";
 
 interface CourseAnalysis {
   courses: any[];
@@ -37,11 +38,13 @@ export class CourseIntegrationEngine {
   private client: Anthropic;
   private curriculumConnector: CurriculumConnector;
   private studyPlannerConnector: StudyPlannerConnector;
+  private assignmentConnector: AssignmentConnector;
 
   constructor() {
     this.client = new Anthropic();
     this.curriculumConnector = new CurriculumConnector();
     this.studyPlannerConnector = new StudyPlannerConnector();
+    this.assignmentConnector = new AssignmentConnector();
   }
 
   /**
@@ -218,6 +221,7 @@ export class CourseIntegrationEngine {
 
   /**
    * Integrate with assignments
+   * Generates assignments based on curriculum and courses
    */
   private async integrateWithAssignments(
     userId: number,
@@ -225,27 +229,33 @@ export class CourseIntegrationEngine {
     events: any
   ): Promise<ModuleConnectorResult> {
     try {
-      const assignmentsCreated = await Promise.all(
-        analysis.courses.map((course) =>
-          db
-            .insert(assignmentTable)
-            .values({
-              title: `Introduction to ${course.titleEn}`,
-              description: `Get started with ${course.titleEn}`,
-              courseId: course.id,
-              points: 10,
-            })
-            .returning()
-        )
+      // Generate unique integration ID
+      const integrationId = this.generateIntegrationId();
+
+      // Use AssignmentConnector to generate assignments
+      const assignmentResult = await this.assignmentConnector.integrate(
+        userId,
+        analysis,
+        integrationId
       );
 
+      if (assignmentResult.status === 'success') {
+        return {
+          success: true,
+          module: "assignments",
+          itemsCreated: assignmentResult.assignmentsCreated,
+          details: `${assignmentResult.message} | Next Due: ${new Date(assignmentResult.nextAssignmentDue).toLocaleDateString()}`,
+        };
+      }
+
       return {
-        success: true,
+        success: assignmentResult.status === 'skipped',
         module: "assignments",
-        itemsCreated: assignmentsCreated.length,
-        details: "Assignments created for each course",
+        itemsCreated: 0,
+        details: assignmentResult.message,
       };
     } catch (error) {
+      console.error("[CourseIntegrationEngine] Assignment integration failed:", error);
       return {
         success: false,
         module: "assignments",

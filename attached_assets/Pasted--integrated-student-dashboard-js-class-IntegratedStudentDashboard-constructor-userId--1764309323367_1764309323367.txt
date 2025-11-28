@@ -1,0 +1,188 @@
+// integrated-student-dashboard.js
+class IntegratedStudentDashboard {
+    constructor(userId) {
+        this.userId = userId;
+        this.integrationState = {};
+        this.moduleData = {};
+        this.initializeDashboard();
+    }
+    
+    async initializeDashboard() {
+        await this.loadIntegrationData();
+        this.renderUnifiedDashboard();
+        this.setupRealTimeUpdates();
+    }
+    
+    async loadIntegrationData() {
+        const endpoints = [
+            `/api/integration/state/${this.userId}`,
+            `/api/curriculum/integrated/${this.userId}`,
+            `/api/study-plan/current/${this.userId}`,
+            `/api/assignments/upcoming/${this.userId}`,
+            `/api/targets/active/${this.userId}`,
+            `/api/ai/recommendations/${this.userId}`
+        ];
+        
+        const responses = await Promise.all(endpoints.map(url => fetch(url)));
+        const data = await Promise.all(responses.map(r => r.json()));
+        
+        this.integrationState = data[0];
+        this.moduleData = {
+            curriculum: data[1],
+            studyPlan: data[2],
+            assignments: data[3],
+            targets: data[4],
+            aiRecommendations: data[5]
+        };
+    }
+    
+    renderUnifiedDashboard() {
+        const dashboardHTML = `
+        <div class="integrated-dashboard" id="integrated-dashboard">
+            <!-- Integration Status Header -->
+            <div class="integration-header">
+                <h2>🔄 Integrated Learning Dashboard</h2>
+                <div class="integration-status">
+                    <div class="status-item">
+                        <span class="status-label">Curriculum Sync:</span>
+                        <span class="status-value ${this.integrationState.curriculum_integrated ? 'success' : 'warning'}">
+                            ${this.integrationState.curriculum_integrated ? '✅ Synced' : '🔄 Pending'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Study Plan:</span>
+                        <span class="status-value ${this.integrationState.study_plan_generated ? 'success' : 'warning'}">
+                            ${this.integrationState.study_plan_generated ? '✅ Active' : '🔄 Generating'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Assignments:</span>
+                        <span class="status-value ${this.integrationState.assignments_created ? 'success' : 'warning'}">
+                            ${this.integrationState.assignments_created ? '✅ Created' : '🔄 Creating'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Course Integration Panel -->
+                <div class="dashboard-panel course-integration">
+                    <h3>📚 Your Enrolled Courses</h3>
+                    <div class="enrolled-courses" id="enrolled-courses">
+                        ${this.renderEnrolledCourses()}
+                    </div>
+                    <div class="integration-actions">
+                        <button class="btn-integrate" onclick="triggerIntegration()">
+                            🔄 Update All Modules
+                        </button>
+                        <button class="btn-ai" onclick="generateAIRecommendations()">
+                            🤖 AI Re-analyze
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Curriculum Impact -->
+                <div class="dashboard-panel curriculum-impact">
+                    <h3>🎯 Curriculum Impact</h3>
+                    <div class="impact-analysis" id="impact-analysis">
+                        ${this.renderCurriculumImpact()}
+                    </div>
+                    <div class="learning-path">
+                        <h4>AI-Suggested Learning Path</h4>
+                        <div id="learning-path-visualization"></div>
+                    </div>
+                </div>
+                
+                <!-- Study Plan Integration -->
+                <div class="dashboard-panel study-plan-integration">
+                    <h3>📅 Integrated Study Plan</h3>
+                    <div class="study-schedule" id="study-schedule">
+                        ${this.renderStudySchedule()}
+                    </div>
+                    <div class="plan-metrics">
+                        <div class="metric">
+                            <span class="metric-value">${this.moduleData.studyPlan?.total_hours || 0}h</span>
+                            <span class="metric-label">Total Study</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">${this.moduleData.studyPlan?.weeks || 0}w</span>
+                            <span class="metric-label">Duration</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value">${this.calculateWeeklyHours()}h/w</span>
+                            <span class="metric-label">Weekly</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Assignment Stream -->
+                <div class="dashboard-panel assignment-stream">
+                    <h3>📝 Assignment Pipeline</h3>
+                    <div class="upcoming-assignments" id="upcoming-assignments">
+                        ${this.renderUpcomingAssignments()}
+                    </div>
+                    <div class="assignment-stats">
+                        <span>${this.moduleData.assignments?.length || 0} assignments generated</span>
+                        <span>Next due: ${this.getNextDueDate()}</span>
+                    </div>
+                </div>
+                
+                <!-- AI Recommendations -->
+                <div class="dashboard-panel ai-recommendations">
+                    <h3>💡 AI Learning Director</h3>
+                    <div class="ai-suggestions" id="ai-suggestions">
+                        ${this.renderAISuggestions()}
+                    </div>
+                    <div class="ai-confidence">
+                        <span>AI Confidence: ${this.moduleData.aiRecommendations?.confidence || 0}%</span>
+                    </div>
+                </div>
+                
+                <!-- Target Progress -->
+                <div class="dashboard-panel target-progress">
+                    <h3>🎯 Integrated Targets</h3>
+                    <div class="target-list" id="target-list">
+                        ${this.renderTargetProgress()}
+                    </div>
+                    <div class="target-metrics">
+                        <div class="metric">
+                            <span class="metric-value">${this.calculateTargetProgress()}%</span>
+                            <span class="metric-label">Overall Progress</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Integration Controls -->
+            <div class="integration-controls">
+                <h4>⚙️ Integration Management</h4>
+                <div class="control-buttons">
+                    <button class="btn-control" onclick="syncAllModules()">🔄 Sync All</button>
+                    <button class="btn-control" onclick="regenerateCurriculum()">📚 Regenerate Curriculum</button>
+                    <button class="btn-control" onclick="updateStudyPlan()">📅 Update Study Plan</button>
+                    <button class="btn-control" onclick="refreshAssignments()">📝 Refresh Assignments</button>
+                    <button class="btn-control" onclick="adjustTargets()">🎯 Adjust Targets</button>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        document.getElementById('main-container').innerHTML = dashboardHTML;
+        this.initializeVisualizations();
+    }
+    
+    renderEnrolledCourses() {
+        const courses = this.integrationState.enrolled_courses || [];
+        return courses.map(course => `
+            <div class="course-item" data-course-id="${course.id}">
+                <div class="course-info">
+                    <strong>${course.title}</strong>
+                    <span class="course-meta">${course.difficulty} • ${course.credits} credits</span>
+                </div>
+                <div class="course-integration-status">
+                    <span class="status integrated">Integrated</span>
+                </div>
+            </div>
+        `).join('');
+    }
+}

@@ -1,0 +1,55 @@
+# ai/subcourse_director.py
+class AISubcourseDirector:
+    """AI system that generates and directs users through subcourses"""
+    
+    def __init__(self):
+        self.content_analyzer = ContentAnalyzer()
+        self.learning_path_optimizer = LearningPathOptimizer()
+        self.recommendation_engine = RecommendationEngine()
+    
+    def generate_subcourses_from_courses(self, user_id, enrolled_courses):
+        """Generate AI-powered subcourses from enrolled courses"""
+        
+        subcourses = []
+        
+        for course in enrolled_courses:
+            # Analyze course content for subcourse opportunities
+            content_analysis = self.content_analyzer.analyze_course_content(course)
+            
+            # Generate subcourses based on content analysis
+            course_subcourses = self._generate_course_subcourses(course, content_analysis, user_id)
+            
+            # Optimize learning path through subcourses
+            optimized_path = self.learning_path_optimizer.optimize_subcourse_sequence(
+                course_subcourses, user_id
+            )
+            
+            subcourses.extend({
+                'parent_course': course['id'],
+                'subcourses': course_subcourses,
+                'optimized_path': optimized_path,
+                'estimated_completion_time': self._calculate_completion_time(course_subcourses)
+            })
+        
+        return subcourses
+    
+    def direct_user_to_subcourses(self, user_id, current_progress):
+        """Direct user to appropriate subcourses based on progress"""
+        
+        # Get user's current learning state
+        learning_state = self._analyze_learning_state(user_id, current_progress)
+        
+        # Get recommended next subcourses
+        recommendations = self.recommendation_engine.get_next_subcourses(
+            user_id, learning_state
+        )
+        
+        # Generate personalized learning direction
+        direction_plan = self._create_direction_plan(user_id, recommendations, learning_state)
+        
+        return {
+            'recommended_subcourses': recommendations,
+            'direction_plan': direction_plan,
+            'confidence_level': self._calculate_confidence(learning_state),
+            'alternative_paths': self._generate_alternative_paths(recommendations)
+        }

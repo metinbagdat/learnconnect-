@@ -2,6 +2,7 @@ import { db } from "./db";
 import * as schema from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { aiCurriculumGenerator } from "./ai-curriculum-generator";
+import { aiPersonalization } from "./ai-personalization";
 
 interface EnrollmentResult {
   success: boolean;
@@ -10,6 +11,9 @@ interface EnrollmentResult {
   curriculum: any;
   assignments: any[];
   notifications: any[];
+  aiPersonalized: boolean;
+  aiPoweredModules: any[];
+  personalizedContent: Record<string, any>;
 }
 
 export class EnrollmentPipeline {
@@ -24,6 +28,10 @@ export class EnrollmentPipeline {
       // Step 2: Get or generate curriculum
       const curriculum = await this.getOrGenerateCurriculum(courseId);
       console.log(`[EnrollmentPipeline] Step 2 - Curriculum obtained: ${curriculum.id}`);
+
+      // Step 2.5: Generate AI personalization
+      const personalization = await aiPersonalization.generatePersonalizedContent(userId, courseId, curriculum);
+      console.log(`[EnrollmentPipeline] Step 2.5 - AI Personalization generated: ${personalization.aiPoweredModules.length} modules`);
 
       // Step 3: Create personalized study plan
       const studyPlan = await this.createStudyPlan(userId, courseId, curriculum);
@@ -44,6 +52,9 @@ export class EnrollmentPipeline {
         curriculum,
         assignments,
         notifications,
+        aiPersonalized: personalization.aiPersonalized,
+        aiPoweredModules: personalization.aiPoweredModules,
+        personalizedContent: personalization.personalizedContent,
       };
     } catch (error) {
       console.error(`[EnrollmentPipeline] Error during enrollment:`, error);

@@ -5,6 +5,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { userCourses, courses, users } from "@shared/schema";
 import { orchestrationEngine } from "./orchestration-engine";
+import { unifiedIntegrationLayer } from "./unified-integration-layer";
 
 /**
  * Event handler triggered when user enrolls in course
@@ -33,10 +34,11 @@ export async function handleCourseEnrollment(userId: number, courseId: number): 
 
     const enrolledCourseIds = enrolledCourseRecords.map((uc: any) => uc.courseId);
 
-    // Trigger unified orchestration
+    // Trigger unified orchestration with full cascade integration
     console.log(`[EnrollmentEvent] Triggering orchestration for user ${userId} with ${enrolledCourseIds.length} courses`);
     
-    const orchestrationResult = await orchestrationEngine.onCourseEnrollment(userId, courseId);
+    // Use unified integration for complete ecosystem cascading
+    const orchestrationResult = await unifiedIntegrationLayer.cascadeEnrollment(userId, courseId);
 
     // Log event
     console.log(`[EnrollmentEvent] ✓ Enrollment orchestration complete for user ${userId}`);

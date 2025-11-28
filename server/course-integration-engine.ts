@@ -18,6 +18,7 @@ import { CurriculumConnector } from "./curriculum-connector";
 import { StudyPlannerConnector } from "./study-planner-connector";
 import { AssignmentConnector } from "./assignment-connector";
 import { AISubcourseDirector } from "./ai-subcourse-director";
+import { ecosystemStateManager } from "./ecosystem-state-manager";
 
 interface CourseAnalysis {
   courses: any[];

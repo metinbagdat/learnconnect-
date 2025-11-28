@@ -8386,6 +8386,98 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // ============================================================================
   // ADMIN: AI-GENERATED CURRICULUM
   // ============================================================================
+  // Generate curriculum for existing course
+  app.post("/api/generate-curriculum", async (req, res) => {
+    try {
+      const { courseId } = req.body;
+
+      if (!courseId) {
+        return res.status(400).json({ message: "courseId required" });
+      }
+
+      // Get course from database
+      const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, courseId));
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Use AI to generate curriculum from course description
+      const { generateCurriculum } = await import("./ai-integration.js");
+      const curriculum = await generateCurriculum({
+        courseTitle: course.title,
+        description: course.description,
+        targetAudience: "General",
+        durationWeeks: 8,
+        skillLevel: "intermediate"
+      });
+
+      if (!curriculum.modules || !Array.isArray(curriculum.modules)) {
+        return res.status(500).json({ message: "Failed to generate curriculum" });
+      }
+
+      // Save curriculum to database (modules and lessons)
+      const modulesWithLessons = await Promise.all(
+        curriculum.modules.map(async (module: any, moduleIdx: number) => {
+          const [newModule] = await db.insert(schema.modules).values({
+            courseId,
+            title: module.title || `Module ${moduleIdx + 1}`,
+            description: module.objectives || "",
+            order: moduleIdx + 1,
+          }).returning();
+
+          const lessons = await Promise.all(
+            (module.lessons || []).map(async (lesson: any, lessonIdx: number) => {
+              // Parse duration (could be "2 hours", "120 minutes", "2")
+              let durationMinutes = 60;
+              if (lesson.duration) {
+                const match = lesson.duration.toString().match(/\d+/);
+                if (match) {
+                  let duration = parseInt(match[0]);
+                  // If it looks like hours, convert to minutes
+                  if (lesson.duration.includes("hour")) {
+                    duration *= 60;
+                  } else if (lesson.duration.includes("day")) {
+                    duration *= 24 * 60;
+                  }
+                  durationMinutes = duration;
+                }
+              }
+
+              const [newLesson] = await db.insert(schema.lessons).values({
+                moduleId: newModule.id,
+                title: lesson.title || `Lesson ${lessonIdx + 1}`,
+                description: lesson.title || "",
+                durationMinutes,
+                order: lessonIdx + 1,
+                contentType: lesson.contentType || "video",
+              }).returning();
+
+              return newLesson;
+            })
+          );
+
+          return { module: newModule, lessons };
+        })
+      );
+
+      res.json({
+        success: true,
+        course,
+        curriculum: {
+          modules: modulesWithLessons,
+          totalModules: curriculum.modules.length,
+          totalLessons: modulesWithLessons.reduce((sum: number, m: any) => sum + m.lessons.length, 0),
+        },
+        message: "Curriculum generated and saved successfully",
+      });
+    } catch (error) {
+      console.error("Curriculum generation error:", error);
+      res.status(500).json({ message: "Failed to generate curriculum", error: String(error) });
+    }
+  });
+
+  // Create curriculum from scratch with new course
   app.post("/api/admin/curriculum/generate", async (req, res) => {
     try {
       const { courseTitle, courseDescription, durationWeeks, targetAudience } = req.body;

@@ -124,6 +124,7 @@ import {
 } from "./advanced-adaptive-service";
 import * as smartPlanning from "./smart-planning";
 import { aiCurriculumGenerator } from "./ai-curriculum-generator";
+import { enrollmentPipeline } from "./enrollment-pipeline";
 import * as notificationService from "./notification-service";
 import * as aiSessionGenerator from "./ai-session-generator";
 import { analyzeProgressAndRecommend, getTopicResources, trackResourceEngagement } from "./resource-recommendation-service";
@@ -8987,7 +8988,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  // PIPELINE: Enrollment → Curriculum → StudyPlan → Assignments → Progress
+  // PIPELINE: Automated Enrollment → Curriculum → StudyPlan → Assignments → Notifications
   app.post("/api/pipeline/enroll-and-generate", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -8999,81 +9000,32 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }).safeParse(req.body);
 
       if (!validation.success) {
-        return res.status(400).json({ message: "Validation error" });
+        return res.status(400).json({ message: "Validation error", errors: validation.error.errors });
       }
 
       const { courseId } = validation.data;
       const userId = req.user.id;
 
-      // Step 1: Get course
+      // Verify course exists
       const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, courseId));
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
 
-      // Step 2: Create enrollment
-      const [enrollment] = await db.insert(schema.userCourses).values({
-        userId,
-        courseId,
-      }).onConflictDoNothing().returning();
-
-      if (!enrollment) {
-        return res.status(409).json({ message: "Already enrolled in this course" });
-      }
-
-      // Step 3: Get or create curriculum
-      let [curriculum] = await db.select()
-        .from(schema.curriculums)
-        .where(eq(schema.curriculums.courseId, courseId));
-
-      if (!curriculum) {
-        const [newCurriculum] = await db.insert(schema.curriculums).values({
-          courseId,
-          title: course.title,
-          aiGenerated: course.isAiGenerated || false,
-        }).returning();
-        curriculum = newCurriculum;
-      }
-
-      // Step 4: Create study plan
-      const startDate = new Date();
-      const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-      const [studyPlan] = await db.insert(schema.studyPlans).values({
-        userId,
-        title: `${course.title} Study Plan`,
-      }).returning();
-
-      // Step 5: Create assignments from modules/lessons
-      const modules = await db.select()
-        .from(schema.modules)
-        .where(eq(schema.modules.courseId, courseId));
-
-      for (const module of modules) {
-        const lessons = await db.select()
-          .from(schema.lessons)
-          .where(eq(schema.lessons.moduleId, module.id));
-
-        for (const lesson of lessons) {
-          const dueDate = new Date(startDate.getTime() + (lesson.durationMinutes || 60) * 60 * 1000);
-          
-          await db.insert(schema.assignments).values({
-            title: lesson.title,
-            description: lesson.content || lesson.title,
-            courseId,
-            dueDate: dueDate as any,
-          }).returning();
-        }
-      }
+      // Execute enrollment pipeline
+      const result = await enrollmentPipeline.processEnrollment(userId, courseId);
 
       res.json({
         success: true,
-        message: "Pipeline completed: enrolled, curriculum loaded, study plan created, assignments generated",
-        data: { enrollment, curriculum, studyPlan },
+        message: "Enrollment completed successfully: created enrollment, generated curriculum, created study plan, generated assignments, sent notifications",
+        data: result,
       });
     } catch (error) {
-      console.error("Pipeline error:", error);
-      res.status(500).json({ message: "Pipeline failed", error: String(error) });
+      console.error("Enrollment pipeline error:", error);
+      res.status(500).json({ 
+        message: "Enrollment pipeline failed", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 

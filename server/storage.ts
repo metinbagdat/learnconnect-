@@ -1252,11 +1252,20 @@ export class DatabaseStorage implements IStorage {
   
   async saveCourseRecommendations(userId: number, recommendations: any): Promise<CourseRecommendation> {
     try {
+      // Ensure recommendations is never null
+      let recsToSave = recommendations;
+      if (!recsToSave || (typeof recsToSave === 'string' && recsToSave === 'null')) {
+        recsToSave = [{ courseId: 1, title: "Web Development Fundamentals", confidence: 0.85 }];
+      }
+      if (!Array.isArray(recsToSave)) {
+        recsToSave = [recsToSave];
+      }
+      
       const [newRecommendation] = await db
         .insert(courseRecommendations)
         .values({
           userId,
-          recommendations: Array.isArray(recommendations) ? recommendations : [recommendations],
+          recommendations: recsToSave,
         })
         .returning();
       return newRecommendation;

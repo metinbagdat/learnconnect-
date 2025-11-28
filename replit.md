@@ -1,248 +1,42 @@
 # LearnConnect - AI-Powered Educational Platform
 
 ## Overview
-LearnConnect is a comprehensive AI-powered educational platform featuring intelligent study planning, automated enrollment-to-task pipeline automation, AI-generated curriculum, adaptive learning adjustments, and real-time progress tracking. Students receive personalized learning paths with cumulative due dates calculated from lesson durations. Admins can instantly generate structured courses using Claude AI with user-level adaptation (beginner/intermediate/advanced).
+LearnConnect is an AI-powered educational platform designed to provide personalized learning experiences. It offers intelligent study planning, automated enrollment-to-task pipeline automation, AI-generated curriculum, adaptive learning adjustments, and real-time progress tracking. The platform aims to deliver personalized learning paths with cumulative due dates based on lesson durations. Admins can generate structured courses using Claude AI, with adaptation for user levels (beginner/intermediate/advanced). Key capabilities include a smart AI curriculum generator, an automated enrollment pipeline, a student dashboard with smart widgets, an intelligent suggestions engine, and an adaptive learning system.
 
----
+## User Preferences
+I want to prioritize iterative development. Please ask before making major architectural changes or introducing new dependencies. I prefer clear and concise explanations for any complex logic.
 
-## 🎯 COMPLETE IMPLEMENTATION - FEATURES 2.1 THROUGH 4.2
+## System Architecture
 
-### ✅ FEATURE 2.1: Smart AI Curriculum Generator
-**AICurriculumGenerator Service** - Full production-ready implementation:
-- Analyzes course description and learning objectives using Claude 3.5 Sonnet
-- Generates 3-5 modules per curriculum with progressive difficulty
-- Creates 2-4 lessons per module with estimated durations
-- Calculates total course hours automatically
-- Optimizes learning path with difficulty progression (beginner → intermediate → advanced)
-- Extracts and returns learning outcomes for course preview
-- **Two smart endpoints**:
-  - `POST /api/admin/curriculum/generate-smart` - Admin specifies user level
-  - `POST /api/curriculum/generate-for-user` - Auto-adapts to user's learningPace (slow/moderate/fast)
+### UI/UX Decisions
+The frontend is built with React 18, TypeScript, Shadcn UI, and uses Wouter for routing, ensuring a responsive and modern user interface. The dashboard integrates four smart widgets: ProgressWidget, AISuggestions, StudyTimeline, and PerformanceAnalytics, providing a comprehensive learning overview.
 
-### ✅ FEATURE 2.2: Automated Enrollment Pipeline
-**EnrollmentPipeline Class** - Full 5-step orchestration:
-1. **Create Enrollment** - Register user in course, prevent duplicates
-2. **Get/Generate Curriculum** - Fetch existing or auto-generate via AI
-3. **Create Study Plan** - Generate 30-day personalized study path
-4. **Generate Assignments** - Create tasks with **cumulative due dates** (each assignment's due date = start date + accumulated lesson durations)
-5. **Welcome Package** - Send 3 notifications:
-   - Course enrollment confirmation
-   - Study plan overview
-   - First assignment ready
+### Technical Implementations
+- **AI Curriculum Generator:** Utilizes Claude 3.5 Sonnet to analyze course descriptions and learning objectives, generating modules, lessons, and estimating durations with progressive difficulty. It supports user-level adaptation (admin-specified or auto-adapted by learning pace).
+- **Automated Enrollment Pipeline:** A 5-step orchestration process that handles user registration, curriculum generation (or fetching), personalized study plan creation, assignment generation with cumulative due dates, and sending welcome notifications.
+- **Intelligent Suggestions Engine:** Analyzes user learning data (completion rates, scores) to generate five types of prioritized, AI-powered suggestions: Learning Path, Resource, Pace, Peer Learning, and Review, each with reasoning.
+- **Adaptive Learning System:** Dynamically adjusts study plans and assignment due dates based on real-time performance data, detecting learning patterns (improving/declining/stable) and updating the user's learning pace.
+- **Real-time Progress Tracking:** Monitors user progress metrics (scores, time spent) and identifies intervention scenarios like low scores or users getting stuck, triggering alerts or additional resources.
+- **Automated Assignment Generation:** Uses Claude AI to generate tailored assignments, including descriptions, instructions, resources, rubrics, and time estimates, adapted to learning styles and difficulty levels.
+- **Analytics Dashboard:** Provides platform-wide metrics, tracking pipeline performance, suggestion effectiveness, and user engagement for administrators.
 
-**Single Endpoint:**
-- `POST /api/pipeline/enroll-and-generate` - Orchestrates entire 5-step process
+### Core Technologies
+- **Frontend:** React 18, TypeScript, Shadcn UI, TanStack Query, Wouter.
+- **Backend:** Express.js with TypeScript.
+- **Database:** PostgreSQL with Drizzle ORM for type-safe queries.
+- **AI/ML:** Claude 3.5 Sonnet (via Anthropic SDK).
+- **Validation:** Zod schemas for type safety.
+- **Authentication:** Passport.js with session-based authentication and role-based access control.
 
-### ✅ FEATURE 3.1: Student Dashboard Components
-**Four Smart Widgets** - Comprehensive learning interface:
+### System Design Choices
+- **Bilingual Support:** Curriculums and module titles support both English and Turkish.
+- **Cumulative Due Dates:** Assignment due dates are calculated cumulatively based on lesson durations to prevent task clustering.
+- **Role-Based Access Control:** Differentiates between student, instructor, and admin roles for secure access to specific functionalities.
+- **Comprehensive Error Handling:** Implemented across all layers with user-friendly notifications.
+- **Type Safety:** Enforced throughout the application using TypeScript and Zod validation.
 
-1. **ProgressWidget** - Current course, completion %, next assignment at a glance
-2. **AISuggestions** - AI-powered personalized recommendations (3 suggestions shown)
-3. **StudyTimeline** - Study plan visualization with pace adjustment controls
-4. **PerformanceAnalytics** - Key metrics (avg score, completion rate, hours), strengths, improvement areas
-
-**Dashboard Route:**
-- `/dashboard-smart` - Full smart dashboard with all widgets integrated
-
-### ✅ FEATURE 4.1: Intelligent Suggestions Engine
-**SuggestionEngine Service** - AI-powered recommendation system:
-- Analyzes user's learning data (completion rates, scores, engagement patterns)
-- Generates 5 suggestion types in parallel:
-  - **Learning Path** - Start advanced modules or review foundations
-  - **Resource** - Target weak areas with extra materials
-  - **Pace** - Slow down if struggling, speed up if excelling
-  - **Peer Learning** - Join study groups or become mentor
-  - **Review** - Catch performance dips and recommend reviews
-- Prioritizes suggestions by urgency (high/medium/low) and type
-- Provides reasoning for each suggestion
-- **Two API Endpoints:**
-  - `GET /api/suggestions/generate/:userId` - Full detailed suggestions (admin/self)
-  - `GET /api/ai/suggestions/smart` - Dashboard-optimized top 5 suggestions
-
-### ✅ FEATURE 4.2: Adaptive Learning System
-**AdaptiveLearningSystem Service** - Dynamic curriculum optimization:
-- Analyzes performance data (scores, trends, engagement)
-- Detects learning patterns: improving/declining/stable trends
-- Automatically adjusts study plans when needed
-- Re-optimizes assignment due dates based on performance insights
-- Updates user's learning pace (slow/moderate/fast)
-- Sends notifications explaining plan adjustments
-- **Two API Endpoints:**
-  - `POST /api/adaptive/adjust-curriculum` - Manual curriculum adjustment
-  - `POST /api/adaptive/auto-check` - Automated check (triggers on 3+ assignments)
-
----
-
-## 📊 Complete Database Schema
-
-**Core Tables:**
-- `users` - User profiles with learningPace tracking
-- `courses` - Course definitions with bilingual support (EN/TR)
-- `enrollments` (userCourses) - User course registrations
-- `curriculums` - Curriculum structure (JSON), AI flag, versioning
-- `modules` - Course modules with bilingual titles
-- `lessons` - Individual lessons with duration tracking
-- `assignments` - Tasks with calculated cumulative due dates
-- `userProgress` - Assignment completion tracking with scores/feedback
-- `notifications` - User notifications with read status
-- `studyPlans` - Personalized learning paths
-- `studyPlanAdjustments` - Pace change history tracking
-
----
-
-## 🔌 Complete API Endpoints
-
-**Smart Curriculum Generation:**
-- `POST /api/admin/curriculum/generate-smart` - Generate with level (admin)
-- `POST /api/curriculum/generate-for-user` - Auto-adapted to user (authenticated)
-- `POST /api/admin/curriculum/generate` - Create course + curriculum (admin)
-- `GET /api/curriculum/:courseId` - Fetch curriculum structure (public)
-
-**Automated Enrollment Pipeline:**
-- `POST /api/pipeline/enroll-and-generate` - Single endpoint orchestrates 5 steps
-
-**AI Suggestions Engine:**
-- `GET /api/suggestions/generate/:userId` - Full suggestion generation
-- `GET /api/ai/suggestions/smart` - Dashboard suggestions (top 5)
-
-**Adaptive Learning System:**
-- `POST /api/adaptive/adjust-curriculum` - Manual adjustment with performance data
-- `POST /api/adaptive/auto-check` - Automated check and adjustment
-
-**Progress Tracking:**
-- `GET /api/user-progress/:assignmentId` - Get assignment progress
-- `POST /api/user-progress/update` - Update progress/score
-
-**Study Plans:**
-- `POST /api/study-plan/adjust-pace` - Adjust learning pace
-- `GET /api/study-plan/adjustments` - View adjustment history
-
-**Notifications:**
-- `GET /api/notifications` - User's notifications (paginated)
-- `PATCH /api/notifications/:id/read` - Mark as read
-
-**Dashboard & Analytics:**
-- `GET /api/admin/dashboard` - Admin analytics
-- `GET /api/admin/analytics` - Platform metrics
-- `GET /api/student/dashboard/:userId` - Student dashboard data
-
----
-
-## 🛠️ Technology Stack
-
-- **Frontend:** React 18, TypeScript, Shadcn UI, TanStack Query, Wouter
-- **Backend:** Express.js with TypeScript, Drizzle ORM, Passport.js
-- **Database:** PostgreSQL with type-safe queries
-- **AI/ML:** Claude 3.5 Sonnet (via Anthropic SDK)
-- **Validation:** Zod schemas for type safety
-- **Authentication:** Passport.js sessions with role-based access
-
----
-
-## 📱 Frontend Routes
-
-- `/` - Landing page (public)
-- `/login` - Authentication page (public)
-- `/student-dashboard` - Student view: courses, assignments, progress
-- `/dashboard-smart` - Smart dashboard with AI widgets
-- `/admin-dashboard` - Admin analytics: enrollments, completion rates
-- `/admin/curriculum-generator` - AI curriculum creation UI
-- `/ai-recommendations` - AI features dashboard
-- `/curriculum-framework` - Design framework visualization
-- `/kpi-dashboard` - Success metrics
-- `/program-plan` - Program execution framework
-
----
-
-## ✅ Implementation Status - PRODUCTION READY
-
-**Fully Implemented Features:**
-✅ AI curriculum generator with multi-level adaptation (beginner/intermediate/advanced)
-✅ Automated enrollment pipeline with 5-step orchestration
-✅ Cumulative due date calculation from lesson durations
-✅ Bilingual curriculum support (English/Turkish)
-✅ Student dashboard with 4 smart widgets
-✅ AI-powered suggestions engine with 5 recommendation types
-✅ Adaptive learning system with performance-based curriculum adjustments
-✅ Smart notifications for all lifecycle events
-✅ Progress tracking with scoring and feedback
-✅ Study plan pace adjustment with history
-✅ Complete authentication and authorization
-✅ Comprehensive Zod validation on all inputs
-✅ Error handling with user-friendly notifications
-✅ TypeScript type safety throughout
-✅ Database schema fully aligned with specification
-✅ Cumulative assignment due dates prevent clustering
-✅ Performance analysis with trend detection
-✅ User pace recommendations based on performance
-
-**Current Status:** ✅ **PRODUCTION READY** - All core features implemented, tested, and integrated. Server running successfully on port 5000 with all endpoints operational.
-
-**Future Enhancements:**
-1. Spaced repetition algorithm (SuperMemo-2)
-2. Content-based course recommendations using ML
-3. A/B testing framework for curriculum optimization
-4. Advanced learner feedback UI with detailed analytics
-5. Mobile app adaptation
-6. Real-time collaboration features
-7. Advanced reporting and insights dashboard
-
----
-
-## 🚀 Deployment
-
-The application is ready for deployment:
-1. Database migrations are automatically managed via Drizzle ORM
-2. API endpoints are fully functional and tested
-3. Frontend routes are properly configured with authentication
-4. AI integration is active using Replit's Anthropic integration
-5. Error handling is comprehensive across all layers
-
-**To Deploy:**
-- Use Replit's built-in publishing to make the app live on a .replit.app domain
-- All environment variables and secrets are securely managed via Replit's system
-- No additional configuration needed - the app is production-ready
-
----
-
-## 📝 Notes
-
-- All features use type-safe operations via TypeScript and Zod validation
-- Database operations use Drizzle ORM for type safety and migrations
-- AI features leverage Claude 3.5 Sonnet via official Anthropic SDK
-- Authentication uses Passport.js with session-based auth
-- Frontend is fully responsive and mobile-friendly with Tailwind CSS
-- All endpoints include proper error handling and logging
-- Notifications are sent for all important user events
-
----
-
-## ✅ FEATURE 6.1: Real-time Progress Tracking
-**ProgressTracker Service** - Continuous learning performance monitoring:
-- Tracks user progress metrics (scores, time spent, completion attempts)
-- Analyzes patterns in real-time for intervention opportunities
-- Detects four types of intervention scenarios:
-  - Low scores (< 60%) - triggers additional resources
-  - User stuck - extended time with poor performance
-  - Falling behind - declining performance trend
-  - Excelling - high performance (>= 90%)
-- Creates automatic alerts and notifications
-- **API Endpoints:**
-  - `POST /api/progress/track` - Track assignment completion metrics
-  - `GET /api/progress/summary/:userId` - Get user progress overview
-
-## ✅ FEATURE 6.2: Automated Assignment Generation
-**AssignmentGenerator Service** - AI-powered assignment creation:
-- Generates assignments tailored to learning style (visual/auditory/kinesthetic/reading)
-- Creates difficulty-appropriate content (beginner/intermediate/advanced)
-- Uses Claude AI to generate:
-  - Detailed assignment descriptions
-  - Step-by-step instructions
-  - Learning resources
-  - Grading rubrics
-  - Time estimates
-- Supports batch generation for course modules
-- **API Endpoints:**
-  - `POST /api/assignments/generate` - Batch generate assignments (admin)
-  - `POST /api/assignments/generate-single` - Create single assignment (admin)
-
+## External Dependencies
+- **PostgreSQL:** Primary database for storing all application data.
+- **Anthropic SDK:** Used to interact with Claude 3.5 Sonnet for AI functionalities such as curriculum generation, intelligent suggestions, and adaptive learning adjustments.
+- **Passport.js:** Authentication middleware for user login and session management.
+- **Drizzle ORM:** Object-Relational Mapper for interacting with the PostgreSQL database.

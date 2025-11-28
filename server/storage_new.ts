@@ -1,12 +1,4 @@
-import {
-  eq,
-  and,
-  or,
-  desc,
-  inArray,
-  asc,
-  sql
-} from "drizzle-orm";
+import { eq, and, or, desc, inArray } from "drizzle-orm";
 import { db } from "./db";
 import * as schema from "@shared/schema";
 
@@ -39,12 +31,17 @@ const {
 } = schema;
 
 export interface IStorage {
+  // User methods
   getUser(id: number): Promise<any>;
   createUser(user: any): Promise<any>;
+  
+  // Course methods
   getCourses(): Promise<any[]>;
   getCourse(id: number): Promise<any>;
   createCourse(course: any): Promise<any>;
   updateCourse(id: number, updates: any): Promise<any>;
+  
+  // Curriculum Design
   createDesignProcess(design: any): Promise<any>;
   getDesignProcess(id: number): Promise<any>;
   updateDesignProcess(id: number, updates: any): Promise<any>;
@@ -84,6 +81,7 @@ class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  // Curriculum Design Operations
   async createDesignProcess(design: any) {
     const [created] = await db.insert(curriculumDesignParameters).values({
       userId: design.userId || 1,

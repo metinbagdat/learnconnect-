@@ -15,7 +15,7 @@ const mockEnrollmentTrend = [
 ];
 
 export function AdminDashboard() {
-  const { data: dashboardData = {} } = useQuery({
+  const { data: dashboardData = { totalStudents: 0, totalCourses: 0, totalEnrollments: 0, avgCompletion: 0 } } = useQuery({
     queryKey: ["/api/admin/dashboard"],
   });
 
@@ -28,9 +28,9 @@ export function AdminDashboard() {
   });
 
   const mockCourseStats = (courses as any[]).map((c: any) => ({
-    name: c.title,
-    students: c.enrollmentCount,
-    completion: c.avgCompletion,
+    name: c.title || "Unknown",
+    students: c.enrollmentCount || 0,
+    completion: c.avgCompletion || 0,
   })).slice(0, 5) || [];
 
   return (

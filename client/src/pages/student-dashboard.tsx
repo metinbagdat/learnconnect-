@@ -13,16 +13,9 @@ export function StudentDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: enrolledCourses = [] } = useQuery({
-    queryKey: ["/api/student/courses"],
-  });
-
-  const { data: studyPlans = [] } = useQuery({
-    queryKey: ["/api/student/study-plans"],
-  });
-
-  const { data: assignments = [] } = useQuery({
-    queryKey: ["/api/student/assignments"],
+  // Fetch comprehensive dashboard data
+  const { data: dashboardCourses = [] } = useQuery({
+    queryKey: [`/api/student/dashboard/${user?.id || 1}`],
   });
 
   const completeAssignmentMutation = useMutation({
@@ -32,12 +25,18 @@ export function StudentDashboard() {
     },
     onSuccess: () => {
       toast({ title: "✓ Assignment completed!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/student/dashboard/${user?.id || 1}`] });
     },
     onError: () => {
       toast({ title: "Failed to complete assignment", variant: "destructive" });
     }
   });
+
+  // Extract flat lists from dashboard data
+  const allAssignments = (dashboardCourses as any[]).flatMap(c => c.assignments || []);
+  const totalProgress = allAssignments.length > 0 
+    ? Math.round((allAssignments.filter(a => a.status === "completed").length / allAssignments.length) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-950 dark:to-slate-900 p-6">
@@ -57,42 +56,49 @@ export function StudentDashboard() {
 
           {/* COURSES TAB */}
           <TabsContent value="courses" className="space-y-4">
-            {enrolledCourses?.map((course: any) => (
-              <Card key={course.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="flex items-center gap-2">
-                        <BookOpen className="w-5 h-5" />
-                        {course.title}
-                      </CardTitle>
-                      <CardDescription>{course.description}</CardDescription>
-                    </div>
-                    <Badge variant={course.completed ? "default" : "secondary"}>
-                      {course.completed ? "Completed" : "In Progress"}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress</span>
-                      <span className="font-semibold">{course.progress}%</span>
-                    </div>
-                    <Progress value={course.progress} />
-                  </div>
-                  <Button className="w-full">Continue Learning</Button>
-                </CardContent>
-              </Card>
-            ))}
+            {(dashboardCourses as any[])?.length === 0 ? (
+              <Card><CardContent className="pt-6 text-center text-muted-foreground">No enrolled courses. Enroll to get started!</CardContent></Card>
+            ) : (
+              (dashboardCourses as any[]).map((item: any) => {
+                const courseProgress = item.studyPlan?.completionPercentage || 0;
+                return (
+                  <Card key={item.course?.id} data-testid={`card-enrolled-course-${item.course?.id}`}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="flex items-center gap-2">
+                            <BookOpen className="w-5 h-5" />
+                            {item.course?.title}
+                          </CardTitle>
+                          <CardDescription>{item.course?.description}</CardDescription>
+                        </div>
+                        <Badge variant={courseProgress === 100 ? "default" : "secondary"}>
+                          {courseProgress === 100 ? "Completed" : "In Progress"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress</span>
+                          <span className="font-semibold">{courseProgress}%</span>
+                        </div>
+                        <Progress value={courseProgress} />
+                      </div>
+                      <Button className="w-full">Continue Learning</Button>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </TabsContent>
 
           {/* ASSIGNMENTS TAB */}
           <TabsContent value="assignments" className="space-y-4">
-            {assignments?.length === 0 ? (
+            {allAssignments?.length === 0 ? (
               <Card><CardContent className="pt-6 text-center text-muted-foreground">No assignments yet. Enroll in a course to get started!</CardContent></Card>
             ) : (
-              assignments.map((assignment: any) => (
+              allAssignments.map((assignment: any) => (
                 <Card key={assignment.id} data-testid={`card-assignment-${assignment.id}`}>
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between gap-4">
@@ -141,26 +147,40 @@ export function StudentDashboard() {
             <div className="grid md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Learning Stats</CardTitle>
+                  <CardTitle className="text-lg">Overall Progress</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded">
-                    <p className="text-sm text-muted-foreground">Total Study Time</p>
-                    <p className="text-2xl font-bold">24.5 hours</p>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Completion</span>
+                      <span className="font-semibold">{totalProgress}%</span>
+                    </div>
+                    <Progress value={totalProgress} />
                   </div>
-                  <div className="p-3 bg-green-50 dark:bg-green-950 rounded">
-                    <p className="text-sm text-muted-foreground">Assignments Completed</p>
-                    <p className="text-2xl font-bold">18 / 25</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded">
+                      <p className="text-muted-foreground">Total Tasks</p>
+                      <p className="text-2xl font-bold">{allAssignments.length}</p>
+                    </div>
+                    <div className="p-3 bg-green-50 dark:bg-green-950 rounded">
+                      <p className="text-muted-foreground">Completed</p>
+                      <p className="text-2xl font-bold">{allAssignments.filter(a => a.status === "completed").length}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Module Progress</CardTitle>
+                  <CardTitle className="text-lg">Course Progress</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                  {(dashboardCourses as any[]).map((item: any) => (
+                    <div key={item.course?.id} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>{item.course?.title}</span>
+                        <span className="font-semibold">{item.studyPlan?.completionPercentage || 0}%</span>
+                      </div>
+                      <Progress value={item.studyPlan?.completionPercentage || 0} />
                       <span>Module 1: Basics</span>
                       <span>100%</span>
                     </div>

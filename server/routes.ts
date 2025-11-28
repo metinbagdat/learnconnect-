@@ -8189,6 +8189,45 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   });
 
   // 2. STUDENT ENDPOINTS
+  app.get("/api/student/dashboard/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Get all enrollments with courses
+      const enrollments = await db.select().from(schema.userCourses).where(eq(schema.userCourses.userId, userId));
+      
+      // For each enrollment, get study plan and assignments
+      const coursesWithAssignments = await Promise.all(
+        enrollments.map(async (enrollment: any) => {
+          // Get course details
+          const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, enrollment.courseId));
+          
+          // Get study plan
+          const [studyPlan] = await db.select().from(schema.studyPlans).where(
+            eq(schema.studyPlans.userId, userId) && eq(schema.studyPlans.courseId, enrollment.courseId)
+          );
+          
+          // Get assignments
+          const assignments = studyPlan 
+            ? await db.select().from(schema.userAssignments).where(eq(schema.userAssignments.studyPlanId, studyPlan.id))
+            : [];
+          
+          return {
+            course,
+            studyPlan,
+            assignments,
+            enrollment,
+          };
+        })
+      );
+      
+      res.json(coursesWithAssignments);
+    } catch (error) {
+      console.error("Student dashboard error:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard" });
+    }
+  });
+
   app.get("/api/student/courses", async (req, res) => {
     try {
       const courses = await db.select().from(schema.userCourses).where(eq(schema.userCourses.userId, req.user?.id || 1));

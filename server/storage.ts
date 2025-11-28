@@ -37,6 +37,7 @@ const {
   aiRecommendationState,
   learningEcosystemState,
   userCourses,
+  userAchievements,
 } = schema;
 
 export interface IStorage {
@@ -139,11 +140,11 @@ class DatabaseStorage implements IStorage {
   }
 
   async getUserDesignProcesses(userId: number) {
-    return db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.designId, userId));
+    return db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.userId, userId));
   }
 
   async getDesignParameters(designId: number) {
-    const [params] = await db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.designId, designId));
+    const [params] = await db.select().from(curriculumDesignParameters).where(eq(curriculumDesignParameters.id, designId));
     return params;
   }
 
@@ -153,13 +154,29 @@ class DatabaseStorage implements IStorage {
   }
 
   async updateDesignParameters(designId: number, updates: any) {
-    const [updated] = await db.update(curriculumDesignParameters).set(updates).where(eq(curriculumDesignParameters.designId, designId)).returning();
+    const [updated] = await db.update(curriculumDesignParameters).set(updates).where(eq(curriculumDesignParameters.id, designId)).returning();
     return updated;
   }
 
   async updateSuccessMetrics(designId: number, updates: any) {
     const [updated] = await db.update(curriculumSuccessMetrics).set(updates).where(eq(curriculumSuccessMetrics.designId, designId)).returning();
     return updated;
+  }
+
+  async getCurriculumContextForDailyTasks(userId: number, taskIds: number[]) {
+    return new Map();
+  }
+
+  async getDailyStudyTasks(userId: number, date?: string) {
+    if (date) {
+      return db.select().from(dailyTasks).where(eq(dailyTasks.userId, userId));
+    }
+    return db.select().from(dailyTasks).where(eq(dailyTasks.userId, userId));
+  }
+
+  async createDailyStudyTask(task: any) {
+    const [created] = await db.insert(dailyTasks).values(task).returning();
+    return created;
   }
 
   // Dashboard & Learning Methods
@@ -176,19 +193,24 @@ class DatabaseStorage implements IStorage {
   }
 
   async getCourseRecommendations(userId: number) {
-    return [];
+    return db.select().from(aiRecommendationState).where(eq(aiRecommendationState.userId, userId));
+  }
+
+  async saveCourseRecommendations(userId: number, recommendations: any) {
+    const existing = await db.select().from(aiRecommendationState).where(eq(aiRecommendationState.userId, userId));
+    if (existing.length > 0) {
+      await db.update(aiRecommendationState).set({ recommendedItems: recommendations }).where(eq(aiRecommendationState.userId, userId));
+    } else {
+      await db.insert(aiRecommendationState).values({ userId, recommendedItems: recommendations, recommendationType: 'course', confidenceScore: 0.85 });
+    }
   }
 
   async getUserCourses(userId: number) {
     return db.select().from(userCourses).where(eq(userCourses.userId, userId));
   }
 
-  async getDailyStudyTasks(userId: number) {
-    return db.select().from(dailyTasks).where(eq(dailyTasks.userId, userId));
-  }
-
   async getUserAssignments(userId: number) {
-    return [];
+    return db.select().from(assignments).innerJoin(userCourses, eq(assignments.courseId, userCourses.courseId)).where(eq(userCourses.userId, userId));
   }
 
   async getUserLevel(userId: number) {
@@ -200,7 +222,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async getUserStudyPrograms(userId: number) {
-    return [];
+    return db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
   }
 
   async getUserWeeklyStats(userId: number) {
@@ -208,11 +230,11 @@ class DatabaseStorage implements IStorage {
   }
 
   async getStudySessions(userId: number) {
-    return [];
+    return db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
   }
 
   async getUserAchievements(userId: number) {
-    return [];
+    return db.select().from(userAchievements).where(eq(userAchievements.userId, userId)).innerJoin(achievements, eq(userAchievements.achievementId, achievements.id));
   }
 }
 

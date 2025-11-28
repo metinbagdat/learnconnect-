@@ -7,15 +7,32 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 
-export default function TaskManager() {
-  const [newTask, setNewTask] = useState({ title: '', subject: '', priority: 'medium' });
+interface Task {
+  id: string;
+  title: string;
+  subject: string;
+  priority: string;
+  completed: boolean;
+}
 
-  const { data: tasks = [], isLoading } = useQuery({
+interface NewTask {
+  title: string;
+  subject: string;
+  priority: string;
+}
+
+export default function TaskManager() {
+  const [newTask, setNewTask] = useState<NewTask>({ title: '', subject: '', priority: 'medium' });
+
+  const { data: tasks = [], isLoading } = useQuery<Task[]>({
     queryKey: ['/api/tasks'],
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (task) => apiRequest('POST', '/api/tasks', task),
+    mutationFn: async (task: NewTask) => {
+      const response = await apiRequest('POST', '/api/tasks', task);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       setNewTask({ title: '', subject: '', priority: 'medium' });
@@ -23,14 +40,17 @@ export default function TaskManager() {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (id: string) => apiRequest('DELETE', `/api/tasks/${id}`),
+    mutationFn: async (id: string) => {
+      const response = await apiRequest('DELETE', `/api/tasks/${id}`);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
     },
   });
 
-  const completedTasks = tasks.filter((t: any) => t.completed);
-  const pendingTasks = tasks.filter((t: any) => !t.completed);
+  const completedTasks = tasks.filter((t: Task) => t.completed);
+  const pendingTasks = tasks.filter((t: Task) => !t.completed);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin" /></div>;

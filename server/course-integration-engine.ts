@@ -101,6 +101,9 @@ export class CourseIntegrationEngine {
     // Get user's current level
     const [user] = await db.select().from(users).where(eq(users.id, userId));
 
+    // Determine difficulty from course category or default to intermediate
+    const courseDifficulty = enrolledCourses.length > 0 ? "intermediate" : "intermediate";
+
     return {
       courses: enrolledCourses,
       prerequisites: this.identifyPrerequisites(enrolledCourses),
@@ -108,7 +111,7 @@ export class CourseIntegrationEngine {
       totalCommitment: enrolledCourses.reduce((sum: number, c: any) => sum + (c.estimatedHours || 40), 0),
       upcomingMilestones: this.identifyMilestones(enrolledCourses),
       goalImpact: {
-        difficulty: enrolledCourses[0]?.difficulty || "intermediate",
+        difficulty: courseDifficulty,
         estimatedCompletion: 30,
         engagementFactor: 0.8,
       },
@@ -135,24 +138,23 @@ export class CourseIntegrationEngine {
 
       if (existing.length === 0) {
         // Create new curricula for each course
-        const created = await Promise.all(
-          analysis.courses.map(async (course) => {
-            return await db
-              .insert(memoryEnhancedCurricula)
-              .values({
-                userId,
-                baseCurriculumId: course.id,
-                modules: JSON.stringify(this.generateModules(course)),
-                memoryTechniquesApplied: ["spaced-repetition", "active-recall"],
-                predictedRetentionRate: 0.75,
-                studyDuration: 60,
-              });
-          })
-        );
+        const curriculumValues = analysis.courses.map((course: any) => ({
+          userId: userId,
+          baseCurriculumId: course.id,
+          modules: JSON.stringify(this.generateModules(course)),
+          memoryTechniquesApplied: JSON.stringify(["spaced-repetition", "active-recall"]),
+          predictedRetentionRate: 0.75,
+          studyDuration: 60,
+        }));
+
+        if (curriculumValues.length > 0) {
+          await db.insert(memoryEnhancedCurricula).values(curriculumValues);
+        }
+
         return {
           success: true,
           module: "curriculum",
-          itemsCreated: created.length,
+          itemsCreated: curriculumValues.length,
           details: "Curricula created for enrolled courses",
         };
       }

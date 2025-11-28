@@ -8406,7 +8406,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       const { generateCurriculum } = await import("./ai-integration.js");
       const curriculum = await generateCurriculum({
         courseTitle: course.title,
-        description: course.description,
+        description: course.description || course.descriptionEn,
         targetAudience: "General",
         durationWeeks: 8,
         skillLevel: "intermediate"
@@ -8419,10 +8419,14 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       // Save curriculum to database (modules and lessons)
       const modulesWithLessons = await Promise.all(
         curriculum.modules.map(async (module: any, moduleIdx: number) => {
+          const moduleTitle = module.title || `Module ${moduleIdx + 1}`;
           const [newModule] = await db.insert(schema.modules).values({
             courseId,
-            title: module.title || `Module ${moduleIdx + 1}`,
-            description: module.objectives || "",
+            title: moduleTitle,
+            titleEn: moduleTitle,
+            titleTr: moduleTitle,
+            descriptionEn: module.objectives || "",
+            descriptionTr: module.objectives || "",
             order: moduleIdx + 1,
           }).returning();
 
@@ -8435,22 +8439,30 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
                 if (match) {
                   let duration = parseInt(match[0]);
                   // If it looks like hours, convert to minutes
-                  if (lesson.duration.includes("hour")) {
+                  if (lesson.duration.toString().includes("hour")) {
                     duration *= 60;
-                  } else if (lesson.duration.includes("day")) {
+                  } else if (lesson.duration.toString().includes("day")) {
                     duration *= 24 * 60;
                   }
                   durationMinutes = duration;
                 }
               }
 
+              const lessonTitle = lesson.title || `Lesson ${lessonIdx + 1}`;
+              const lessonContent = lesson.content || lesson.title || "";
+
               const [newLesson] = await db.insert(schema.lessons).values({
                 moduleId: newModule.id,
-                title: lesson.title || `Lesson ${lessonIdx + 1}`,
-                description: lesson.title || "",
+                title: lessonTitle,
+                titleEn: lessonTitle,
+                titleTr: lessonTitle,
+                content: lessonContent,
+                contentEn: lessonContent,
+                contentTr: lessonContent,
+                descriptionEn: lessonContent,
+                descriptionTr: lessonContent,
                 durationMinutes,
                 order: lessonIdx + 1,
-                contentType: lesson.contentType || "video",
               }).returning();
 
               return newLesson;
@@ -8480,7 +8492,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // Create curriculum from scratch with new course
   app.post("/api/admin/curriculum/generate", async (req, res) => {
     try {
-      const { courseTitle, courseDescription, durationWeeks, targetAudience } = req.body;
+      const { courseTitle, courseDescription, durationWeeks = 8, targetAudience = "General", category = "General", instructorId = 1 } = req.body;
       
       if (!courseTitle || !courseDescription) {
         return res.status(400).json({ message: "Course title and description required" });
@@ -8491,8 +8503,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       const curriculum = await generateCurriculum({
         courseTitle,
         description: courseDescription,
-        targetAudience: targetAudience || "General",
-        durationWeeks: durationWeeks || 8,
+        targetAudience,
+        durationWeeks,
         skillLevel: "intermediate"
       });
 
@@ -8500,35 +8512,65 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         return res.status(500).json({ message: "Failed to generate curriculum" });
       }
 
-      // Save curriculum to database
+      // Create course with bilingual support and AI marking
       const [course] = await db.insert(schema.courses).values({
         title: courseTitle,
         description: courseDescription,
+        titleEn: courseTitle,
+        titleTr: courseTitle,
+        descriptionEn: courseDescription,
+        descriptionTr: courseDescription,
+        category,
+        instructorId,
         moduleCount: curriculum.modules.length,
+        isAiGenerated: true,
       }).returning();
 
       // Create modules and lessons
       const modulesWithLessons = await Promise.all(
         curriculum.modules.map(async (module: any, moduleIdx: number) => {
+          const moduleTitle = module.title || `Module ${moduleIdx + 1}`;
           const [newModule] = await db.insert(schema.modules).values({
             courseId: course.id,
-            title: module.title || `Module ${moduleIdx + 1}`,
-            description: module.objectives || "",
+            title: moduleTitle,
+            titleEn: moduleTitle,
+            titleTr: moduleTitle,
+            descriptionEn: module.objectives || "",
+            descriptionTr: module.objectives || "",
             order: moduleIdx + 1,
           }).returning();
 
           const lessons = await Promise.all(
             (module.lessons || []).map(async (lesson: any, lessonIdx: number) => {
-              const durationMatch = lesson.duration?.match(/\d+/);
-              const durationMinutes = durationMatch ? parseInt(durationMatch[0]) * 60 : 60;
+              let durationMinutes = 60;
+              if (lesson.duration) {
+                const match = lesson.duration.toString().match(/\d+/);
+                if (match) {
+                  let duration = parseInt(match[0]);
+                  if (lesson.duration.toString().includes("hour")) {
+                    duration *= 60;
+                  } else if (lesson.duration.toString().includes("day")) {
+                    duration *= 24 * 60;
+                  }
+                  durationMinutes = duration;
+                }
+              }
+
+              const lessonTitle = lesson.title || `Lesson ${lessonIdx + 1}`;
+              const lessonContent = lesson.content || lesson.title || "";
 
               const [newLesson] = await db.insert(schema.lessons).values({
                 moduleId: newModule.id,
-                title: lesson.title || `Lesson ${lessonIdx + 1}`,
-                description: `${lesson.title}`,
+                title: lessonTitle,
+                titleEn: lessonTitle,
+                titleTr: lessonTitle,
+                content: lessonContent,
+                contentEn: lessonContent,
+                contentTr: lessonContent,
+                descriptionEn: lessonContent,
+                descriptionTr: lessonContent,
                 durationMinutes,
                 order: lessonIdx + 1,
-                contentType: lesson.contentType || "video",
               }).returning();
 
               return newLesson;

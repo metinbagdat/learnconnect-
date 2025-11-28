@@ -8099,4 +8099,6 @@ Provide JSON: { recommendations: [...], nextSteps: [...], priority: "high"|"medi
       res.status(500).json({ message: "Failed to complete cycle" });
     }
   });
+
+  return httpServer;
 }

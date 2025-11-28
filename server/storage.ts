@@ -136,6 +136,59 @@ class DatabaseStorage implements IStorage {
     const [updated] = await db.update(curriculumFeedbackLoops).set(updates).where(eq(curriculumFeedbackLoops.id, id)).returning();
     return updated;
   }
+
+  // Dashboard & Learning Methods
+  async getChallenges() {
+    return db.select().from(challenges);
+  }
+
+  async getUserActiveAndCompletedChallenges(userId: number) {
+    return { active: [], completed: [] };
+  }
+
+  async getAiGeneratedCourses() {
+    return db.select().from(courses).where(eq(courses.isAiGenerated, true));
+  }
+
+  async getCourseRecommendations(userId: number) {
+    return [];
+  }
+
+  async getUserCourses(userId: number) {
+    return db.select().from(userCourses).where(eq(userCourses.userId, userId));
+  }
+
+  async getDailyStudyTasks(userId: number) {
+    return db.select().from(dailyTasks).where(eq(dailyTasks.userId, userId));
+  }
+
+  async getUserAssignments(userId: number) {
+    return [];
+  }
+
+  async getUserLevel(userId: number) {
+    return { level: 1, xp: 0 };
+  }
+
+  async getUserMentor(userId: number) {
+    return null;
+  }
+
+  async getUserStudyPrograms(userId: number) {
+    return [];
+  }
+
+  async getUserWeeklyStats(userId: number) {
+    return { studyHours: 0, lessonsCompleted: 0, challengesCompleted: 0 };
+  }
+
+  async getStudySessions(userId: number) {
+    return [];
+  }
+
+  async getUserAchievements(userId: number) {
+    return [];
+  }
 }
 
 export const storage = new DatabaseStorage();

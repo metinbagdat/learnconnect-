@@ -90,6 +90,7 @@ import { StudentDashboard } from "@/pages/student-dashboard";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { AiRecommendations } from "@/pages/ai-recommendations";
 import { AdminCurriculumGenerator } from "@/pages/admin-curriculum-generator";
+import { SmartStudentDashboard } from "@/pages/dashboard-smart";
 
 function Router() {
   return (
@@ -185,6 +186,7 @@ function Router() {
       <ProtectedRoute path="/admin-dashboard" component={AdminDashboard} />
       <ProtectedRoute path="/ai-recommendations" component={AiRecommendations} />
       <ProtectedRoute path="/admin/curriculum-generator" component={AdminCurriculumGenerator} />
+      <ProtectedRoute path="/dashboard-smart" component={SmartStudentDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -9029,5 +9029,46 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // AI SUGGESTIONS (for dashboard)
+  app.get("/api/ai/suggestions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const suggestions = [
+        {
+          id: 1,
+          type: "learning_path",
+          title: "Start Advanced Python Module",
+          description: "Ready for the next level",
+          priority: "high",
+          action: "Start Now",
+        },
+        {
+          id: 2,
+          type: "review",
+          title: "Review: Web Basics",
+          description: "Strengthen your foundation",
+          priority: "medium",
+          action: "Review",
+        },
+        {
+          id: 3,
+          type: "challenge",
+          title: "Complete Daily Challenge",
+          description: "Earn bonus points",
+          priority: "low",
+          action: "Take Challenge",
+        },
+      ];
+
+      res.json(suggestions);
+    } catch (error) {
+      console.error("Get suggestions error:", error);
+      res.status(500).json({ message: "Failed to fetch suggestions" });
+    }
+  });
+
   return httpServer;
 }

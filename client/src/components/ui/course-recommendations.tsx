@@ -58,21 +58,25 @@ export function CourseRecommendations() {
     
     // Find courses that match the recommendations by title or keywords
     return recommendations.map(rec => {
+      // Handle both string and object formats for recommendations
+      const recTitle = typeof rec === 'string' ? rec : (rec?.title || '');
+      const recObj = typeof rec === 'string' ? { title: rec } : rec;
+      
       // Try to find exact title match first
       const matchedCourse = courses.find(c => 
-        c.title.toLowerCase().includes(rec.toLowerCase())
+        c.title.toLowerCase().includes(recTitle.toLowerCase())
       );
       
       if (matchedCourse) {
         return {
-          recommendation: rec,
+          recommendation: recObj,
           course: matchedCourse
         };
       }
       
       // If no exact match, return just the recommendation
       return {
-        recommendation: rec,
+        recommendation: recObj,
         course: null
       };
     });
@@ -161,7 +165,7 @@ export function CourseRecommendations() {
                 </div>
                 <div className="p-4 sm:w-3/4">
                   <h3 className="font-semibold text-md">
-                    {item.course?.title || item.recommendation}
+                    {item.course?.title || (typeof item.recommendation === 'string' ? item.recommendation : item.recommendation?.title)}
                   </h3>
                   
                   {item.course && (

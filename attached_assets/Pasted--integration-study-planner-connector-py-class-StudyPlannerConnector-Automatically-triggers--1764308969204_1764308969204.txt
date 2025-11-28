@@ -1,0 +1,50 @@
+# integration/study_planner_connector.py
+class StudyPlannerConnector:
+    """Automatically triggers study planner based on curriculum"""
+    
+    def integrate_courses(self, user_id, course_analysis, integration_events):
+        """Automatically generate study plan from curriculum"""
+        
+        try:
+            # Get generated curriculum
+            curriculum = self._get_user_curriculum(user_id)
+            
+            if not curriculum:
+                return {'status': 'skipped', 'reason': 'No curriculum available'}
+            
+            # Generate study plan from curriculum
+            study_plan = self._generate_study_plan(user_id, curriculum, course_analysis)
+            
+            # Schedule study sessions
+            scheduled_sessions = self._schedule_study_sessions(study_plan, user_id)
+            
+            # Set up progress tracking
+            progress_tracking = self._setup_progress_tracking(study_plan, user_id)
+            
+            return {
+                'status': 'success',
+                'study_plan_generated': True,
+                'sessions_scheduled': len(scheduled_sessions),
+                'total_study_hours': study_plan['total_hours'],
+                'completion_date': study_plan['estimated_completion']
+            }
+            
+        except Exception as e:
+            logger.error(f"Study planner integration failed: {e}")
+            return {'status': 'error', 'message': str(e)}
+    
+    def _generate_study_plan(self, user_id, curriculum, course_analysis):
+        """Generate comprehensive study plan from curriculum"""
+        
+        planner_engine = AIStudyPlanner()
+        
+        planning_data = {
+            'user_id': user_id,
+            'curriculum': curriculum,
+            'courses': course_analysis['courses'],
+            'availability': self._get_user_schedule(user_id),
+            'learning_pace': self._get_learning_pace(user_id),
+            'intensity_preference': self._get_intensity_preference(user_id)
+        }
+        
+        return planner_engine.generate_study_plan(planning_data)

@@ -11,7 +11,7 @@ import {
   courseIntegrationState,
   aiRecommendationState,
 } from '@shared/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, not } from 'drizzle-orm';
 
 interface CourseAnalysis {
   courses: any[];
@@ -181,7 +181,7 @@ export class CurriculumConnector {
         and(
           inArray(courses.category, courseAnalysis.courses.map((c: any) => c.category)),
           // Filter out already enrolled courses
-          !inArray(courses.id, enrolledCourseIds)
+          not(inArray(courses.id, enrolledCourseIds))
         )
       );
 
@@ -263,13 +263,14 @@ export class CurriculumConnector {
         .where(eq(courseIntegrationState.integrationId, integrationId));
 
       if (integrationRecord.length > 0) {
+        const record = integrationRecord[0];
         await db
           .update(courseIntegrationState)
           .set({
             curriculumIntegrated: true,
             lastIntegrationAt: new Date(),
           })
-          .where(eq(courseIntegrationState.integrationId, integrationId));
+          .where(eq(courseIntegrationState.id, record.id));
       }
     } catch (error) {
       console.error('[CurriculumConnector] Failed to save curriculum integration:', error);

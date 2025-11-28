@@ -15,6 +15,7 @@ import {
 import Anthropic from "@anthropic-ai/sdk";
 import { parseAIJSON } from "./ai-provider-service";
 import { CurriculumConnector } from "./curriculum-connector";
+import { StudyPlannerConnector } from "./study-planner-connector";
 
 interface CourseAnalysis {
   courses: any[];
@@ -35,10 +36,12 @@ interface ModuleConnectorResult {
 export class CourseIntegrationEngine {
   private client: Anthropic;
   private curriculumConnector: CurriculumConnector;
+  private studyPlannerConnector: StudyPlannerConnector;
 
   constructor() {
     this.client = new Anthropic();
     this.curriculumConnector = new CurriculumConnector();
+    this.studyPlannerConnector = new StudyPlannerConnector();
   }
 
   /**
@@ -169,19 +172,48 @@ export class CourseIntegrationEngine {
 
   /**
    * Integrate with study planner
+   * Automatically generates study plan from curriculum
    */
   private async integrateWithStudyPlanner(
     userId: number,
     analysis: CourseAnalysis,
     events: any
   ): Promise<ModuleConnectorResult> {
-    // Study plan generation would happen here
-    return {
-      success: true,
-      module: "study_planner",
-      itemsCreated: analysis.courses.length,
-      details: "Study plans adapted to enrolled courses",
-    };
+    try {
+      // Generate unique integration ID
+      const integrationId = this.generateIntegrationId();
+
+      // Use StudyPlannerConnector to generate study plan
+      const studyPlanResult = await this.studyPlannerConnector.integrate(
+        userId,
+        analysis,
+        integrationId
+      );
+
+      if (studyPlanResult.status === 'success') {
+        return {
+          success: true,
+          module: "study_planner",
+          itemsCreated: studyPlanResult.sessionsScheduled,
+          details: `${studyPlanResult.message} | Weekly Commitment: ${studyPlanResult.weeklyCommitment}h`,
+        };
+      }
+
+      return {
+        success: studyPlanResult.status === 'skipped',
+        module: "study_planner",
+        itemsCreated: 0,
+        details: studyPlanResult.message,
+      };
+    } catch (error) {
+      console.error("[CourseIntegrationEngine] Study planner integration failed:", error);
+      return {
+        success: false,
+        module: "study_planner",
+        itemsCreated: 0,
+        details: String(error),
+      };
+    }
   }
 
   /**

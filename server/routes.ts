@@ -8072,5 +8072,89 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // ============================================================================
+  // PROGRAM PLAN & EXECUTION ENDPOINTS
+  // ============================================================================
+
+  app.get("/api/program-plan/phases", async (req, res) => {
+    try {
+      res.json({
+        phases: [
+          {
+            id: "1",
+            name: "Discovery & Design",
+            tasks: [
+              { title: "Define Success", status: "completed", targetCompletion: 70, targetCareerImpact: 50 },
+              { title: "Analyze Audience", status: "completed", personasCreated: 5 },
+              { title: "Map Curriculum", status: "completed", modulesPlanned: 8 },
+              { title: "Feasibility Check", status: "completed", resourcesAllocated: true }
+            ]
+          },
+          {
+            id: "2",
+            name: "Development & Launch",
+            tasks: [
+              { title: "Build MVC", status: "in_progress", modulesBuilt: 3, projectStatus: "prototype" },
+              { title: "Pilot with Beta", status: "in_progress", betaLearners: 35 },
+              { title: "Gather Feedback", status: "pending", feedbackItems: 42 },
+              { title: "Fix & Refine", status: "pending" }
+            ]
+          },
+          {
+            id: "3",
+            name: "Measure, Analyze & Iterate",
+            tasks: [
+              { title: "Monitor Dashboards", status: "pending" },
+              { title: "Root Cause Analysis", status: "pending", issuesIdentified: 3 },
+              { title: "A/B Testing", status: "pending", testsPlanned: 2 },
+              { title: "Quarterly Review", status: "pending" }
+            ]
+          }
+        ]
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch program phases" });
+    }
+  });
+
+  app.post("/api/program-plan/root-cause-analysis", async (req, res) => {
+    try {
+      const { problem, investigation, hypothesis } = req.body;
+      res.json({
+        analysisId: "rca-" + Date.now(),
+        problem,
+        investigation,
+        hypothesis,
+        suggestedActions: [
+          "Add guided exercise to module",
+          "Create video walkthrough",
+          "Reduce quiz difficulty",
+          "Increase practice time"
+        ],
+        expectedImpact: "Completion rate should increase 10-15%"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create root cause analysis" });
+    }
+  });
+
+  app.post("/api/program-plan/ab-test", async (req, res) => {
+    try {
+      const { name, controlGroup, testGroup, hypothesis } = req.body;
+      res.json({
+        testId: "test-" + Date.now(),
+        name,
+        status: "running",
+        controlGroup,
+        testGroup,
+        hypothesis,
+        startDate: new Date().toISOString(),
+        expectedDuration: "2 weeks"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create A/B test" });
+    }
+  });
+
   return httpServer;
 }

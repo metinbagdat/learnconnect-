@@ -85,6 +85,7 @@ import { SuccessMetricsDashboard } from "@/pages/success-metrics-dashboard";
 import { CurriculumFrameworkDisplay } from "@/pages/curriculum-framework-display";
 import { CurriculumParametersForm } from "@/pages/curriculum-parameters-form";
 import { KPIDashboard } from "@/pages/kpi-dashboard";
+import { ProgramPlan } from "@/pages/program-plan";
 
 function Router() {
   return (
@@ -175,6 +176,7 @@ function Router() {
       <ProtectedRoute path="/curriculum-framework" component={CurriculumFrameworkDisplay} />
       <ProtectedRoute path="/curriculum-parameters" component={CurriculumParametersForm} />
       <ProtectedRoute path="/kpi-dashboard" component={KPIDashboard} />
+      <ProtectedRoute path="/program-plan" component={ProgramPlan} />
       <Route component={NotFound} />
     </Switch>
   );

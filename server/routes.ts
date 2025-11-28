@@ -36,6 +36,7 @@ import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unifi
 import { handleCourseEnrollment } from "./enrollment-event-handler";
 import { registerDashboardEndpoints } from "./smart-suggestions/dashboard-endpoints";
 import { registerFormsAndListsEndpoints } from "./smart-suggestions/forms-and-lists-endpoints";
+import { registerSuccessMetricsEndpoints } from "./smart-suggestions/success-metrics-endpoints";
 import curriculumGenerationRouter from "./smart-suggestions/curriculum-generation-endpoints";
 import productionRouter from "./smart-suggestions/production-endpoints";
 import { realTimeMonitor } from "./real-time-monitor";
@@ -7418,6 +7419,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   registerUnifiedOrchestrationEndpoints(app);
   registerDashboardEndpoints(app);
   registerFormsAndListsEndpoints(app);
+  registerSuccessMetricsEndpoints(app);
   app.use('/api/curriculum', curriculumGenerationRouter);
   app.use('/api/production', productionRouter);
 

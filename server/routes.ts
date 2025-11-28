@@ -9308,111 +9308,22 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
+  // ANALYTICS DASHBOARD
+  app.get("/api/analytics/dashboard", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Only admins can view analytics" });
+      }
+
+      const { analyticsEngine } = await import("./analytics-engine");
+      const metrics = await analyticsEngine.getDashboardMetrics();
+
+      res.json({ success: true, metrics });
+    } catch (error) {
+      console.error("Analytics dashboard error:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   return httpServer;
 }
-
-  // ============================================================================
-  // REAL-TIME PROGRESS TRACKING
-  // ============================================================================
-  app.post("/api/progress/track", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      const { assignmentId, score, timeSpent, attempts } = req.body;
-      
-      if (!assignmentId || score === undefined) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-
-      const { progressTracker } = await import("./progress-tracker");
-      progressTracker.trackUserProgress(req.user.id, {
-        assignmentId,
-        score,
-        timeSpent: timeSpent || 0,
-        completedAt: new Date().toISOString(),
-        attempts: attempts || 1,
-      });
-
-      const summary = await progressTracker.getProgressSummary(req.user.id);
-      res.json({ success: true, summary });
-    } catch (error) {
-      console.error("Progress tracking error:", error);
-      res.status(500).json({ message: "Failed to track progress" });
-    }
-  });
-
-  app.get("/api/progress/summary/:userId", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      const { userId } = req.params;
-      if (parseInt(userId) !== req.user.id && req.user.role !== "admin") {
-        return res.status(403).json({ message: "Not authorized" });
-      }
-
-      const { progressTracker } = await import("./progress-tracker");
-      const summary = await progressTracker.getProgressSummary(parseInt(userId));
-      res.json(summary);
-    } catch (error) {
-      console.error("Get progress summary error:", error);
-      res.status(500).json({ message: "Failed to fetch progress summary" });
-    }
-  });
-
-  // ============================================================================
-  // AUTOMATED ASSIGNMENT GENERATION
-  // ============================================================================
-  app.post("/api/assignments/generate", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Only admins can generate assignments" });
-      }
-
-      const { courseId, moduleId, count } = req.body;
-      if (!courseId || !moduleId) {
-        return res.status(400).json({ message: "Missing courseId or moduleId" });
-      }
-
-      const { assignmentGenerator } = await import("./assignment-generator");
-      const assignments = await assignmentGenerator.generateAssignmentsForModule(
-        courseId,
-        moduleId,
-        count || 3
-      );
-
-      res.json({
-        success: true,
-        message: `Generated ${assignments.length} assignments`,
-        assignments,
-      });
-    } catch (error) {
-      console.error("Assignment generation error:", error);
-      res.status(500).json({
-        message: "Failed to generate assignments",
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  });
-
-  app.post("/api/assignments/generate-single", (app as any).ensureAuthenticated, async (req, res) => {
-    try {
-      if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Only admins can generate assignments" });
-      }
-
-      const { moduleId, moduleName, difficulty, learningStyle } = req.body;
-      if (!moduleId || !difficulty) {
-        return res.status(400).json({ message: "Missing required parameters" });
-      }
-
-      const { assignmentGenerator } = await import("./assignment-generator");
-      const assignment = await assignmentGenerator.generateAssignment({
-        moduleId,
-        moduleName: moduleName || "Module",
-        difficulty,
-        learningStyle: learningStyle || "visual",
-        learningObjectives: ["Apply concepts", "Practice problem-solving"],
-      });
-
-      res.json({ success: true, assignment });
-    } catch (error) {
-      console.error("Single assignment generation error:", error);
-      res.status(500).json({ message: "Failed to generate assignment" });
-    }
-  });

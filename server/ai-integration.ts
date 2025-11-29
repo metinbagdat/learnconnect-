@@ -69,3 +69,41 @@ export async function analyzeLearningGaps(data: any): Promise<any> {
     return {};
   }
 }
+
+/**
+ * AIIntegration class for use in suggestion engines and learning systems
+ */
+export class AIIntegration {
+  async chat(prompt: string): Promise<string> {
+    try {
+      const message = await client.messages.create({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 1024,
+        messages: [{ role: "user", content: prompt }],
+      });
+      return message.content[0]?.type === "text" ? message.content[0].text : "";
+    } catch (error) {
+      console.error("AI chat error:", error);
+      return "";
+    }
+  }
+
+  async suggestCourses(userProfile: any): Promise<any[]> {
+    return suggestCourses(userProfile);
+  }
+
+  async adjustStudyPlan(data: any): Promise<any> {
+    return adjustStudyPlan(data);
+  }
+
+  async generateCurriculum(courseInfo: any): Promise<any> {
+    return generateCurriculum(courseInfo);
+  }
+
+  async analyzeLearningGaps(data: any): Promise<any> {
+    return analyzeLearningGaps(data);
+  }
+}
+
+// Export singleton instance
+export const aiIntegration = new AIIntegration();

@@ -39,6 +39,7 @@ import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unifi
 import { handleCourseEnrollment } from "./enrollment-event-handler";
 import { aiFeatures } from "./ai-features";
 import { dashboardService } from "./dashboard-service";
+import { contentBasedSuggestions } from "./content-based-suggestions";
 import { registerDashboardEndpoints } from "./smart-suggestions/dashboard-endpoints";
 import { registerFormsAndListsEndpoints } from "./smart-suggestions/forms-and-lists-endpoints";
 import { registerSuccessMetricsEndpoints } from "./smart-suggestions/success-metrics-endpoints";
@@ -9519,15 +9520,48 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
 
   // AI FEATURES ENDPOINTS
   
-  // Feature 1: Get course suggestions based on interests & past enrollments
+  // Feature 1a: Content-based course suggestions (matching interests with course categories)
+  app.get("/api/suggestions/courses/content-based", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const suggestions = await contentBasedSuggestions.suggestCoursesByInterests(userId);
+      res.json({ 
+        success: true, 
+        type: "content-based",
+        suggestions 
+      });
+    } catch (error) {
+      console.error("Content-based suggestions error:", error);
+      res.status(500).json({ message: "Failed to generate suggestions" });
+    }
+  });
+
+  // Feature 1b: AI-powered course suggestions based on enrollment history & learning patterns
   app.get("/api/ai/course-suggestions", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const suggestions = await aiFeatures.suggestCourses(userId);
-      res.json({ success: true, suggestions });
+      res.json({ 
+        success: true, 
+        type: "ai-powered",
+        suggestions 
+      });
     } catch (error) {
-      console.error("Course suggestions error:", error);
-      res.status(500).json({ message: "Failed to generate course suggestions" });
+      console.error("AI course suggestions error:", error);
+      res.status(500).json({ message: "Failed to generate AI suggestions" });
+    }
+  });
+
+  // Get related courses (similar to given course)
+  app.get("/api/courses/:courseId/related", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const limit = parseInt(req.query.limit as string) || 5;
+      const relatedCourses = await contentBasedSuggestions.getRelatedCourses(courseId, limit);
+      res.json({ success: true, relatedCourses });
+    } catch (error) {
+      console.error("Related courses error:", error);
+      res.status(500).json({ message: "Failed to fetch related courses" });
     }
   });
 
@@ -9545,7 +9579,36 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     }
   });
 
-  // Feature 3: Generate curriculum from course description
+  // Feature 3: Generate curriculum from course description (Admin Feature)
+  app.post("/api/curriculum/generate", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin" && req.user.role !== "instructor") {
+        return res.status(403).json({ message: "Only admins and instructors can generate curricula" });
+      }
+
+      const { courseId, description } = req.body;
+      if (!courseId || !description) {
+        return res.status(400).json({ message: "courseId and description are required" });
+      }
+
+      console.log(`[Curriculum Generation] Generating curriculum for course ${courseId}`);
+      const result = await aiFeatures.generateCurriculumFromDescription(courseId, description);
+      
+      res.json({
+        success: true,
+        message: "Curriculum generated successfully",
+        data: result
+      });
+    } catch (error) {
+      console.error("Curriculum generation error:", error);
+      res.status(500).json({ 
+        message: "Failed to generate curriculum", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Alternative endpoint for backward compatibility
   app.post("/api/curriculum/generate-from-description", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (req.user.role !== "admin" && req.user.role !== "instructor") {
@@ -9558,10 +9621,17 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
       }
 
       const result = await aiFeatures.generateCurriculumFromDescription(courseId, description);
-      res.json(result);
+      res.json({
+        success: true,
+        message: "Curriculum generated successfully",
+        data: result
+      });
     } catch (error) {
       console.error("Curriculum generation error:", error);
-      res.status(500).json({ message: "Failed to generate curriculum" });
+      res.status(500).json({ 
+        message: "Failed to generate curriculum",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

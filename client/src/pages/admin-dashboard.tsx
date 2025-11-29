@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Users, BookOpen, TrendingUp, AlertCircle } from "lucide-react";
+import { Users, BookOpen, TrendingUp, AlertCircle, Zap } from "lucide-react";
+import { CourseManager } from "@/components/admin/course-manager";
 
 const mockEnrollmentTrend = [
   { month: "Jan", enrollments: 120 },
@@ -144,41 +145,7 @@ export function AdminDashboard() {
 
           {/* COURSES */}
           <TabsContent value="courses" className="space-y-4">
-            {(courses as any[])?.length === 0 ? (
-              <Card><CardContent className="pt-6 text-center text-muted-foreground">No courses yet</CardContent></Card>
-            ) : (
-              (courses as any[]).map((course: any) => (
-                <Card key={course.id} data-testid={`card-course-${course.id}`}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle>{course.title}</CardTitle>
-                        <CardDescription>{course.description}</CardDescription>
-                      </div>
-                      <Button variant="outline" size="sm">Edit</Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Enrolled Students</p>
-                        <p className="text-2xl font-bold">{course.enrollmentCount}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Avg Completion</p>
-                        <p className="text-2xl font-bold">{course.avgCompletion}%</p>
-                        <Progress value={course.avgCompletion} className="mt-2" />
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Assignments</p>
-                        <p className="text-2xl font-bold">{course.completedAssignments}/{course.totalAssignments}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-            <Button className="w-full">+ Create New Course</Button>
+            <CourseManager />
           </TabsContent>
 
           {/* STUDENTS */}

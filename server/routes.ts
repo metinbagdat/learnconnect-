@@ -40,6 +40,9 @@ import { handleCourseEnrollment } from "./enrollment-event-handler";
 import { aiFeatures } from "./ai-features";
 import { dashboardService } from "./dashboard-service";
 import { contentBasedSuggestions } from "./content-based-suggestions";
+import { notificationsService } from "./notifications-service";
+import { studyPlanService } from "./study-plan-service";
+import { requireAdmin, requireInstructor, validateRequest, curriculumGenerationSchema, studyPlanAdjustmentSchema } from "./middleware/auth-validation";
 import { registerDashboardEndpoints } from "./smart-suggestions/dashboard-endpoints";
 import { registerFormsAndListsEndpoints } from "./smart-suggestions/forms-and-lists-endpoints";
 import { registerSuccessMetricsEndpoints } from "./smart-suggestions/success-metrics-endpoints";
@@ -9565,45 +9568,130 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     }
   });
 
-  // Feature 2: Adjust study plan based on progress
+  // Feature 2: Adjust study plan based on progress (AI-powered)
   app.patch("/api/study-plans/:id/adjust", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const studyPlanId = parseInt(req.params.id);
       
+      if (!studyPlanId || isNaN(studyPlanId)) {
+        return res.status(400).json({ message: "Invalid study plan ID" });
+      }
+
       const adjustment = await aiFeatures.adjustStudyPlan(userId, studyPlanId);
       res.json({ success: true, adjustment });
     } catch (error) {
       console.error("Study plan adjustment error:", error);
-      res.status(500).json({ message: "Failed to adjust study plan" });
+      res.status(500).json({ 
+        message: "Failed to adjust study plan",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
-  // Feature 3: Generate curriculum from course description (Admin Feature)
+  // Feature 2b: Change study plan pace manually
+  app.patch("/api/study-plans/:id/pace", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const studyPlanId = parseInt(req.params.id);
+      const { pace } = req.body;
+
+      if (!studyPlanId || isNaN(studyPlanId)) {
+        return res.status(400).json({ message: "Invalid study plan ID" });
+      }
+
+      if (!pace || !["slow", "moderate", "fast"].includes(pace)) {
+        return res.status(400).json({ 
+          message: "Invalid pace. Must be one of: slow, moderate, fast" 
+        });
+      }
+
+      const result = await studyPlanService.changePaceAndRecalculate(userId, studyPlanId, pace);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Pace change error:", error);
+      res.status(500).json({ 
+        message: "Failed to change study plan pace",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Feature 2c: Extend study plan deadline
+  app.patch("/api/study-plans/:id/extend", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const studyPlanId = parseInt(req.params.id);
+      const { days = 7, reason = "" } = req.body;
+
+      if (!studyPlanId || isNaN(studyPlanId)) {
+        return res.status(400).json({ message: "Invalid study plan ID" });
+      }
+
+      if (typeof days !== "number" || days < 1 || days > 90) {
+        return res.status(400).json({ 
+          message: "Invalid extension duration. Must be between 1 and 90 days"
+        });
+      }
+
+      const result = await studyPlanService.adjustStudyPlanDuration(userId, studyPlanId, days, reason);
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Study plan extension error:", error);
+      res.status(500).json({ 
+        message: "Failed to extend study plan",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Feature 3: Generate curriculum from course description (Admin/Instructor Feature)
   app.post("/api/curriculum/generate", (app as any).ensureAuthenticated, async (req, res) => {
     try {
+      // Authorization check
       if (req.user.role !== "admin" && req.user.role !== "instructor") {
-        return res.status(403).json({ message: "Only admins and instructors can generate curricula" });
+        return res.status(403).json({ 
+          message: "Only admins and instructors can generate curricula",
+          requiredRole: ["admin", "instructor"],
+          userRole: req.user.role
+        });
       }
 
-      const { courseId, description } = req.body;
-      if (!courseId || !description) {
-        return res.status(400).json({ message: "courseId and description are required" });
+      // Validation
+      const validation = curriculumGenerationSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: validation.error.errors.map(e => ({
+            field: e.path.join("."),
+            message: e.message
+          }))
+        });
       }
 
-      console.log(`[Curriculum Generation] Generating curriculum for course ${courseId}`);
+      const { courseId, description } = validation.data;
+
+      // Verify course exists
+      const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, courseId));
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      console.log(`[Curriculum Generation] User ${req.user.id} generating curriculum for course ${courseId}`);
       const result = await aiFeatures.generateCurriculumFromDescription(courseId, description);
       
       res.json({
         success: true,
         message: "Curriculum generated successfully",
-        data: result
+        data: result,
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error("Curriculum generation error:", error);
       res.status(500).json({ 
         message: "Failed to generate curriculum", 
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
       });
     }
   });
@@ -9630,6 +9718,72 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
       console.error("Curriculum generation error:", error);
       res.status(500).json({ 
         message: "Failed to generate curriculum",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // NOTIFICATIONS ENDPOINTS
+  
+  // Get user's notifications
+  app.get("/api/notifications", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const notifications = await notificationsService.getUnreadNotifications(userId);
+      
+      res.json({
+        success: true,
+        count: notifications.length,
+        notifications
+      });
+    } catch (error) {
+      console.error("Get notifications error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch notifications",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Check and send upcoming assignment notifications
+  app.post("/api/notifications/check-upcoming", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const daysUntilDue = req.body.daysUntilDue || 1;
+
+      const notifications = await notificationsService.notifyUpcomingAssignments(userId, daysUntilDue);
+      
+      res.json({
+        success: true,
+        message: "Checked for upcoming assignments",
+        notificationCount: notifications.length,
+        notifications
+      });
+    } catch (error) {
+      console.error("Check upcoming notifications error:", error);
+      res.status(500).json({ 
+        message: "Failed to check notifications",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Check and send overdue assignment notifications
+  app.post("/api/notifications/check-overdue", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const notifications = await notificationsService.notifyOverdueAssignments(userId);
+      
+      res.json({
+        success: true,
+        message: "Checked for overdue assignments",
+        notificationCount: notifications.length,
+        notifications
+      });
+    } catch (error) {
+      console.error("Check overdue notifications error:", error);
+      res.status(500).json({ 
+        message: "Failed to check overdue assignments",
         error: error instanceof Error ? error.message : String(error)
       });
     }

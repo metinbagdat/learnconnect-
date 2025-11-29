@@ -37,6 +37,7 @@ import { registerSpacedRepetitionEndpoints } from "./smart-suggestions/spaced-re
 import { registerAIIntegrationEndpoints } from "./smart-suggestions/ai-integration-endpoints";
 import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unified-orchestration-endpoints";
 import { handleCourseEnrollment } from "./enrollment-event-handler";
+import { aiFeatures } from "./ai-features";
 import { registerDashboardEndpoints } from "./smart-suggestions/dashboard-endpoints";
 import { registerFormsAndListsEndpoints } from "./smart-suggestions/forms-and-lists-endpoints";
 import { registerSuccessMetricsEndpoints } from "./smart-suggestions/success-metrics-endpoints";
@@ -9512,6 +9513,54 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     } catch (error) {
       console.error("Analytics dashboard error:", error);
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // AI FEATURES ENDPOINTS
+  
+  // Feature 1: Get course suggestions based on interests & past enrollments
+  app.get("/api/ai/course-suggestions", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const suggestions = await aiFeatures.suggestCourses(userId);
+      res.json({ success: true, suggestions });
+    } catch (error) {
+      console.error("Course suggestions error:", error);
+      res.status(500).json({ message: "Failed to generate course suggestions" });
+    }
+  });
+
+  // Feature 2: Adjust study plan based on progress
+  app.patch("/api/study-plans/:id/adjust", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const studyPlanId = parseInt(req.params.id);
+      
+      const adjustment = await aiFeatures.adjustStudyPlan(userId, studyPlanId);
+      res.json({ success: true, adjustment });
+    } catch (error) {
+      console.error("Study plan adjustment error:", error);
+      res.status(500).json({ message: "Failed to adjust study plan" });
+    }
+  });
+
+  // Feature 3: Generate curriculum from course description
+  app.post("/api/curriculum/generate-from-description", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin" && req.user.role !== "instructor") {
+        return res.status(403).json({ message: "Only admins and instructors can generate curricula" });
+      }
+
+      const { courseId, description } = req.body;
+      if (!courseId || !description) {
+        return res.status(400).json({ message: "courseId and description are required" });
+      }
+
+      const result = await aiFeatures.generateCurriculumFromDescription(courseId, description);
+      res.json(result);
+    } catch (error) {
+      console.error("Curriculum generation error:", error);
+      res.status(500).json({ message: "Failed to generate curriculum" });
     }
   });
 

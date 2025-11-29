@@ -9834,5 +9834,82 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     }
   });
 
+  // ==================== ADMIN DASHBOARD ENDPOINTS ====================
+  
+  // Get comprehensive admin dashboard with all courses and enrollment stats
+  app.get("/api/admin/dashboard", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ 
+          message: "Admin access required",
+          requiredRole: "admin",
+          userRole: req.user.role
+        });
+      }
+
+      const dashboardData = await adminDashboardService.getAdminDashboard();
+      res.json({
+        success: true,
+        data: dashboardData,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Admin dashboard error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch admin dashboard",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get detailed stats for a specific course
+  app.get("/api/admin/courses/:courseId/stats", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const courseId = parseInt(req.params.courseId);
+      if (!courseId || isNaN(courseId)) {
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+
+      const courseStats = await adminDashboardService.getCourseDetailedStats(courseId);
+      res.json({
+        success: true,
+        data: courseStats,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Course stats error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch course stats",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get enrollment trends
+  app.get("/api/admin/enrollment-trends", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const trends = await adminDashboardService.getEnrollmentTrends();
+      res.json({
+        success: true,
+        data: trends,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Enrollment trends error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch enrollment trends",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   return httpServer;
 }

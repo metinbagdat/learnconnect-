@@ -14,7 +14,7 @@ export interface CourseStats {
   id: number;
   title: string;
   category: string;
-  level?: string;
+  level: string | null | undefined;
   enrollmentCount: number;
   completedEnrollments: number;
   activeEnrollments: number;

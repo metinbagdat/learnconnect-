@@ -39,6 +39,7 @@ import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unifi
 import { handleCourseEnrollment } from "./enrollment-event-handler";
 import { aiFeatures } from "./ai-features";
 import { dashboardService } from "./dashboard-service";
+import { adminDashboardService } from "./admin-dashboard-service";
 import { contentBasedSuggestions } from "./content-based-suggestions";
 import { notificationsService } from "./notifications-service";
 import { studyPlanService } from "./study-plan-service";

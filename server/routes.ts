@@ -38,6 +38,7 @@ import { registerAIIntegrationEndpoints } from "./smart-suggestions/ai-integrati
 import { registerUnifiedOrchestrationEndpoints } from "./smart-suggestions/unified-orchestration-endpoints";
 import { handleCourseEnrollment } from "./enrollment-event-handler";
 import { aiFeatures } from "./ai-features";
+import { dashboardService } from "./dashboard-service";
 import { registerDashboardEndpoints } from "./smart-suggestions/dashboard-endpoints";
 import { registerFormsAndListsEndpoints } from "./smart-suggestions/forms-and-lists-endpoints";
 import { registerSuccessMetricsEndpoints } from "./smart-suggestions/success-metrics-endpoints";
@@ -9561,6 +9562,50 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     } catch (error) {
       console.error("Curriculum generation error:", error);
       res.status(500).json({ message: "Failed to generate curriculum" });
+    }
+  });
+
+  // STUDENT DASHBOARD ENDPOINT
+  // Get comprehensive dashboard data for authenticated student
+  app.get("/api/dashboard", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const dashboardData = await dashboardService.getStudentDashboard(userId);
+      
+      res.json({
+        success: true,
+        data: dashboardData,
+      });
+    } catch (error) {
+      console.error("Dashboard error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch dashboard", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Alternative: Get dashboard for specific user (admin only)
+  app.get("/api/dashboard/:userId", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      // Check if user is admin or viewing their own dashboard
+      const requestedUserId = parseInt(req.params.userId);
+      if (req.user.role !== "admin" && req.user.id !== requestedUserId) {
+        return res.status(403).json({ message: "Not authorized to view this dashboard" });
+      }
+
+      const dashboardData = await dashboardService.getStudentDashboard(requestedUserId);
+      
+      res.json({
+        success: true,
+        data: dashboardData,
+      });
+    } catch (error) {
+      console.error("Dashboard error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch dashboard", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

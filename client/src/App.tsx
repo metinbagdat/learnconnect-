@@ -92,6 +92,8 @@ import { AiRecommendations } from "@/pages/ai-recommendations";
 import { AdminCurriculumGenerator } from "@/pages/admin-curriculum-generator";
 import { SmartStudentDashboard } from "@/pages/dashboard-smart";
 import StudyPlanDashboard from "@/pages/study-plan-dashboard";
+import AdminEnrollmentDashboard from "@/pages/admin-enrollment-dashboard";
+import StudentEnrollmentDashboard from "@/pages/student-enrollment-dashboard";
 
 function Router() {
   return (
@@ -188,6 +190,9 @@ function Router() {
       <ProtectedRoute path="/ai-recommendations" component={AiRecommendations} />
       <ProtectedRoute path="/admin/curriculum-generator" component={AdminCurriculumGenerator} />
       <ProtectedRoute path="/dashboard-smart" component={SmartStudentDashboard} />
+      <ProtectedRoute path="/study-plan" component={StudyPlanDashboard} />
+      <ProtectedRoute path="/admin/enrollment" component={AdminEnrollmentDashboard} />
+      <ProtectedRoute path="/student/dashboard" component={StudentEnrollmentDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

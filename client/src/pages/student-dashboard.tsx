@@ -1,193 +1,209 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { BookOpen, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProgressWidget } from "@/components/dashboard/progress-widget";
+import { AISuggestions } from "@/components/dashboard/ai-suggestions";
+import { StudyTimeline } from "@/components/dashboard/study-timeline";
+import { PerformanceAnalytics } from "@/components/dashboard/performance-analytics";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2, AlertCircle } from "lucide-react";
+
+interface DashboardData {
+  enrolledCourses: any[];
+  currentAssignments: any[];
+  overallProgress: number;
+  totalEnrolled: number;
+  completedCourses: number;
+  upcomingAssignments: any[];
+  summary: {
+    totalAssignments: number;
+    completedAssignments: number;
+    pendingAssignments: number;
+    overdueAssignments: number;
+  };
+}
 
 export function StudentDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch comprehensive dashboard data
+  // Fetch comprehensive dashboard data from backend
+  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
+    queryKey: ["/api/dashboard"],
+  });
+
+  // Fetch legacy dashboard courses for fallback
   const { data: dashboardCourses = [] } = useQuery({
     queryKey: [`/api/student/dashboard/${user?.id || 1}`],
   });
 
-  const completeAssignmentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest("POST", `/api/student/assignments/${id}/complete`, { score: 100 });
+  // Handle study plan adjustment
+  const adjustPlanMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PATCH", `/api/study-plans/${dashboardData?.enrolledCourses?.[0]?.id}/pace`, 
+        { pace: "moderate" });
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "✓ Assignment completed!" });
-      queryClient.invalidateQueries({ queryKey: [`/api/student/dashboard/${user?.id || 1}`] });
+      toast({ title: "✓ Study plan adjusted!" });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
     },
     onError: () => {
-      toast({ title: "Failed to complete assignment", variant: "destructive" });
+      toast({ title: "Failed to adjust plan", variant: "destructive" });
     }
   });
 
-  // Extract flat lists from dashboard data
-  const allAssignments = (dashboardCourses as any[]).flatMap(c => c.assignments || []);
-  const totalProgress = allAssignments.length > 0 
-    ? Math.round((allAssignments.filter(a => a.status === "completed").length / allAssignments.length) * 100)
-    : 0;
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: any) => {
+    toast({ title: `Exploring: ${suggestion.title}` });
+    // Navigate to course or take other action
+  };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Extract data for widgets
+  const currentCourse = dashboardData?.enrolledCourses?.[0];
+  const nextAssignment = dashboardData?.upcomingAssignments?.[0];
+  const completionPercentage = dashboardData?.overallProgress || 0;
+  const learningMetrics = {
+    averageScore: Math.round(Math.random() * 40 + 60), // placeholder
+    completionRate: dashboardData?.summary.completedAssignments 
+      ? Math.round((dashboardData.summary.completedAssignments / dashboardData.summary.totalAssignments) * 100)
+      : 0,
+    totalHoursLearned: Math.round(Math.random() * 20 + 10) // placeholder
+  };
+  const identifiedStrengths = ["Consistent completion", "Quick learner", "Strong problem-solving"];
+  const improvementAreas = ["Quiz performance", "Project depth", "Time management"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-950 dark:to-slate-900 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="dashboard-header">
           <h1 className="text-4xl font-bold">My Learning Dashboard</h1>
-          <p className="text-muted-foreground">Track your courses, assignments, and progress</p>
+          <p className="text-muted-foreground">
+            {dashboardData?.totalEnrolled} active course{dashboardData?.totalEnrolled !== 1 ? "s" : ""} • 
+            {dashboardData?.completedCourses} completed
+          </p>
         </div>
 
-        <Tabs defaultValue="courses" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="courses">Enrolled Courses</TabsTrigger>
-            <TabsTrigger value="assignments">My Tasks</TabsTrigger>
-            <TabsTrigger value="progress">Progress</TabsTrigger>
-          </TabsList>
+        {/* Alert for overdue assignments */}
+        {(dashboardData?.summary.overdueAssignments || 0) > 0 && (
+          <Card className="border-red-200 bg-red-50 dark:bg-red-950" data-testid="alert-overdue">
+            <CardContent className="pt-6 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-red-900 dark:text-red-100">
+                  Action Needed: {dashboardData?.summary.overdueAssignments} overdue assignment{(dashboardData?.summary.overdueAssignments || 0) !== 1 ? "s" : ""}
+                </p>
+                <p className="text-sm text-red-800 dark:text-red-200">Please complete these as soon as possible</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* COURSES TAB */}
-          <TabsContent value="courses" className="space-y-4">
-            {(dashboardCourses as any[])?.length === 0 ? (
-              <Card><CardContent className="pt-6 text-center text-muted-foreground">No enrolled courses. Enroll to get started!</CardContent></Card>
-            ) : (
-              (dashboardCourses as any[]).map((item: any) => {
-                const courseProgress = item.studyPlan?.completionPercentage || 0;
-                return (
-                  <Card key={item.course?.id} data-testid={`card-enrolled-course-${item.course?.id}`}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <CardTitle className="flex items-center gap-2">
-                            <BookOpen className="w-5 h-5" />
-                            {item.course?.title}
-                          </CardTitle>
-                          <CardDescription>{item.course?.description}</CardDescription>
-                        </div>
-                        <Badge variant={courseProgress === 100 ? "default" : "secondary"}>
-                          {courseProgress === 100 ? "Completed" : "In Progress"}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Progress</span>
-                          <span className="font-semibold">{courseProgress}%</span>
-                        </div>
-                        <Progress value={courseProgress} />
-                      </div>
-                      <Button className="w-full">Continue Learning</Button>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
-          </TabsContent>
+        {/* Dashboard Grid - Phase 3.1 */}
+        <div className="dashboard-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="dashboard-grid">
+          {/* Progress Widget - spans 2 columns */}
+          <div className="lg:col-span-2">
+            <ProgressWidget
+              currentCourse={currentCourse || { id: 1, title: "No courses", description: "Enroll to get started" }}
+              completionPercentage={completionPercentage}
+              nextAssignment={nextAssignment || null}
+            />
+          </div>
 
-          {/* ASSIGNMENTS TAB */}
-          <TabsContent value="assignments" className="space-y-4">
-            {allAssignments?.length === 0 ? (
-              <Card><CardContent className="pt-6 text-center text-muted-foreground">No assignments yet. Enroll in a course to get started!</CardContent></Card>
-            ) : (
-              allAssignments.map((assignment: any) => (
-                <Card key={assignment.id} data-testid={`card-assignment-${assignment.id}`}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{assignment.title}</h4>
-                        <p className="text-sm text-muted-foreground">{assignment.description}</p>
-                        <div className="flex gap-3 mt-3 text-sm flex-wrap">
-                          <Badge variant="outline">{assignment.type}</Badge>
-                          {assignment.dueDate && (
-                            <div className="flex items-center gap-1 text-orange-600">
-                              <Clock className="w-4 h-4" />
-                              Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2 items-end">
-                        <Badge className={assignment.status === "completed" ? "bg-green-600" : "bg-blue-600"}>
-                          {assignment.status}
-                        </Badge>
-                        {assignment.status !== "completed" && (
-                          <Button
-                            size="sm"
-                            onClick={() => completeAssignmentMutation.mutate(assignment.id)}
-                            disabled={completeAssignmentMutation.isPending}
-                            data-testid={`button-complete-assignment-${assignment.id}`}
-                          >
-                            {completeAssignmentMutation.isPending ? (
-                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4 mr-2" />
-                            )}
-                            Mark Complete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+          {/* Quick Stats */}
+          <Card data-testid="quick-stats-card">
+            <CardHeader>
+              <CardTitle className="text-base">Assignment Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div data-testid="stat-completed">
+                <p className="text-sm text-muted-foreground">Completed</p>
+                <p className="text-2xl font-bold">{dashboardData?.summary.completedAssignments}</p>
+              </div>
+              <div data-testid="stat-pending">
+                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-2xl font-bold text-orange-600">{dashboardData?.summary.pendingAssignments}</p>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* PROGRESS TAB */}
-          <TabsContent value="progress" className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Overall Progress</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Completion</span>
-                      <span className="font-semibold">{totalProgress}%</span>
-                    </div>
-                    <Progress value={totalProgress} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded">
-                      <p className="text-muted-foreground">Total Tasks</p>
-                      <p className="text-2xl font-bold">{allAssignments.length}</p>
-                    </div>
-                    <div className="p-3 bg-green-50 dark:bg-green-950 rounded">
-                      <p className="text-muted-foreground">Completed</p>
-                      <p className="text-2xl font-bold">{allAssignments.filter(a => a.status === "completed").length}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Course Progress</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {(dashboardCourses as any[]).map((item: any) => (
-                    <div key={item.course?.id} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{item.course?.title}</span>
-                        <span className="font-semibold">{item.studyPlan?.completionPercentage || 0}%</span>
-                      </div>
-                      <Progress value={item.studyPlan?.completionPercentage || 0} />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+          {/* Overall Progress Indicator */}
+          <Card data-testid="progress-indicator-card">
+            <CardHeader>
+              <CardTitle className="text-base">Overall Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center py-6">
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-200 to-blue-100" />
+                  <p className="relative text-3xl font-bold" data-testid="progress-percentage">
+                    {completionPercentage}%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Second Row - AI Suggestions and Study Timeline */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* AI Suggestions Widget */}
+          <AISuggestions
+            onSuggestionSelect={handleSuggestionSelect}
+          />
+
+          {/* Study Timeline Widget */}
+          <StudyTimeline
+            plan={currentCourse ? { id: 1, title: currentCourse.title } : { id: 0, title: "No plan" }}
+            assignments={dashboardData?.upcomingAssignments || []}
+            onPlanAdjust={() => adjustPlanMutation.mutate()}
+          />
+        </div>
+
+        {/* Performance Analytics Widget */}
+        <div className="grid grid-cols-1">
+          <PerformanceAnalytics
+            metrics={learningMetrics}
+            strengths={identifiedStrengths}
+            areasToImprove={improvementAreas}
+          />
+        </div>
+
+        {/* Enrolled Courses Overview */}
+        {dashboardData?.enrolledCourses && dashboardData.enrolledCourses.length > 1 && (
+          <Card data-testid="courses-overview">
+            <CardHeader>
+              <CardTitle>Your Enrolled Courses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="courses-grid">
+                {dashboardData.enrolledCourses.map((course, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    className="h-auto flex-col items-start justify-start p-4"
+                    data-testid={`course-card-${idx}`}
+                  >
+                    <p className="font-semibold">{course.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{course.category}</p>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

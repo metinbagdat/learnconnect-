@@ -91,6 +91,7 @@ import { AdminDashboard } from "@/pages/admin-dashboard";
 import { AiRecommendations } from "@/pages/ai-recommendations";
 import { AdminCurriculumGenerator } from "@/pages/admin-curriculum-generator";
 import { SmartStudentDashboard } from "@/pages/dashboard-smart";
+import StudyPlanDashboard from "@/pages/study-plan-dashboard";
 
 function Router() {
   return (

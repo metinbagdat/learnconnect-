@@ -325,7 +325,13 @@ export const userMentors = pgTable("user_mentors", { id: serial("id").primaryKey
 export const studyPrograms = pgTable("study_programs", { id: serial("id").primaryKey(), title: text("title").notNull() });
 export const programSchedules = pgTable("program_schedules", { id: serial("id").primaryKey(), programId: integer("program_id").notNull() });
 export const userProgramProgress = pgTable("user_program_progress", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
-export const studySessions = pgTable("study_sessions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
+export const studySessions = pgTable("study_sessions", { 
+  id: serial("id").primaryKey(), 
+  userId: integer("user_id").notNull(),
+  courseId: integer("course_id"),
+  duration: integer("duration"),
+  completedAt: timestamp("completed_at")
+});
 export const levelAssessments = pgTable("level_assessments", { id: serial("id").primaryKey(), title: text("title").notNull() });
 export const assessmentQuestions = pgTable("assessment_questions", { id: serial("id").primaryKey(), assessmentId: integer("assessment_id").notNull() });
 export const userSkillLevels = pgTable("user_skill_levels", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });

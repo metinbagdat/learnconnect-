@@ -99,8 +99,11 @@ export const assignments = pgTable("assignments", {
   title: text("title").notNull(),
   description: text("description"),
   courseId: integer("course_id").notNull(),
+  studyPlanId: integer("study_plan_id"),
+  lessonId: integer("lesson_id"),
   points: integer("points").default(0),
   dueDate: timestamp("due_date"),
+  status: text("status").default("pending"), // pending, in_progress, completed
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -491,7 +494,17 @@ export const userSubscriptions = pgTable("user_subscriptions", { id: serial("id"
 export const userUsageTracking = pgTable("user_usage_tracking", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
 export const userGoals = pgTable("user_goals", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), goalText: text("goal_text").notNull() });
 export const userInterests = pgTable("user_interests", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), interest: text("interest").notNull() });
-export const studyPlans = pgTable("study_plans", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), title: text("title").notNull() });
+export const studyPlans = pgTable("study_plans", { 
+  id: serial("id").primaryKey(), 
+  userId: integer("user_id").notNull(),
+  courseId: integer("course_id"),
+  curriculumId: integer("curriculum_id"),
+  title: text("title").notNull(),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  status: text("status").default("active"), // active, completed, paused
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
 export const studyMilestones = pgTable("study_milestones", { id: serial("id").primaryKey(), planId: integer("plan_id").notNull() });
 export const courseSuggestions = pgTable("course_suggestions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
 export const goalSuggestions = pgTable("goal_suggestions", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });

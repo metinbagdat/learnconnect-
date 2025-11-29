@@ -133,10 +133,15 @@ export class EnrollmentPipeline {
 
       const [studyPlan] = await db.insert(schema.studyPlans).values({
         userId,
+        courseId,
+        curriculumId: curriculum.id,
         title: `Study Plan - Course ${courseId}`,
+        startDate,
+        endDate,
+        status: "active",
       }).returning();
 
-      console.log(`[EnrollmentPipeline] Study plan created: ${studyPlan.id}`);
+      console.log(`[EnrollmentPipeline] Study plan created: ${studyPlan.id} (${courseId}, curriculum: ${curriculum.id})`);
       return studyPlan;
     } catch (error) {
       console.error("[EnrollmentPipeline] Failed to create study plan:", error);
@@ -203,8 +208,11 @@ export class EnrollmentPipeline {
             title: `${module.title} - ${lesson.title}`,
             description: lesson.content || lesson.title,
             courseId,
+            studyPlanId: studyPlan.id,
+            lessonId: lesson.id,
             dueDate: dueDate as any,
             points: 10,
+            status: "pending",
           }).returning();
 
           assignments.push(assignment);

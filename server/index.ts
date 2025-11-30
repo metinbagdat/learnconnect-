@@ -78,34 +78,41 @@ app.use((req, res, next) => {
 
     // Run seeding operations asynchronously AFTER server starts
     // This prevents blocking the port opening and deployment timeout
-    (async () => {
-      // Add a small delay to ensure port is fully opened
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Seed TYT/AYT curriculum first (most important for the platform)
-      try {
-        await seedTytAytCurriculum();
-        log("TYT/AYT curriculum seeded successfully");
-      } catch (error) {
-        log(`Failed to seed TYT/AYT curriculum: ${error}`);
-      }
-      
-      // Seed modules and lessons as fallback
-      try {
-        await seedModulesAndLessons();
-        log("Modules and lessons seeded successfully");
-      } catch (error) {
-        log(`Failed to seed modules and lessons: ${error}`);
-      }
-      
-      // Seed challenges
-      try {
-        await seedChallenges();
-        log("Challenge system initialized successfully");
-      } catch (error) {
-        log(`Failed to seed challenges: ${error}`);
-      }
-    })();
+    // Skip seeding in production unless explicitly enabled
+    const shouldSeed = process.env.NODE_ENV !== 'production' || process.env.ENABLE_SEEDING === 'true';
+    
+    if (shouldSeed) {
+      (async () => {
+        // Add a small delay to ensure port is fully opened
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Seed TYT/AYT curriculum first (most important for the platform)
+        try {
+          await seedTytAytCurriculum();
+          log("TYT/AYT curriculum seeded successfully");
+        } catch (error) {
+          log(`Failed to seed TYT/AYT curriculum: ${error}`);
+        }
+        
+        // Seed modules and lessons as fallback
+        try {
+          await seedModulesAndLessons();
+          log("Modules and lessons seeded successfully");
+        } catch (error) {
+          log(`Failed to seed modules and lessons: ${error}`);
+        }
+        
+        // Seed challenges
+        try {
+          await seedChallenges();
+          log("Challenge system initialized successfully");
+        } catch (error) {
+          log(`Failed to seed challenges: ${error}`);
+        }
+      })();
+    } else {
+      log("Seeding disabled in production (set ENABLE_SEEDING=true to override)");
+    }
   } catch (error) {
     log(`FATAL ERROR: ${error}`);
     process.exit(1);

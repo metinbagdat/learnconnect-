@@ -72,8 +72,15 @@ app.use((req, res, next) => {
     // this serves both the API and the client.
     // It is the only port that is not firewalled.
     const port = 5000;
-    server.listen(port, "0.0.0.0", async () => {
+    server.listen(port, "0.0.0.0", () => {
       log(`serving on port ${port}`);
+    });
+
+    // Run seeding operations asynchronously AFTER server starts
+    // This prevents blocking the port opening and deployment timeout
+    (async () => {
+      // Add a small delay to ensure port is fully opened
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Seed TYT/AYT curriculum first (most important for the platform)
       try {
@@ -91,14 +98,14 @@ app.use((req, res, next) => {
         log(`Failed to seed modules and lessons: ${error}`);
       }
       
-      // Seed challenges on server startup
+      // Seed challenges
       try {
         await seedChallenges();
         log("Challenge system initialized successfully");
       } catch (error) {
         log(`Failed to seed challenges: ${error}`);
       }
-    });
+    })();
   } catch (error) {
     log(`FATAL ERROR: ${error}`);
     process.exit(1);

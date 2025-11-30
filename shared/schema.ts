@@ -72,6 +72,11 @@ export const lessons = pgTable("lessons", {
   descriptionTr: text("description_tr").notNull().default(""),
   order: integer("order").notNull(),
   durationMinutes: integer("duration_minutes").default(30),
+  // JSON fields for AI-generated curriculum content
+  concepts: json("concepts").default([]), // Array of concept strings
+  studyProblems: json("study_problems").default([]), // Array of problem strings
+  reviewHelp: text("review_help"), // Review help content
+  studyTips: text("study_tips"), // Study tips content
 });
 
 export const userCourses = pgTable("user_courses", {
@@ -877,11 +882,39 @@ export const curriculums = pgTable("curriculums", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
   title: text("title").notNull(),
+  description: text("description"),
+  generatedBy: integer("generated_by"), // admin user_id
+  generatedAt: timestamp("generated_at"),
+  totalEstimatedTime: integer("total_estimated_time"), // in minutes
   structureJson: json("structure_json"), // { modules: [...], lessons: [...] }
   aiGenerated: boolean("ai_generated").default(false),
   version: text("version").default("1.0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// AI-Generated Modules table
+export const aiModules = pgTable("ai_modules", {
+  id: serial("id").primaryKey(),
+  curriculumId: integer("curriculum_id").notNull(),
+  title: text("title").notNull(),
+  objective: text("objective"),
+  estimatedTime: integer("estimated_time"), // in minutes
+  orderIndex: integer("order_index").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// AI-Generated Lessons table
+export const aiLessons = pgTable("ai_lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").notNull(),
+  title: text("title").notNull(),
+  orderIndex: integer("order_index").notNull(),
+  concepts: json("concepts").default([]), // Array of concept strings
+  studyProblems: json("study_problems").default([]), // Array of problem strings
+  reviewHelp: text("review_help"),
+  studyTips: text("study_tips"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const userProgress = pgTable("user_progress", {

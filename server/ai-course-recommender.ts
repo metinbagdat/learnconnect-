@@ -97,7 +97,7 @@ export class AICourseRecommender {
       const recommendedCourses = await db
         .select({ courseId: schema.userCourses.courseId })
         .from(schema.userCourses)
-        .where(sql`user_id IN (${sql.raw(similarUserIds.join(",")})} ) AND course_id NOT IN (${sql.raw(enrolledCourseIds.join(","))})`)
+        .where(sql`user_id IN (${sql.raw(similarUserIds.join(","))}) AND course_id NOT IN (${sql.raw(enrolledCourseIds.join(","))})`)
         .limit(100);
 
       // Score by frequency

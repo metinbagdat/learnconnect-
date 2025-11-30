@@ -1,0 +1,65 @@
+Step 4: Implementation Plan
+
+We'll break the implementation into two parts:
+
+Part A: Course Recommendation System
+
+text
+ 1. Add UserInterests and CourseTags tables.
+ 2. Create a function to compute the content-based similarity between a user and a course.
+ 3. Create an API endpoint for course recommendations for a user.
+Part B: AI-generated Curriculum
+
+text
+ 1. Create an admin page (or integrate into existing admin) to generate curriculum for a course.
+ 2. When the admin provides course description and hits generate, we send a request to the backend.
+ 3. The backend calls the OpenAI API with the prompt and then parses the response.
+ 4. We store the generated curriculum in the database.
+We'll use the OpenAI Node.js library for the AI part.
+
+Let's write the code for each part.
+
+Part A: Course Recommendation System
+
+We'll assume we have the following tables:
+
+text
+ UserInterests: user_id, interest
+ CourseTags: course_id, tag
+We'll create a function that, given a user_id, returns a list of recommended courses.
+
+Steps:
+
+text
+ 1. Get the user's interests.
+ 2. Get all courses (or a subset, e.g., not already enrolled) and their tags.
+ 3. For each course, compute the Jaccard similarity between the user's interests and the course's tags.
+ 4. Sort by similarity and return the top N.
+Code:
+
+text
+  async function getContentBasedRecommendations(userId, limit = 10) {
+    // Get user interests
+    const userInterests = await UserInterests.find({ user_id: userId }).pluck('interest');
+    
+    // Get all courses (with their tags) that the user is not enrolled in
+    const courses = await CourseTags.aggregate([
+      { $match: { course_id: { $nin: enrolledCourseIds } } },
+      { $group: { _id: "$course_id", tags: { $push: "$tag" } } }
+    ]);
+
+    // Compute Jaccard similarity for each course
+    const recommendations = courses.map(course => {
+      const courseTags = course.tags;
+      const intersection = userInterests.filter(interest => courseTags.includes(interest)).length;
+      const union = new Set([...userInterests, ...courseTags]).size;
+      const similarity = union === 0 ? 0 : intersection / union;
+      return { course_id: course._id, similarity };
+    });
+
+    // Sort by similarity (descending) and return top `limit`
+    return recommendations.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
+  }
+We can also combine this with collaborative filtering if we have enrollment data.
+
+For collaborative filtering, we can use matrix factorization. However, we'll start with content-based.

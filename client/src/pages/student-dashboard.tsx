@@ -7,6 +7,7 @@ import { AISuggestions } from "@/components/dashboard/ai-suggestions";
 import { StudyTimeline } from "@/components/dashboard/study-timeline";
 import { PerformanceAnalytics } from "@/components/dashboard/performance-analytics";
 import { ToDoList } from "@/components/assignments/todo-list";
+import { CourseRecommendations } from "@/components/recommendations/course-recommendations";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -189,6 +190,11 @@ export function StudentDashboard() {
             <ToDoList courseId={currentCourse.id} showEmpty={true} />
           </div>
         )}
+
+        {/* Course Recommendations - AI-powered suggestions */}
+        <div data-testid="recommendations-section">
+          <CourseRecommendations />
+        </div>
 
         {/* Enrolled Courses Overview */}
         {dashboardData?.enrolledCourses && dashboardData.enrolledCourses.length > 1 && (

@@ -131,6 +131,7 @@ import {
 } from "./advanced-adaptive-service";
 import * as smartPlanning from "./smart-planning";
 import { aiCurriculumGenerator } from "./ai-curriculum-generator";
+import { aiCourseRecommender } from "./ai-course-recommender";
 import { enrollmentPipeline } from "./enrollment-pipeline";
 import * as notificationService from "./notification-service";
 import * as aiSessionGenerator from "./ai-session-generator";

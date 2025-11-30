@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users, BookOpen, TrendingUp, AlertCircle, Zap } from "lucide-react";
 import { CourseManager } from "@/components/admin/course-manager";
+import { CurriculumGenerator } from "@/components/admin/curriculum-generator";
 
 const mockEnrollmentTrend = [
   { month: "Jan", enrollments: 120 },
@@ -146,6 +147,11 @@ export function AdminDashboard() {
           {/* COURSES */}
           <TabsContent value="courses" className="space-y-4">
             <CourseManager />
+          </TabsContent>
+
+          {/* CURRICULUM GENERATOR */}
+          <TabsContent value="curriculum" className="space-y-4">
+            <CurriculumGenerator />
           </TabsContent>
 
           {/* STUDENTS */}

@@ -14,10 +14,10 @@ if (!process.env.DATABASE_URL) {
 // Configure connection pool to prevent "too many connections" errors
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 2, // Reduced to 2 connections to allow deployment diff checks
-  idleTimeoutMillis: 3000, // Close idle connections after 3 seconds
-  connectionTimeoutMillis: 3000, // Connection timeout 3 seconds
-  statement_timeout: 30000, // Query timeout 30 seconds
+  max: 1, // Single connection to prevent deployment diff check failures
+  idleTimeoutMillis: 2000, // Close idle connections after 2 seconds
+  connectionTimeoutMillis: 2000, // Connection timeout 2 seconds
+  statement_timeout: 20000, // Query timeout 20 seconds
 });
 
 // Ensure pool closes gracefully

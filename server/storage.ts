@@ -210,7 +210,11 @@ class DatabaseStorage implements IStorage {
   }
 
   async getUserAssignments(userId: number) {
-    return db.select().from(assignments).innerJoin(userCourses, eq(assignments.courseId, userCourses.courseId)).where(eq(userCourses.userId, userId));
+    try {
+      return db.select().from(assignments).innerJoin(userCourses, eq(assignments.courseId, userCourses.courseId)).where(eq(userCourses.userId, userId));
+    } catch (error) {
+      return [];
+    }
   }
 
   async getUserLevel(userId: number) {
@@ -233,12 +237,20 @@ class DatabaseStorage implements IStorage {
   }
 
   async getStudySessions(userId: number) {
-    return db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
+    try {
+      return db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
+    } catch (error) {
+      return [];
+    }
   }
 
   async getUserAchievements(userId: number) {
-    const result = await db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
-    return result || [];
+    try {
+      const result = await db.select().from(userAchievements).where(eq(userAchievements.userId, userId));
+      return result || [];
+    } catch (error) {
+      return [];
+    }
   }
 
   // Enrollment method

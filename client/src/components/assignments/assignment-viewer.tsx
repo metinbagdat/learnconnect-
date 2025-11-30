@@ -60,11 +60,11 @@ export function AssignmentViewer({ courseId, studentId, showAsTodo = false }: As
                   </CardDescription>
                 </div>
                 <Badge
-                  variant={isOverdue ? "destructive" : "secondary"}
+                  variant={isOverdue ? "destructive" : assignment.status === "completed" ? "default" : "secondary"}
                   data-testid={`status-${assignment.id}`}
                   className="ml-2"
                 >
-                  {isOverdue ? "Overdue" : "Active"}
+                  {isOverdue ? "Overdue" : assignment.status === "completed" ? "Completed" : "Active"}
                 </Badge>
               </div>
             </CardHeader>
@@ -115,7 +115,7 @@ export function AssignmentViewer({ courseId, studentId, showAsTodo = false }: As
               </div>
 
               {/* Progress Bar (if in progress) */}
-              {!assignment.isCompleted && (
+              {assignment.status !== "completed" && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Progress</p>
                   <Progress value={0} className="h-2" data-testid={`progress-${assignment.id}`} />

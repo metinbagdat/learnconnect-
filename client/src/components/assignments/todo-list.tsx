@@ -20,8 +20,8 @@ export function ToDoList({ courseId, showEmpty = true }: ToDoListProps) {
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
 
   // Separate pending and completed
-  const pendingAssignments = assignments.filter((a) => !completedIds.has(a.id) && !a.isCompleted);
-  const completedAssignments = assignments.filter((a) => completedIds.has(a.id) || a.isCompleted);
+  const pendingAssignments = assignments.filter((a) => !completedIds.has(a.id) && a.status !== "completed");
+  const completedAssignments = assignments.filter((a) => completedIds.has(a.id) || a.status === "completed");
 
   const toggleComplete = (id: number) => {
     const newCompleted = new Set(completedIds);

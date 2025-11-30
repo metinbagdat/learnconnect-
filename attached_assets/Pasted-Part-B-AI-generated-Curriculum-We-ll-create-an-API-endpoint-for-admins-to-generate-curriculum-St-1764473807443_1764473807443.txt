@@ -1,0 +1,113 @@
+Part B: AI-generated Curriculum
+
+We'll create an API endpoint for admins to generate curriculum.
+
+Steps:
+
+text
+ 1. Admin sends a POST request with course_id and (optionally) a course description (if not provided, we use the existing course description).
+ 2. We call the OpenAI API with the prompt.
+ 3. We parse the response and save the curriculum in the database.
+Code:
+
+text
+  const openai = new OpenAI(process.env.OPENAI_API_KEY);
+
+  app.post('/admin/generate-curriculum', async (req, res) => {
+    const { course_id, course_description } = req.body;
+
+    // If course_description is not provided, get the course from the database
+    let course;
+    if (!course_description) {
+      course = await Courses.findOne({ course_id });
+      if (!course) {
+        return res.status(404).json({ error: 'Course not found' });
+      }
+    }
+
+    const prompt = `You are an expert curriculum designer. Create a curriculum for a course titled '${course.title}' with description: '${course_description || course.description}'. 
+    The curriculum should be divided into modules and lessons. For each lesson, include the following:
+      - Title
+      - Key concepts
+      - Study problems
+      - Review help
+      - Study tips
+
+    Also, provide an estimated time for each module and the entire course.
+
+    Output the curriculum in the following JSON format:
+
+    {
+      "course_title": "...",
+      "course_description": "...",
+      "estimated_total_time": "...",
+      "modules": [
+        {
+          "module_title": "...",
+          "module_objective": "...",
+          "estimated_time": "...",
+          "lessons": [
+            {
+              "lesson_title": "...",
+              "concepts": ["...", "..."],
+              "study_problems": ["...", "..."],
+              "review_help": "...",
+              "study_tips": "..."
+            }
+          ]
+        }
+      ]
+    }`;
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      });
+
+      const curriculumJSON = JSON.parse(completion.choices[0].message.content);
+
+      // Now save the curriculum to the database
+      const curriculum = await Curriculums.create({
+        course_id: course_id,
+        generated_by: req.user.id, // assuming we have admin user in request
+        generated_at: new Date(),
+        title: curriculumJSON.course_title,
+        description: curriculumJSON.course_description,
+        total_estimated_time: curriculumJSON.estimated_total_time
+      });
+
+      for (let i = 0; i < curriculumJSON.modules.length; i++) {
+        const moduleData = curriculumJSON.modules[i];
+        const module = await Modules.create({
+          curriculum_id: curriculum.curriculum_id,
+          title: moduleData.module_title,
+          objective: moduleData.module_objective,
+          estimated_time: moduleData.estimated_time,
+          order_index: i
+        });
+
+        for (let j = 0; j < moduleData.lessons.length; j++) {
+          const lessonData = moduleData.lessons[j];
+          await Lessons.create({
+            module_id: module.module_id,
+            title: lessonData.lesson_title,
+            order_index: j,
+            concepts: lessonData.concepts, // assuming JSON column
+            study_problems: lessonData.study_problems,
+            review_help: lessonData.review_help,
+            study_tips: lessonData.study_tips
+          });
+        }
+      }
+
+      res.json({ success: true, curriculum_id: curriculum.curriculum_id });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to generate curriculum' });
+    }
+  });
+Note: We are using GPT-4 for better quality. Also, we are storing the entire curriculum in the database.
+
+We can also provide an option to edit the generated curriculum before saving.

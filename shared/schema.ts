@@ -499,6 +499,7 @@ export const userSubscriptions = pgTable("user_subscriptions", { id: serial("id"
 export const userUsageTracking = pgTable("user_usage_tracking", { id: serial("id").primaryKey(), userId: integer("user_id").notNull() });
 export const userGoals = pgTable("user_goals", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), goalText: text("goal_text").notNull() });
 export const userInterests = pgTable("user_interests", { id: serial("id").primaryKey(), userId: integer("user_id").notNull(), interest: text("interest").notNull() });
+export const courseTags = pgTable("course_tags", { id: serial("id").primaryKey(), courseId: integer("course_id").notNull(), tag: text("tag").notNull() });
 export const studyPlans = pgTable("study_plans", { 
   id: serial("id").primaryKey(), 
   userId: integer("user_id").notNull(),

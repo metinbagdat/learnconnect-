@@ -186,6 +186,76 @@ Return ONLY valid JSON with this exact structure:
       throw error;
     }
   }
+
+  async storeCurriculumInDB(courseId: number, curriculum: CurriculumStructure) {
+    try {
+      // Calculate total estimated time
+      const totalMinutes = Math.round(curriculum.totalHours * 60);
+
+      // Insert curriculum record
+      const insertedCurriculum = await db
+        .insert(schema.curriculums)
+        .values({
+          courseId,
+          title: `AI-Generated Curriculum for Course ${courseId}`,
+          description: `Auto-generated curriculum with ${curriculum.modules.length} modules`,
+          totalEstimatedTime: totalMinutes,
+          structureJson: curriculum as any,
+          aiGenerated: true,
+        })
+        .returning();
+
+      const curriculumId = insertedCurriculum[0]?.id;
+      if (!curriculumId) throw new Error("Failed to insert curriculum");
+
+      // Insert modules and lessons
+      for (let moduleIdx = 0; moduleIdx < curriculum.modules.length; moduleIdx++) {
+        const module = curriculum.modules[moduleIdx];
+        
+        const insertedModule = await db
+          .insert(schema.aiModules)
+          .values({
+            curriculumId,
+            title: module.title,
+            objective: module.objectives.join("; "),
+            estimatedTime: Math.round(module.estimatedHours * 60),
+            orderIndex: moduleIdx,
+          })
+          .returning();
+
+        const moduleId = insertedModule[0]?.id;
+        if (!moduleId) continue;
+
+        // Insert lessons for this module
+        for (let lessonIdx = 0; lessonIdx < module.lessons.length; lessonIdx++) {
+          const lesson = module.lessons[lessonIdx];
+          
+          await db
+            .insert(schema.aiLessons)
+            .values({
+              moduleId,
+              title: lesson.title,
+              orderIndex: lessonIdx,
+              concepts: [lesson.contentType],
+              studyProblems: [],
+              reviewHelp: lesson.content,
+              studyTips: `Complete this ${lesson.duration}-minute ${lesson.contentType}`,
+            })
+            .returning();
+        }
+      }
+
+      return {
+        success: true,
+        curriculumId,
+        modulesCount: curriculum.modules.length,
+        totalTime: totalMinutes,
+      };
+    } catch (error) {
+      console.error("Error storing curriculum in DB:", error);
+      throw error;
+    }
+  }
 }
 
 export const aiCurriculumGenerator = new AICurriculumGenerator();

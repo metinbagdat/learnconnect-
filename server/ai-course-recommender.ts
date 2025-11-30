@@ -12,7 +12,7 @@ interface CourseScore {
 
 export class AICourseRecommender {
   /**
-   * Content-based filtering using course tags and user interests
+   * Content-based filtering using Jaccard similarity: |I ∩ T| / |I ∪ T|
    */
   async recommendCoursesByInterests(userId: number, limit: number = 5): Promise<CourseScore[]> {
     try {
@@ -20,45 +20,42 @@ export class AICourseRecommender {
 
       // Get user interests
       const userInterests = await db.select().from(schema.userInterests).where(eq(schema.userInterests.userId, userId));
-      const interestList = userInterests.map((u: any) => u.interest.toLowerCase());
+      const interestSet = new Set(userInterests.map((u: any) => u.interest.toLowerCase()));
 
-      if (interestList.length === 0) {
+      if (interestSet.size === 0) {
         return this.getTopCourses(limit);
       }
 
-      // Get all courses
-      const courses = await db.select().from(schema.courses).limit(100);
-
-      // Score each course based on interest match
-      const scores: CourseScore[] = courses.map((course: any) => {
-        const courseKeywords = [
-          course.title.toLowerCase(),
-          course.description.toLowerCase(),
-          course.category.toLowerCase(),
-          course.level?.toLowerCase() || "",
-        ].join(" ");
-
-        // Calculate match score
-        let score = 0;
-        const matchedTags: string[] = [];
-
-        interestList.forEach((interest) => {
-          if (courseKeywords.includes(interest)) {
-            score += 10;
-            matchedTags.push(interest);
-          }
-        });
-
-        // Bonus for popular/high-rated courses
-        if (course.rating && course.rating > 4) {
-          score += 5;
+      // Get all courses with their tags
+      const allCourses = await db.select().from(schema.courses).limit(100);
+      const courseTags = await db.select().from(schema.courseTags);
+      
+      // Group tags by courseId
+      const courseTagMap = new Map<number, Set<string>>();
+      courseTags.forEach((ct: any) => {
+        if (!courseTagMap.has(ct.courseId)) {
+          courseTagMap.set(ct.courseId, new Set());
         }
+        courseTagMap.get(ct.courseId)!.add(ct.tag.toLowerCase());
+      });
 
+      // Calculate Jaccard similarity for each course
+      const scores: CourseScore[] = allCourses.map((course: any) => {
+        const courseTags = courseTagMap.get(course.id) || new Set();
+        
+        // Jaccard Similarity: |I ∩ T| / |I ∪ T|
+        const intersection = new Set([...interestSet].filter(i => courseTags.has(i)));
+        const union = new Set([...interestSet, ...courseTags]);
+        const jaccardScore = union.size === 0 ? 0 : (intersection.size / union.size);
+
+        // Normalize to 0-100 scale
+        const score = Math.round(jaccardScore * 100);
+        
         return {
           courseId: course.id,
           score,
-          reason: `Matches your interests: ${matchedTags.join(", ")}`,
-          matchedTags,
+          reason: `${score}% match with ${Array.from(intersection).join(", ") || "similar topics"}`,
+          matchedTags: Array.from(intersection),
         };
       });
 

@@ -3,15 +3,17 @@ import { Assignment } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { Clock, AlertCircle, CheckCircle, ListTodo } from "lucide-react";
 import { format } from "date-fns";
+import { ToDoList } from "./todo-list";
 
 interface AssignmentViewerProps {
   courseId: number;
   studentId?: number;
+  showAsTodo?: boolean;
 }
 
-export function AssignmentViewer({ courseId, studentId }: AssignmentViewerProps) {
+export function AssignmentViewer({ courseId, studentId, showAsTodo = false }: AssignmentViewerProps) {
   const { data: assignments = [], isLoading } = useQuery<Assignment[]>({
     queryKey: [`/api/courses/${courseId}/assignments`],
   });
@@ -20,11 +22,18 @@ export function AssignmentViewer({ courseId, studentId }: AssignmentViewerProps)
     return <div data-testid="loading">Loading assignments...</div>;
   }
 
+  // Use ToDoList view if requested
+  if (showAsTodo) {
+    return <ToDoList courseId={courseId} />;
+  }
+
   if (assignments.length === 0) {
     return (
-      <Card data-testid="no-assignments">
-        <CardContent className="pt-6 text-center text-muted-foreground">
-          No assignments available for this course
+      <Card data-testid="no-assignments" className="border-dashed">
+        <CardContent className="pt-6 text-center">
+          <ListTodo className="w-12 h-12 mx-auto text-muted-foreground mb-3 opacity-50" />
+          <p className="font-semibold">You're all caught up!</p>
+          <p className="text-sm text-muted-foreground">No pending assignments at the moment.</p>
         </CardContent>
       </Card>
     );

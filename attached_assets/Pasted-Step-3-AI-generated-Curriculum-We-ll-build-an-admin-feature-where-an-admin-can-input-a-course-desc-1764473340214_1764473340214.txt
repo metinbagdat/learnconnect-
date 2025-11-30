@@ -1,0 +1,81 @@
+Step 3: AI-generated Curriculum
+
+We'll build an admin feature where an admin can input a course description and then the AI will generate a curriculum.
+
+The curriculum will be structured as:
+
+text
+ Course
+    -> Modules (each module has a title, objective, estimated time)
+        -> Lessons (each lesson has a title, content, concepts, study problems, review help, study tips)
+We'll use the OpenAI GPT model to generate the curriculum. We can structure the prompt to output in JSON format.
+
+Example prompt:
+
+text
+    "You are an expert curriculum designer. Create a curriculum for a course titled '{course_title}' with description: '{course_description}'. 
+    The curriculum should be divided into modules and lessons. For each lesson, include the following:
+      - Title
+      - Key concepts
+      - Study problems
+      - Review help
+      - Study tips
+
+    Also, provide an estimated time for each module and the entire course.
+
+    Output the curriculum in the following JSON format:
+
+    {
+      \"course_title\": \"...\",
+      \"course_description\": \"...\",
+      \"estimated_total_time\": \"...\",
+      \"modules\": [
+        {
+          \"module_title\": \"...\",
+          \"module_objective\": \"...\",
+          \"estimated_time\": \"...\",
+          \"lessons\": [
+            {
+              \"lesson_title\": \"...\",
+              \"concepts\": [\"...\", \"...\"],
+              \"study_problems\": [\"...\", \"...\"],
+              \"review_help\": \"...\",
+              \"study_tips\": \"...\"
+            }
+          ]
+        }
+      ]
+    }"
+We'll then parse the JSON and store it in the database.
+
+We need to design tables for:
+
+text
+ Curriculums: curriculum_id, course_id, generated_by (admin user_id), generated_at, title, description, total_estimated_time
+ Modules: module_id, curriculum_id, title, objective, estimated_time, order_index
+ Lessons: lesson_id, module_id, title, order_index
+ LessonContents: lesson_content_id, lesson_id, content_type ('concept', 'study_problem', 'review_help', 'study_tip'), content
+Alternatively, we can store the concepts, study_problems, etc. as arrays in the Lessons table if we are using a database that supports JSON (like PostgreSQL).
+
+Let's assume we use JSON in the Lessons table:
+
+text
+ Lessons: lesson_id, module_id, title, order_index, concepts JSON, study_problems JSON, review_help TEXT, study_tips TEXT
+Step 4: Implementation Plan
+
+We'll break the implementation into two parts:
+
+Part A: Course Recommendation System
+
+text
+ 1. Add UserInterests and CourseTags tables.
+ 2. Create a function to compute the content-based similarity between a user and a course.
+ 3. Create an API endpoint for course recommendations for a user.
+Part B: AI-generated Curriculum
+
+text
+ 1. Create an admin page (or integrate into existing admin) to generate curriculum for a course.
+ 2. When the admin provides course description and hits generate, we send a request to the backend.
+ 3. The backend calls the OpenAI API with the prompt and then parses the response.
+ 4. We store the generated curriculum in the database.
+We'll use the OpenAI Node.js library for the AI part.

@@ -9912,5 +9912,114 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     }
   });
 
+  // ==================== AI RECOMMENDATION & CURRICULUM ENDPOINTS ====================
+
+  // Get course recommendations for user
+  app.get("/api/recommendations/courses", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit as string) || 5;
+      
+      const recommendations = await aiCourseRecommender.recommendCoursesByInterests(userId, limit);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Recommendations error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch recommendations",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get user interests
+  app.get("/api/user/interests", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const interests = await db.select().from(schema.userInterests).where(eq(schema.userInterests.userId, userId));
+      res.json(interests);
+    } catch (error) {
+      console.error("User interests error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch user interests",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Add user interest
+  app.post("/api/user/interests", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { interest } = req.body;
+      
+      if (!interest || typeof interest !== 'string') {
+        return res.status(400).json({ message: "Invalid interest" });
+      }
+
+      // Check if already exists
+      const existing = await db.select().from(schema.userInterests).where(
+        eq(schema.userInterests.userId, userId)
+      );
+      
+      if (existing.some((u: any) => u.interest.toLowerCase() === interest.toLowerCase())) {
+        return res.status(409).json({ message: "Interest already exists" });
+      }
+
+      // Insert new interest
+      const inserted = await db.insert(schema.userInterests).values({
+        userId,
+        interest: interest.trim()
+      }).returning();
+
+      res.json({ success: true, data: inserted[0] });
+    } catch (error) {
+      console.error("Add interest error:", error);
+      res.status(500).json({ 
+        message: "Failed to add interest",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Generate curriculum using AI
+  app.post("/api/admin/curriculum/generate", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { courseId, courseTitle, courseDescription } = req.body;
+      
+      if (!courseId || !courseTitle) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Generate curriculum using AI
+      const curriculum = await aiCurriculumGenerator.generateCurriculum(
+        courseTitle,
+        courseDescription || ""
+      );
+
+      if (!curriculum) {
+        return res.status(500).json({ message: "Failed to generate curriculum" });
+      }
+
+      // Store in database
+      const stored = await aiCurriculumGenerator.storeCurriculumInDB(courseId, curriculum);
+
+      res.json({ 
+        success: true, 
+        data: stored,
+        modulesCount: curriculum.modules?.length || 0
+      });
+    } catch (error) {
+      console.error("Curriculum generation error:", error);
+      res.status(500).json({ 
+        message: "Failed to generate curriculum",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   return httpServer;
 }

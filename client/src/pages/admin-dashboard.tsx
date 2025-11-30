@@ -100,9 +100,10 @@ export function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="analytics" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
+            <TabsTrigger value="curriculum">AI Curriculum</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
           </TabsList>
 

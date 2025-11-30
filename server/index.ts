@@ -76,43 +76,10 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     });
 
-    // Run seeding operations asynchronously AFTER server starts
-    // This prevents blocking the port opening and deployment timeout
-    // Skip seeding in production unless explicitly enabled
-    const shouldSeed = process.env.NODE_ENV !== 'production' || process.env.ENABLE_SEEDING === 'true';
-    
-    if (shouldSeed) {
-      (async () => {
-        // Add a small delay to ensure port is fully opened
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Seed TYT/AYT curriculum first (most important for the platform)
-        try {
-          await seedTytAytCurriculum();
-          log("TYT/AYT curriculum seeded successfully");
-        } catch (error) {
-          log(`Failed to seed TYT/AYT curriculum: ${error}`);
-        }
-        
-        // Seed modules and lessons as fallback
-        try {
-          await seedModulesAndLessons();
-          log("Modules and lessons seeded successfully");
-        } catch (error) {
-          log(`Failed to seed modules and lessons: ${error}`);
-        }
-        
-        // Seed challenges
-        try {
-          await seedChallenges();
-          log("Challenge system initialized successfully");
-        } catch (error) {
-          log(`Failed to seed challenges: ${error}`);
-        }
-      })();
-    } else {
-      log("Seeding disabled in production (set ENABLE_SEEDING=true to override)");
-    }
+    // Database seeding is now disabled on startup to prevent deployment timeouts
+    // Autoscale deployments require immediate port opening for health checks
+    // Seed data persists in the database - seeding only needed on first deployment
+    log("Database seeding disabled on startup (already persisted from previous deployments)");
   } catch (error) {
     log(`FATAL ERROR: ${error}`);
     process.exit(1);

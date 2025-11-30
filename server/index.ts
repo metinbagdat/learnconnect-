@@ -1,11 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedChallenges } from "./seed-challenges";
-import { seedAchievements } from "./seed-achievements";
-import { seedSkillChallenges } from "./seed-skill-challenges";
-import { seedModulesAndLessons } from "./seed-modules-and-lessons";
-import { seedTytAytCurriculum } from "./seed-tyt-ayt-curriculum";
 import sitemapRoutes from "./routes-sitemap";
 
 const app = express();

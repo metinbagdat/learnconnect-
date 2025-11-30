@@ -9981,7 +9981,7 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
     }
   });
 
-  // Generate curriculum using AI
+  // Generate curriculum using AI (preview only - not saved yet)
   app.post("/api/admin/curriculum/generate", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       if (req.user.role !== "admin") {
@@ -9994,14 +9994,48 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Generate curriculum using AI
+      // Generate curriculum using AI (for preview)
       const curriculum = await aiCurriculumGenerator.generateCurriculum(
-        courseTitle,
-        courseDescription || ""
+        courseId,
+        "intermediate"
       );
 
       if (!curriculum) {
         return res.status(500).json({ message: "Failed to generate curriculum" });
+      }
+
+      // Return for preview (not stored yet)
+      res.json({ 
+        success: true, 
+        preview: {
+          courseId,
+          courseTitle,
+          courseDescription: courseDescription || "",
+          curriculum,
+          modulesCount: curriculum.modules?.length || 0,
+          totalHours: curriculum.totalHours || 0
+        }
+      });
+    } catch (error) {
+      console.error("Curriculum generation error:", error);
+      res.status(500).json({ 
+        message: "Failed to generate curriculum",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Publish/save curriculum after admin review
+  app.post("/api/admin/curriculum/publish", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { courseId, curriculum } = req.body;
+      
+      if (!courseId || !curriculum) {
+        return res.status(400).json({ message: "Missing required fields" });
       }
 
       // Store in database
@@ -10010,12 +10044,12 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
       res.json({ 
         success: true, 
         data: stored,
-        modulesCount: curriculum.modules?.length || 0
+        curriculumId: stored.curriculumId
       });
     } catch (error) {
-      console.error("Curriculum generation error:", error);
+      console.error("Curriculum publish error:", error);
       res.status(500).json({ 
-        message: "Failed to generate curriculum",
+        message: "Failed to publish curriculum",
         error: error instanceof Error ? error.message : String(error)
       });
     }

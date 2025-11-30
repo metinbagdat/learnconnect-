@@ -1,9 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { db } from "./db";
 import * as schema from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-const client = new Anthropic();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 interface LearningObjective {
   title: string;
@@ -77,16 +79,16 @@ export class AICurriculumGenerator {
     courseTitle: string
   ): Promise<Module[]> {
     try {
-      const prompt = `You are an expert curriculum designer. Break down these learning objectives into a structured curriculum.
+      const prompt = `You are an expert curriculum designer. Create a comprehensive curriculum for a course.
 
 Course: ${courseTitle}
 User Level: ${userLevel}
 Objectives: ${objectives}
 
 Create a detailed curriculum with:
-1. 3-5 modules, each with clear learning objectives
-2. Each module contains 2-4 lessons
-3. Estimated hours per module (30-120 min per lesson)
+1. 4-5 modules, each with clear learning objectives
+2. Each module contains 3-4 lessons
+3. Estimated hours per module (0.5-2 hours)
 4. Difficulty progression (beginner → intermediate → advanced)
 
 Return ONLY valid JSON with this exact structure:
@@ -95,33 +97,31 @@ Return ONLY valid JSON with this exact structure:
     {
       "title": "Module Title",
       "objectives": ["objective 1", "objective 2"],
-      "difficulty": "beginner|intermediate|advanced",
-      "estimatedHours": number,
+      "difficulty": "beginner",
+      "estimatedHours": 2,
       "lessons": [
         {
           "title": "Lesson Title",
           "content": "Brief description",
-          "duration": 60,
-          "contentType": "video|reading|exercise|quiz"
+          "duration": 45,
+          "contentType": "video"
         }
       ]
     }
   ]
 }`;
 
-      const message = await client.messages.create({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 2048,
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4",
         messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 4096,
       });
 
-      const content = message.content[0];
-      if (content.type !== "text") {
-        throw new Error("Unexpected response type");
-      }
+      const responseText = completion.choices[0]?.message?.content || "";
 
       // Extract JSON from response
-      const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error("Could not parse AI response");
       }

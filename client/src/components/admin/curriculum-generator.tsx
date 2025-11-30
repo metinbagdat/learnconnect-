@@ -11,12 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, Zap, BookOpen, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CurriculumEditor } from "./curriculum-editor";
 
 export function CurriculumGenerator() {
   const { toast } = useToast();
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const [courseDescription, setCourseDescription] = useState("");
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [previewData, setPreviewData] = useState<any>(null);
 
   // Fetch courses
   const { data: courses = [] } = useQuery<Course[]>({
@@ -46,12 +48,10 @@ export function CurriculumGenerator() {
     onSuccess: (data) => {
       toast({
         title: "✓ Curriculum Generated!",
-        description: `Generated ${data.modulesCount || 0} modules with lessons and study materials.`,
+        description: `Preview ready. Review and publish to save.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
+      setPreviewData(data.preview);
       setGenerationProgress(0);
-      setSelectedCourseId("");
-      setCourseDescription("");
     },
     onError: () => {
       toast({
@@ -78,6 +78,7 @@ export function CurriculumGenerator() {
   const selectedCourse = courses.find((c) => c.id === parseInt(selectedCourseId));
 
   return (
+    <>
     <Card data-testid="curriculum-generator">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -194,11 +195,24 @@ export function CurriculumGenerator() {
           <div className="p-4 bg-green-50 dark:bg-green-950 rounded border border-green-200 dark:border-green-800" data-testid="success-message">
             <p className="text-sm font-semibold text-green-900 dark:text-green-100 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
-              Curriculum generated successfully!
+              Curriculum preview ready! Review and publish to save.
             </p>
           </div>
         )}
       </CardContent>
     </Card>
+
+    {/* Editor Modal */}
+    {previewData && (
+      <CurriculumEditor
+        preview={previewData}
+        onClose={() => {
+          setPreviewData(null);
+          setSelectedCourseId("");
+          setCourseDescription("");
+        }}
+      />
+    )}
+    </>
   );
 }

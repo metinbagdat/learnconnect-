@@ -33,7 +33,7 @@ export default function Courses() {
   });
   
   const { data: allCoursesTree = [], isLoading: allCoursesLoading, error: allCoursesError, refetch: refetchAllCourses } = useQuery<any[]>({
-    queryKey: ["/api/courses/tree"],
+    queryKey: ["/api/courses"],
   });
   
   const filterCourseTree = (courses: any[], query: string): any[] => {

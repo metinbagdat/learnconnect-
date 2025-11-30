@@ -236,7 +236,7 @@ class DatabaseStorage implements IStorage {
     return { studyHours: 0, lessonsCompleted: 0, challengesCompleted: 0 };
   }
 
-  async getStudySessions(userId: number) {
+  async getStudySessions(userId: number, filters?: any) {
     try {
       return db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
     } catch (error) {

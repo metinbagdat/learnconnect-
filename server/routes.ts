@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerStripeRoutes } from "./stripe-routes";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { db } from "./db";
 import * as schema from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -178,6 +179,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup Stripe payment routes
   registerStripeRoutes(app);
+
+  // Setup PayPal payment routes
+  app.get("/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/order", async (req, res) => {
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
 
   // Courses API
   app.get("/api/courses", async (req, res) => {

@@ -11,12 +11,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Configure connection pool
+// Configure connection pool - optimized for Replit deployments
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 10, // Allow multiple concurrent connections
-  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-  connectionTimeoutMillis: 5000, // Connection timeout 5 seconds
+  max: 3, // Conservative pool size to avoid exhausting Neon connection limits
+  idleTimeoutMillis: 10000, // Close idle connections after 10 seconds
+  connectionTimeoutMillis: 10000, // Longer timeout for better reliability
   statement_timeout: 30000, // Query timeout 30 seconds
 });
 

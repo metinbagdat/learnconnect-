@@ -11,13 +11,14 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Configure connection pool - minimal for Replit deployment constraints
+// Configure connection pool - ultra-minimal for Replit deployment constraints
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 1, // Single connection - Replit health checks need minimal connections
+  max: 2, // Minimal pool size - 2 connections max to prevent "too many connections" during deployment
   idleTimeoutMillis: 5000, // Close idle connections quickly
-  connectionTimeoutMillis: 10000, // Longer timeout for reliability
-  statement_timeout: 30000, // Query timeout 30 seconds
+  connectionTimeoutMillis: 15000, // Longer timeout for deployment phases
+  statement_timeout: 45000, // Longer query timeout for schema introspection
+  application_name: 'learnconnect-app', // Identify connection for debugging
 });
 
 // Ensure pool closes gracefully

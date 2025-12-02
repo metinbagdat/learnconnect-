@@ -216,14 +216,14 @@ export function CourseCategoryTree() {
                   <div>
                     <Label>Parent Category (Optional)</Label>
                     <Select
-                      value={newCourseParentId?.toString() || ""}
-                      onValueChange={(val) => setNewCourseParentId(val ? parseInt(val) : null)}
+                      value={newCourseParentId?.toString() || "none"}
+                      onValueChange={(val) => setNewCourseParentId(val === "none" ? null : parseInt(val))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Root (No parent)</SelectItem>
+                        <SelectItem value="none">Root (No parent)</SelectItem>
                         {courses.map((course) => (
                           <SelectItem key={course.id} value={course.id.toString()}>
                             {course.titleEn || course.title}

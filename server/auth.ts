@@ -52,24 +52,24 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Create a seeded test user on startup for debugging - USING PLAINTEXT FOR TESTING
-  (async () => {
-    try {
-      const existingUser = await storage.getUserByUsername("testuser");
-      if (!existingUser) {
-        // TEMPORARY: Store plaintext for testing
-        await storage.createUser({
-          username: "testuser",
-          password: "password123",
-          displayName: "Test User",
-          role: "student"
-        });
-        console.log("✓ Seeded test user: testuser / password123 (PLAINTEXT FOR TESTING)");
-      }
-    } catch (err) {
-      console.log("Could not seed test user:", err);
-    }
-  })();
+  // DISABLED: Auto-creation of test users on startup
+  // (async () => {
+  //   try {
+  //     const existingUser = await storage.getUserByUsername("testuser");
+  //     if (!existingUser) {
+  //       // TEMPORARY: Store plaintext for testing
+  //       await storage.createUser({
+  //         username: "testuser",
+  //         password: "password123",
+  //         displayName: "Test User",
+  //         role: "student"
+  //       });
+  //       console.log("✓ Seeded test user: testuser / password123 (PLAINTEXT FOR TESTING)");
+  //     }
+  //   } catch (err) {
+  //     console.log("Could not seed test user:", err);
+  //   }
+  // })();
 
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || (() => {

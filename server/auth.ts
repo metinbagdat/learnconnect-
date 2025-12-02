@@ -52,24 +52,35 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // DISABLED: Auto-creation of test users on startup
-  // (async () => {
-  //   try {
-  //     const existingUser = await storage.getUserByUsername("testuser");
-  //     if (!existingUser) {
-  //       // TEMPORARY: Store plaintext for testing
-  //       await storage.createUser({
-  //         username: "testuser",
-  //         password: "password123",
-  //         displayName: "Test User",
-  //         role: "student"
-  //       });
-  //       console.log("✓ Seeded test user: testuser / password123 (PLAINTEXT FOR TESTING)");
-  //     }
-  //   } catch (err) {
-  //     console.log("Could not seed test user:", err);
-  //   }
-  // })();
+  // AUTO-CREATION: Re-enabled to populate production database with courses
+  (async () => {
+    try {
+      const existingUser = await storage.getUserByUsername("testuser");
+      if (!existingUser) {
+        // TEMPORARY: Store plaintext for testing
+        await storage.createUser({
+          username: "testuser",
+          password: "password123",
+          displayName: "Test User",
+          role: "student"
+        });
+        console.log("✓ Seeded test user: testuser / password123 (PLAINTEXT FOR TESTING)");
+      }
+      // Also ensure admin user exists
+      const adminUser = await storage.getUserByUsername("admin");
+      if (!adminUser) {
+        await storage.createUser({
+          username: "admin",
+          password: "password123",
+          displayName: "Admin User",
+          role: "admin"
+        });
+        console.log("✓ Seeded admin user: admin / password123");
+      }
+    } catch (err) {
+      console.log("Could not seed test user:", err);
+    }
+  })();
 
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || (() => {

@@ -44,6 +44,10 @@ integrations = ["javascript_openai:1.0.0", "javascript_anthropic:1.0.0", "javasc
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 40093
+externalPort = 3000
+
 [userenv]
 
 [userenv.production]

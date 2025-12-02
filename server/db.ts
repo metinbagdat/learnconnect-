@@ -11,12 +11,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Configure connection pool - optimized for Replit deployments
+// Configure connection pool - minimal for Replit deployment constraints
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 3, // Conservative pool size to avoid exhausting Neon connection limits
-  idleTimeoutMillis: 10000, // Close idle connections after 10 seconds
-  connectionTimeoutMillis: 10000, // Longer timeout for better reliability
+  max: 1, // Single connection - Replit health checks need minimal connections
+  idleTimeoutMillis: 5000, // Close idle connections quickly
+  connectionTimeoutMillis: 10000, // Longer timeout for reliability
   statement_timeout: 30000, // Query timeout 30 seconds
 });
 

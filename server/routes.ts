@@ -151,15 +151,20 @@ import {
   users
 } from "@shared/schema";
 
-// Initialize the OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize clients only if API keys are provided
+const openaiKey = process.env.OPENAI_API_KEY?.trim();
+const openai = openaiKey && openaiKey.length > 0
+  ? new OpenAI({
+      apiKey: openaiKey,
+    })
+  : null;
 
-// Initialize the Anthropic client
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const anthropicKey = process.env.ANTHROPIC_API_KEY?.trim();
+const anthropic = anthropicKey && anthropicKey.length > 0
+  ? new Anthropic({
+      apiKey: anthropicKey,
+    })
+  : null;
 
 // Helper function to build hierarchical course tree
 function buildCourseTree(courses: any[], parentId: number | null = null): any[] {

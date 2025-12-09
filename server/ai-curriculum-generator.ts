@@ -3,9 +3,13 @@ import { db } from "./db";
 import * as schema from "@shared/schema";
 import { eq } from "drizzle-orm";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client only if API key is provided
+const openaiKey = process.env.OPENAI_API_KEY?.trim();
+const openai = openaiKey && openaiKey.length > 0
+  ? new OpenAI({
+      apiKey: openaiKey,
+    })
+  : null;
 
 interface LearningObjective {
   title: string;
@@ -110,6 +114,10 @@ Return ONLY valid JSON with this exact structure:
     }
   ]
 }`;
+
+      if (!openai) {
+        throw new Error("OPENAI_API_KEY is not configured. AI features require an API key.");
+      }
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4",

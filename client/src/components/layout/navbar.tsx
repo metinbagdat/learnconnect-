@@ -171,7 +171,7 @@ export function Navbar() {
                   </Button>
                   <Button
                     size="sm"
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500"
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500"
                     onClick={() => navigate("/auth")}
                   >
                     {isTr ? "Başla" : "Start"}

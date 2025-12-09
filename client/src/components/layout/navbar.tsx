@@ -1,16 +1,53 @@
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/consolidated-language-context";
 import { useAuth } from "@/hooks/use-auth";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { language } = useLanguage();
   const { user } = useAuth();
   const isTr = language === "tr";
+
+  // Close menu on route change
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
+
+  // Close menu when viewport is desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Prevent background scroll and allow Esc to close
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isOpen]);
 
   const navItems = [
     { label: isTr ? "Anasayfa" : "Home", href: "/" },
@@ -79,21 +116,35 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-slate-300 hover:text-white"
+            className="md:hidden text-slate-300 hover:text-white inline-flex items-center justify-center rounded-md p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
             onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav"
+            aria-label={isOpen ? (isTr ? "Menüyü kapat" : "Close menu") : (isTr ? "Menüyü aç" : "Open menu")}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
+        {isOpen && (
+          <button
+            aria-label={isTr ? "Menüyü kapat" : "Close menu"}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden border-t border-slate-800 py-4 space-y-3">
+          <div
+            id="mobile-nav"
+            className="md:hidden border-t border-slate-800 py-4 space-y-3 relative z-50 bg-slate-950/95 backdrop-blur-xl shadow-xl rounded-b-xl"
+          >
             {navItems.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
-                className="block text-slate-300 hover:text-white px-4 py-2"
+                className="block text-slate-300 hover:text-white px-4 py-2 rounded-md transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 {item.label}
@@ -120,7 +171,7 @@ export function Navbar() {
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500"
                     onClick={() => navigate("/auth")}
                   >
                     {isTr ? "Başla" : "Start"}

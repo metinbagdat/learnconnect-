@@ -59,18 +59,33 @@ export interface IStorage {
 
 class DatabaseStorage implements IStorage {
   async getUser(id: number) {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user ${id}:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to get user'}`);
+    }
   }
 
   async getUserByUsername(username: string) {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user by username ${username}:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to get user'}`);
+    }
   }
 
   async createUser(userData: any) {
-    const [created] = await db.insert(users).values(userData).returning();
-    return created;
+    try {
+      const [created] = await db.insert(users).values(userData).returning();
+      return created;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error creating user:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to create user'}`);
+    }
   }
 
   async getCourses() {

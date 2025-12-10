@@ -44,6 +44,10 @@ export interface IStorage {
   getUser(id: number): Promise<any>;
   getUserByUsername(username: string): Promise<any>;
   createUser(user: any): Promise<any>;
+  getUserCourses(userId: number): Promise<any[]>;
+  getUserAssignments(userId: number): Promise<any[]>;
+  getUserAchievements(userId: number): Promise<any[]>;
+  getStudySessions(userId: number): Promise<any[]>;
   getCourses(): Promise<any[]>;
   getCourse(id: number): Promise<any>;
   createCourse(course: any): Promise<any>;
@@ -88,8 +92,44 @@ class DatabaseStorage implements IStorage {
     }
   }
 
+  async getUserCourses(userId: number) {
+    try {
+      return await db.select().from(userCourses).where(eq(userCourses.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting courses for user ${userId}:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to get user courses'}`);
+    }
+  }
+
   async getCourses() {
     return db.select().from(courses);
+  }
+
+  async getUserAssignments(userId: number) {
+    try {
+      return await db.select().from(assignments).where(eq(assignments.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting assignments for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserAchievements(userId: number) {
+    try {
+      return await db.select().from(achievements).where(eq(achievements.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting achievements for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getStudySessions(userId: number) {
+    try {
+      return await db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting study sessions for user ${userId}:`, error?.message || error);
+      return [];
+    }
   }
 
   async getCourse(id: number) {
@@ -366,4 +406,41 @@ class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+class InMemoryStorage implements IStorage {
+  private users: any[] = [];
+  private nextId = 1;
+
+  async getUser(id: number) {
+    return this.users.find((u) => u.id === id) || null;
+  }
+
+  async getUserByUsername(username: string) {
+    return this.users.find((u) => u.username === username) || null;
+  }
+
+  async createUser(userData: any) {
+    const user = { ...userData, id: this.nextId++ };
+    this.users.push(user);
+    return user;
+  }
+
+  // Basic no-op implementations to keep the app running without a database
+  async getCourses() { return []; }
+  async getCourse(_id: number) { return null; }
+  async createCourse(courseData: any) { return { ...courseData, id: this.nextId++ }; }
+  async updateCourse(_id: number, updates: any) { return { ...updates, id: _id }; }
+  async createDesignProcess(design: any) { return { ...design, id: this.nextId++ }; }
+  async getDesignProcess(_id: number) { return null; }
+  async updateDesignProcess(_id: number, updates: any) { return { ...updates, id: _id }; }
+  async createSuccessMetrics(metrics: any) { return { ...metrics, id: this.nextId++ }; }
+  async createFeedbackLoop(loop: any) { return { ...loop, id: this.nextId++ }; }
+  async getFeedbackLoops(_designId: number) { return []; }
+  async updateFeedbackLoop(_id: number, updates: any) { return { ...updates, id: _id }; }
+  async getUserCourses(_userId: number) { return []; }
+  async getUserAssignments(_userId: number) { return []; }
+  async getUserAchievements(_userId: number) { return []; }
+  async getStudySessions(_userId: number) { return []; }
+}
+
+const useDatabase = !!process.env.DATABASE_URL;
+export const storage: IStorage = useDatabase ? new DatabaseStorage() : new InMemoryStorage();

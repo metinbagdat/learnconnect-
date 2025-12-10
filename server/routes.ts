@@ -6,7 +6,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
@@ -223,6 +223,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch course tree" });
     }
   });
+
+  // Get courses organized by exam category with full curriculum tree
+  app.get("/api/courses/by-exam-category", async (req, res) => {
+    try {
+      const { examCategory } = req.query; // Optional filter: "TYT", "AYT", "LGS"
+      
+      // Get all exam categories
+      let examCategoriesQuery = db
+        .select()
+        .from(schema.examCategories)
+        .where(eq(schema.examCategories.isActive, true))
+        .orderBy(schema.examCategories.order);
+      
+      const examCategoriesList = await examCategoriesQuery;
+      
+      // Filter by exam category code if provided
+      const filteredCategories = examCategory 
+        ? examCategoriesList.filter(cat => cat.code === examCategory)
+        : examCategoriesList;
+      
+      if (filteredCategories.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get all courses with modules and lessons
+      const categoryIds = filteredCategories.map(cat => cat.id);
+      const allCourses = await db
+        .select()
+        .from(schema.courses)
+        .where(inArray(schema.courses.examCategoryId, categoryIds))
+        .orderBy(schema.courses.order);
+      
+      if (allCourses.length === 0) {
+        return res.json(filteredCategories.map(cat => ({ ...cat, courses: [] })));
+      }
+      
+      // Get modules for all courses
+      const allModules = await db
+        .select()
+        .from(schema.modules)
+        .where(inArray(schema.modules.courseId, allCourses.map(c => c.id)))
+        .orderBy(schema.modules.order);
+      
+      // Get lessons for all modules
+      const moduleIds = allModules.map(m => m.id);
+      const allLessons = moduleIds.length > 0 ? await db
+        .select()
+        .from(schema.lessons)
+        .where(inArray(schema.lessons.moduleId, moduleIds))
+        .orderBy(schema.lessons.order) : [];
+      
+      // Build the tree structure: Exam Category > Course > Unit (Module) > Lesson
+      const result = filteredCategories.map(category => {
+        const categoryCourses = allCourses.filter(c => c.examCategoryId === category.id);
+        
+        const coursesWithCurriculum = categoryCourses.map(course => {
+          const courseModules = allModules.filter(m => m.courseId === course.id);
+          
+          const modulesWithLessons = courseModules.map(module => {
+            const moduleLessons = allLessons.filter(l => l.moduleId === module.id);
+            
+            return {
+              ...module,
+              lessons: moduleLessons.map(lesson => ({
+                id: lesson.id,
+                title: lesson.title,
+                titleEn: lesson.titleEn,
+                titleTr: lesson.titleTr,
+                descriptionEn: lesson.descriptionEn,
+                descriptionTr: lesson.descriptionTr,
+                order: lesson.order,
+                durationMinutes: lesson.durationMinutes,
+                concepts: lesson.concepts,
+                learningOutcomes: lesson.concepts, // Using concepts as learning outcomes
+              }))
+            };
+          });
+          
+          return {
+            ...course,
+            units: modulesWithLessons, // Using "units" to match MEB terminology
+          };
+        });
+        
+        return {
+          ...category,
+          courses: coursesWithCurriculum,
+        };
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching courses by exam category:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch courses", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  // Get exam categories
+  app.get("/api/exam-categories", async (req, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(schema.examCategories)
+        .where(eq(schema.examCategories.isActive, true))
+        .orderBy(schema.examCategories.order);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching exam categories:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch exam categories",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   app.get("/api/courses/:id", async (req, res) => {
     try {
@@ -268,13 +385,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid course ID" });
       }
 
-      const { price, isPremium, level } = req.body;
+      // Allow updating all course fields
+      const updates = req.body;
       
-      const updatedCourse = await storage.updateCourse(courseId, {
-        price: price !== undefined ? price : undefined,
-        isPremium: isPremium !== undefined ? isPremium : undefined,
-        level: level || undefined,
-      });
+      const updatedCourse = await storage.updateCourse(courseId, updates);
 
       if (!updatedCourse) {
         return res.status(404).json({ message: "Course not found" });
@@ -284,6 +398,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating course:", error);
       res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+
+  // Delete course (admin only)
+  app.delete("/api/courses/:id", (app as any).ensureAuthenticated, async (req, res) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized - Admin access required" });
+    }
+
+    try {
+      const courseId = parseInt(req.params.id);
+      if (!Number.isInteger(courseId) || courseId < 1) {
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+
+      // Delete the course from database
+      await db.delete(schema.courses).where(eq(schema.courses.id, courseId));
+
+      res.json({ message: "Course deleted successfully", id: courseId });
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
     }
   });
   

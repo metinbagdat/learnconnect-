@@ -43,6 +43,10 @@ import EssaysPage from "@/pages/essays";
 import TimeTracking from "@/pages/time-tracking";
 import AIDailyPlan from "@/pages/ai-daily-plan";
 import LandingPage from "@/pages/landing-page";
+import LearnConnectPortal from "@/pages/learnconnect-portal";
+import LearnConnectExams from "@/pages/learnconnect-exams";
+import LearnConnectAdmin from "@/pages/learnconnect-admin";
+import LearnConnectAI from "@/pages/learnconnect-ai";
 import MarketingDashboard from "@/pages/marketing-dashboard";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import WaitlistManagement from "@/pages/waitlist-management";
@@ -98,6 +102,10 @@ import StudentEnrollmentDashboard from "@/pages/student-enrollment-dashboard";
 function Router() {
   return (
     <Switch>
+      <Route path="/learnconnect" component={LearnConnectPortal} />
+      <Route path="/learnconnect/exams" component={LearnConnectExams} />
+      <Route path="/learnconnect/admin" component={LearnConnectAdmin} />
+      <Route path="/learnconnect/ai" component={LearnConnectAI} />
       <Route path="/landing" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/study-techniques" component={StudyTechniques} />

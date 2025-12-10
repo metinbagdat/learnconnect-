@@ -7,6 +7,20 @@ import { z } from "zod";
 // CORE TABLES
 // ============================================================================
 
+// Exam Categories (TYT, AYT, LGS)
+export const examCategories = pgTable("exam_categories", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // "TYT", "AYT", "LGS"
+  nameEn: text("name_en").notNull(),
+  nameTr: text("name_tr").notNull(),
+  descriptionEn: text("description_en"),
+  descriptionTr: text("description_tr"),
+  order: integer("order").notNull().default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -32,6 +46,12 @@ export const courses = pgTable("courses", {
   descriptionTr: text("description_tr").notNull().default(""),
   category: text("category").notNull(),
   categoryId: integer("category_id"),
+  // MEB Exam Category Integration
+  examCategoryId: integer("exam_category_id"), // Link to exam_categories (TYT/AYT/LGS)
+  mebCode: text("meb_code"), // Official MEB course code (e.g., "MAT-TYT", "TUR-AYT")
+  mebYear: integer("meb_year"), // Curriculum year (e.g., 2024)
+  officialUnitCount: integer("official_unit_count"), // Number of units from MEB curriculum
+  // Existing fields
   imageUrl: text("image_url"),
   moduleCount: integer("module_count").notNull().default(1),
   durationHours: integer("duration_hours"),
@@ -56,6 +76,11 @@ export const modules = pgTable("modules", {
   titleTr: text("title_tr").notNull().default(""),
   descriptionEn: text("description_en").notNull().default(""),
   descriptionTr: text("description_tr").notNull().default(""),
+  // MEB Unit Integration
+  mebUnitCode: text("meb_unit_code"), // Official unit code from MEB
+  mebUnitNumber: integer("meb_unit_number"), // Unit sequence in MEB curriculum
+  learningOutcomes: json("learning_outcomes"), // MEB kazanımlar (learning outcomes) as JSON array
+  estimatedHours: integer("estimated_hours"), // Estimated hours for this unit
   order: integer("order").notNull(),
 });
 
@@ -605,6 +630,10 @@ export type LearningPathStep = typeof learningPathSteps.$inferSelect;
 export const insertCourseCategorySchema = z.object({ nameEn: z.string(), nameTr: z.string(), descriptionEn: z.string().optional(), descriptionTr: z.string().optional(), order: z.number().optional() });
 export type InsertCourseCategory = z.infer<typeof insertCourseCategorySchema>;
 export type CourseCategory = typeof courseCategories.$inferSelect;
+
+export const insertExamCategorySchema = createInsertSchema(examCategories).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertExamCategory = z.infer<typeof insertExamCategorySchema>;
+export type ExamCategory = typeof examCategories.$inferSelect;
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;

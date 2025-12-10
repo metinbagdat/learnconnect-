@@ -1,15 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Challenge, UserChallenge } from "@shared/schema";
+import { challenges as Challenge, userChallenges as UserChallenge } from "@shared/schema";
 import { SkillChallengePopup } from "@/components/challenges/skill-challenge-popup";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 
 // Define types for challenge status data structure
-interface UserChallengeWithChallenge extends UserChallenge {
-  challenge: Challenge;
-}
+type UserChallengeWithChallenge = typeof UserChallenge & { challenge: typeof Challenge };
 
 interface UserChallengeStatus {
   active: UserChallengeWithChallenge[];
@@ -25,18 +23,18 @@ const SkillChallengeContext = createContext<SkillChallengeContextType | undefine
 
 export function SkillChallengeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
+  const [currentChallenge, setCurrentChallenge] = useState<typeof Challenge | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  
+
   // Track which challenges have been shown to the user in this session
   const [shownChallenges, setShownChallenges] = useState<number[]>([]);
   
   // Fetch available skill challenges
-  const { data: challenges = [] } = useQuery<Challenge[]>({
+  const { data: challenges = [] } = useQuery<typeof Challenge[]>({
     queryKey: ["/api/challenges"],
     enabled: !!user
   });
-  
+
   // Fetch user's active challenges to avoid showing challenges already accepted
   const { data: userChallengesData } = useQuery<UserChallengeStatus>({
     queryKey: ["/api/user/challenges/status"],
@@ -59,8 +57,8 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
   useEffect(() => {
     if (userChallengesData) {
       console.log("User challenges loaded:", 
-        userChallengesData.active.length, "active,",
-        userChallengesData.completed.length, "completed"
+        userChallengesData.active?.length || 0, "active,",
+        userChallengesData.completed?.length || 0, "completed"
       );
     }
   }, [userChallengesData]);
@@ -75,8 +73,8 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
     }
     
     // Get active challenge IDs
-    const activeIds = userChallenges.active.map((uc) => uc.challenge.id);
-    const completedIds = userChallenges.completed.map((uc) => uc.challenge.id);
+    const activeIds = (userChallenges.active || []).map((uc) => uc.challenge?.id || uc.challengeId || 0);
+    const completedIds = (userChallenges.completed || []).map((uc) => uc.challenge?.id || uc.challengeId || 0);
     
     // Find eligible challenges
     const eligibleChallenges = challenges.filter(

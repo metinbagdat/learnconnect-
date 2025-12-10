@@ -48,6 +48,13 @@ export interface IStorage {
   getUserAssignments(userId: number): Promise<any[]>;
   getUserAchievements(userId: number): Promise<any[]>;
   getStudySessions(userId: number): Promise<any[]>;
+  getUserActiveAndCompletedChallenges(userId: number): Promise<any[]>;
+  getUserLevel(userId: number): Promise<any | null>;
+  getChallenges(): Promise<any[]>;
+  getUserStudyPrograms(userId: number): Promise<any[]>;
+  getUserLearningTrails(userId: number): Promise<any[]>;
+  getUserLearningStats(userId: number): Promise<any | null>;
+  getDailyTasks(userId: number): Promise<any[]>;
   getCourses(): Promise<any[]>;
   getCourse(id: number): Promise<any>;
   createCourse(course: any): Promise<any>;
@@ -130,6 +137,51 @@ class DatabaseStorage implements IStorage {
       console.error(`[STORAGE] Error getting study sessions for user ${userId}:`, error?.message || error);
       return [];
     }
+  }
+
+  async getUserActiveAndCompletedChallenges(userId: number) {
+    try {
+      // placeholder: return empty
+      return [];
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting challenges for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserLevel(userId: number) {
+    try {
+      const [level] = await db.select().from(userLevels).where(eq(userLevels.userId, userId));
+      return level || null;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user level ${userId}:`, error?.message || error);
+      return null;
+    }
+  }
+
+  async getChallenges() {
+    try {
+      return []; // placeholder
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting challenges:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserStudyPrograms(_userId: number) {
+    return [];
+  }
+
+  async getUserLearningTrails(_userId: number) {
+    return [];
+  }
+
+  async getUserLearningStats(_userId: number) {
+    return null;
+  }
+
+  async getDailyTasks(_userId: number) {
+    return [];
   }
 
   async getCourse(id: number) {
@@ -440,6 +492,13 @@ class InMemoryStorage implements IStorage {
   async getUserAssignments(_userId: number) { return []; }
   async getUserAchievements(_userId: number) { return []; }
   async getStudySessions(_userId: number) { return []; }
+  async getUserActiveAndCompletedChallenges(_userId: number) { return []; }
+  async getUserLevel(_userId: number) { return null; }
+  async getChallenges() { return []; }
+  async getUserStudyPrograms(_userId: number) { return []; }
+  async getUserLearningTrails(_userId: number) { return []; }
+  async getUserLearningStats(_userId: number) { return null; }
+  async getDailyTasks(_userId: number) { return []; }
 }
 
 const useDatabase = !!process.env.DATABASE_URL;

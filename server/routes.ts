@@ -6,7 +6,7 @@ import { registerStripeRoutes } from "./stripe-routes";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, gt, and } from "drizzle-orm";
 import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
@@ -340,6 +340,221 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // ==================== EXAM SCHEDULES API ====================
+  
+  // Get all exam schedules with filters
+  app.get("/api/exam-schedules", async (req, res) => {
+    try {
+      const { examType, country, upcoming, year } = req.query;
+      
+      let query = db
+        .select()
+        .from(schema.examSchedules)
+        .where(eq(schema.examSchedules.isActive, true))
+        .orderBy(schema.examSchedules.examDate);
+      
+      if (examType) {
+        query = query.where(eq(schema.examSchedules.examType, examType as string));
+      }
+      
+      if (country) {
+        query = query.where(eq(schema.examSchedules.country, country as string));
+      }
+      
+      if (upcoming === "true") {
+        const now = new Date();
+        query = query.where(gt(schema.examSchedules.examDate, now));
+      }
+      
+      const schedules = await query;
+      res.json(schedules);
+    } catch (error) {
+      console.error("Error fetching exam schedules:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch exam schedules",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get countdown data for upcoming exams
+  app.get("/api/exam-schedules/upcoming", async (req, res) => {
+    try {
+      const now = new Date();
+      
+      const upcomingExams = await db
+        .select()
+        .from(schema.examSchedules)
+        .where(
+          and(
+            eq(schema.examSchedules.isActive, true),
+            gt(schema.examSchedules.examDate, now)
+          )
+        )
+        .orderBy(schema.examSchedules.examDate)
+        .limit(20);
+      
+      // Calculate countdown for each exam
+      const examsWithCountdown = upcomingExams.map(exam => {
+        const examDate = new Date(exam.examDate);
+        const diff = examDate.getTime() - now.getTime();
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const totalSeconds = Math.floor(diff / 1000);
+        
+        return {
+          ...exam,
+          countdown: {
+            days,
+            hours,
+            minutes,
+            totalSeconds,
+            isUrgent: days <= 7,
+          }
+        };
+      });
+      
+      res.json(examsWithCountdown);
+    } catch (error) {
+      console.error("Error fetching upcoming exams:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch upcoming exams",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Create user exam reminder
+  app.post("/api/exam-reminders", (app as any).ensureAuthenticated, async (req, res) => {
+    try {
+      const { examScheduleId, reminderDaysBefore } = req.body;
+      const userId = req.user.id;
+      
+      const reminder = await db.insert(schema.userExamReminders).values({
+        userId,
+        examScheduleId,
+        reminderDaysBefore: reminderDaysBefore || 7,
+      }).returning();
+      
+      res.json(reminder[0]);
+    } catch (error) {
+      console.error("Error creating reminder:", error);
+      res.status(500).json({ 
+        message: "Failed to create reminder",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // ==================== EDUCATION SYSTEMS API ====================
+  
+  // Get all education systems
+  app.get("/api/education-systems", async (req, res) => {
+    try {
+      const systems = await db
+        .select()
+        .from(schema.educationSystems)
+        .where(eq(schema.educationSystems.isActive, true))
+        .orderBy(schema.educationSystems.order);
+      res.json(systems);
+    } catch (error) {
+      console.error("Error fetching education systems:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch education systems",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Get education system by country
+  app.get("/api/education-systems/:countryCode", async (req, res) => {
+    try {
+      const { countryCode } = req.params;
+      const [system] = await db
+        .select()
+        .from(schema.educationSystems)
+        .where(eq(schema.educationSystems.countryCode, countryCode.toUpperCase()))
+        .limit(1);
+      
+      if (!system) {
+        return res.status(404).json({ message: "Education system not found" });
+      }
+      res.json(system);
+    } catch (error) {
+      console.error("Error fetching education system:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch education system",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Compare two education systems
+  app.post("/api/education-systems/compare", async (req, res) => {
+    try {
+      const { system1Id, system2Id } = req.body;
+      
+      const [system1Result, system2Result] = await Promise.all([
+        db.select().from(schema.educationSystems).where(eq(schema.educationSystems.id, system1Id)).limit(1),
+        db.select().from(schema.educationSystems).where(eq(schema.educationSystems.id, system2Id)).limit(1),
+      ]);
+      
+      if (!system1Result[0] || !system2Result[0]) {
+        return res.status(404).json({ message: "One or both systems not found" });
+      }
+      
+      const system1 = system1Result[0];
+      const system2 = system2Result[0];
+      
+      const comparison = {
+        systems: [system1, system2],
+        similarities: [],
+        differences: [],
+        recommendations: [],
+      };
+      
+      // Basic comparison logic
+      if (system1.gradingSystem === system2.gradingSystem) {
+        comparison.similarities.push("Same grading system");
+      } else {
+        comparison.differences.push({
+          field: "grading_system",
+          system1: system1.gradingSystem,
+          system2: system2.gradingSystem,
+        });
+      }
+      
+      res.json(comparison);
+    } catch (error) {
+      console.error("Error comparing systems:", error);
+      res.status(500).json({ 
+        message: "Failed to compare systems",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // ==================== INTERNATIONAL EXAM CATEGORIES API ====================
+  
+  // Get all international exam categories
+  app.get("/api/international-exam-categories", async (req, res) => {
+    try {
+      const categories = await db
+        .select()
+        .from(schema.internationalExamCategories)
+        .where(eq(schema.internationalExamCategories.isActive, true))
+        .orderBy(schema.internationalExamCategories.order);
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching international exam categories:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch international exam categories",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   app.get("/api/courses/:id", async (req, res) => {
     try {
@@ -591,9 +806,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a map for fast course lookup
       const courseMap = new Map(allCourses.map(c => [c.id, c]));
       
-      // Get enrolled course IDs
-      const enrolledCourseIds = new Set(userCourses.map(uc => uc.courseId));
-      console.log('[Courses Tree] Enrolled course IDs:', Array.from(enrolledCourseIds));
+      // Get enrolled course IDs, but filter out any that don't exist in the course map
+      // This handles cases where a course was deleted but user enrollment still exists
+      const allEnrolledCourseIds = userCourses.map(uc => uc.courseId);
+      const invalidCourseIds = allEnrolledCourseIds.filter(courseId => !courseMap.has(courseId));
+      const validEnrolledCourseIds = allEnrolledCourseIds.filter(courseId => courseMap.has(courseId));
+      
+      if (invalidCourseIds.length > 0) {
+        console.warn('[Courses Tree] WARNING: Found', invalidCourseIds.length, 'invalid enrolled course IDs that do not exist in database:');
+        console.warn('[Courses Tree] Invalid course IDs:', invalidCourseIds);
+        console.warn('[Courses Tree] These courses may have been deleted. User enrollments:', 
+          userCourses.filter(uc => invalidCourseIds.includes(uc.courseId)).map(uc => ({
+            userCourseId: uc.id,
+            courseId: uc.courseId,
+            enrolledAt: uc.enrolledAt
+          }))
+        );
+      }
+      
+      const enrolledCourseIds = new Set(validEnrolledCourseIds);
+      console.log('[Courses Tree] Valid enrolled course IDs:', Array.from(enrolledCourseIds));
+      console.log('[Courses Tree] Total enrolled:', allEnrolledCourseIds.length, '| Valid:', validEnrolledCourseIds.length, '| Invalid:', invalidCourseIds.length);
+      
+      // If no valid enrolled courses, return empty array
+      if (enrolledCourseIds.size === 0) {
+        console.log('[Courses Tree] No valid enrolled courses, returning empty tree');
+        return res.json([]);
+      }
       
       // Helper function to get all descendants of a course ID
       const getAllDescendants = (courseId: number): number[] => {
@@ -610,8 +849,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const ancestors: number[] = [];
         const course = courseMap.get(courseId);
         if (course && course.parentCourseId) {
-          ancestors.push(course.parentCourseId);
-          ancestors.push(...getAllAncestors(course.parentCourseId));
+          // Only add parent if it exists in the course map
+          if (courseMap.has(course.parentCourseId)) {
+            ancestors.push(course.parentCourseId);
+            ancestors.push(...getAllAncestors(course.parentCourseId));
+          }
         }
         return ancestors;
       };
@@ -624,12 +866,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add all ancestors for enrolled courses (up to root)
       enrolledCourseIds.forEach(id => {
-        getAllAncestors(id).forEach(ancestorId => relevantCourseIds.add(ancestorId));
+        getAllAncestors(id).forEach(ancestorId => {
+          // Only add if ancestor exists in course map
+          if (courseMap.has(ancestorId)) {
+            relevantCourseIds.add(ancestorId);
+          }
+        });
       });
       
       // Add all descendants for enrolled courses
       enrolledCourseIds.forEach(id => {
-        getAllDescendants(id).forEach(descId => relevantCourseIds.add(descId));
+        getAllDescendants(id).forEach(descId => {
+          // Only add if descendant exists in course map
+          if (courseMap.has(descId)) {
+            relevantCourseIds.add(descId);
+          }
+        });
       });
       
       // Build final course array with enrollment info
@@ -650,13 +902,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Courses Tree] Relevant course IDs count:', relevantCourseIds.size);
       console.log('[Courses Tree] Courses with enrollment:', coursesWithEnrollment.length);
       
+      // Additional validation: check for any undefined courses (shouldn't happen but safety check)
+      const undefinedCourses = coursesWithEnrollment.filter(c => !c || !c.id);
+      if (undefinedCourses.length > 0) {
+        console.error('[Courses Tree] ERROR: Found', undefinedCourses.length, 'undefined courses in final array');
+        console.error('[Courses Tree] Undefined courses:', undefinedCourses);
+      }
+      
       const courseTree = buildCourseTree(coursesWithEnrollment, null);
       console.log('[Courses Tree] Final tree result:', courseTree.length, 'root courses');
+      console.log('[Courses Tree] Successfully built course tree for user', userId);
       
       return res.json(courseTree);
     } catch (error) {
-      console.error('[Courses Tree] Error:', error);
+      console.error('[Courses Tree] ERROR: Failed to fetch user course tree');
+      console.error('[Courses Tree] User ID:', userId);
+      console.error('[Courses Tree] Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('[Courses Tree] Error message:', error instanceof Error ? error.message : String(error));
+      console.error('[Courses Tree] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
+      // Try to get partial data for debugging
+      try {
+        const userCourses = await storage.getUserCourses(userId);
+        const allCourses = await storage.getCourses();
+        console.error('[Courses Tree] Debug info - User courses count:', userCourses.length);
+        console.error('[Courses Tree] Debug info - All courses count:', allCourses.length);
+        console.error('[Courses Tree] Debug info - User course IDs:', userCourses.map(uc => uc.courseId));
+      } catch (debugError) {
+        console.error('[Courses Tree] Could not fetch debug info:', debugError);
+      }
+      
       return res.status(500).json({ message: "Failed to fetch user course tree", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+  
+  // Diagnostic endpoint to check course enrollment issues
+  // Place this BEFORE /api/user/courses/tree to ensure proper routing
+  app.get("/api/user/courses/diagnostic", (app as any).ensureAuthenticated, async (req, res) => {
+    let userId = req.user?.id;
+    
+    if (!userId && req.headers['x-user-id']) {
+      userId = parseInt(req.headers['x-user-id'] as string);
+    }
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+      const userCourses = await storage.getUserCourses(userId);
+      const allCourses = await storage.getCourses();
+      const courseMap = new Map(allCourses.map(c => [c.id, c]));
+      
+      const allEnrolledCourseIds = userCourses.map(uc => uc.courseId);
+      const invalidCourseIds = allEnrolledCourseIds.filter(courseId => !courseMap.has(courseId));
+      const validCourseIds = allEnrolledCourseIds.filter(courseId => courseMap.has(courseId));
+      
+      const invalidEnrollments = userCourses
+        .filter(uc => invalidCourseIds.includes(uc.courseId))
+        .map(uc => ({
+          userCourseId: uc.id,
+          courseId: uc.courseId,
+          enrolledAt: uc.enrolledAt,
+          progress: uc.progress,
+          completed: uc.completed
+        }));
+      
+      return res.json({
+        userId,
+        summary: {
+          totalEnrollments: userCourses.length,
+          validEnrollments: validCourseIds.length,
+          invalidEnrollments: invalidCourseIds.length,
+          totalCoursesInDatabase: allCourses.length
+        },
+        invalidCourseIds,
+        invalidEnrollments,
+        validCourseIds,
+        recommendation: invalidCourseIds.length > 0 
+          ? `Found ${invalidCourseIds.length} invalid course enrollment(s). These courses may have been deleted. Consider cleaning up these enrollments.`
+          : "All course enrollments are valid."
+      });
+    } catch (error) {
+      console.error('[Courses Diagnostic] Error:', error);
+      return res.status(500).json({ 
+        message: "Failed to run diagnostic", 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
   

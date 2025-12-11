@@ -73,7 +73,7 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
       const userLessons = await storage.getUserLessons(userId);
       
       // Generate AI context for the module
-      const moduleAIContext = await generateModuleAIContext(module, course, user, userLevel);
+      const moduleAIContext = await generateModuleAIContext(module, course, user, userLevel, language);
       
       const enhancedLessons: AIEnhancedLesson[] = [];
       
@@ -83,7 +83,7 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
         const progress = userLesson?.progress || 0;
         
         // Generate personalized AI content for each lesson
-        const aiContext = await generateLessonAIContext(lesson, module, course, user, userLevel, progress);
+        const aiContext = await generateLessonAIContext(lesson, module, course, user, userLevel, progress, language);
         
         const lessonDescription = language === 'tr' ? (lesson.descriptionTr || lesson.description) : (lesson.descriptionEn || lesson.description);
         const lessonTitle = language === 'tr' ? (lesson.titleTr || lesson.title) : (lesson.titleEn || lesson.title);
@@ -130,110 +130,405 @@ export async function generateAIEnhancedModules(courseId: number, userId: number
   }
 }
 
-async function generateModuleAIContext(module: any, course: any, user: any, userLevel: any) {
-  try {
-    const moduleTitle = module.titleEn || module.title;
-    const moduleDesc = module.descriptionEn || module.description;
-    const courseTitle = course.titleEn || course.title;
-    
-    const prompt = `
+async function generateModuleAIContext(module: any, course: any, user: any, userLevel: any, language: string = 'en') {
+  const maxRetries = 2;
+  let lastError: any = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const moduleTitle = language === 'tr' ? (module.titleTr || module.title) : (module.titleEn || module.title);
+      const moduleDesc = language === 'tr' ? (module.descriptionTr || module.description) : (module.descriptionEn || module.description);
+      const courseTitle = language === 'tr' ? (course.titleTr || course.title) : (course.titleEn || course.title);
+      
+      // Extract learning outcomes if available
+      const learningOutcomes = module.learningOutcomes || [];
+      const outcomesText = Array.isArray(learningOutcomes) && learningOutcomes.length > 0
+        ? learningOutcomes.map((outcome: any, idx: number) => `${idx + 1}. ${typeof outcome === 'string' ? outcome : outcome.text || outcome}`).join('\n')
+        : 'Not specified';
+      
+      // Get module metadata
+      const mebCode = module.mebUnitCode ? ` (MEB Code: ${module.mebUnitCode})` : '';
+      const estimatedHours = module.estimatedHours ? `Estimated time: ${module.estimatedHours} hours` : '';
+      
+      // Get previous modules for prerequisite context
+      const allModules = await storage.getModules(course.id);
+      const currentModuleIndex = allModules.findIndex((m: any) => m.id === module.id);
+      const previousModules = currentModuleIndex > 0 ? allModules.slice(0, currentModuleIndex).map((m: any) => 
+        language === 'tr' ? (m.titleTr || m.title) : (m.titleEn || m.title)
+      ) : [];
+      
+      const prompt = language === 'tr' ? `
+Sen bir AI öğrenme asistanısın. Aşağıdaki modül için kişiselleştirilmiş içerik oluştur:
+
+Modül: "${moduleTitle}"${mebCode}
+Açıklama: "${moduleDesc}"
+Kurs: "${courseTitle}"
+Öğrenci Seviyesi: ${userLevel?.level || 1}
+Öğrenci XP: ${userLevel?.totalXp || 0}
+${estimatedHours ? `Tahmini Süre: ${module.estimatedHours} saat` : ''}
+
+Öğrenme Kazanımları:
+${outcomesText}
+
+${previousModules.length > 0 ? `Önceki Modüller: ${previousModules.join(', ')}` : ''}
+
+Aşağıdaki JSON formatında yanıt ver:
+{
+  "moduleOverview": "Öğrencinin ne öğreneceğini açıklayan kişiselleştirilmiş genel bakış (2-3 cümle)",
+  "learningPath": "Bu modülün öğrenme yolculuğuna nasıl uyduğu (1-2 cümle)",
+  "personalizedTips": ["Bu öğrenci için 3 özel ipucu"],
+  "prerequisiteCheck": "Başlamadan önce bilinmesi gerekenler (önceki modüllere referans ver)"
+}
+
+Seviyelerine özel ve cesaret verici ol. Öğrenme kazanımlarını kullan.
+` : `
 You are an AI learning assistant. Generate personalized module context for:
 
-Module: "${moduleTitle}"
+Module: "${moduleTitle}"${mebCode}
 Description: "${moduleDesc}"
 Course: "${courseTitle}"
 Student Level: ${userLevel?.level || 1}
 Student XP: ${userLevel?.totalXp || 0}
+${estimatedHours ? `Estimated Time: ${module.estimatedHours} hours` : ''}
+
+Learning Outcomes:
+${outcomesText}
+
+${previousModules.length > 0 ? `Previous Modules: ${previousModules.join(', ')}` : ''}
 
 Generate a JSON response with:
 {
-  "moduleOverview": "Personalized overview explaining what the student will learn",
-  "learningPath": "How this module fits into their learning journey", 
+  "moduleOverview": "Personalized overview explaining what the student will learn (2-3 sentences)",
+  "learningPath": "How this module fits into their learning journey (1-2 sentences)",
   "personalizedTips": ["3 specific tips for this student"],
-  "prerequisiteCheck": "What the student should know before starting"
+  "prerequisiteCheck": "What the student should know before starting (reference previous modules)"
 }
 
-Make it encouraging and specific to their level.
+Make it encouraging and specific to their level. Use the learning outcomes.
 `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }],
-    });
+      if (!anthropic) {
+        throw new Error('Anthropic API key not configured');
+      }
 
-    const aiResponse = JSON.parse(response.content[0].text);
-    return aiResponse;
-    
-  } catch (error) {
-    console.error('Error generating module AI context:', error);
-    const moduleTitle = module.titleEn || module.title;
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const responseText = typeof response.content[0] === 'object' && 'text' in response.content[0]
+        ? response.content[0].text
+        : String(response.content[0]);
+      // Try to extract JSON from markdown code blocks if present
+      const jsonMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || responseText.match(/(\{[\s\S]*\})/);
+      const jsonText = jsonMatch ? jsonMatch[1] : responseText;
+      
+      const aiResponse = JSON.parse(jsonText);
+      
+      // Validate response structure
+      if (!aiResponse.moduleOverview || !aiResponse.learningPath) {
+        throw new Error('Invalid AI response structure');
+      }
+      
+      return aiResponse;
+      
+    } catch (error) {
+      lastError = error;
+      console.error(`Error generating module AI context (attempt ${attempt + 1}/${maxRetries + 1}):`, error);
+      
+      if (attempt < maxRetries) {
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        continue;
+      }
+    }
+  }
+
+  // Fallback with actual module data
+  console.error('All AI generation attempts failed, using enhanced fallback');
+  return generateEnhancedModuleFallback(module, course, userLevel, language);
+}
+
+function generateEnhancedModuleFallback(module: any, course: any, userLevel: any, language: string = 'en') {
+  const moduleTitle = language === 'tr' ? (module.titleTr || module.title) : (module.titleEn || module.title);
+  const moduleDesc = language === 'tr' ? (module.descriptionTr || module.description) : (module.descriptionEn || module.description);
+  const learningOutcomes = module.learningOutcomes || [];
+  const estimatedHours = module.estimatedHours;
+  
+  const hasOutcomes = Array.isArray(learningOutcomes) && learningOutcomes.length > 0;
+  const outcomesPreview = hasOutcomes 
+    ? learningOutcomes.slice(0, 3).map((outcome: any) => 
+        typeof outcome === 'string' ? outcome : outcome.text || outcome
+      ).join(', ')
+    : null;
+
+  if (language === 'tr') {
     return {
-      moduleOverview: `This module covers ${moduleTitle} concepts to build your understanding.`,
-      learningPath: "This module is designed to advance your skills step by step.",
+      moduleOverview: hasOutcomes
+        ? `Bu modül ${moduleTitle} konusunu kapsar ve şu kazanımları hedefler: ${outcomesPreview}. ${moduleDesc || 'Kavramları adım adım öğrenerek anlayışınızı geliştireceksiniz.'}`
+        : `Bu modül ${moduleTitle} kavramlarını kapsar ve anlayışınızı geliştirmek için tasarlanmıştır. ${moduleDesc || 'Her ders önceki bilgilerin üzerine inşa edilir.'}`,
+      learningPath: estimatedHours
+        ? `Bu modül, öğrenme yolculuğunuzda önemli bir adımdır. Yaklaşık ${estimatedHours} saatlik çalışma ile ${moduleTitle} konusunda yetkinlik kazanacaksınız.`
+        : `Bu modül, öğrenme yolculuğunuzda sistematik olarak ilerlemenizi sağlar. Her ders bir öncekinin üzerine inşa edilir.`,
       personalizedTips: [
-        "Take notes while learning",
-        "Practice regularly",
-        "Ask questions when confused"
+        `${moduleTitle} konusunda notlar alarak çalışın`,
+        "Düzenli pratik yaparak kavramları pekiştirin",
+        userLevel?.level && userLevel.level <= 2 
+          ? "Temel kavramları anlamak için zaman ayırın"
+          : "İleri seviye uygulamalara odaklanın"
       ],
-      prerequisiteCheck: "Basic understanding of previous concepts recommended."
+      prerequisiteCheck: hasOutcomes
+        ? `Bu modüle başlamadan önce, önceki modüllerdeki temel kavramları anladığınızdan emin olun. Bu modül şu kazanımları hedefler: ${outcomesPreview}.`
+        : "Önceki modüllerdeki temel kavramları anladığınızdan emin olun."
+    };
+  } else {
+    return {
+      moduleOverview: hasOutcomes
+        ? `This module covers ${moduleTitle} and targets these learning outcomes: ${outcomesPreview}. ${moduleDesc || "You'll build your understanding step by step through structured lessons."}`
+        : `This module covers ${moduleTitle} concepts to build your understanding. ${moduleDesc || "Each lesson builds upon previous knowledge systematically."}`,
+      learningPath: estimatedHours
+        ? `This module is a key step in your learning journey. With approximately ${estimatedHours} hours of study, you will gain proficiency in ${moduleTitle}.`
+        : `This module is designed to advance your skills step by step. Each lesson builds systematically on the previous one.`,
+      personalizedTips: [
+        `Take notes while learning ${moduleTitle}`,
+        "Practice regularly to reinforce concepts",
+        userLevel?.level && userLevel.level <= 2
+          ? "Take time to understand fundamental concepts"
+          : "Focus on advanced applications"
+      ],
+      prerequisiteCheck: hasOutcomes
+        ? `Before starting this module, ensure you understand the basic concepts from previous modules. This module targets: ${outcomesPreview}.`
+        : "Basic understanding of previous concepts recommended."
     };
   }
 }
 
-async function generateLessonAIContext(lesson: any, module: any, course: any, user: any, userLevel: any, progress: number) {
-  try {
-    const prompt = `
+async function generateLessonAIContext(lesson: any, module: any, course: any, user: any, userLevel: any, progress: number, language: string = 'en') {
+  const maxRetries = 2;
+  let lastError: any = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const lessonTitle = language === 'tr' ? (lesson.titleTr || lesson.title) : (lesson.titleEn || lesson.title);
+      const lessonDesc = language === 'tr' ? (lesson.descriptionTr || lesson.description) : (lesson.descriptionEn || lesson.description);
+      const moduleTitle = language === 'tr' ? (module.titleTr || module.title) : (module.titleEn || module.title);
+      const courseTitle = language === 'tr' ? (course.titleTr || course.title) : (course.titleEn || course.title);
+      
+      // Extract concepts and study problems if available
+      const concepts = lesson.concepts || [];
+      const studyProblems = lesson.studyProblems || [];
+      const studyTips = lesson.studyTips;
+      const reviewHelp = lesson.reviewHelp;
+      
+      const conceptsText = Array.isArray(concepts) && concepts.length > 0
+        ? concepts.map((c: any, idx: number) => `${idx + 1}. ${typeof c === 'string' ? c : c.name || c}`).join('\n')
+        : 'Not specified';
+      
+      const problemsText = Array.isArray(studyProblems) && studyProblems.length > 0
+        ? studyProblems.slice(0, 3).map((p: any, idx: number) => `${idx + 1}. ${typeof p === 'string' ? p : p.text || p}`).join('\n')
+        : 'Practice exercises will be provided';
+      
+      const duration = lesson.durationMinutes || 30;
+      
+      const prompt = language === 'tr' ? `
+Sen bir AI öğrenme asistanısın. Aşağıdaki ders için kişiselleştirilmiş içerik oluştur:
+
+Ders: "${lessonTitle}"
+Modül: "${moduleTitle}"
+Kurs: "${courseTitle}"
+Öğrenci Seviyesi: ${userLevel?.level || 1}
+Öğrenci İlerlemesi: ${progress}%
+Süre: ${duration} dakika
+
+Ders Açıklaması: "${lessonDesc || 'Açıklama yok'}"
+
+Kavramlar:
+${conceptsText}
+
+Pratik Problemler:
+${problemsText}
+
+${studyTips ? `Çalışma İpuçları: ${studyTips}` : ''}
+${reviewHelp ? `Gözden Geçirme Yardımı: ${reviewHelp}` : ''}
+
+Aşağıdaki JSON formatında yanıt ver:
+{
+  "personalizedIntro": "Bu öğrenci için kişiselleştirilmiş ilgi çekici giriş (2-3 cümle)",
+  "learningObjectives": ["3-4 özel öğrenme hedefi"],
+  "adaptedContent": "Seviyelerine uyarlanmış içerik açıklaması (2-3 cümle)",
+  "practiceExercises": ["3-4 pratik alıştırma"],
+  "nextSteps": ["2-3 önerilen sonraki adım"],
+  "difficultyReason": "Bu zorluk seviyesinin neden seçildiği"
+}
+
+İlerlemelerine ve seviyelerine göre içeriği uyarla. Kavramları ve problemleri kullan.
+` : `
 You are an AI learning assistant. Generate personalized lesson content for:
 
-Lesson: "${lesson.title}"
-Module: "${module.title}"
-Course: "${course.title}"
+Lesson: "${lessonTitle}"
+Module: "${moduleTitle}"
+Course: "${courseTitle}"
 Student Level: ${userLevel?.level || 1}
 Student Progress: ${progress}%
+Duration: ${duration} minutes
+
+Lesson Description: "${lessonDesc || 'No description'}"
+
+Concepts:
+${conceptsText}
+
+Practice Problems:
+${problemsText}
+
+${studyTips ? `Study Tips: ${studyTips}` : ''}
+${reviewHelp ? `Review Help: ${reviewHelp}` : ''}
 
 Generate a JSON response with:
 {
-  "personalizedIntro": "Engaging intro personalized for this student",
+  "personalizedIntro": "Engaging intro personalized for this student (2-3 sentences)",
   "learningObjectives": ["3-4 specific learning objectives"],
-  "adaptedContent": "Content explanation adapted to their level",
+  "adaptedContent": "Content explanation adapted to their level (2-3 sentences)",
   "practiceExercises": ["3-4 practice exercises"],
   "nextSteps": ["2-3 recommended next steps"],
   "difficultyReason": "Why this difficulty level was chosen"
 }
 
-Adapt the content based on their current level and progress.
+Adapt the content based on their current level and progress. Use the concepts and problems.
 `;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1200,
-      messages: [{ role: 'user', content: prompt }],
-    });
+      if (!anthropic) {
+        throw new Error('Anthropic API key not configured');
+      }
 
-    const aiResponse = JSON.parse(response.content[0].text);
-    return aiResponse;
-    
-  } catch (error) {
-    console.error('Error generating lesson AI context:', error);
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const responseText = typeof response.content[0] === 'object' && 'text' in response.content[0]
+        ? response.content[0].text
+        : String(response.content[0]);
+      // Try to extract JSON from markdown code blocks if present
+      const jsonMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/) || responseText.match(/(\{[\s\S]*\})/);
+      const jsonText = jsonMatch ? jsonMatch[1] : responseText;
+      
+      const aiResponse = JSON.parse(jsonText);
+      
+      // Validate response structure
+      if (!aiResponse.personalizedIntro || !aiResponse.learningObjectives) {
+        throw new Error('Invalid AI response structure');
+      }
+      
+      return aiResponse;
+      
+    } catch (error) {
+      lastError = error;
+      console.error(`Error generating lesson AI context (attempt ${attempt + 1}/${maxRetries + 1}):`, error);
+      
+      if (attempt < maxRetries) {
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        continue;
+      }
+    }
+  }
+
+  // Fallback with actual lesson data
+  console.error('All AI generation attempts failed, using enhanced fallback');
+  return generateEnhancedLessonFallback(lesson, module, userLevel, progress, language);
+}
+
+function generateEnhancedLessonFallback(lesson: any, module: any, userLevel: any, progress: number, language: string = 'en') {
+  const lessonTitle = language === 'tr' ? (lesson.titleTr || lesson.title) : (lesson.titleEn || lesson.title);
+  const lessonDesc = language === 'tr' ? (lesson.descriptionTr || lesson.description) : (lesson.descriptionEn || lesson.description);
+  const moduleTitle = language === 'tr' ? (module.titleTr || module.title) : (module.titleEn || module.title);
+  
+  const concepts = lesson.concepts || [];
+  const studyProblems = lesson.studyProblems || [];
+  const studyTips = lesson.studyTips;
+  const duration = lesson.durationMinutes || 30;
+  
+  const hasConcepts = Array.isArray(concepts) && concepts.length > 0;
+  const conceptsList = hasConcepts 
+    ? concepts.slice(0, 3).map((c: any) => typeof c === 'string' ? c : c.name || c)
+    : [];
+  
+  const hasProblems = Array.isArray(studyProblems) && studyProblems.length > 0;
+  const problemsList = hasProblems
+    ? studyProblems.slice(0, 3).map((p: any) => typeof p === 'string' ? p : p.text || p)
+    : [];
+
+  if (language === 'tr') {
     return {
-      personalizedIntro: `Welcome to ${lesson.title}! Let's explore this topic together.`,
-      learningObjectives: [
-        `Understand the core concepts of ${lesson.title}`,
-        "Apply knowledge through practical examples",
-        "Build confidence in the subject matter"
-      ],
-      adaptedContent: `This lesson covers ${lesson.title} with clear explanations and examples.`,
-      practiceExercises: [
-        "Review the key concepts",
-        "Complete practice problems", 
-        "Test your understanding"
-      ],
+      personalizedIntro: progress > 0
+        ? `${lessonTitle} dersine geri döndüğünüz için hoş geldiniz! ${progress}% ilerleme kaydettiniz. Kaldığınız yerden devam edelim.`
+        : `${lessonTitle} dersine hoş geldiniz! Bu ders ${moduleTitle} modülünün önemli bir parçasıdır. ${lessonDesc || 'Kavramları adım adım öğreneceksiniz.'}`,
+      learningObjectives: hasConcepts
+        ? [
+            `${conceptsList[0] || lessonTitle} kavramını anlamak`,
+            conceptsList[1] ? `${conceptsList[1]} ile ilgili uygulamalar yapmak` : "Pratik örneklerle bilgiyi uygulamak",
+            conceptsList[2] ? `${conceptsList[2]} konusunda yetkinlik kazanmak` : "Konu hakkında güven kazanmak"
+          ]
+        : [
+            `${lessonTitle} temel kavramlarını anlamak`,
+            "Pratik senaryolarda bilgiyi uygulamak",
+            "Konu hakkında güven kazanmak"
+          ],
+      adaptedContent: hasConcepts
+        ? `Bu ders ${lessonTitle} konusunu kapsar ve şu kavramları içerir: ${conceptsList.join(', ')}. ${lessonDesc || 'Açık açıklamalar ve örneklerle öğreneceksiniz.'}`
+        : `Bu ders ${lessonTitle} konusunu kapsamlı bir şekilde ele alır. ${lessonDesc || 'Açık açıklamalar ve örneklerle öğreneceksiniz.'}`,
+      practiceExercises: hasProblems
+        ? problemsList.map((p: string, idx: number) => `${idx + 1}. ${p}`)
+        : [
+            "Anahtar kavramları gözden geçirin",
+            "Pratik problemleri tamamlayın",
+            "Anlayışınızı test edin"
+          ],
       nextSteps: [
-        "Move to the next lesson",
-        "Practice more examples"
+        progress < 50 ? "Bu dersi tamamlayın" : "Sonraki derse geçin",
+        "Ek örnekler üzerinde çalışın",
+        "Kavramları pekiştirmek için tekrar yapın"
       ],
-      difficultyReason: "Difficulty adjusted based on your current learning level."
+      difficultyReason: userLevel?.level && userLevel.level <= 2
+        ? "Temel seviye öğrenciler için içerik uyarlanmıştır."
+        : "İçerik mevcut öğrenme seviyenize göre ayarlanmıştır."
+    };
+  } else {
+    return {
+      personalizedIntro: progress > 0
+        ? `Welcome back to ${lessonTitle}! You've made ${progress}% progress. Let's continue from where you left off.`
+        : `Welcome to ${lessonTitle}! This lesson is an important part of the ${moduleTitle} module. ${lessonDesc || "You will learn the concepts step by step."}`,
+      learningObjectives: hasConcepts
+        ? [
+            `Understand the concept of ${conceptsList[0] || lessonTitle}`,
+            conceptsList[1] ? `Apply ${conceptsList[1]} in practice` : "Apply knowledge through practical examples",
+            conceptsList[2] ? `Gain proficiency in ${conceptsList[2]}` : "Build confidence in the subject matter"
+          ]
+        : [
+            `Understand the core concepts of ${lessonTitle}`,
+            "Apply knowledge through practical examples",
+            "Build confidence in the subject matter"
+          ],
+      adaptedContent: hasConcepts
+        ? `This lesson covers ${lessonTitle} and includes these concepts: ${conceptsList.join(', ')}. ${lessonDesc || "You will learn with clear explanations and examples."}`
+        : `This lesson provides comprehensive coverage of ${lessonTitle}. ${lessonDesc || "You will learn with clear explanations and examples."}`,
+      practiceExercises: hasProblems
+        ? problemsList.map((p: string, idx: number) => `${idx + 1}. ${p}`)
+        : [
+            "Review the key concepts",
+            "Complete practice problems",
+            "Test your understanding"
+          ],
+      nextSteps: [
+        progress < 50 ? "Complete this lesson" : "Move to the next lesson",
+        "Work on additional examples",
+        "Review to reinforce concepts"
+      ],
+      difficultyReason: userLevel?.level && userLevel.level <= 2
+        ? "Content adapted for beginner level students."
+        : "Difficulty adjusted based on your current learning level."
     };
   }
 }
@@ -318,16 +613,7 @@ async function generateFallbackModules(courseId: number, userId: number, languag
         description: moduleDesc,
         progress: moduleProgress,
         lessons: enhancedLessons,
-        aiContext: {
-          moduleOverview: `This module covers ${moduleTitle} to advance your learning.`,
-          learningPath: "Each lesson builds upon previous knowledge systematically.",
-          personalizedTips: [
-            "Take your time with each concept",
-            "Practice regularly for best results",
-            "Don't hesitate to review previous lessons"
-          ],
-          prerequisiteCheck: "Basic understanding of previous modules recommended."
-        }
+        aiContext: generateEnhancedModuleFallback(module, course, { level: 1, totalXp: 0 }, language)
       });
     }
     

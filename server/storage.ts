@@ -59,6 +59,9 @@ export interface IStorage {
   getCourse(id: number): Promise<any>;
   createCourse(course: any): Promise<any>;
   updateCourse(id: number, updates: any): Promise<any>;
+  getModules(courseId: number): Promise<any[]>;
+  getLessons(moduleId: number): Promise<any[]>;
+  getUserLessons(userId: number): Promise<any[]>;
   createDesignProcess(design: any): Promise<any>;
   getDesignProcess(id: number): Promise<any>;
   updateDesignProcess(id: number, updates: any): Promise<any>;
@@ -405,9 +408,22 @@ class DatabaseStorage implements IStorage {
   // Lesson methods
   async getLessons(moduleId: number) {
     try {
-      return db.select().from(lessons).where(eq(lessons.moduleId, moduleId));
-    } catch (error) {
-      console.error('Error fetching lessons:', error);
+      return await db.select().from(lessons).where(eq(lessons.moduleId, moduleId)).orderBy(asc(lessons.order));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting lessons for module ${moduleId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserLessons(userId: number) {
+    try {
+      const userLessons = await db
+        .select()
+        .from(schema.userLessons)
+        .where(eq(schema.userLessons.userId, userId));
+      return userLessons;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user lessons for user ${userId}:`, error?.message || error);
       return [];
     }
   }
@@ -499,6 +515,9 @@ class InMemoryStorage implements IStorage {
   async getUserLearningTrails(_userId: number) { return []; }
   async getUserLearningStats(_userId: number) { return null; }
   async getDailyTasks(_userId: number) { return []; }
+  async getModules(_courseId: number) { return []; }
+  async getLessons(_moduleId: number) { return []; }
+  async getUserLessons(_userId: number) { return []; }
 }
 
 const useDatabase = !!process.env.DATABASE_URL;

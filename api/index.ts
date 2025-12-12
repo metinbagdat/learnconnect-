@@ -34,6 +34,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// 404 handler - must be before error handler
+app.use((_req: Request, res: Response) => {
+  if (!res.headersSent) {
+    res.status(404).json({ error: "Not Found" });
+  }
+});
+
 // Error handler middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
@@ -123,10 +130,26 @@ export default async function handler(req: any, res: any) {
         if (err) {
           console.error("Express error:", err);
           if (!res.headersSent && !finished) {
-            res.status(500).json({ error: "Internal server error" });
+            try {
+              res.status(500).json({ error: "Internal server error" });
+            } catch (e) {
+              console.error("Error sending error response:", e);
+            }
+            finish();
+          } else {
             finish();
           }
+        } else if (!res.headersSent && !finished) {
+          // If no response was sent, send 404
+          try {
+            res.status(404).json({ error: "Not Found" });
+          } catch (e) {
+            console.error("Error sending 404 response:", e);
+          }
+          finish();
         } else if (res.finished && !finished) {
+          finish();
+        } else {
           finish();
         }
       });
@@ -134,7 +157,11 @@ export default async function handler(req: any, res: any) {
   } catch (error: any) {
     console.error("Handler error:", error);
     if (!res.headersSent) {
-      res.status(500).json({ error: "Internal server error" });
+      try {
+        res.status(500).json({ error: "Internal server error" });
+      } catch (e) {
+        console.error("Error sending error response in catch:", e);
+      }
     }
   }
 }

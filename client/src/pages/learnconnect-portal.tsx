@@ -1,6 +1,5 @@
 import { LearnConnectLayout } from "@/components/layout/LearnConnectLayout";
 import { useLanguage } from "@/contexts/consolidated-language-context";
-import { AnimatedCard } from "@/components/ui/animated-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,7 @@ export default function LearnConnectPortal() {
       <GradientBackground>
         <div className="relative z-10 space-y-8 p-6">
           {/* Hero Section */}
-          <AnimatedCard delay={0}>
+          <Card>
             <CardHeader>
               <CardTitle className="text-4xl font-bold text-white">
                 {language === "tr"
@@ -27,7 +26,7 @@ export default function LearnConnectPortal() {
                   : "AI-powered education experience bridging Turkish national education with global opportunities"}
               </CardDescription>
             </CardHeader>
-          </AnimatedCard>
+          </Card>
 
           {/* Main Features Tabs */}
           <Tabs defaultValue="exams" className="w-full">

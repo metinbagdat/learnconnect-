@@ -1,6 +1,5 @@
 import { LearnConnectLayout } from "@/components/layout/LearnConnectLayout";
 import { useLanguage } from "@/contexts/consolidated-language-context";
-import { GradientBackground } from "@/components/ui/gradient-background";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain, Globe, Calendar, GraduationCap } from "lucide-react";
@@ -10,7 +9,7 @@ export default function LearnConnectPortal() {
 
   return (
     <LearnConnectLayout>
-      <GradientBackground>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="relative z-10 space-y-8 p-6">
           {/* Hero Section */}
           <Card>
@@ -122,7 +121,7 @@ export default function LearnConnectPortal() {
             </TabsContent>
           </Tabs>
         </div>
-      </GradientBackground>
+      </div>
     </LearnConnectLayout>
   );
 }

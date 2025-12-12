@@ -1,3 +1,40 @@
+import { eq } from "drizzle-orm";
+import { db } from "./db";
+import * as schema from "@shared/schema";
+
+export interface IStorage {
+  getCourses(): Promise<any[]>;
+  getCourse(id: number): Promise<any | null>;
+  getModules(courseId?: number): Promise<any[]>;
+  getLessons(moduleId?: number): Promise<any[]>;
+}
+
+class DatabaseStorage implements IStorage {
+  async getCourses() {
+    return db.select().from(schema.courses);
+  }
+
+  async getCourse(id: number) {
+    const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, id));
+    return course || null;
+  }
+
+  async getModules(courseId?: number) {
+    if (courseId === undefined) {
+      return db.select().from(schema.modules);
+    }
+    return db.select().from(schema.modules).where(eq(schema.modules.courseId, courseId));
+  }
+
+  async getLessons(moduleId?: number) {
+    if (moduleId === undefined) {
+      return db.select().from(schema.lessons);
+    }
+    return db.select().from(schema.lessons).where(eq(schema.lessons.moduleId, moduleId));
+  }
+}
+
+export const storage: IStorage = new DatabaseStorage();
 import {
   eq,
   and,

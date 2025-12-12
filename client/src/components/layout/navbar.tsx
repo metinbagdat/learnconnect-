@@ -76,10 +76,10 @@ export function Navbar() {
               // Use Link for internal routes, anchor for hash links
               if (item.href.startsWith("#")) {
                 return (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+              <a
+                key={item.label}
+                href={item.href}
+                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
                     onClick={(e) => {
                       e.preventDefault();
                       const element = document.querySelector(item.href);
@@ -87,9 +87,9 @@ export function Navbar() {
                         element.scrollIntoView({ behavior: "smooth", block: "start" });
                       }
                     }}
-                  >
-                    {item.label}
-                  </a>
+              >
+                {item.label}
+              </a>
                 );
               }
               return (
@@ -167,9 +167,9 @@ export function Navbar() {
               // Use Link for internal routes, anchor for hash links
               if (item.href.startsWith("#")) {
                 return (
-                  <a
-                    key={item.label}
-                    href={item.href}
+              <a
+                key={item.label}
+                href={item.href}
                     className="block text-slate-300 hover:text-white px-4 py-2 rounded-md transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
@@ -189,9 +189,9 @@ export function Navbar() {
                   key={item.label}
                   href={item.href}
                   className="block text-slate-300 hover:text-white px-4 py-2 rounded-md transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
+                onClick={() => setIsOpen(false)}
+              >
+                {item.label}
                 </Link>
               );
             })}

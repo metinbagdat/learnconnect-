@@ -154,7 +154,7 @@ class DatabaseStorage implements IStorage {
 
   async getUserLevel(userId: number) {
     try {
-      const [level] = await db.select().from(userLevels).where(eq(userLevels.userId, userId));
+      const [level] = await db.select().from(schema.userLevels).where(eq(schema.userLevels.userId, userId));
       return level || null;
     } catch (error: any) {
       console.error(`[STORAGE] Error getting user level ${userId}:`, error?.message || error);
@@ -290,14 +290,6 @@ class DatabaseStorage implements IStorage {
   }
 
   // Dashboard & Learning Methods
-  async getChallenges() {
-    return db.select().from(challenges);
-  }
-
-  async getUserActiveAndCompletedChallenges(userId: number) {
-    return { active: [], completed: [] };
-  }
-
   async getAiGeneratedCourses() {
     return db.select().from(courses).where(eq(courses.isAiGenerated, true));
   }
@@ -315,31 +307,8 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserCourses(userId: number) {
-    return db.select().from(userCourses).where(eq(userCourses.userId, userId));
-  }
-
-  async getUserAssignments(userId: number) {
-    try {
-      return db.select().from(assignments).innerJoin(userCourses, eq(assignments.courseId, userCourses.courseId)).where(eq(userCourses.userId, userId));
-    } catch (error) {
-      return [];
-    }
-  }
-
-  async getUserLevel(userId: number) {
-    return { level: 1, xp: 0 };
-  }
-
   async getUserMentor(userId: number) {
     return null;
-  }
-
-  async getUserStudyPrograms(userId: number) {
-    const userEnrollments = await db.select().from(userCourses).where(eq(userCourses.userId, userId));
-    if (!userEnrollments.length) return [];
-    const courseIds = userEnrollments.map(e => e.courseId);
-    return db.select().from(courses).where(inArray(courses.id, courseIds));
   }
 
   async getUserWeeklyStats(userId: number) {
@@ -411,19 +380,6 @@ class DatabaseStorage implements IStorage {
       return await db.select().from(lessons).where(eq(lessons.moduleId, moduleId)).orderBy(asc(lessons.order));
     } catch (error: any) {
       console.error(`[STORAGE] Error getting lessons for module ${moduleId}:`, error?.message || error);
-      return [];
-    }
-  }
-
-  async getUserLessons(userId: number) {
-    try {
-      const userLessons = await db
-        .select()
-        .from(schema.userLessons)
-        .where(eq(schema.userLessons.userId, userId));
-      return userLessons;
-    } catch (error: any) {
-      console.error(`[STORAGE] Error getting user lessons for user ${userId}:`, error?.message || error);
       return [];
     }
   }

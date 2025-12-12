@@ -1,6 +1,5 @@
 import { LearnConnectLayout } from "@/components/layout/LearnConnectLayout";
 import { useLanguage } from "@/contexts/consolidated-language-context";
-import { StatisticsDashboard } from "@/components/dashboard/statistics-dashboard";
 import { EducationSystemsMap } from "@/components/global-education/education-systems-map";
 import { EducationSystemsComparison } from "@/components/global-education/education-systems-comparison";
 import { ExamTimetable } from "@/components/exams/exam-timetable";

@@ -1,8 +1,16 @@
 import "dotenv/config";
-import express = require("express");
+import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "../server/routes";
 import sitemapRoutes from "../server/routes-sitemap.js";
+
+// Declare process for TypeScript
+declare const process: {
+  env?: {
+    NODE_ENV?: string;
+    [key: string]: string | undefined;
+  };
+};
 
 const app = express();
 app.use(express.json());
@@ -34,7 +42,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   if (!res.headersSent) {
     res.status(status).json({ 
       message, 
-      error: (typeof process !== "undefined" && process.env?.NODE_ENV === 'development') ? err.stack : undefined 
+      error: (typeof process !== "undefined" && process?.env?.NODE_ENV === 'development') ? err.stack : undefined 
     });
   }
 });

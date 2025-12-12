@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
-import { registerRoutes } from "../server/routes";
+import { registerRoutes } from "../server/routes.js";
 import sitemapRoutes from "../server/routes-sitemap.js";
 
 // Declare process for TypeScript
@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(sitemapRoutes);
 
 // Logging middleware
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const path = req.path;
 

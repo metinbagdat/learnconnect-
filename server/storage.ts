@@ -124,23 +124,6 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserAchievements(userId: number) {
-    try {
-      return await db.select().from(achievements).where(eq(achievements.userId, userId));
-    } catch (error: any) {
-      console.error(`[STORAGE] Error getting achievements for user ${userId}:`, error?.message || error);
-      return [];
-    }
-  }
-
-  async getStudySessions(userId: number) {
-    try {
-      return await db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
-    } catch (error: any) {
-      console.error(`[STORAGE] Error getting study sessions for user ${userId}:`, error?.message || error);
-      return [];
-    }
-  }
 
   async getUserActiveAndCompletedChallenges(userId: number) {
     try {

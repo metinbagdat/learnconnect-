@@ -74,12 +74,56 @@ async function initializeApp() {
 }
 
 // Vercel serverless function handler
-// Vercel's runtime provides req/res that are compatible with Express
 export default async function handler(req: any, res: any) {
-  // Initialize app on first request
-  await initializeApp();
+  try {
+    // Initialize app on first request
+    await initializeApp();
 
-  // Vercel's req/res are compatible with Express
-  return app(req, res);
+    // Vercel rewrites /api/* to /api, so we need to restore the full path
+    // The original path is available in the request
+    if (req.url && !req.url.startsWith('/api')) {
+      // Reconstruct the API path
+      const pathMatch = req.headers['x-vercel-path'] || req.url;
+      req.url = pathMatch.startsWith('/api') ? pathMatch : `/api${pathMatch}`;
+      req.originalUrl = req.url;
+    }
+
+    // Handle the request through Express app
+    return new Promise<void>((resolve, reject) => {
+      // Ensure response is properly handled
+      const originalEnd = res.end.bind(res);
+      let ended = false;
+      
+      res.end = function(chunk?: any, encoding?: any, cb?: any) {
+        if (!ended) {
+          ended = true;
+          originalEnd(chunk, encoding, cb);
+          resolve();
+        }
+      };
+
+      // Handle Express app
+      app(req, res, (err: any) => {
+        if (err) {
+          console.error("Express error:", err);
+          if (!res.headersSent && !ended) {
+            res.status(500).json({ error: "Internal server error" });
+          }
+          if (!ended) {
+            ended = true;
+            resolve();
+          }
+        } else if (!ended && (res.headersSent || res.finished)) {
+          ended = true;
+          resolve();
+        }
+      });
+    });
+  } catch (error: any) {
+    console.error("Handler error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 }
 

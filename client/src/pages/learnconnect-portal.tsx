@@ -1,9 +1,5 @@
 import { LearnConnectLayout } from "@/components/layout/LearnConnectLayout";
 import { useLanguage } from "@/contexts/consolidated-language-context";
-import { EducationSystemsMap } from "@/components/global-education/education-systems-map";
-import { EducationSystemsComparison } from "@/components/global-education/education-systems-comparison";
-import { ExamTimetable } from "@/components/exams/exam-timetable";
-import { InternationalExamsPortal } from "@/components/exams/international-exams-portal";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { GradientBackground } from "@/components/ui/gradient-background";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,9 +29,6 @@ export default function LearnConnectPortal() {
             </CardHeader>
           </AnimatedCard>
 
-          {/* Statistics */}
-          <StatisticsDashboard />
-
           {/* Main Features Tabs */}
           <Tabs defaultValue="exams" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
@@ -58,16 +51,30 @@ export default function LearnConnectPortal() {
             </TabsList>
 
             <TabsContent value="exams" className="mt-6">
-              <ExamTimetable />
+              <Card>
+                <CardHeader>
+                  <CardTitle>{language === "tr" ? "Sınavlar" : "Exams"}</CardTitle>
+                  <CardDescription>{language === "tr" ? "Sınav takvimi yakında eklenecek" : "Exam timetable coming soon"}</CardDescription>
+                </CardHeader>
+              </Card>
             </TabsContent>
 
             <TabsContent value="global" className="mt-6 space-y-6">
-              <EducationSystemsMap />
-              <EducationSystemsComparison />
+              <Card>
+                <CardHeader>
+                  <CardTitle>{language === "tr" ? "Küresel Sistemler" : "Global Systems"}</CardTitle>
+                  <CardDescription>{language === "tr" ? "Eğitim sistemleri karşılaştırması yakında eklenecek" : "Education systems comparison coming soon"}</CardDescription>
+                </CardHeader>
+              </Card>
             </TabsContent>
 
             <TabsContent value="international" className="mt-6">
-              <InternationalExamsPortal />
+              <Card>
+                <CardHeader>
+                  <CardTitle>{language === "tr" ? "Uluslararası" : "International"}</CardTitle>
+                  <CardDescription>{language === "tr" ? "Uluslararası sınavlar portalı yakında eklenecek" : "International exams portal coming soon"}</CardDescription>
+                </CardHeader>
+              </Card>
             </TabsContent>
 
             <TabsContent value="ai" className="mt-6">

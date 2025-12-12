@@ -4,7 +4,6 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { AddTurkishCourses } from "@/components/ui/add-turkish-courses";
 import { CategoryManager } from "@/components/admin/category-manager";
 import { CourseManager } from "@/components/admin/course-manager";
-import { CourseCRUDManager } from "@/components/admin/course-crud-manager";
 import { UserManager } from "@/components/admin/user-manager";
 import { DatabaseManager } from "@/components/admin/database-manager";
 import { CourseCategoryTree } from "@/components/admin/course-category-tree";
@@ -83,9 +82,6 @@ export default function AdminPanel() {
                 
                 
                 <TabsContent value="courses" className="mt-6 space-y-6">
-                  {/* Course CRUD Management */}
-                  <CourseCRUDManager />
-                  
                   {/* Course & Category Tree */}
                   <CourseCategoryTree />
                   

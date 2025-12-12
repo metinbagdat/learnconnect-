@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/contexts/consolidated-language-context";
-import { GlobalNav } from "@/components/layout/GlobalNav";
+import { Navbar } from "@/components/layout/navbar";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
 import Dashboard from "@/pages/dashboard";
@@ -222,7 +222,7 @@ function App() {
           <LanguageProvider>
             <GamificationProvider>
               <SkillChallengeProvider>
-                <GlobalNav />
+                <Navbar />
                 <Router />
                 <Toaster />
               </SkillChallengeProvider>

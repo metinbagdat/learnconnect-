@@ -142,9 +142,18 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
+      if (!user) {
+        console.log(`[AUTH] User not found during deserialization: ${id}`);
+        return done(null, false);
+      }
       done(null, user);
-    } catch (error) {
-      done(error);
+    } catch (error: any) {
+      // If database is not available, don't fail the session
+      // This allows the app to work even without a database connection
+      console.error(`[AUTH] Error deserializing user ${id}:`, error?.message || error);
+      // Return null instead of error to allow session to continue
+      // The user will need to re-authenticate when database is available
+      done(null, false);
     }
   });
 

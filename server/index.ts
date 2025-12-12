@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { registerRoutes } from "./routes";
@@ -41,12 +42,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Error handler middleware - register early
+// Error handler middleware - register early but don't throw after sending response
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
-  res.status(status).json({ message });
-  throw err;
+  console.error("[ERROR]", err);
+  if (!res.headersSent) {
+    res.status(status).json({ message, error: process.env.NODE_ENV === 'development' ? err.stack : undefined });
+  }
+  // Don't throw after sending response - it causes issues
 });
 
 // Create server and open port IMMEDIATELY for deployment health checks

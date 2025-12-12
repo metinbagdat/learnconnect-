@@ -64,11 +64,95 @@ export interface LessonTrailData {
   };
 }
 
+function mockTrail(): LessonTrailData {
+  const nodes: TrailNodeData[] = [
+    {
+      id: 'n1',
+      position: { x: 100, y: 100 },
+      type: 'lesson',
+      lessonId: 1,
+      title: 'Foundations',
+      description: 'Start with core concepts.',
+      difficulty: 'easy',
+      estimatedTime: 30,
+      prerequisites: [],
+      unlockConditions: {},
+      hoverInfo: {
+        summary: 'Key ideas and terminology',
+        learningObjectives: ['Understand basics'],
+        keyTopics: ['Intro'],
+        tips: ['Skim once, then review'],
+        resources: ['Notes']
+      },
+      rewards: { xp: 50, points: 50 },
+      isOptional: false
+    },
+    {
+      id: 'n2',
+      position: { x: 260, y: 160 },
+      type: 'lesson',
+      lessonId: 2,
+      title: 'Practice',
+      description: 'Apply what you learned.',
+      difficulty: 'medium',
+      estimatedTime: 40,
+      prerequisites: ['n1'],
+      unlockConditions: { requiredNodes: ['n1'] },
+      hoverInfo: {
+        summary: 'Exercises and drills',
+        learningObjectives: ['Apply basics'],
+        keyTopics: ['Practice'],
+        tips: ['Work through examples'],
+        resources: ['Exercises']
+      },
+      rewards: { xp: 70, points: 70 },
+      isOptional: false
+    },
+    {
+      id: 'n3',
+      position: { x: 420, y: 120 },
+      type: 'checkpoint',
+      lessonId: 3,
+      title: 'Checkpoint',
+      description: 'Quick review and quiz.',
+      difficulty: 'medium',
+      estimatedTime: 20,
+      prerequisites: ['n2'],
+      unlockConditions: { requiredNodes: ['n2'] },
+      hoverInfo: {
+        summary: 'Assess understanding',
+        learningObjectives: ['Recall', 'Apply'],
+        keyTopics: ['Review'],
+        tips: ['Note gaps'],
+        resources: ['Quiz']
+      },
+      rewards: { xp: 60, points: 60 },
+      isOptional: false
+    }
+  ];
+
+  return {
+    nodes,
+    connections: [
+      { from: 'n1', to: 'n2', type: 'prerequisite' },
+      { from: 'n2', to: 'n3', type: 'prerequisite' },
+    ],
+    metadata: {
+      totalEstimatedTime: nodes.reduce((s, n) => s + n.estimatedTime, 0),
+      difficultyDistribution: calculateDifficultyDistribution(nodes),
+      skillProgression: extractSkillProgression(nodes),
+    },
+  };
+}
+
 /**
  * Generates an interactive lesson trail for a course using AI
  */
 export async function generateLessonTrail(courseId: number, userId: number): Promise<LessonTrailData> {
   try {
+    if (!process.env.DATABASE_URL) {
+      return mockTrail();
+    }
     // Get course and lesson data
     const [course] = await db.select().from(courses).where(eq(courses.id, courseId));
     if (!course) throw new Error('Course not found');
@@ -309,6 +393,9 @@ export async function updateTrailProgress(
  */
 export async function generatePersonalizedRecommendations(userId: number) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return [];
+    }
     // Get user's learning data
     const [userLevel] = await db.select().from(userLevels).where(eq(userLevels.userId, userId));
     const userProgressData = await db.select()

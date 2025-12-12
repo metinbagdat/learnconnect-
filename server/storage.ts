@@ -44,10 +44,24 @@ export interface IStorage {
   getUser(id: number): Promise<any>;
   getUserByUsername(username: string): Promise<any>;
   createUser(user: any): Promise<any>;
+  getUserCourses(userId: number): Promise<any[]>;
+  getUserAssignments(userId: number): Promise<any[]>;
+  getUserAchievements(userId: number): Promise<any[]>;
+  getStudySessions(userId: number): Promise<any[]>;
+  getUserActiveAndCompletedChallenges(userId: number): Promise<any[]>;
+  getUserLevel(userId: number): Promise<any | null>;
+  getChallenges(): Promise<any[]>;
+  getUserStudyPrograms(userId: number): Promise<any[]>;
+  getUserLearningTrails(userId: number): Promise<any[]>;
+  getUserLearningStats(userId: number): Promise<any | null>;
+  getDailyTasks(userId: number): Promise<any[]>;
   getCourses(): Promise<any[]>;
   getCourse(id: number): Promise<any>;
   createCourse(course: any): Promise<any>;
   updateCourse(id: number, updates: any): Promise<any>;
+  getModules(courseId: number): Promise<any[]>;
+  getLessons(moduleId: number): Promise<any[]>;
+  getUserLessons(userId: number): Promise<any[]>;
   createDesignProcess(design: any): Promise<any>;
   getDesignProcess(id: number): Promise<any>;
   updateDesignProcess(id: number, updates: any): Promise<any>;
@@ -59,22 +73,118 @@ export interface IStorage {
 
 class DatabaseStorage implements IStorage {
   async getUser(id: number) {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user ${id}:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to get user'}`);
+    }
   }
 
   async getUserByUsername(username: string) {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user by username ${username}:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to get user'}`);
+    }
   }
 
   async createUser(userData: any) {
-    const [created] = await db.insert(users).values(userData).returning();
-    return created;
+    try {
+      const [created] = await db.insert(users).values(userData).returning();
+      return created;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error creating user:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to create user'}`);
+    }
+  }
+
+  async getUserCourses(userId: number) {
+    try {
+      return await db.select().from(userCourses).where(eq(userCourses.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting courses for user ${userId}:`, error?.message || error);
+      throw new Error(`Database error: ${error?.message || 'Failed to get user courses'}`);
+    }
   }
 
   async getCourses() {
     return db.select().from(courses);
+  }
+
+  async getUserAssignments(userId: number) {
+    try {
+      return await db.select().from(assignments).where(eq(assignments.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting assignments for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserAchievements(userId: number) {
+    try {
+      return await db.select().from(achievements).where(eq(achievements.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting achievements for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getStudySessions(userId: number) {
+    try {
+      return await db.select().from(studySchedules).where(eq(studySchedules.userId, userId));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting study sessions for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserActiveAndCompletedChallenges(userId: number) {
+    try {
+      // placeholder: return empty
+      return [];
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting challenges for user ${userId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserLevel(userId: number) {
+    try {
+      const [level] = await db.select().from(userLevels).where(eq(userLevels.userId, userId));
+      return level || null;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user level ${userId}:`, error?.message || error);
+      return null;
+    }
+  }
+
+  async getChallenges() {
+    try {
+      return []; // placeholder
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting challenges:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserStudyPrograms(_userId: number) {
+    return [];
+  }
+
+  async getUserLearningTrails(_userId: number) {
+    return [];
+  }
+
+  async getUserLearningStats(_userId: number) {
+    return null;
+  }
+
+  async getDailyTasks(_userId: number) {
+    return [];
   }
 
   async getCourse(id: number) {
@@ -298,9 +408,22 @@ class DatabaseStorage implements IStorage {
   // Lesson methods
   async getLessons(moduleId: number) {
     try {
-      return db.select().from(lessons).where(eq(lessons.moduleId, moduleId));
-    } catch (error) {
-      console.error('Error fetching lessons:', error);
+      return await db.select().from(lessons).where(eq(lessons.moduleId, moduleId)).orderBy(asc(lessons.order));
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting lessons for module ${moduleId}:`, error?.message || error);
+      return [];
+    }
+  }
+
+  async getUserLessons(userId: number) {
+    try {
+      const userLessons = await db
+        .select()
+        .from(schema.userLessons)
+        .where(eq(schema.userLessons.userId, userId));
+      return userLessons;
+    } catch (error: any) {
+      console.error(`[STORAGE] Error getting user lessons for user ${userId}:`, error?.message || error);
       return [];
     }
   }
@@ -351,4 +474,51 @@ class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+class InMemoryStorage implements IStorage {
+  private users: any[] = [];
+  private nextId = 1;
+
+  async getUser(id: number) {
+    return this.users.find((u) => u.id === id) || null;
+  }
+
+  async getUserByUsername(username: string) {
+    return this.users.find((u) => u.username === username) || null;
+  }
+
+  async createUser(userData: any) {
+    const user = { ...userData, id: this.nextId++ };
+    this.users.push(user);
+    return user;
+  }
+
+  // Basic no-op implementations to keep the app running without a database
+  async getCourses() { return []; }
+  async getCourse(_id: number) { return null; }
+  async createCourse(courseData: any) { return { ...courseData, id: this.nextId++ }; }
+  async updateCourse(_id: number, updates: any) { return { ...updates, id: _id }; }
+  async createDesignProcess(design: any) { return { ...design, id: this.nextId++ }; }
+  async getDesignProcess(_id: number) { return null; }
+  async updateDesignProcess(_id: number, updates: any) { return { ...updates, id: _id }; }
+  async createSuccessMetrics(metrics: any) { return { ...metrics, id: this.nextId++ }; }
+  async createFeedbackLoop(loop: any) { return { ...loop, id: this.nextId++ }; }
+  async getFeedbackLoops(_designId: number) { return []; }
+  async updateFeedbackLoop(_id: number, updates: any) { return { ...updates, id: _id }; }
+  async getUserCourses(_userId: number) { return []; }
+  async getUserAssignments(_userId: number) { return []; }
+  async getUserAchievements(_userId: number) { return []; }
+  async getStudySessions(_userId: number) { return []; }
+  async getUserActiveAndCompletedChallenges(_userId: number) { return []; }
+  async getUserLevel(_userId: number) { return null; }
+  async getChallenges() { return []; }
+  async getUserStudyPrograms(_userId: number) { return []; }
+  async getUserLearningTrails(_userId: number) { return []; }
+  async getUserLearningStats(_userId: number) { return null; }
+  async getDailyTasks(_userId: number) { return []; }
+  async getModules(_courseId: number) { return []; }
+  async getLessons(_moduleId: number) { return []; }
+  async getUserLessons(_userId: number) { return []; }
+}
+
+const useDatabase = !!process.env.DATABASE_URL;
+export const storage: IStorage = useDatabase ? new DatabaseStorage() : new InMemoryStorage();

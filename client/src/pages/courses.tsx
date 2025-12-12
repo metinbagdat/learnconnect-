@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import ModernNavigation from "@/components/layout/modern-navigation";
 import { CourseTree } from "@/components/ui/course-tree";
+import { ExamCategoryTree } from "@/components/ui/exam-category-tree";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,10 @@ export default function Courses() {
   
   const { data: allCoursesTree = [], isLoading: allCoursesLoading, error: allCoursesError, refetch: refetchAllCourses } = useQuery<any[]>({
     queryKey: ["/api/courses"],
+  });
+
+  const { data: examCategoryData = [], isLoading: examCategoryLoading, error: examCategoryError, refetch: refetchExamCategories } = useQuery<any[]>({
+    queryKey: ["/api/courses/by-exam-category"],
   });
   
   const filterCourseTree = (courses: any[], query: string): any[] => {
@@ -113,6 +118,7 @@ export default function Courses() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/courses/tree"] });
       queryClient.invalidateQueries({ queryKey: ["/api/courses/tree"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses/by-exam-category"] });
     } catch (error) {
       toast({
         title: t('enrollmentFailed'),
@@ -219,39 +225,39 @@ export default function Courses() {
                   </TabsContent>
                   
                   <TabsContent value="available" className="mt-6">
-                    {allCoursesError ? (
+                    {examCategoryError ? (
                       <ApiError 
-                        error={allCoursesError}
-                        onRetry={refetchAllCourses}
+                        error={examCategoryError}
+                        onRetry={refetchExamCategories}
                         type="server"
                         title={t('failedToLoadCourses', 'Failed to load available courses')}
                         description={t('coursesErrorDesc', 'Unable to load available courses. Please try again.')}
                       />
-                    ) : allCoursesLoading ? (
+                    ) : examCategoryLoading ? (
                       <div className="space-y-4">
                         {[...Array(3)].map((_, i) => (
                           <CourseCardSkeleton key={i} />
                         ))}
                       </div>
-                    ) : filteredAvailableCourses && filteredAvailableCourses.length === 0 ? (
-                      <EmptyState 
-                        type={searchQuery ? "search" : "courses"}
-                        onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
-                      />
-                    ) : filteredAvailableCourses && filteredAvailableCourses.length > 0 ? (
+                    ) : examCategoryData && examCategoryData.length > 0 ? (
                       <div className="space-y-6">
                         <div className="mb-4">
                           <p className="text-sm text-muted-foreground">
-                            Browse available courses organized by curriculum structure. Enroll in any course to begin learning.
+                            Browse courses organized by exam category (TYT/AYT/LGS) with full curriculum structure. Enroll in any course to begin learning.
                           </p>
                         </div>
-                        <CourseTree 
-                          courses={filteredAvailableCourses} 
+                        <ExamCategoryTree 
+                          data={examCategoryData} 
                           showEnrollButton
                           onEnroll={enrollInCourse}
                         />
                       </div>
-                    ) : null}
+                    ) : (
+                      <EmptyState 
+                        type={searchQuery ? "search" : "courses"}
+                        onAction={() => searchQuery ? setSearchQuery("") : navigate('/courses')}
+                      />
+                    )}
                   </TabsContent>
                 </Tabs>
               </div>

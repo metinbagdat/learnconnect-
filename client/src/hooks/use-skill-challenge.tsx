@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Challenge, UserChallenge } from "@shared/schema";
+import { challenges as Challenge, userChallenges as UserChallenge } from "@shared/schema";
 import { SkillChallengePopup } from "@/components/challenges/skill-challenge-popup";
+import type { SkillChallenge } from "@/components/challenges/skill-challenge-popup";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 
 // Define types for challenge status data structure
-interface UserChallengeWithChallenge extends UserChallenge {
-  challenge: Challenge;
-}
+type ChallengeSelect = typeof Challenge.$inferSelect;
+type UserChallengeWithChallenge = typeof UserChallenge.$inferSelect & { challenge: ChallengeSelect };
 
 interface UserChallengeStatus {
   active: UserChallengeWithChallenge[];
@@ -25,18 +25,18 @@ const SkillChallengeContext = createContext<SkillChallengeContextType | undefine
 
 export function SkillChallengeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
+  const [currentChallenge, setCurrentChallenge] = useState<ChallengeSelect | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  
+
   // Track which challenges have been shown to the user in this session
   const [shownChallenges, setShownChallenges] = useState<number[]>([]);
   
   // Fetch available skill challenges
-  const { data: challenges = [] } = useQuery<Challenge[]>({
+  const { data: challenges = [] } = useQuery<ChallengeSelect[]>({
     queryKey: ["/api/challenges"],
     enabled: !!user
   });
-  
+
   // Fetch user's active challenges to avoid showing challenges already accepted
   const { data: userChallengesData } = useQuery<UserChallengeStatus>({
     queryKey: ["/api/user/challenges/status"],
@@ -59,37 +59,47 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
   useEffect(() => {
     if (userChallengesData) {
       console.log("User challenges loaded:", 
-        userChallengesData.active.length, "active,",
-        userChallengesData.completed.length, "completed"
+        userChallengesData.active?.length || 0, "active,",
+        userChallengesData.completed?.length || 0, "completed"
       );
     }
   }, [userChallengesData]);
   
   // Function to find a suitable challenge
-  const findSuitableChallenge = (type?: string): Challenge | null => {
+  const findSuitableChallenge = (type?: string): ChallengeSelect | null => {
     console.log("Finding challenge of type:", type);
-    
+
     if (!challenges || challenges.length === 0) {
       console.log("No challenges available");
       return null;
     }
     
     // Get active challenge IDs
-    const activeIds = userChallenges.active.map((uc) => uc.challenge.id);
-    const completedIds = userChallenges.completed.map((uc) => uc.challenge.id);
+    const activeIds = (userChallenges.active || []).map((uc) => {
+      const challengeId = uc.challenge?.id;
+      return typeof challengeId === "number" ? challengeId : (uc.challengeId || 0);
+    });
+    const completedIds = (userChallenges.completed || []).map((uc) => {
+      const challengeId = uc.challenge?.id;
+      return typeof challengeId === "number" ? challengeId : (uc.challengeId || 0);
+    });
     
     // Find eligible challenges
     const eligibleChallenges = challenges.filter(
-      (challenge) => 
-        // Not already active or completed
-        !activeIds.includes(challenge.id) && 
-        !completedIds.includes(challenge.id) &&
-        // Not shown in this session yet
-        !shownChallenges.includes(challenge.id) &&
-        // Match type if specified
-        (!type || challenge.type === type) &&
-        // Only skill challenges or specific popup-worthy types
-        (challenge.type === 'skill' || challenge.type === 'daily')
+      (challenge) => {
+        const challengeId = typeof challenge.id === "number" ? challenge.id : Number(challenge.id) || 0;
+        return (
+          // Not already active or completed
+          !activeIds.includes(challengeId) && 
+          !completedIds.includes(challengeId) &&
+          // Not shown in this session yet
+          !shownChallenges.includes(challengeId) &&
+          // Match type if specified
+          (!type || (challenge as any).type === type) &&
+          // Only skill challenges or specific popup-worthy types
+          ((challenge as any).type === 'skill' || (challenge as any).type === 'daily')
+        );
+      }
     );
     
     console.log("Eligible challenges:", eligibleChallenges.length);
@@ -97,10 +107,11 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
     if (eligibleChallenges.length === 0) {
       // Fallback to any challenge for daily challenges
       if (type === "daily") {
-        const anyChallenge = challenges.find(c => 
-          !activeIds.includes(c.id) && 
-          (c.type === 'daily' || c.type === 'skill')
-        );
+        const anyChallenge = challenges.find(c => {
+          const challengeId = typeof c.id === "number" ? c.id : Number(c.id) || 0;
+          return !activeIds.includes(challengeId) && 
+            ((c as any).type === 'daily' || (c as any).type === 'skill');
+        });
         
         if (anyChallenge) {
           console.log("Using fallback challenge:", anyChallenge.title);
@@ -149,7 +160,8 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
     setIsPopupOpen(true);
     
     // Add to shown challenges
-    setShownChallenges((prev) => [...prev, challenge.id]);
+    const challengeId = typeof challenge.id === "number" ? challenge.id : Number(challenge.id) || 0;
+    setShownChallenges((prev) => [...prev, challengeId]);
   };
   
   const dismissCurrentChallenge = () => {
@@ -159,8 +171,8 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
   };
   
   // Handle accepting a challenge
-  const handleAcceptChallenge = async () => {
-    console.log("Challenge accepted");
+  const handleAcceptChallenge = (success: boolean, points: number, xp: number) => {
+    console.log("Challenge completed:", { success, points, xp });
     dismissCurrentChallenge();
   };
   
@@ -169,16 +181,32 @@ export function SkillChallengeProvider({ children }: { children: React.ReactNode
     dismissCurrentChallenge,
   };
   
+  // Helper function to check if challenge has all required properties
+  const isValidChallenge = (challenge: ChallengeSelect | null): challenge is ChallengeSelect & SkillChallenge => {
+    if (!challenge || typeof challenge !== "object") return false;
+    return (
+      "type" in challenge &&
+      "category" in challenge &&
+      "timeLimit" in challenge &&
+      "xpReward" in challenge &&
+      "question" in challenge &&
+      "correctAnswer" in challenge &&
+      "explanation" in challenge &&
+      "prerequisites" in challenge &&
+      "tags" in challenge &&
+      "hint" in challenge
+    );
+  };
+
   return (
     <SkillChallengeContext.Provider value={contextValue}>
       {children}
-      {currentChallenge && (
+      {isValidChallenge(currentChallenge) && (
         <SkillChallengePopup
-          challenge={currentChallenge}
-          open={isPopupOpen}
-          setOpen={setIsPopupOpen}
-          onAccept={handleAcceptChallenge}
-          onSkip={dismissCurrentChallenge}
+          challenge={currentChallenge as unknown as SkillChallenge}
+          isOpen={isPopupOpen}
+          onClose={dismissCurrentChallenge}
+          onComplete={handleAcceptChallenge}
         />
       )}
     </SkillChallengeContext.Provider>

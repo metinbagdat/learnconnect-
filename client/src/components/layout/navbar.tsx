@@ -72,15 +72,36 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) => {
+              // Use Link for internal routes, anchor for hash links
+              if (item.href.startsWith("#")) {
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.querySelector(item.href);
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Buttons */}
@@ -116,6 +137,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             className="md:hidden text-slate-300 hover:text-white inline-flex items-center justify-center rounded-md p-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
             onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
@@ -128,6 +150,7 @@ export function Navbar() {
 
         {isOpen && (
           <button
+            type="button"
             aria-label={isTr ? "Menüyü kapat" : "Close menu"}
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
             onClick={() => setIsOpen(false)}
@@ -140,16 +163,38 @@ export function Navbar() {
             id="mobile-nav"
             className="md:hidden border-t border-slate-800 py-4 space-y-3 relative z-50 bg-slate-950/95 backdrop-blur-xl shadow-xl rounded-b-xl"
           >
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="block text-slate-300 hover:text-white px-4 py-2 rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) => {
+              // Use Link for internal routes, anchor for hash links
+              if (item.href.startsWith("#")) {
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="block text-slate-300 hover:text-white px-4 py-2 rounded-md transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsOpen(false);
+                      const element = document.querySelector(item.href);
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                );
+              }
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="block text-slate-300 hover:text-white px-4 py-2 rounded-md transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             <div className="flex gap-2 px-4 pt-2">
               {user ? (
                 <Button

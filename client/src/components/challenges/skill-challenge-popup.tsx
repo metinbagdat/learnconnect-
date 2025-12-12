@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,12 +15,10 @@ import {
   Target, 
   Trophy, 
   Zap, 
-  Clock, 
   CheckCircle, 
   XCircle, 
   Lightbulb,
   Star,
-  Award,
   Timer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -104,6 +101,7 @@ export function SkillChallengePopup({ isOpen, onClose, challenge, onComplete, on
     }
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTimerActive, timeRemaining, isSubmitted]);
 
   const handleSubmit = async (timeUp = false) => {

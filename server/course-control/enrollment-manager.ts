@@ -1,4 +1,4 @@
-import { storage } from "../storage";
+import { storage } from "../storage.js";
 import type { UserCourse, UserLesson } from "@shared/schema";
 
 export class EnrollmentManager {
@@ -60,7 +60,7 @@ export class EnrollmentManager {
   async getUserProgress(userId: number, courseId: number) {
     try {
       const userCourses = await storage.getUserCourses(userId);
-      const enrollment = userCourses.find((uc) => uc.courseId === courseId);
+      const enrollment = userCourses.find((uc: { courseId: number }) => uc.courseId === courseId);
       if (!enrollment) return null;
 
       const courseModules = await storage.getModules(courseId);

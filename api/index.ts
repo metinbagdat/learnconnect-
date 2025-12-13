@@ -43,14 +43,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// 404 handler - must be before error handler
-app.use((_req: Request, res: Response) => {
-  if (!res.headersSent) {
-    res.status(404).json({ error: "Not Found" });
-  }
-});
-
-// Error handler middleware
+// Error handler middleware - must come after routes are registered
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
@@ -77,6 +70,14 @@ async function initializeApp() {
   initializationPromise = (async () => {
     try {
       await registerRoutes(app);
+      
+      // 404 handler - must be AFTER all routes are registered
+      app.use((_req: Request, res: Response) => {
+        if (!res.headersSent) {
+          res.status(404).json({ error: "Not Found" });
+        }
+      });
+      
       appInitialized = true;
       console.log("Application initialized for Vercel");
     } catch (error) {
@@ -90,11 +91,6 @@ async function initializeApp() {
 
 // Vercel serverless function handler
 export default async function handler(req: any, res: any) {
-  // Ensure proper headers are set
-  if (!res.getHeader('content-type')) {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  }
-
   try {
     // Get the original path from Vercel's rewrite
     const originalUrl = req.url || req.originalUrl || '/';
@@ -107,14 +103,19 @@ export default async function handler(req: any, res: any) {
       apiPath = vercelPath;
     }
 
-    // Ensure we're handling an API path
-    // If not, this handler shouldn't have been called, but handle gracefully
+    // CRITICAL: Only handle API paths. Reject everything else early to prevent SSL errors
     if (!apiPath.startsWith('/api') && !vercelPath) {
-      console.warn(`API handler called for non-API path: ${apiPath}`);
+      console.warn(`API handler called for non-API path: ${apiPath} - rejecting`);
+      // Return early without processing - Vercel will handle routing to index.html
       if (!res.headersSent) {
         res.status(404).json({ error: "Not Found" });
       }
       return;
+    }
+
+    // Ensure proper headers are set for API responses
+    if (!res.getHeader('content-type')) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
     }
 
     // Normalize API path

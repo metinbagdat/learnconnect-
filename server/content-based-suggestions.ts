@@ -29,14 +29,14 @@ export class ContentBasedSuggestions {
         .from(schema.userCourses)
         .where(eq(schema.userCourses.userId, userId));
 
-      const enrolledCourseIds = enrollments.map((e) => e.courseId);
+      const enrolledCourseIds = enrollments.map((e: typeof enrollments[0]) => e.courseId);
 
       // Get all available courses
       const allCourses = await db.select().from(schema.courses);
 
       // Filter out already enrolled courses
       const availableCourses = allCourses.filter(
-        (c) => !enrolledCourseIds.includes(c.id)
+        (c: typeof allCourses[0]) => !enrolledCourseIds.includes(c.id)
       );
 
       // Calculate relevance scores based on category/tag matching
@@ -47,7 +47,7 @@ export class ContentBasedSuggestions {
         matchedInterests: string[];
       }
 
-      const scoredCourses: ScoredCourse[] = availableCourses.map((course) => {
+      const scoredCourses: ScoredCourse[] = availableCourses.map((course: typeof availableCourses[0]) => {
         const courseCategory = (course.category || "").toLowerCase();
         const courseTitle = (course.title || "").toLowerCase();
 
@@ -92,11 +92,11 @@ export class ContentBasedSuggestions {
 
       // Sort by score and return top recommendations
       const topRecommendations = scoredCourses
-        .filter((c) => c.score > 0) // Only include courses with matches
-        .sort((a, b) => b.score - a.score)
+        .filter((c: ScoredCourse) => c.score > 0) // Only include courses with matches
+        .sort((a: ScoredCourse, b: ScoredCourse) => b.score - a.score)
         .slice(0, 5)
-        .map((rec) => {
-          const course = availableCourses.find((c) => c.id === rec.courseId);
+        .map((rec: ScoredCourse) => {
+          const course = availableCourses.find((c: typeof availableCourses[0]) => c.id === rec.courseId);
           return {
             courseId: rec.courseId,
             title: rec.title,
@@ -128,11 +128,11 @@ export class ContentBasedSuggestions {
 
       // Get all other courses
       const allCourses = await db.select().from(schema.courses);
-      const otherCourses = allCourses.filter((c) => c.id !== courseId);
+      const otherCourses = allCourses.filter((c: typeof allCourses[0]) => c.id !== courseId);
 
       // Score courses by similarity
       const similarCourses = otherCourses
-        .map((c) => {
+        .map((c: typeof otherCourses[0]) => {
           let score = 0;
 
           // Same category (high weight)
@@ -149,22 +149,22 @@ export class ContentBasedSuggestions {
           const courseKeywords = (course.description || "")
             .toLowerCase()
             .split(/\s+/)
-            .filter((w) => w.length > 3);
+            .filter((w: string) => w.length > 3);
           const otherKeywords = (c.description || "")
             .toLowerCase()
             .split(/\s+/)
-            .filter((w) => w.length > 3);
+            .filter((w: string) => w.length > 3);
 
-          const overlap = courseKeywords.filter((k) => otherKeywords.includes(k)).length;
+          const overlap = courseKeywords.filter((k: string) => otherKeywords.includes(k)).length;
           score += overlap * 5;
 
           return { course: c, score };
         })
-        .filter((s) => s.score > 0)
-        .sort((a, b) => b.score - a.score)
+        .filter((s: { course: typeof otherCourses[0]; score: number }) => s.score > 0)
+        .sort((a: { course: typeof otherCourses[0]; score: number }, b: { course: typeof otherCourses[0]; score: number }) => b.score - a.score)
         .slice(0, limit);
 
-      return similarCourses.map((s) => ({
+      return similarCourses.map((s: { course: typeof otherCourses[0]; score: number }) => ({
         courseId: s.course.id,
         title: s.course.title,
         category: s.course.category,

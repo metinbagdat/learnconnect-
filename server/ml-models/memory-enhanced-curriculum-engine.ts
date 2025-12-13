@@ -1,7 +1,7 @@
 // Step 8.1: AI-Powered Memory-Enhanced Curriculum System
 // Integrates DopingHafiza memory techniques into LearnConnect curriculum
 
-import { MemoryEnhancementEngine } from "./memory-enhancement-engine";
+import { MemoryEnhancementEngine } from "./memory-enhancement-engine.js";
 
 export class SpacedRepetitionEngine {
   /**

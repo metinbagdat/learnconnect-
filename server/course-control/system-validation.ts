@@ -1,8 +1,8 @@
-import { interactionTracker } from "./interaction-tracker";
-import { integrationManager } from "./integration-manager";
-import { courseAlertNotificationSystem } from "./alert-notification-system";
-import { permissionController } from "./permission-controller";
-import { dataFlowController } from "./data-flow-controller";
+import { interactionTracker } from "./interaction-tracker.js";
+import { integrationManager } from "./integration-manager.js";
+import { courseAlertNotificationSystem } from "./alert-notification-system.js";
+import { permissionController } from "./permission-controller.js";
+import { dataFlowController } from "./data-flow-controller.js";
 
 export interface SystemMetrics {
   responseTime: number;

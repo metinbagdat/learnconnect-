@@ -4,9 +4,9 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerStripeRoutes } from "./stripe-routes";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
-import { db } from "./db";
 import * as schema from "@shared/schema";
-import { eq, inArray, gt, and } from "drizzle-orm";
+import type { User, CurriculumDesignParameters, UserSkillProgress } from "@shared/schema";
+import { eq, inArray, gt, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { checkSubscription, checkAssessmentLimit, requirePremium, trackUsage } from "./middleware/subscription";
 import { studyPlannerControl } from "./study-planner-control";
 import { controlHandlers } from "./study-planner-control-handlers";
@@ -138,7 +138,6 @@ import * as aiSessionGenerator from "./ai-session-generator";
 import { analyzeProgressAndRecommend, getTopicResources, trackResourceEngagement } from "./resource-recommendation-service";
 import { generateAdaptiveAdjustments, detectLearningInterventionNeeds } from "./adaptive-adjustment-service";
 import { db } from "./db";
-import { eq, and, gte, notInArray, count, sum, sql } from "drizzle-orm";
 import { 
   skillChallenges, 
   userSkillChallengeAttempts,
@@ -240,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Filter by exam category code if provided
       const filteredCategories = examCategory 
-        ? examCategoriesList.filter(cat => cat.code === examCategory)
+        ? examCategoriesList.filter((cat: any) => cat.code === examCategory)
         : examCategoriesList;
       
       if (filteredCategories.length === 0) {
@@ -256,18 +255,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(schema.courses.order);
       
       if (allCourses.length === 0) {
-        return res.json(filteredCategories.map(cat => ({ ...cat, courses: [] })));
+        return res.json(filteredCategories.map((cat: any) => ({ ...cat, courses: [] })));
       }
       
       // Get modules for all courses
       const allModules = await db
         .select()
         .from(schema.modules)
-        .where(inArray(schema.modules.courseId, allCourses.map(c => c.id)))
+        .where(inArray(schema.modules.courseId, allCourses.map((c: any) => c.id)))
         .orderBy(schema.modules.order);
       
       // Get lessons for all modules
-      const moduleIds = allModules.map(m => m.id);
+      const moduleIds = allModules.map((m: any) => m.id);
       const allLessons = moduleIds.length > 0 ? await db
         .select()
         .from(schema.lessons)
@@ -275,18 +274,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(schema.lessons.order) : [];
       
       // Build the tree structure: Exam Category > Course > Unit (Module) > Lesson
-      const result = filteredCategories.map(category => {
-        const categoryCourses = allCourses.filter(c => c.examCategoryId === category.id);
+      const result = filteredCategories.map((category: any) => {
+        const categoryCourses = allCourses.filter((c: any) => c.examCategoryId === category.id);
         
-        const coursesWithCurriculum = categoryCourses.map(course => {
-          const courseModules = allModules.filter(m => m.courseId === course.id);
+        const coursesWithCurriculum = categoryCourses.map((course: any) => {
+          const courseModules = allModules.filter((m: any) => m.courseId === course.id);
           
-          const modulesWithLessons = courseModules.map(module => {
-            const moduleLessons = allLessons.filter(l => l.moduleId === module.id);
+          const modulesWithLessons = courseModules.map((module: any) => {
+            const moduleLessons = allLessons.filter((l: any) => l.moduleId === module.id);
             
             return {
               ...module,
-              lessons: moduleLessons.map(lesson => ({
+              lessons: moduleLessons.map((lesson: any) => ({
                 id: lesson.id,
                 title: lesson.title,
                 titleEn: lesson.titleEn,
@@ -396,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(20);
       
       // Calculate countdown for each exam
-      const examsWithCountdown = upcomingExams.map(exam => {
+      const examsWithCountdown = upcomingExams.map((exam: any) => {
         const examDate = new Date(exam.examDate);
         const diff = examDate.getTime() - now.getTime();
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -430,7 +429,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/exam-reminders", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const { examScheduleId, reminderDaysBefore } = req.body;
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       
       const reminder = await db.insert(schema.userExamReminders).values({
         userId,
@@ -572,7 +572,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.post("/api/courses", (app as any).ensureAuthenticated, async (req, res) => {
-    if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = req.user as User;
+    if (user.role !== "admin" && user.role !== "instructor") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     
@@ -590,7 +594,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Update course (admin/instructor only)
   app.patch("/api/courses/:id", (app as any).ensureAuthenticated, async (req, res) => {
-    if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = req.user as User;
+    if (user.role !== "admin" && user.role !== "instructor") {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
@@ -618,7 +626,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Delete course (admin only)
   app.delete("/api/courses/:id", (app as any).ensureAuthenticated, async (req, res) => {
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = req.user as User;
+    if (user.role !== "admin") {
       return res.status(403).json({ message: "Unauthorized - Admin access required" });
     }
 
@@ -764,7 +776,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // User Courses API
   app.get("/api/user/courses", async (req, res) => {
-    let userId = req.user?.id;
+    let userId: number | null = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as User).id;
+    }
     
     if (!userId && req.headers['x-user-id']) {
       userId = parseInt(req.headers['x-user-id'] as string);
@@ -784,7 +799,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Hierarchical User Courses API - returns courses with full hierarchy
   app.get("/api/user/courses/tree", async (req, res) => {
-    let userId = req.user?.id;
+    let userId: number | null = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as User).id;
+    }
     
     if (!userId && req.headers['x-user-id']) {
       userId = parseInt(req.headers['x-user-id'] as string);
@@ -800,7 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('[Courses Tree] User ID:', userId);
       console.log('[Courses Tree] User courses count:', userCourses.length);
-      console.log('[Courses Tree] User courses:', userCourses.map(uc => ({ id: uc.id, courseId: uc.courseId })));
+      console.log('[Courses Tree] User courses:', userCourses.map((uc: any) => ({ id: uc.id, courseId: uc.courseId })));
       console.log('[Courses Tree] All courses count:', allCourses.length);
       
       // Create a map for fast course lookup
@@ -808,15 +826,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get enrolled course IDs, but filter out any that don't exist in the course map
       // This handles cases where a course was deleted but user enrollment still exists
-      const allEnrolledCourseIds = userCourses.map(uc => uc.courseId);
-      const invalidCourseIds = allEnrolledCourseIds.filter(courseId => !courseMap.has(courseId));
-      const validEnrolledCourseIds = allEnrolledCourseIds.filter(courseId => courseMap.has(courseId));
+      const allEnrolledCourseIds = userCourses.map((uc: any) => uc.courseId);
+      const invalidCourseIds = allEnrolledCourseIds.filter((courseId: number) => !courseMap.has(courseId));
+      const validEnrolledCourseIds = allEnrolledCourseIds.filter((courseId: number) => courseMap.has(courseId));
       
       if (invalidCourseIds.length > 0) {
         console.warn('[Courses Tree] WARNING: Found', invalidCourseIds.length, 'invalid enrolled course IDs that do not exist in database:');
         console.warn('[Courses Tree] Invalid course IDs:', invalidCourseIds);
         console.warn('[Courses Tree] These courses may have been deleted. User enrollments:', 
-          userCourses.filter(uc => invalidCourseIds.includes(uc.courseId)).map(uc => ({
+          userCourses.filter((uc: any) => invalidCourseIds.includes(uc.courseId)).map((uc: any) => ({
             userCourseId: uc.id,
             courseId: uc.courseId,
             enrolledAt: uc.enrolledAt
@@ -836,7 +854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Helper function to get all descendants of a course ID
       const getAllDescendants = (courseId: number): number[] => {
-        const children = allCourses.filter(c => c.parentCourseId === courseId).map(c => c.id);
+        const children = allCourses.filter((c: any) => c.parentCourseId === courseId).map((c: any) => c.id);
         const descendants = [...children];
         children.forEach(childId => {
           descendants.push(...getAllDescendants(childId));
@@ -886,9 +904,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Build final course array with enrollment info
       const coursesWithEnrollment = Array.from(relevantCourseIds)
-        .map(id => courseMap.get(id))
-        .filter(c => c !== undefined)
-        .map(course => {
+        .map((id: number) => courseMap.get(id))
+        .filter((c: any) => c !== undefined)
+        .map((course: any) => {
           const userCourse = userCourses.find(uc => uc.courseId === course.id);
           return {
             ...course,
@@ -939,7 +957,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Diagnostic endpoint to check course enrollment issues
   // Place this BEFORE /api/user/courses/tree to ensure proper routing
   app.get("/api/user/courses/diagnostic", (app as any).ensureAuthenticated, async (req, res) => {
-    let userId = req.user?.id;
+    let userId: number | null = null;
+    if (req.isAuthenticated() && req.user) {
+      userId = (req.user as User).id;
+    }
     
     if (!userId && req.headers['x-user-id']) {
       userId = parseInt(req.headers['x-user-id'] as string);
@@ -1120,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Assignments API
   app.get("/api/assignments", async (req, res) => {
     try {
-      const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+      const userId = req.isAuthenticated() && req.user ? (req.user as User).id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
       const assignments = await storage.getUserAssignments(userId);
       return res.json(Array.isArray(assignments) ? assignments : []);
@@ -1131,7 +1152,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.post("/api/assignments", (app as any).ensureAuthenticated, async (req, res) => {
-    if (!req.user || (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor"))) {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = req.user as User;
+    if (user.role !== "admin" && user.role !== "instructor") {
       return res.status(403).json({ message: "Unauthorized" });
     }
     
@@ -1512,7 +1537,11 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   
   // AI-powered course generation endpoint
   app.post("/api/ai/generate-course", (app as any).ensureAuthenticated, async (req, res) => {
-    if (!req.isAuthenticated() || (req.user.role !== "admin" && req.user.role !== "instructor")) {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = req.user as User;
+    if (user.role !== "admin" && user.role !== "instructor") {
       return res.status(403).json({ message: "Only instructors or admins can generate courses" });
     }
 
@@ -2419,7 +2448,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
 
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const { startDate, endDate } = req.query;
       
       // Get user engagement data
@@ -2466,7 +2496,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
 
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       
       // Get user's courses and progress
       const userCourses = await storage.getUserCourses(userId);
@@ -2513,7 +2544,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
 
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const { days = 30 } = req.query;
       
       const endDate = new Date();
@@ -3059,7 +3091,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
 
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const stats = {
         totalHours: 0,
         coursesCompleted: 0,
@@ -3211,7 +3244,6 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
   });
 
-  const httpServer = createServer(app);
   // Comprehensive Gamification System API Endpoints
   
   // Get comprehensive leaderboards with real user data
@@ -3372,7 +3404,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
 
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const usersWithLevels = await storage.getAllUsersWithLevels();
       
       // Sort by total XP and find user's rank
@@ -3426,7 +3459,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
 
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const newlyUnlocked = await storage.checkAndUnlockAchievements(userId);
       
       res.json({
@@ -3768,7 +3802,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
 
       const { difficulty, category } = req.query;
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
 
       // Get challenges the user hasn't attempted recently
       const recentAttempts = await db.select({ challengeId: userSkillChallengeAttempts.challengeId })
@@ -3816,7 +3851,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
 
       const { challengeId, answer, timeSpent, isCorrect, timedOut, hintUsed } = req.body;
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
 
       // Get the challenge to determine rewards
       const [challenge] = await db.select()
@@ -6510,7 +6546,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   // Get specific user curriculum with details
   app.get("/api/user/curriculum/:userCurriculumId", async (req, res) => {
-    const userId = req.isAuthenticated() ? req.user?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
+    const userId = req.isAuthenticated() ? (req.user as User)?.id : (req.headers['x-user-id'] ? parseInt(req.headers['x-user-id'] as string) : null);
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
     
     try {
@@ -6520,8 +6556,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Get user curriculum
-      const userCurriculums = await storage.getUserCurriculums(userId);
-      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      const userCurriculums = await storage.getUserCurriculums(userId) as CurriculumDesignParameters[];
+      const userCurriculum = userCurriculums.find((uc: CurriculumDesignParameters) => uc.id === userCurriculumId);
       
       if (!userCurriculum) {
         return res.status(404).json({ message: "Curriculum not found" });
@@ -6560,8 +6596,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      const userCurriculums = await storage.getUserCurriculums(req.user.id);
-      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userCurriculums = await storage.getUserCurriculums((req.user as User).id) as CurriculumDesignParameters[];
+      const userCurriculum = userCurriculums.find((uc: CurriculumDesignParameters) => uc.id === userCurriculumId);
       if (!userCurriculum) {
         return res.status(404).json({ message: "Curriculum not found" });
       }
@@ -6649,8 +6686,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      const userCurriculums = await storage.getUserCurriculums(req.user.id);
-      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userCurriculums = await storage.getUserCurriculums((req.user as User).id) as CurriculumDesignParameters[];
+      const userCurriculum = userCurriculums.find((uc: CurriculumDesignParameters) => uc.id === userCurriculumId);
       if (!userCurriculum) {
         return res.status(404).json({ message: "Curriculum not found" });
       }
@@ -6680,8 +6718,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      const userCurriculums = await storage.getUserCurriculums(req.user.id);
-      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userCurriculums = await storage.getUserCurriculums((req.user as User).id) as CurriculumDesignParameters[];
+      const userCurriculum = userCurriculums.find((uc: CurriculumDesignParameters) => uc.id === userCurriculumId);
       if (!userCurriculum) {
         return res.status(404).json({ message: "Curriculum not found" });
       }
@@ -6706,14 +6745,15 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // First get all user curricula to verify ownership
-      const userCurriculums = await storage.getUserCurriculums(req.user.id);
-      const userCurriculumIds = userCurriculums.map(uc => uc.id);
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userCurriculums = await storage.getUserCurriculums((req.user as User).id) as CurriculumDesignParameters[];
+      const userCurriculumIds = userCurriculums.map((uc: CurriculumDesignParameters) => uc.id);
       
       // Get all skill progress for user's curricula to verify this progress belongs to user
       let ownsProgress = false;
       for (const curriculumId of userCurriculumIds) {
-        const progressList = await storage.getUserSkillProgress(curriculumId);
-        if (progressList.some(p => p.id === progressId)) {
+        const progressList = await storage.getUserSkillProgress(curriculumId) as UserSkillProgress[];
+        if (progressList.some((p: UserSkillProgress) => p.id === progressId)) {
           ownsProgress = true;
           break;
         }
@@ -6743,8 +6783,9 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      const userCurriculums = await storage.getUserCurriculums(req.user.id);
-      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userCurriculums = await storage.getUserCurriculums((req.user as User).id) as CurriculumDesignParameters[];
+      const userCurriculum = userCurriculums.find((uc: CurriculumDesignParameters) => uc.id === userCurriculumId);
       if (!userCurriculum) {
         return res.status(404).json({ message: "Curriculum not found" });
       }
@@ -6771,14 +6812,15 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      const userCurriculums = await storage.getUserCurriculums(req.user.id);
-      const userCurriculum = userCurriculums.find(uc => uc.id === userCurriculumId);
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userCurriculums = await storage.getUserCurriculums((req.user as User).id) as CurriculumDesignParameters[];
+      const userCurriculum = userCurriculums.find((uc: CurriculumDesignParameters) => uc.id === userCurriculumId);
       if (!userCurriculum) {
         return res.status(404).json({ message: "Curriculum not found" });
       }
       
       const assessment = await storage.createSkillAssessment({
-        userId: req.user.id,
+        userId: (req.user as User).id,
         userCurriculumId,
         skillId,
         score,
@@ -6804,7 +6846,7 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     try {
       if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const uploadType = req.query.type as string | undefined;
-      const uploads = await storage.getUserUploads(req.user.id, uploadType);
+      const uploads = await storage.getUserUploads((req.user as User).id, uploadType);
       res.json(uploads);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch uploads" });
@@ -6826,7 +6868,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      if (upload.userId !== req.user.id) {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      if (upload.userId !== (req.user as User).id) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -6843,9 +6886,10 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
     }
     
     try {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
       const validatedData = insertUploadSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: (req.user as User).id
       });
       
       const upload = await storage.createUpload(validatedData);
@@ -6873,7 +6917,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
       
       // Verify ownership
-      if (upload.userId !== req.user.id) {
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      if (upload.userId !== (req.user as User).id) {
         return res.status(403).json({ message: "Forbidden" });
       }
       
@@ -9503,7 +9548,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
       }
 
       const { courseId } = validation.data;
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
 
       // Verify course exists
       const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, courseId));
@@ -9653,7 +9699,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const userProgress = await db.select()
         .from(schema.userProgress)
         .where(eq(schema.userProgress.userId, userId));
@@ -9810,7 +9857,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   // STUDY PLAN ENDPOINTS
   app.get("/api/study-plans", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const plans = await db.select()
         .from(schema.studyPlans)
         .where(eq(schema.studyPlans.userId, userId));
@@ -9824,7 +9872,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   app.get("/api/assignments/upcoming", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const assignments = await db.select()
         .from(schema.assignments)
         .leftJoin(schema.userCourses, eq(schema.assignments.courseId, schema.userCourses.courseId))
@@ -9853,7 +9902,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
 
   app.get("/api/learning-path", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const paths = await db.select()
         .from(schema.learningPaths)
         .where(eq(schema.learningPaths.userId, userId));
@@ -9951,7 +10001,8 @@ In this lesson, you've learned about ${lessonTitle}, including its core concepts
   app.post("/api/ai/study-plan-tutor", (app as any).ensureAuthenticated, async (req, res) => {
     try {
       const { message, studyPlans, assignments, context } = req.body;
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
 
       if (!message) {
         return res.status(400).json({ message: "Message is required" });
@@ -10019,7 +10070,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Feature 1a: Content-based course suggestions (matching interests with course categories)
   app.get("/api/suggestions/courses/content-based", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const suggestions = await contentBasedSuggestions.suggestCoursesByInterests(userId);
       res.json({ 
         success: true, 
@@ -10035,7 +10087,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Feature 1b: AI-powered course suggestions based on enrollment history & learning patterns
   app.get("/api/ai/course-suggestions", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const suggestions = await aiFeatures.suggestCourses(userId);
       res.json({ 
         success: true, 
@@ -10064,7 +10117,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Feature 2: Adjust study plan based on progress (AI-powered)
   app.patch("/api/study-plans/:id/adjust", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const studyPlanId = parseInt(req.params.id);
       
       if (!studyPlanId || isNaN(studyPlanId)) {
@@ -10085,7 +10139,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Feature 2b: Change study plan pace manually
   app.patch("/api/study-plans/:id/pace", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const studyPlanId = parseInt(req.params.id);
       const { pace } = req.body;
 
@@ -10113,7 +10168,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Feature 2c: Extend study plan deadline
   app.patch("/api/study-plans/:id/extend", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const studyPlanId = parseInt(req.params.id);
       const { days = 7, reason = "" } = req.body;
 
@@ -10221,7 +10277,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Get user's notifications
   app.get("/api/notifications", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const notifications = await notificationsService.getUnreadNotifications(userId);
       
       res.json({
@@ -10241,7 +10298,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Check and send upcoming assignment notifications
   app.post("/api/notifications/check-upcoming", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const daysUntilDue = req.body.daysUntilDue || 1;
 
       const notifications = await notificationsService.notifyUpcomingAssignments(userId, daysUntilDue);
@@ -10264,7 +10322,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Check and send overdue assignment notifications
   app.post("/api/notifications/check-overdue", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const notifications = await notificationsService.notifyOverdueAssignments(userId);
       
       res.json({
@@ -10286,7 +10345,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Get comprehensive dashboard data for authenticated student
   app.get("/api/dashboard", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const dashboardData = await dashboardService.getStudentDashboard(userId);
       
       res.json({
@@ -10408,7 +10468,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Get course recommendations for user
   app.get("/api/recommendations/courses", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const limit = parseInt(req.query.limit as string) || 5;
       
       const recommendations = await aiCourseRecommender.recommendCoursesByInterests(userId, limit);
@@ -10425,7 +10486,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Get user interests
   app.get("/api/user/interests", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const interests = await db.select().from(schema.userInterests).where(eq(schema.userInterests.userId, userId));
       res.json(interests);
     } catch (error) {
@@ -10440,7 +10502,8 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
   // Add user interest
   app.post("/api/user/interests", (app as any).ensureAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+      const userId = (req.user as User).id;
       const { interest } = req.body;
       
       if (!interest || typeof interest !== 'string') {
@@ -10545,6 +10608,58 @@ Keep responses concise, encouraging, and actionable. Respond in the same languag
       });
     }
   });
+
+  // 404 Handler - must be after all routes
+  app.use((req, res) => {
+    res.status(404).json({
+      success: false,
+      message: "Route not found",
+      path: req.path,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Global Error Handler - must be after all routes and 404 handler
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error("Global error handler:", err);
+    
+    // Don't send error response if headers already sent
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    // Determine status code
+    const statusCode = err.statusCode || err.status || 500;
+    
+    // Prepare error response
+    const errorResponse: any = {
+      success: false,
+      message: err.message || "Internal server error",
+      timestamp: new Date().toISOString(),
+      path: req.path,
+      method: req.method
+    };
+
+    // Include stack trace in development
+    if (process.env.NODE_ENV !== 'production') {
+      errorResponse.stack = err.stack;
+      errorResponse.error = err;
+    }
+
+    // Handle specific error types
+    if (err instanceof z.ZodError) {
+      errorResponse.message = "Validation error";
+      errorResponse.errors = err.errors;
+      return res.status(400).json(errorResponse);
+    }
+
+    // Send error response
+    res.status(statusCode).json(errorResponse);
+  });
+
+  // Create HTTP server
+  const httpServer = createServer(app);
 
   return httpServer;
 }

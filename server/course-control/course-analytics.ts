@@ -1,4 +1,4 @@
-import { storage } from "../storage";
+import { storage } from "../storage.js";
 
 export class CourseAnalytics {
   async getCourseStats(courseId: number) {

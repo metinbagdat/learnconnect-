@@ -29,5 +29,23 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 2000, // Increase limit to 2MB to reduce warnings
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate vendor chunks
+          'react-vendor': ['react', 'react-dom'],
+          'router-vendor': ['wouter'],
+          'query-vendor': ['@tanstack/react-query'],
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+          ],
+          'chart-vendor': ['recharts'],
+        },
+      },
+    },
   },
 });

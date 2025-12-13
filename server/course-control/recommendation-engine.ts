@@ -1,16 +1,16 @@
-import { storage } from "../storage";
+import { storage } from "../storage.js";
 import type { Course } from "@shared/schema";
 
 export class RecommendationEngine {
   async recommendCourses(userId: number, limit: number = 5): Promise<Course[]> {
     try {
       const userCourses = await storage.getUserCourses(userId);
-      const enrolledCourseIds = new Set(userCourses.map((uc) => uc.courseId));
+      const enrolledCourseIds = new Set(userCourses.map((uc: { courseId: number }) => uc.courseId));
 
       const allCourses = await storage.getCourses();
       const user = await storage.getUser(userId);
 
-      const recommendations = allCourses.filter((c) => !enrolledCourseIds.has(c.id));
+      const recommendations = allCourses.filter((c: Course) => !enrolledCourseIds.has(c.id));
 
       const scored = recommendations.map((course: Course) => {
         let score = 0;
@@ -36,9 +36,9 @@ export class RecommendationEngine {
       });
 
       return scored
-        .sort((a, b) => b.score - a.score)
+        .sort((a: { course: Course; score: number }, b: { course: Course; score: number }) => b.score - a.score)
         .slice(0, limit)
-        .map((item) => item.course);
+        .map((item: { course: Course; score: number }) => item.course);
     } catch (error) {
       console.error("[RecommendationEngine] Error recommending courses:", error);
       return [];
@@ -103,10 +103,10 @@ export class RecommendationEngine {
       });
 
       return scored
-        .filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score)
+        .filter((item: { course: Course; score: number }) => item.score > 0)
+        .sort((a: { course: Course; score: number }, b: { course: Course; score: number }) => b.score - a.score)
         .slice(0, limit)
-        .map((item) => item.course);
+        .map((item: { course: Course; score: number }) => item.course);
     } catch (error) {
       console.error("[RecommendationEngine] Error generating learning path:", error);
       return [];

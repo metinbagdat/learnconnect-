@@ -47,6 +47,7 @@ import LandingPage from "@/pages/landing-page";
 import LearnConnectPortal from "@/pages/learnconnect-portal";
 import LearnConnectExams from "@/pages/learnconnect-exams";
 import LearnConnectAdmin from "@/pages/learnconnect-admin";
+import LearnConnectAI from "@/pages/learnconnect-ai";
 import MarketingDashboard from "@/pages/marketing-dashboard";
 import AffiliateDashboard from "@/pages/affiliate-dashboard";
 import WaitlistManagement from "@/pages/waitlist-management";

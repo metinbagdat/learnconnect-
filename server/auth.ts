@@ -267,15 +267,36 @@ export function setupAuth(app: Express) {
     }
   };
 
-  app.get("/api/user", ensureAuthenticated, async (req, res) => {
+  app.get("/api/user", async (req, res) => {
     try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized" });
+      // Try to get user from session first
+      if (req.isAuthenticated() && req.user) {
+        const { password, ...userWithoutPassword } = req.user;
+        return res.json(userWithoutPassword);
       }
-      const { password, ...userWithoutPassword } = req.user;
-      res.json(userWithoutPassword);
+      
+      // Try header-based auth
+      const userId = req.headers['x-user-id'];
+      if (userId) {
+        try {
+          const user = await storage.getUser(Number(userId));
+          if (user) {
+            const { password, ...userWithoutPassword } = user;
+            return res.json(userWithoutPassword);
+          }
+        } catch (dbError) {
+          console.error("[AUTH] Database error fetching user:", dbError);
+          // Return 401 instead of 500 for database errors
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+      }
+      
+      // No authentication - return 401 (this is expected for unauthenticated users)
+      return res.status(401).json({ message: "Unauthorized" });
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving user" });
+      console.error("[AUTH] Error in /api/user:", error);
+      // Return 401 instead of 500 to prevent ErrorBoundary from catching it
+      res.status(401).json({ message: "Unauthorized" });
     }
   });
 

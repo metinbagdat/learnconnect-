@@ -86,7 +86,6 @@ export class DataFlowController {
       }
 
       this.logFlowEvent(pipelineId, {
-        id: flowId,
         pipelineId,
         type: "start",
         timestamp: Date.now(),
@@ -105,7 +104,6 @@ export class DataFlowController {
           const stepDuration = Date.now() - stepStartTime;
 
           this.logFlowEvent(pipelineId, {
-            id: `${flowId}_step_${target}`,
             pipelineId,
             type: "step",
             timestamp: Date.now(),
@@ -125,7 +123,6 @@ export class DataFlowController {
           stepResults.push({ module: target, status: "failed", error: String(error), duration: stepDuration });
 
           this.logFlowEvent(pipelineId, {
-            id: `${flowId}_step_${target}`,
             pipelineId,
             type: "error",
             timestamp: Date.now(),
@@ -146,7 +143,6 @@ export class DataFlowController {
         (pipeline.metrics.averageProcessTime * (pipeline.metrics.totalFlows - 1) + totalDuration) / pipeline.metrics.totalFlows;
 
       this.logFlowEvent(pipelineId, {
-        id: `${flowId}_complete`,
         pipelineId,
         type: "complete",
         timestamp: Date.now(),
@@ -168,7 +164,6 @@ export class DataFlowController {
       const totalDuration = Date.now() - startTime;
 
       this.logFlowEvent(pipelineId, {
-        id: `${flowId}_error`,
         pipelineId,
         type: "error",
         timestamp: Date.now(),

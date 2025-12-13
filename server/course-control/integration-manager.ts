@@ -1,5 +1,5 @@
-import { interactionChainManager } from "./interaction-chain-manager";
-import { interactionTracker } from "./interaction-tracker";
+import { interactionChainManager } from "./interaction-chain-manager.js";
+import { interactionTracker } from "./interaction-tracker.js";
 
 interface IntegrationChain {
   id: string;

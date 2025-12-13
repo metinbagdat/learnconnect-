@@ -109,8 +109,9 @@ class CourseAlertNotificationSystem {
         name: "module_interaction_anomaly",
         condition: (m: any) => {
           const interactions = m.modules || {};
-          const avgInteractions = Object.values(interactions).reduce((sum: any, m: any) => sum + (m.interactions || 0), 0) / Math.max(Object.keys(interactions).length, 1);
-          return Object.values(interactions).some((m: any) => (m.interactions || 0) > avgInteractions * 5);
+          const interactionValues = Object.values(interactions) as Array<{ interactions?: number }>;
+          const avgInteractions = interactionValues.reduce((sum: number, mod: { interactions?: number }) => sum + (mod.interactions || 0), 0) / Math.max(interactionValues.length, 1);
+          return interactionValues.some((mod: { interactions?: number }) => (mod.interactions || 0) > avgInteractions * 5);
         },
         message: "Unusual module interaction pattern detected",
         severity: "medium",

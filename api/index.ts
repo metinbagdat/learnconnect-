@@ -16,6 +16,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Ensure proper content-type headers
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Only set content-type if not already set
+  if (!res.getHeader('content-type')) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  }
+  next();
+});
+
 // SEO routes (sitemap, robots.txt)
 app.use(sitemapRoutes);
 
@@ -81,28 +90,40 @@ async function initializeApp() {
 
 // Vercel serverless function handler
 export default async function handler(req: any, res: any) {
-  try {
-    await initializeApp();
+  // Ensure proper headers are set
+  if (!res.getHeader('content-type')) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  }
 
+  try {
     // Get the original path from Vercel's rewrite
     const originalUrl = req.url || req.originalUrl || '/';
     let apiPath = originalUrl;
 
-    // If URL doesn't start with /api, check Vercel headers
-    if (!apiPath.startsWith('/api')) {
-      const vercelPath = req.headers['x-vercel-path'] || req.headers['x-invoke-path'];
-      if (vercelPath) {
-        apiPath = vercelPath;
-      } else {
-        // Fallback: use query parameter or default to /api
-        const pathParam = req.query?.path;
-        if (pathParam) {
-          apiPath = `/api/${Array.isArray(pathParam) ? pathParam.join('/') : pathParam}`;
-        } else {
-          apiPath = '/api';
-        }
-      }
+    // Vercel sends /api/* requests to this handler via rewrite
+    // Check Vercel-specific headers first
+    const vercelPath = req.headers['x-vercel-path'] || req.headers['x-invoke-path'];
+    if (vercelPath) {
+      apiPath = vercelPath;
     }
+
+    // Ensure we're handling an API path
+    // If not, this handler shouldn't have been called, but handle gracefully
+    if (!apiPath.startsWith('/api') && !vercelPath) {
+      console.warn(`API handler called for non-API path: ${apiPath}`);
+      if (!res.headersSent) {
+        res.status(404).json({ error: "Not Found" });
+      }
+      return;
+    }
+
+    // Normalize API path
+    if (!apiPath.startsWith('/api')) {
+      apiPath = `/api${apiPath.startsWith('/') ? '' : '/'}${apiPath}`;
+    }
+
+    // Initialize app (only once)
+    await initializeApp();
 
     // Update request for Express
     req.url = apiPath;
@@ -126,7 +147,21 @@ export default async function handler(req: any, res: any) {
         finish();
       };
 
+      // Set timeout to ensure response is always sent
+      const timeout = setTimeout(() => {
+        if (!finished && !res.headersSent) {
+          try {
+            res.status(504).json({ error: "Request timeout" });
+          } catch (e) {
+            console.error("Error sending timeout response:", e);
+          }
+          finish();
+        }
+      }, 25000); // 25 seconds (before Vercel's 30s limit)
+
       app(req, res, (err: any) => {
+        clearTimeout(timeout);
+        
         if (err) {
           console.error("Express error:", err);
           if (!res.headersSent && !finished) {

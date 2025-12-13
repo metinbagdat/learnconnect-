@@ -96,31 +96,28 @@ export default async function handler(req: any, res: any) {
     const originalUrl = req.url || req.originalUrl || '/';
     let apiPath = originalUrl;
 
-    // Vercel sends /api/* requests to this handler via rewrite
-    // Check Vercel-specific headers first
-    const vercelPath = req.headers['x-vercel-path'] || req.headers['x-invoke-path'];
-    if (vercelPath) {
-      apiPath = vercelPath;
-    }
-
-    // CRITICAL: Only handle API paths. Reject everything else early to prevent SSL errors
-    if (!apiPath.startsWith('/api') && !vercelPath) {
-      console.warn(`API handler called for non-API path: ${apiPath} - rejecting`);
-      // Return early without processing - Vercel will handle routing to index.html
+    // Vercel sends /api/* requests to this handler via rewrite rule
+    // The rewrite rule sends: /api/* -> /api/index.ts
+    // So req.url will be like /api/health, /api/courses, etc.
+    
+    // Extract path from Vercel's routing
+    const vercelPath = req.headers['x-vercel-rewrite'] || req.url || originalUrl;
+    
+    // Ensure we're handling an API path
+    if (!vercelPath.startsWith('/api')) {
+      console.warn(`[API Handler] Non-API path received: ${vercelPath}`);
       if (!res.headersSent) {
-        res.status(404).json({ error: "Not Found" });
+        res.status(404).json({ error: "Not Found", path: vercelPath });
       }
       return;
     }
+    
+    apiPath = vercelPath;
 
-    // Ensure proper headers are set for API responses
-    if (!res.getHeader('content-type')) {
+    // Ensure proper headers are set for API responses (always JSON for API)
+    if (!res.headersSent) {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    }
-
-    // Normalize API path
-    if (!apiPath.startsWith('/api')) {
-      apiPath = `/api${apiPath.startsWith('/') ? '' : '/'}${apiPath}`;
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     // Initialize app (only once)
